@@ -1,0 +1,3004 @@
+schema_version: "0.11"
+system:
+  id: google_docs_mini
+  summary: This model describes the write, retry, ownership-failover, recovery, and reconnect paths
+    of a server-authoritative collaborative document system. A client submits a raw logical edit.
+    The server-side OT control layer may transform that input into a canonical accepted change.
+    Accepted changes are represented in authoritative history, while clients may retry when request
+    outcome is uncertain. Correctness claims in the DAG specify which stronger properties this
+    design is intended to guarantee.
+  liveness_boundary: Do not infer eventual retry, reconnect, scheduling fairness, or eventual
+    success from this failure model. Any liveness requirement must appear as an explicit assumption
+    or claim in the proof slice.
+source:
+  article: design/google-docs.md
+scope:
+  includes:
+    - server-authoritative OT control plane
+    - canonical accepted-change-set history
+    - retry/idempotency semantics
+    - owner failover and fencing
+    - snapshot/replay recovery
+    - reconnect/catch-up semantics
+    - client revision continuity
+    - reconnect reconciliation of already accepted optimistic edits by client_change_id
+  excludes:
+    - implementation of the OT transformation algorithm itself
+    - rich-text semantics, range formatting, undo/redo, and selection semantics
+    - cross-document transactions
+    - semantic correctness of local codec/application execution for an already valid canonical
+      accepted change beyond deterministic replay; this mini-system treats that local
+      operation-execution semantics as outside the distributed correctness scope
+    - automatic client-side OT/rebase of unresolved speculative edits onto a replaced canonical base
+    - conflict-resolution UI semantics, seamless editability during reconnect reconciliation, and
+      progress guarantees for unresolved speculative edits
+refinement:
+  decisions:
+    D1_retry_loser_progress_contract:
+      question: Must every overlapping retry that loses absent-key arbitration eventually resolve
+        despite winner crash or scheduling loss, or does the guarantee only constrain completed
+        attempts while unresolved attempts may wait or retry indefinitely?
+      reason: The root wording can imply unconditional eventual resolution, but the current failure
+        model supplies no fairness, eventual recovery, or retry-horizon premise.
+      options:
+        - unconditional_eventual_resolution_requires_explicit_progress_assumptions
+        - conditional_completion_safety_allows_indefinite_pending
+      status: resolved
+      resolution: Conditional-completion safety. Requests have a timeout, so the guarantee does not
+        require every overlapping loser to resolve. Pending, timeout, or cancellation is permitted;
+        any attempt that produces an acceptance-resolution outcome must resolve through the unique
+        canonical acceptance and must not create a second logical operation.
+    D2_recovery_attempt_progress_and_selection_linearization:
+      question: Does checkpoint-selection correctness apply only to recovery attempts that reach a
+        defined selection/completion phase, or must every initiated recovery attempt eventually
+        select despite further crashes; and at which atomic point must the selected identity belong
+        to the authoritative published checkpoint set?
+      reason: The failure model permits the recovering owner to crash before selection, and
+        concurrent checkpoint publication or cleanup makes set membership ambiguous without an
+        explicit linearization point.
+      options:
+        - conditional_completion_with_membership_at_immutable_identity_capture
+        - unconditional_eventual_selection_with_explicit_progress_and_retention_assumptions
+      status: resolved
+      resolution: Conditional-completion safety with serialized checkpoint lifecycle. A recovery
+        attempt may crash or abort before checkpoint selection/load completes and has no
+        unconditional progress obligation. For each document, only the current fenced OT owner after
+        recovery may publish or clean up checkpoints, and checkpoint publication/cleanup is excluded
+        while new-owner recovery selects and loads its checkpoint. The authoritative checkpoint set
+        is therefore stable during that interval; no concurrent Q publication or P cleanup is
+        permitted.
+    D3_recovery_lifecycle_serialization_mechanism:
+      question: How should new-owner recovery be linearized against checkpoint publication and
+        cleanup without introducing a persistent READY/generation state machine?
+      reason: Recovery is a low-frequency lifecycle path, so correctness and proof simplicity
+        dominate lifecycle concurrency. The existing owner epoch already fences normal accepted
+        writes.
+      options:
+        - per_document_postgresql_advisory_lock
+        - persistent_recovery_phase_and_generation_state_machine
+      status: resolved
+      resolution: Use one session-scoped PostgreSQL advisory lock keyed by document_id across
+        new-owner recovery and checkpoint publication/cleanup. Advance the owner epoch under the
+        lock before capturing recovery head H. Old owners remain fenced by authoritative epoch
+        checks. The new owner exposes no transform/acceptance entrypoint until checkpoint load,
+        exact replay, OT metadata rebuild, and local-head initialization complete. No durable READY
+        flag or recovered-generation publication protocol is required.
+    D4_acked_edit_post_failover_observability:
+      question: What exact post-failover scope and observability guarantee should
+        G0_acked_edit_survives_failover provide?
+      reason: Current dependencies prove durable canonical survival and inclusion whenever recovery
+        completes, but the unqualified phrase "remains observable after failover" may also require
+        recovery/client-visibility progress that the global liveness boundary forbids us to infer.
+      options:
+        - 'Safety-only: if a new-owner recovery completes and resumes service, every acknowledged edit
+          is included in its recovered authoritative state; no eventual recovery or client-visibility
+          promise.'
+        - 'Client liveness: after failover, a normally participating client eventually observes every
+          acknowledged edit, requiring explicit recovery scheduling/success and reconnect/catch-up progress
+          premises.'
+        - 'Store observability: after owner failure, every acknowledged edit remains durably readable
+          from authoritative history even before a new owner completes recovery.'
+      status: resolved
+      resolution: 'Specification wording repair, not a new product/liveness choice. G0 now states conditional
+        failover safety through the typed acked_edit_failover_survival contract: ACK implies durable acceptance
+        and any completed recovery through a frontier containing the edit is equivalent to canonical replay.
+        Eventual recovery/client visibility and permanent physical history-row observability are explicitly
+        excluded.'
+    D5_snapshot_recovery_observation_boundary:
+      question: Which observations and comparison frontier define G3's claim that snapshotting,
+        compaction, and recovery are observationally equivalent to replaying canonical history from
+        the beginning?
+      reason: Existing dependencies prove equal logical document state through a common
+        authoritative frontier and preserve subsequent protocol behavior, but compaction may
+        physically remove revision records. Physical-history or audit observers can distinguish that
+        representation even when logical state is identical.
+      options:
+        - 'Logical state-machine boundary: compare document state, latest_revision, and subsequent protocol
+          behavior at the same authoritative frontier; physical storage layout and audit access are excluded
+          observations.'
+        - 'Physical-history boundary: individual canonical revision records and audit access remain observable,
+          so compaction must preserve an equivalent queryable audit representation rather than merely
+          logical document state.'
+        - Define a different explicit observer interface and frontier before retaining this root
+          guarantee.
+      status: resolved
+      resolution: 'Specification wording repair. G3 now uses the typed logical_state_equivalence_at_frontier
+        relation: comparison is at one authoritative frontier and covers logical document state, latest_revision,
+        and acceptance-relevant continuation state. Physical row retention/storage layout/audit-query
+        equivalence and performance/timing are excluded observations.'
+    D6_reconnect_convergence_horizon:
+      question: At what authoritative frontier and under what progress condition must reconnect
+        convergence be guaranteed?
+      reason: The current root says a reconnecting client reaches the same canonical document state,
+        but continuous accepted writes leave no fixed comparison frontier, and the current liveness
+        assumption guarantees only reconnect or retry rather than successful catch-up to a moving
+        head.
+      options:
+        - 'Per-response captured-frontier safety: if a catch-up attempt completes for authoritative head
+          H, client state equals canonical replay through H; no eventual claim is made about catching
+          a continuously moving live head.'
+        - 'Quiescent eventual convergence: if accepted writes eventually stop and reconnect/retry continues,
+          the client eventually reaches the final authoritative frontier.'
+        - Continuous-stream convergence under additional explicit fairness and
+          production-versus-consumption assumptions sufficient to catch a moving head.
+      status: resolved
+      resolution: 'Specification wording repair, not a new product/architecture choice. G4 is a captured-frontier
+        safety property: for one authoritative catch-up response head H, if catch-up completes, client
+        state equals canonical replay through H without omission or duplicate application through H. No
+        guarantee is made that a client catches a continuously advancing live head.'
+  tooling_blockers:
+    T1_regression_tests_are_coupled_to_mutable_graph_state:
+      status: resolved
+      issue: The mandatory regression suite hard-codes mutable correctness-DAG node IDs, allocation
+        counters, and initial refinement statuses. A mutation that passed the mutation schema,
+        semantic checks, candidate DAG validation, and atomic commit caused five regression failures
+        solely because the tests still expected L15/L20, the old next leaf ID, and L14 to remain
+        pending.
+      reason: The canonical workflow requires the regression suite to pass after every graph
+        mutation before any further audit. Because supported semantics-preserving reclassification
+        and stable-state transitions necessarily invalidate these fixture-specific assertions, the
+        control plane cannot distinguish a mutation bug from expected graph evolution. Continuing
+        would require skipping the mandatory gate or editing tests ad hoc around the current
+        mutation, either of which would weaken correctness control-plane assurance.
+      suggested_change: Refactor test_correctness.py so structural tool tests operate on an
+        immutable dedicated fixture or construct their own temporary graph. Derive allocated IDs
+        from the fixture's node_id_policy, avoid hard-coded production node IDs in invalidation and
+        slice tests, and reset refinement statuses inside each test before asserting scheduler
+        behavior. Then rerun the full suite against the already-committed DAG, repair any genuine
+        failures, and explicitly resolve this blocker with human authority before resuming at the
+        current runnable frontier.
+      resolution: 'Repaired the control-plane validation boundary: graph-only DAG mutations no longer
+        require the correctness.py tooling regression suite. test_correctness.py now uses an isolated
+        immutable synthetic DAG fixture, dynamically derives allocator expectations, and constructs scheduler/blocker
+        states locally. Production DAG validation remains a separate mandatory gate; full unit regression
+        is required when correctness tooling changes or after a tooling repair.'
+  nodes:
+    G0_acked_edit_survives_failover:
+      status: stable
+      blocked_by: []
+      signature: cbbdaf6fb103e613e2a5fb85b1307fb04077721a46e9082d1aee416a8cce039e
+    G1_retry_is_logically_exactly_once:
+      status: stable
+      blocked_by: []
+      rationale: Retry identity stability gives one client_change_id for the logical edit, exact
+        request-to-acceptance identity preservation binds every acceptance back to that same key,
+        and temporal key uniqueness permits at most one canonical acceptance for it.
+      signature: 9f8b6f69bc47e22625d4aa30c2eb6f6bf8e0f0cf95bc9a072da45f63eedd2ff1
+    G2_canonical_history_is_linear_and_fenced:
+      status: stable
+      blocked_by: []
+      rationale: C7 exactly proves the single gap-free history conjunct and C8 exactly proves
+        stale-owner fencing; C6 is redundant at this level and L18 concerns payload semantics not
+        the root's structural wording.
+      signature: 5252d1896ae098d11abfc127b573cbaf95f64be21f089c683c15dee360c926d0
+    G3_snapshot_and_recovery_preserve_state:
+      status: stable
+      blocked_by: []
+      signature: 8708f225883c862ab320237b6df5b88b2464e0f1b31bd3bd91adfcb820d613da
+    G4_reconnect_converges_without_gap_or_duplicate:
+      status: stable
+      blocked_by: []
+      rationale: Existing catch-up representation, deterministic application, revision continuity,
+        and content/frontier pairing establish the correct canonical candidate through H. L109
+        separately closes the publication boundary by keeping intermediate candidate prefixes
+        unobservable and rejecting any response head below the already visible frontier, so
+        overlapping/retried resync attempts cannot regress a previously published canonical state.
+      signature: 8126752677e22bbb5fab8f62ef104b1d1a2ce3802dd5f19e3d8dd1695124ff12
+    L16_commit_precedes_ack:
+      status: stable
+      blocked_by: []
+      rationale: Commit-before-ACK is one localized event-ordering invariant.
+      signature: 768b3dad12b3f41123bea486840b0c9ca0faa4d43a9fb95343a818d5224b14c7
+    L17_commit_precedes_broadcast:
+      status: stable
+      blocked_by: []
+      rationale: Commit-before-broadcast is one localized event-ordering invariant.
+      signature: 430ef9aee76999e11fb49992eef2b4bc62b3d0978da6af98100b5767571180c9
+    G5_retry_resolves_idempotently:
+      status: stable
+      blocked_by: []
+      rationale: The retry-resolution case split is exhaustive and already bounds every successful
+        path; request-to-acceptance identity preservation closes the previously missing bridge from
+        the logical edit's stable client_change_id to the authoritative accepted identity used by
+        those paths.
+      signature: 46f116721d8d069e7198e8ebdb1522f2ce0b61c2a0de181984e587344b670de2
+    C7_revision_frontier_is_linear:
+      status: stable
+      blocked_by: []
+      rationale: Initialization establishes the prefix; every append preserves it, adds exactly the
+        next revision, atomically sets the matching frontier, and lifecycle transitions preserve the
+        invariant.
+      signature: 3bf3abc245b9723812874c70735f4021205c961797fc2d48346a2b8f76696f31
+    C8_stale_owner_is_fenced:
+      status: stable
+      blocked_by: []
+      rationale: L5 requires commit-time equality with the authoritative epoch and L28 prevents any
+        superseded older epoch from becoming authoritative again.
+      signature: 24b15032847cdfaccdfad5c7be37bfd9d73046e206c5798b86201fd4e4cc5fab
+    C9_recovery_reconstructs_committed_state:
+      status: stable
+      blocked_by: []
+      rationale: Epoch handoff and fencing stabilize authoritative H; exact authoritative checkpoint
+        plus deterministic exact-tail replay reconstructs document state through H; metadata and
+        local frontier are rebuilt from truth while lifecycle lock continuity and the acceptance
+        barrier close interleavings.
+      signature: 56adec1d654572b7fe493365015d95ad53dec34f60e09b9ae30a2160c63e7075
+    C10_catchup_represents_exact_missing_suffix:
+      status: stable
+      blocked_by: []
+      rationale: The catch-up proof propositions and dependencies are unchanged; its temporary
+        staleness was caused solely by the non-semantic mechanism-annotation cleanup under L37/C17.
+      signature: ffd18062de2608a57cd34ee760828fc76a8d51b5c54bc762ed0fe948b5885e1d
+    L19_client_applies_only_contiguous_revisions:
+      status: stable
+      blocked_by: []
+      rationale: The three revision cases form one localized client state machine.
+      signature: 301cf4291aba1f9bebc5238007d83eabadcdfdc793b6ce9a2ed5affd4a87e89e
+    C12_live_delivery_contains_only_accepted_changes:
+      status: stable
+      blocked_by: []
+      rationale: Same-change commit-before-broadcast implication exactly proves live-stream
+        provenance.
+      signature: fd520e9b35d407e155ddb6c7feb173c3b29728c34294930c321fed50830c7816
+    L2_retry_returns_existing_acceptance:
+      status: stable
+      blocked_by: []
+      rationale: Exact existing-record response fidelity is one localized conditional safety
+        invariant; pending, timeout, and cancellation impose no liveness obligation.
+      signature: 47c08bdbdc1ae28835d5d6c8e4abc82453cb2bb95ee90a3a0b04384a487b3c2f
+    C13_idempotency_key_is_temporally_unique:
+      status: stable
+      blocked_by: []
+      rationale: Concurrent first acceptance is excluded by L27 and every later reacceptance by
+        persistent gate identity plus acceptance-path mediation; snapshot record uniqueness is
+        redundant.
+      signature: fc1f4fdcd203533809fd9374eb4bce581fef67e30525c50fe80b59b0bfa52d23
+    L14_accepted_idempotency_identity_survives_lifecycle:
+      status: stable
+      blocked_by: []
+      rationale: Lifecycle preservation of non-reusable identity is one temporal state-machine
+        invariant.
+      signature: cb0796838bbb93ce1d269b5f089627b64bcbb14e030f522730250b10b3187100
+    L3_revision_key_is_unique:
+      status: stable
+      blocked_by: []
+      rationale: Revision-key uniqueness is one schema-level invariant.
+      signature: 4bf6844a509dde1109da1c4bacd7c9266d6b196c6bd04359217edd768f98f9f0
+    L4_append_requires_previous_frontier:
+      status: stable
+      blocked_by: []
+      rationale: Commit-time predecessor-frontier predicate is one localized transaction invariant.
+      signature: ab8a27fff6b9ef61f01cbb4296e91058173115aa204fd6b6a63c9ef27d13b9f8
+    L5_append_requires_current_epoch:
+      status: stable
+      blocked_by: []
+      rationale: Commit-time epoch equality is one localized authoritative append predicate.
+      signature: 4c898dd1d798af7dea37d24e5d1598abd444929d1f624746af6f4d54c5ae9d38
+    L6_frontier_advance_and_insert_commit_together:
+      status: stable
+      blocked_by: []
+      rationale: Insert/frontier atomicity is one localized transaction boundary.
+      signature: bffef8f5279acb489d2f495982d44ff96e9d5201d9cc06046a7c3d82acd7d58c
+    L8_snapshot_is_exact_committed_prefix:
+      status: stable
+      blocked_by: []
+      rationale: Snapshot versus canonical-prefix replay equivalence is one localized
+        materialization invariant.
+      signature: 133423725454a7ff184c3fec231869acf032a01aa47f6489a859d6ad781b9389
+    L9_snapshot_content_and_frontier_publish_atomically:
+      status: stable
+      blocked_by: []
+      rationale: Atomic checkpoint content/frontier publication is intrinsic to snapshot_checkpoint
+        and does not depend on the removed recovery lifecycle mechanism.
+      signature: b7183977607e4fbc85e9703febd38139f02cdb9ecafa82dad7d310575040c807
+    L10_replay_covers_exact_tail_in_order_once:
+      status: stable
+      blocked_by: []
+      rationale: Exact-tail replay is one localized trace-equivalence verification boundary.
+      signature: d82a485e566b32a4602021b2500a7a2d88bbf0407421e9fa61c41215e96106c8
+    L12_delta_catchup_reads_canonical_revision_range:
+      status: stable
+      blocked_by: []
+      rationale: Retained-delta response correctness is one fixed-head ordered-sequence equality
+        invariant.
+      signature: b1fee87bbe8f21da4fd6f38043c311a359d4bae25dec7e117fc2965d4f18a153
+    C14_all_acceptance_paths_honor_idempotency_identity:
+      status: stable
+      blocked_by: []
+      rationale: Path mediation plus already-accepted gate rejection jointly and narrowly prove the
+        composite claim.
+      signature: b65db24582903ae2b82eddcd4bfa2c2543779404c6b860bbac7df81fec29bb8d
+    L20_acceptance_paths_are_authoritatively_mediated:
+      status: stable
+      blocked_by: []
+      rationale: Acceptance-sink gate dominance is a localized control-flow completeness invariant.
+      signature: 830e6afd978c91bf75a974b934114426923dbcceabf28f715ad53f1f2e3661f1
+    L21_accepted_key_gate_rejects_new_acceptance:
+      status: stable
+      blocked_by: []
+      rationale: Already-accepted gate behavior is a localized transaction state-machine invariant.
+
+      signature: ef8cb32a106317bd9678165f2f420cbc1816a51477d0277eaee93bc14212d5dc
+    L22_initial_history_matches_frontier:
+      status: stable
+      blocked_by: []
+      rationale: Initialization prefix/frontier equality is one localized state invariant.
+      signature: f61bb1b67858098743fdfaa43d6c8b1c57e45da5ff63785e5e8908bde274f885
+    C15_snapshot_catchup_returns_checkpoint_and_exact_tail:
+      status: stable
+      blocked_by: []
+      rationale: L25 and L26 exactly establish checkpoint replacement and the exact canonical tail
+        for every selected snapshot-mode response.
+      signature: 595627fc2daf1cc4db62b52a4874c77b933f99fa920f09d54cf92221e72e86a0
+    L25_snapshot_catchup_uses_selected_checkpoint_replacement:
+      status: stable
+      blocked_by: []
+      rationale: Checkpoint identity and replacement mode share one localized response-contract
+        boundary.
+      signature: 21335d9b4020b18cd3d7c71765d3ec2e6334d488e366df96c6a8073dc766faba
+    L26_snapshot_catchup_returns_exact_canonical_tail:
+      status: stable
+      blocked_by: []
+      rationale: Exact canonical tail equality is one localized range-contract boundary.
+      signature: 3183daf5cd6bff8d69574c1623e3bc16c7c9c94b66f10c0a0cf30ce8300973fc
+    L27_concurrent_first_acceptance_is_atomically_arbitrated:
+      status: stable
+      blocked_by: []
+      rationale: Concurrent absent-key arbitration is one localized atomic check-and-create
+        invariant.
+      signature: 40bb19737118c611b24e92da2c8fd23dbc6725322853f3ae75fb831914470963
+    L28_authoritative_epoch_never_regresses_or_reuses:
+      status: stable
+      blocked_by: []
+      rationale: Authoritative epoch non-regression after supersession is one localized lifecycle
+        state-machine invariant.
+      signature: 829cc0cd32c1e9d40f8d4f6e3306f95c7cde74872785693cfeb4ba3a8f5f7634
+    C16_non_append_lifecycle_preserves_logical_revision_prefix:
+      status: stable
+      blocked_by: []
+      rationale: L29 preserves the logical revision domain and frontier while L30 independently
+        preserves the semantics of any removed or replaced prefix representation.
+      signature: cb28fef6cd427ef747ce1e2b4a11cacdc567446d3006d922973fa013c28df504
+    L29_non_append_lifecycle_preserves_revision_domain:
+      status: stable
+      blocked_by: []
+      rationale: Revision-domain and frontier preservation are one localized pre/post structural
+        invariant.
+      signature: e8bccec9a9876aac2465a1b4656094195bebdecb7efdda352d528ef56fe8607c
+    L30_non_append_lifecycle_preserves_prefix_semantics:
+      status: stable
+      blocked_by: []
+      rationale: Semantic preservation across one representation-changing lifecycle transition is
+        one localized differential invariant.
+      signature: 46b46b342ef5870954ec2e5ec92a6fa1303f95272388ef898dd59fbed2434b7f
+    L31_committed_append_sets_frontier_to_revision:
+      status: stable
+      blocked_by: []
+      rationale: Exact equality between the committed append revision and immediate post-state
+        frontier is one localized transaction postcondition.
+      signature: 8e14e660f7f5ef628cb0db99adfdb8d818006b0788618c0fd58dba9608b8e6b6
+    L32_catchup_selects_complete_mode_for_response_head:
+      status: stable
+      blocked_by: []
+      rationale: The source protocol defines this exact exhaustive dispatch, and its prior clean
+        audit established one localized Boolean selector boundary.
+      signature: ccc13a1c76734cc2aca20e88c546ea8698a733cbdac3285c8d18086ff16f9ceb
+    L33_committed_append_preserves_existing_revision_prefix:
+      status: stable
+      blocked_by: []
+      rationale: The append frame is one exact pre/post logical revision-domain invariant.
+      signature: 78abeadbc29759ba91f023c0687bf5288096bc7645e03ecf9ced94ffd0a177e0
+    L34_retries_of_logical_edit_reuse_identity:
+      status: stable
+      blocked_by: []
+      rationale: Retry identity stability is one localized client trace invariant across all retry
+        paths.
+      signature: 60d5fae9169b15544cb6d56359c1aad8e87a6765f4a37647c7cd32b510787c1a
+    L35_losing_retry_resolves_through_canonical_acceptance:
+      status: stable
+      blocked_by: []
+      rationale: With pending, timeout, and cancellation explicitly permitted, the remaining
+        completed-outcome rule is one localized arbitration-resolution safety invariant.
+      signature: 7fe190bbaddd4ee25215d6516858e135797fc99af1fa1b85bde4f8f80c267287
+    C17_snapshot_mode_selects_checkpoint_not_after_head:
+      status: stable
+      blocked_by: []
+      rationale: L37 proposition is unchanged; only an unnecessary recovery-lifecycle mechanism
+        annotation was removed. L37 plus L38 still establish authoritative checkpoint selection with
+        S <= H.
+      signature: 29dee7c1d49a622deb65715f98ed6ec183c953cf8dc147008cad5a2c3c668478
+    L37_snapshot_mode_selects_authoritative_checkpoint:
+      status: stable
+      blocked_by: []
+      rationale: The checkpoint lifecycle serialization mechanism was an unnecessary context
+        dependency for this snapshot-selection identity leaf; its proposition and verifier boundary
+        are unchanged.
+      signature: c7bea0f1c3f012f9b2de89d848b98c1b4ceeca3d7cd00322d49cd466b3fbdd47
+    L38_selected_checkpoint_does_not_exceed_response_head:
+      status: stable
+      blocked_by: []
+      rationale: The selected checkpoint frontier bound S <= H is one localized selection
+        postcondition.
+      signature: f0f79682b1919dbc7b34f1b7b6095fc0d55c07c44b795e1b9fb2523770472c52
+    L39_recovered_owner_resumes_at_head_plus_one:
+      status: stable
+      blocked_by: []
+      rationale: Recovered local head and next-candidate equalities share one pre-acceptance
+        recovery cursor boundary.
+      signature: 57449ba27e1b2dacfa2a28b9a330b84c741704e1a9d9d8e15ef0b9dc83e9e4cd
+    L41_recovery_checkpoint_does_not_exceed_recovery_head:
+      status: stable
+      blocked_by: []
+      rationale: The loaded recovery checkpoint frontier bound S <= H is one localized recovery
+        selection concurrency invariant.
+      signature: ca4ac6a855ceb86b3df422fdcf0f2d8d740529a4d02d3aaf5b7a6b3892241301
+    C18_recovery_selects_and_loads_authoritative_checkpoint:
+      status: stable
+      blocked_by: []
+      rationale: L42 fixes one authoritative checkpoint identity, L9 binds its content and frontier
+        atomically, L95 prevents checkpoint lifecycle interleaving during recovery, and L93
+        preserves and installs exactly that selected identity before replay. The broader
+        checkpoint-mutation epoch-fencing branch was removed because no correctness consumer
+        required it.
+      signature: 6f5066252abddf3a3ab7e9ce7eca8627a3e2d7ae98c09b5f0b5428b641db37d4
+    L42_recovery_selects_authoritative_checkpoint_identity:
+      status: stable
+      blocked_by: []
+      rationale: Lifecycle mutual exclusion is proved by parent C23/C18; this leaf only requires
+        authoritative checkpoint identity selection, so removing the old lifecycle mechanism
+        reference does not change its proposition.
+      signature: c809e4d94394f33943512b9d10467c8e0dc382828b62c82318509ae53be7905c
+    L54_absent_key_winner_returns_its_canonical_acceptance:
+      status: stable
+      blocked_by: []
+      rationale: Commit-before-success and exact returned-record identity form one localized
+        absent-key winner response postcondition.
+      signature: ed673a45d6225d3d93e0aa57179ff456a6bf2ca4a248540124efbd5c233f66d4
+    L55_successful_retry_resolution_paths_are_exhaustive:
+      status: stable
+      blocked_by: []
+      rationale: Every successful response sink can be locally classified into exactly one
+        authoritative existing-key, absent-key winner, or loser-through- winner case.
+      signature: 936d2abf7a8a18732703894c669ad98ed8918401b25d25598b58813c0b55a881
+    C25_recovery_derives_complete_ot_metadata_from_truth:
+      status: stable
+      blocked_by: []
+      rationale: Its two proof premises remain the same metadata-equivalence and
+        authoritative-provenance obligations; removing generation terminology from L65 does not
+        change the composition argument.
+      signature: aa8aad55c6dadfbf3819b7f2738f3939af30adc4f5a153bbe5cff10b33a1693d
+    L64_recovered_ot_metadata_equals_clean_authoritative_reconstruction:
+      status: stable
+      blocked_by: []
+      rationale: Exact key-set and value equality against one clean reconstruction oracle proves
+        both required-field completeness and metadata correctness through H.
+      signature: e31e74e10f46f09243dec8d68bf466ad9e451ba6e339a25874146dfa04f60b0b
+    L65_failed_owner_volatile_state_cannot_influence_recovered_metadata:
+      status: stable
+      blocked_by: []
+      rationale: 'The wording cleanup removes the discarded active-generation terminology without changing
+        the already-audited provenance invariant: recovered OT metadata depends only on the selected authoritative
+        checkpoint and exact canonical tail.'
+      signature: 6ef94f2ecd384ef8bebc37e3241f1edfaa5e92d2a710f8e7475c0b55f8f5ddcd
+    L79_new_owner_accepts_only_after_reconstruction:
+      status: stable
+      blocked_by: []
+      rationale: One local recovery sequencing invariant can mechanically prove that no transform or
+        acceptance entrypoint is reachable until checkpoint install, exact replay through H, OT
+        metadata reconstruction, and local frontier initialization all complete.
+      signature: f30518b231b42995e3c47a321842ceb017596522302628a347f3a8f8f50246e3
+    L92_captured_recovery_head_equals_authoritative_frontier:
+      status: stable
+      blocked_by: []
+      rationale: Captured recovery head H and the authoritative frontier read result at the same
+        post-handoff capture event form one local mechanically observable equality invariant.
+      signature: fe1e89cde5d1cc9df15dab45d9beab0bea80215196eb67d818e2d0782bfcc074
+    L93_recovery_loads_selected_checkpoint_before_replay:
+      status: stable
+      blocked_by: []
+      signature: e66c62e778846f8939f35bea33b8dbb0db79018372ca4f166e8f1933a55d847e
+    L94_recovery_starts_after_epoch_handoff:
+      status: stable
+      blocked_by: []
+      signature: a5a6e89cdb70f797af479204ad5173bd3c175abd98ff185698d1339cbd2f5b19
+    L95_lifecycle_procedures_share_and_hold_document_lock:
+      status: stable
+      blocked_by: []
+      signature: b20d8491bee087bf13aee24c06fb3c4297285b098148eda61557b55b5a0411a9
+    L96_recovery_orders_head_selection_replay_and_metadata:
+      status: stable
+      blocked_by: []
+      signature: e36aefcc80573df091da9ad27851909062bfd7ec617280de8124b302a6b253f1
+    L97_client_adopts_snapshot_before_tail:
+      status: stable
+      blocked_by: []
+      signature: dc7c47fb45bf379dd9d72dfc74becc262a9c1300298058a6cb94894a6b486950
+    G6_accepted_change_preserves_ot_semantics:
+      status: stable
+      blocked_by: []
+      rationale: Exact OT input/context binding, frontier binding, exclusive successful-output
+        provenance, algorithm correctness, and exact request-identity preservation jointly establish
+        payload, context, and protocol-identity provenance for every canonical acceptance.
+      signature: 424935b865af54aad84d952c36742399fe05e6b2b4ab9128e7758b33dce3e6cd
+    L98_ot_receives_exact_request_and_canonical_context:
+      status: stable
+      blocked_by: []
+      signature: 92ce2cd3bbd4090798be6a9cd89b3b10bff1b56d1c808095cefec293902bdf06
+    L99_ot_result_is_bound_to_acceptance_frontier:
+      status: stable
+      blocked_by: []
+      signature: e6d8df497cac0b5e6fc8ab81ab7c23aeee51276db1e40092f280f13613c7e3aa
+    L100_acceptance_commits_only_ot_success_output:
+      status: stable
+      blocked_by: []
+      rationale: One localized control-flow and dataflow verifier can prove OT-success dominance,
+        exact output provenance, and rejection-path non-reachability across the canonical producer
+        boundary.
+      signature: b9ca70a8c7e6c66aba7cfdfd5695fe4c0b28c9eb967d017ab11aa1f059f048e7
+    L101_client_completes_catchup_through_response_head:
+      status: stable
+      blocked_by: []
+      signature: c4f81922770e1e994b49cbf1563f8f59fa9c5641ff21975a8f59e9c33f546f22
+    L102_client_frontier_matches_canonical_base:
+      status: stable
+      blocked_by: []
+      signature: a7f517ce86c8ffadc794824d7226ef31d58565c48d6bdf5267ca4ff2306b408f
+    G7_reconnect_does_not_double_render_accepted_optimistic_edit:
+      status: stable
+      blocked_by: []
+      rationale: 'L106 covers every start-pending key, L107 closes the speculative-edit set during resync,
+        L108 preserves request identity into acceptance, and L104 classifies each key against the same
+        response head H. L109 then permits only one atomic non-regressing publication after every accepted-within-H
+        overlay is removed and prevents stale responses from restoring removed overlays, closing both
+        intermediate-prefix and cross-attempt double-render executions.'
+      signature: 0ee271091f3a34b57cac2356e40a0f900875fb02f81405dcc9a6092c107c6e26
+    L104_pending_identity_resolution_is_bound_to_response_head:
+      status: stable
+      blocked_by: []
+      rationale: Head-bounded classification and preservation of its required identity-to-frontier
+        evidence form one mechanically checkable lifecycle invariant; while-presentable is the
+        contract boundary and does not require choosing a fixed retention duration.
+      signature: 60f6930c215889a2f38d11c6ed3d85899b85c119832afb85eca0885c2687bf9c
+    L106_resync_request_covers_start_pending_set:
+      status: stable
+      blocked_by: []
+      rationale: One localized reconnect state-machine verifier can snapshot the start-pending keys
+        and prove complete request inclusion across serialization, live-delivery, interruption, and
+        retry interleavings.
+      signature: 6ac10f4ad98338a46ea21bf7342ffaadc2f8af1cbf7f52f2d3d4b31915abcd3b
+    L107_client_freezes_speculative_edits_during_resync:
+      status: stable
+      blocked_by: []
+      rationale: 'The proposition is a localized reconnect client state-machine invariant: from resync
+        start until reconciled publication or explicit conflict entry, user-edit transitions for that
+        document must be unreachable. One bounded state-machine/control-flow verifier can decide the whole
+        property without reconstructing parent protocol semantics, so further decomposition would add
+        no independent verification boundary.'
+      signature: aafc76281732cc9e6ae8b8779d4d41fe2dadb1b0075ee589bd1fe0d353d5694e
+    L108_acceptance_preserves_request_identity:
+      status: stable
+      blocked_by: []
+      rationale: The complete proposition is one localized request-to-commit identity-provenance
+        property. A bounded acceptance-path control-flow/dataflow check, reinforced by integration
+        tests with distinguishable identities, can directly establish the whole statement without
+        reconstructing any parent retry, OT, or reconnect protocol.
+      signature: 7c6d6361bb87d282e0cc8b58daf52e6c4f874322a089fed46cfc4678ac83c323
+    L109_resync_publication_is_atomic_and_monotonic:
+      status: stable
+      blocked_by: []
+      rationale: The complete proposition is one localized bounded client-resync publication
+        state-machine property over candidate construction, publication eligibility, atomic
+        exposure, and visible frontier monotonicity. One state-machine verifier can directly decide
+        the whole transition boundary, so further decomposition would not create an independent
+        verification or invalidation surface.
+      signature: 1a1dc9c20ea10a160430388cec49050cf39e4f3a64ed94b8c7d0ec148288beba
+assumptions:
+  A1_storage_commit_is_durable:
+    statement: A successful authoritative-store commit remains recoverable across the server-process
+      and owner failures covered by this model.
+    status: external_assumption
+    source_refs:
+      - accepted_change_log
+      - authoritative_truth
+      - owner_failover
+      - storage_selection
+  A2_ot_engine_is_correct:
+    statement: Given a canonical committed document prefix through revision N and a raw_edit with
+      any submitted client base revision B, the OT engine either returns a canonical transformed
+      change satisfying its algorithmic convergence contract for that raw edit, B, and prefix N, or
+      rejects the input as invalid or rebase-required; it never returns a successful result outside
+      that contract.
+    status: external_assumption
+    note: The source article explicitly treats the transformation function as out of scope.
+    source_refs:
+      - ot_input_output
+      - raft_analogy
+  A3_client_change_id_identifies_logical_edit:
+    statement: Within a document, each logical client edit is assigned one client_change_id. All
+      retries of that edit reuse the same client_change_id, and distinct logical edits use distinct
+      client_change_ids.
+    status: protocol_assumption
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+  A5_apply_accepted_change_is_deterministic:
+    statement: Applying the same canonical accepted-change sequence to the same starting state
+      yields the same document state.
+    status: external_assumption
+    source_refs:
+      - authoritative_truth
+      - raft_analogy
+roots:
+  - G0_acked_edit_survives_failover
+  - G1_retry_is_logically_exactly_once
+  - G2_canonical_history_is_linear_and_fenced
+  - G3_snapshot_and_recovery_preserve_state
+  - G4_reconnect_converges_without_gap_or_duplicate
+  - G5_retry_resolves_idempotently
+  - G6_accepted_change_preserves_ot_semantics
+  - G7_reconnect_does_not_double_render_accepted_optimistic_edit
+claims:
+  G0_acked_edit_survives_failover:
+    kind: root
+    statement: >-
+      Every edit acknowledged to the client satisfies the acked_edit_failover_survival semantic contract.
+    severity: critical
+    assurance_required: strong
+    depends_on:
+      - L16_commit_precedes_ack
+      - C9_recovery_reconstructs_committed_state
+      - A1_storage_commit_is_durable
+      - L8_snapshot_is_exact_committed_prefix
+      - A5_apply_accepted_change_is_deterministic
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - final_architecture
+    semantic_contracts:
+      - acked_edit_failover_survival
+  G1_retry_is_logically_exactly_once:
+    kind: root
+    statement: >-
+      ACK loss, reconnect, or retry cannot cause one logical client edit to create more
+      than one accepted canonical change.
+    severity: critical
+    assurance_required: strong
+    depends_on:
+      - C13_idempotency_key_is_temporally_unique
+      - L34_retries_of_logical_edit_reuse_identity
+      - L108_acceptance_preserves_request_identity
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - storage_selection
+      - final_architecture
+  G2_canonical_history_is_linear_and_fenced:
+    kind: root
+    statement: >-
+      For each document, accepted history is a single gap-free revision sequence, and a
+      stale owner cannot append after ownership has moved to a higher epoch.
+    severity: critical
+    assurance_required: maximal
+    depends_on:
+      - C7_revision_frontier_is_linear
+      - C8_stale_owner_is_fenced
+    source_refs:
+      - accepted_change_log
+      - authoritative_truth
+      - owner_failover
+      - storage_selection
+      - final_architecture
+  G3_snapshot_and_recovery_preserve_state:
+    kind: root
+    statement: >-
+      Snapshotting, compaction, and completed owner recovery satisfy the logical_state_equivalence_at_frontier
+      semantic contract relative to canonical accepted history.
+    severity: critical
+    assurance_required: strong
+    depends_on:
+      - C9_recovery_reconstructs_committed_state
+      - A5_apply_accepted_change_is_deterministic
+      - C16_non_append_lifecycle_preserves_logical_revision_prefix
+      - L8_snapshot_is_exact_committed_prefix
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - owner_failover
+      - final_architecture
+    semantic_contracts:
+      - logical_state_equivalence_at_frontier
+  G4_reconnect_converges_without_gap_or_duplicate:
+    kind: root
+    statement: >-
+      For a normally participating client starting from last_applied_revision L, if a catch-up attempt
+      completes for one authoritative response head H and publishes its reconciled result, the user-visible
+      canonical state equals canonical replay through H without omitting or double-applying any accepted
+      revision through H. Reconnect/resync publication is atomic and monotonic across overlapping or retried
+      attempts: no intermediate candidate prefix is user-visible, and a response whose H is below the
+      already visible canonical frontier cannot regress or otherwise mutate that visible canonical/frontier
+      state. This claim does not require catching a continuously advancing live head.
+    severity: critical
+    assurance_required: strong
+    depends_on:
+      - C10_catchup_represents_exact_missing_suffix
+      - L19_client_applies_only_contiguous_revisions
+      - C12_live_delivery_contains_only_accepted_changes
+      - A5_apply_accepted_change_is_deterministic
+      - L97_client_adopts_snapshot_before_tail
+      - L101_client_completes_catchup_through_response_head
+      - C7_revision_frontier_is_linear
+      - L102_client_frontier_matches_canonical_base
+      - L109_resync_publication_is_atomic_and_monotonic
+    source_refs:
+      - reconnect_revision_boundary
+      - owner_failover
+      - raft_analogy
+      - final_architecture
+  L16_commit_precedes_ack:
+    kind: leaf
+    statement: >-
+      The server emits a success ACK for an edit only after the corresponding canonical
+      accepted change has committed to the authoritative store.
+    formal_intent: "ack(edit_id) => committed(edit_id)"
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - acceptance_path
+      - accepted_history_store
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Every success-ACK path is dominated by successful durable commit.
+        - kind: integration_test
+          intent: Crash after commit/before ACK; retry must recover the committed result.
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - accepted_history_log
+      - server_authoritative_ot
+  L17_commit_precedes_broadcast:
+    kind: leaf
+    statement: >-
+      A live WebSocket broadcast of accepted_change@revision occurs only after the
+      authoritative acceptance transaction has committed.
+    formal_intent: "broadcast(change) => committed(change)"
+    severity: high
+    assurance_required: strong
+    surfaces:
+      - acceptance_path
+      - live_delivery
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Every broadcast path is dominated by successful commit.
+        - kind: fault_injection
+          intent: A crash before commit must never leave a visible accepted revision.
+    source_refs:
+      - accepted_change_log
+      - authoritative_truth
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - commit_before_delivery
+      - server_authoritative_ot
+  G5_retry_resolves_idempotently:
+    kind: root
+    statement: >-
+      If reprocessing the same logical client edit produces a non-timeout acceptance-resolution outcome,
+      it either returns the previously accepted canonical result or accepts the edit once; pending, timeout,
+      or cancellation is permitted, and no execution creates a second logical operation.
+    severity: critical
+    assurance_required: strong
+    depends_on:
+      - L2_retry_returns_existing_acceptance
+      - A3_client_change_id_identifies_logical_edit
+      - C13_idempotency_key_is_temporally_unique
+      - L35_losing_retry_resolves_through_canonical_acceptance
+      - L54_absent_key_winner_returns_its_canonical_acceptance
+      - L55_successful_retry_resolution_paths_are_exhaustive
+      - L108_acceptance_preserves_request_identity
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - storage_selection
+      - final_architecture
+  C7_revision_frontier_is_linear:
+    kind: derived
+    statement: >-
+      Accepted revisions for a document form one monotonically increasing, gap-free
+      sequence in which each committed append advances the frontier by exactly one.
+    severity: critical
+    assurance_required: maximal
+    depends_on:
+      - L3_revision_key_is_unique
+      - L4_append_requires_previous_frontier
+      - L6_frontier_advance_and_insert_commit_together
+      - L22_initial_history_matches_frontier
+      - L29_non_append_lifecycle_preserves_revision_domain
+      - L31_committed_append_sets_frontier_to_revision
+      - L33_committed_append_preserves_existing_revision_prefix
+    source_refs:
+      - accepted_change_log
+      - reconnect_revision_boundary
+      - owner_failover
+      - storage_selection
+      - final_architecture
+  C8_stale_owner_is_fenced:
+    kind: derived
+    statement: >-
+      Once authoritative ownership has moved to a higher epoch, an accepted-change append carrying an
+      older owner_epoch cannot commit to the authoritative accepted-change store.
+    severity: critical
+    assurance_required: maximal
+    depends_on:
+      - L5_append_requires_current_epoch
+      - L28_authoritative_epoch_never_regresses_or_reuses
+    source_refs:
+      - owner_failover
+      - storage_selection
+      - final_architecture
+  C9_recovery_reconstructs_committed_state:
+    kind: derived
+    statement: >-
+      If a new-owner recovery attempt completes and resumes acceptance, then while holding the per-document
+      lifecycle lock it first advances authoritative ownership to its new fenced epoch, captures authoritative
+      head H, selects and installs one valid authoritative checkpoint with frontier S <= H, replays exactly
+      the canonical tail S+1..H, rebuilds required OT metadata solely from authoritative truth, and initializes
+      local head H with next candidate revision H+1. Only after those steps complete may the new owner
+      accept edits. An attempt may crash or abort before completion without a progress obligation.
+    severity: critical
+    assurance_required: strong
+    depends_on:
+      - L8_snapshot_is_exact_committed_prefix
+      - L10_replay_covers_exact_tail_in_order_once
+      - G2_canonical_history_is_linear_and_fenced
+      - L39_recovered_owner_resumes_at_head_plus_one
+      - C18_recovery_selects_and_loads_authoritative_checkpoint
+      - L41_recovery_checkpoint_does_not_exceed_recovery_head
+      - C25_recovery_derives_complete_ot_metadata_from_truth
+      - L94_recovery_starts_after_epoch_handoff
+      - L79_new_owner_accepts_only_after_reconstruction
+      - L95_lifecycle_procedures_share_and_hold_document_lock
+      - L92_captured_recovery_head_equals_authoritative_frontier
+      - L96_recovery_orders_head_selection_replay_and_metadata
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - owner_failover
+      - final_architecture
+    mechanisms:
+      - document_lifecycle_lock
+      - owner_epoch_fencing
+      - recovery_replay
+      - server_authoritative_ot
+      - snapshot_checkpoint
+    surfaces:
+      - acceptance_path
+      - accepted_history_store
+      - ot_state
+      - owner_recovery
+      - ownership
+      - snapshot_store
+  C10_catchup_represents_exact_missing_suffix:
+    kind: derived
+    statement: >-
+      Given last_applied_revision=L, catch-up returns a representation of exactly the
+      missing canonical suffix after L: retained deltas directly, or a semantically
+      equivalent snapshot plus its tail when L is too old.
+    severity: critical
+    assurance_required: strong
+    depends_on:
+      - L8_snapshot_is_exact_committed_prefix
+      - L12_delta_catchup_reads_canonical_revision_range
+      - C15_snapshot_catchup_returns_checkpoint_and_exact_tail
+      - L32_catchup_selects_complete_mode_for_response_head
+      - C17_snapshot_mode_selects_checkpoint_not_after_head
+    source_refs:
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+  L19_client_applies_only_contiguous_revisions:
+    kind: leaf
+    statement: >-
+      A client applies revision r only when r == last_applied_revision + 1; it ignores
+      duplicates at or below the frontier and buffers or recovers gaps above it.
+    formal_intent: >-
+      r == L+1 => apply; r <= L => ignore; r > L+1 => buffer_or_gap_recovery
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - client_sync
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Explore duplicate, reordered, catch-up/live interleaving, and reconnect sequences.
+        - kind: property_test
+          intent: Client applied frontier is always a contiguous prefix of canonical history.
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - client_revision_continuity
+  C12_live_delivery_contains_only_accepted_changes:
+    kind: derived
+    statement: >-
+      The live stream is derived from committed accepted history; delivery may duplicate
+      or reorder across reconnect boundaries, but it never invents an unaccepted change.
+    severity: high
+    assurance_required: strong
+    depends_on:
+      - L17_commit_precedes_broadcast
+    surfaces:
+      - accepted_history_store
+      - live_delivery
+    verification:
+      verifiers:
+        - kind: integration_test
+          intent: Every delivered revision must exist in the authoritative accepted log.
+        - kind: runtime_invariant
+          intent: Observed delivery IDs must resolve to committed accepted-change records.
+    source_refs:
+      - authoritative_truth
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - accepted_history_log
+      - commit_before_delivery
+  L2_retry_returns_existing_acceptance:
+    kind: leaf
+    statement: >-
+      If a retry for an already accepted client_change_id produces a non-timeout acceptance-resolution
+      outcome, that outcome returns exactly the existing canonical accepted record; pending, timeout,
+      or cancellation is permitted.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - acceptance_path
+      - accepted_history_store
+    verification:
+      verifiers:
+        - kind: integration_test
+          intent: Commit, drop ACK, retry; observed canonical revision/change is unchanged.
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+    mechanisms:
+      - acceptance_transaction
+      - accepted_history_log
+      - server_authoritative_ot
+  C13_idempotency_key_is_temporally_unique:
+    kind: derived
+    statement: >-
+      Across overlapping and sequential processing of the same
+      (document_id, client_change_id), including retries after owner recovery or
+      accepted-history lifecycle changes, at most one acceptance event may create a
+      canonical accepted change for that key.
+    formal_intent: "count(acceptance_events where idempotency_key = k) <= 1"
+    severity: critical
+    assurance_required: maximal
+    depends_on:
+      - L14_accepted_idempotency_identity_survives_lifecycle
+      - C14_all_acceptance_paths_honor_idempotency_identity
+      - L27_concurrent_first_acceptance_is_atomically_arbitrated
+    source_refs:
+      - accepted_change_log
+      - snapshot_frontier
+      - owner_failover
+      - storage_selection
+      - final_architecture
+  L14_accepted_idempotency_identity_survives_lifecycle:
+    kind: leaf
+    statement: >-
+      Once an acceptance event has occurred for an idempotency key, authoritative state
+      continues to preserve sufficient non-reusable evidence that the key has already been
+      accepted for every later state in which an execution carrying that key may still reach
+      acceptance, including across owner recovery, snapshotting, compaction, and
+      accepted-history lifecycle cleanup.
+    severity: critical
+    assurance_required: maximal
+    surfaces:
+      - accepted_history_store
+      - history_compaction
+      - owner_recovery
+      - snapshot_store
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: After accept(k), exercise recovery, snapshot, compaction, and cleanup transitions;
+            while k may still reappear at acceptance, authoritative state must continue to
+            distinguish k as already accepted.
+        - kind: fault_injection
+          intent: Crash and recover around idempotency-evidence publication and lifecycle
+            transitions; no completed acceptance may become semantically reusable.
+    source_refs:
+      - accepted_change_log
+      - snapshot_frontier
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - accepted_history_log
+      - recovery_replay
+      - snapshot_checkpoint
+  L3_revision_key_is_unique:
+    kind: leaf
+    statement: >-
+      At most one accepted change exists for a given (document_id, revision).
+    formal_intent: "count(accepted where document_id=d and revision=r) <= 1"
+    severity: critical
+    assurance_required: maximal
+    surfaces:
+      - accepted_history_store
+    verification:
+      verifiers:
+        - kind: schema_constraint
+          intent: PRIMARY KEY or UNIQUE(document_id, revision) is enforced.
+        - kind: property_test
+          intent: Competing appends for the same revision cannot both commit.
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - storage_selection
+    mechanisms:
+      - accepted_history_log
+  L4_append_requires_previous_frontier:
+    kind: leaf
+    statement: >-
+      accepted_change@r may commit only when the authoritative pre-state has
+      latest_revision == r - 1.
+    formal_intent: "commit(change@r) => pre.latest_revision == r-1"
+    severity: critical
+    assurance_required: maximal
+    surfaces:
+      - acceptance_path
+      - revision_frontier
+    verification:
+      verifiers:
+        - kind: integration_test
+          intent: Stale or skipped-frontier appends fail without partial commit.
+        - kind: state_machine
+          intent: Concurrent candidate appends preserve one-step frontier progression.
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - storage_selection
+    mechanisms:
+      - acceptance_transaction
+      - revision_frontier_guard
+      - server_authoritative_ot
+  L5_append_requires_current_epoch:
+    kind: leaf
+    statement: >-
+      accepted_change append may commit only when supplied owner_epoch equals the
+      authoritative document_current_epoch.
+    formal_intent: "commit(change, epoch=e) => pre.current_epoch == e"
+    severity: critical
+    assurance_required: maximal
+    surfaces:
+      - acceptance_path
+      - ownership
+    verification:
+      verifiers:
+        - kind: fault_injection
+          intent: Old owner resumes after takeover and every append is rejected downstream.
+        - kind: state_machine
+          intent: No lower epoch can append after a higher epoch is installed.
+    source_refs:
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - owner_epoch_fencing
+      - server_authoritative_ot
+  L6_frontier_advance_and_insert_commit_together:
+    kind: leaf
+    statement: >-
+      Accepted-change insertion and authoritative frontier advancement are one atomic
+      acceptance decision; either both commit or neither becomes visible.
+    severity: critical
+    assurance_required: maximal
+    surfaces:
+      - acceptance_path
+      - accepted_history_store
+    verification:
+      verifiers:
+        - kind: fault_injection
+          intent: Abort/crash at each transaction boundary; no torn acceptance state is observable.
+    source_refs:
+      - accepted_change_log
+      - storage_selection
+    mechanisms:
+      - acceptance_transaction
+      - accepted_history_log
+      - server_authoritative_ot
+  L8_snapshot_is_exact_committed_prefix:
+    kind: leaf
+    statement: >-
+      snapshot(content, S) represents exactly the document state after applying all and
+      only canonical accepted changes through revision S.
+    formal_intent: "snapshot_state(S) == replay(accepted[1..S])"
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - accepted_history_store
+      - snapshot_store
+    verification:
+      verifiers:
+        - kind: differential_test
+          intent: snapshot(S) equals full replay through S over generated histories.
+        - kind: mutation_test
+          intent: Off-by-one frontier/content mutations must be killed by snapshot tests.
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - owner_failover
+      - final_architecture
+    mechanisms:
+      - accepted_history_log
+      - snapshot_checkpoint
+  L9_snapshot_content_and_frontier_publish_atomically:
+    kind: leaf
+    statement: >-
+      A published snapshot cannot expose content from one revision frontier while claiming
+      another; content and snapshot_revision switch together as one checkpoint identity.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - snapshot_lifecycle
+      - snapshot_store
+    verification:
+      verifiers:
+        - kind: fault_injection
+          intent: Crash during snapshot build/publish never exposes a mismatched checkpoint.
+    source_refs:
+      - snapshot_frontier
+    mechanisms:
+      - snapshot_checkpoint
+  L10_replay_covers_exact_tail_in_order_once:
+    kind: leaf
+    statement: >-
+      Recovery from snapshot frontier S applies each canonical accepted change with
+      revision > S through the authoritative head exactly once and in increasing revision order.
+    formal_intent: "recover(S,H) == fold(apply, snapshot(S), accepted[S+1..H])"
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - accepted_history_store
+      - owner_recovery
+    verification:
+      verifiers:
+        - kind: differential_test
+          intent: snapshot+tail replay equals full canonical replay for generated histories.
+        - kind: integration_test
+          intent: Owner crash at arbitrary accepted frontier reconstructs identical state.
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - owner_failover
+      - final_architecture
+    mechanisms:
+      - accepted_history_log
+      - recovery_replay
+  L12_delta_catchup_reads_canonical_revision_range:
+    kind: leaf
+    statement: >-
+      For client frontier L and one authoritative response head H, when catch-up selects retained-delta
+      mode it returns every and only canonical accepted change with revision in L+1..H exactly once and
+      in increasing revision order, with no speculative data.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - accepted_history_store
+      - catchup
+    verification:
+      verifiers:
+        - kind: integration_test
+          intent: Capture L and one authoritative response head H, invoke retained-delta mode, and
+            compare the response exactly with canonical accepted history L+1..H.
+        - kind: property_test
+          intent: Random reconnect frontiers and response heads return complete, exclusive, unique,
+            ordered canonical ranges despite pagination.
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - accepted_history_log
+      - catchup_protocol
+  C14_all_acceptance_paths_honor_idempotency_identity:
+    kind: derived
+    statement: >-
+      Every transition capable of creating a canonical accepted change for an idempotency
+      key is constrained by authoritative accepted-key identity: if that key is already
+      recorded as accepted, the transition cannot produce another acceptance event for it.
+    severity: critical
+    assurance_required: maximal
+    surfaces:
+      - acceptance_path
+      - owner_recovery
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Enumerate every acceptance-producing transition and prove each path consults the
+            authoritative accepted-key identity before creating a new accepted change.
+        - kind: state_machine
+          intent: Explore normal submit, retry, delayed execution, failover, and resumed-owner
+            paths; no transition can accept a key whose accepted identity is already authoritative.
+    depends_on:
+      - L20_acceptance_paths_are_authoritatively_mediated
+      - L21_accepted_key_gate_rejects_new_acceptance
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - recovery_replay
+      - server_authoritative_ot
+  L20_acceptance_paths_are_authoritatively_mediated:
+    statement: Every transition capable of creating a canonical accepted change routes its
+      acceptance decision through the authoritative accepted-key identity gate; no normal
+      submission, retry, delayed execution, owner-recovery, or resumed-owner path can bypass that
+      gate.
+    severity: critical
+    assurance_required: maximal
+    surfaces:
+      - acceptance_path
+      - owner_recovery
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Enumerate every acceptance-producing transition and prove that each reaches the
+            authoritative accepted-key decision before its acceptance sink.
+    kind: leaf
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - recovery_replay
+      - server_authoritative_ot
+  L21_accepted_key_gate_rejects_new_acceptance:
+    statement: For a transition mediated by the authoritative accepted-key identity gate, if
+      authoritative state records the key as already accepted at the acceptance decision, that
+      transition cannot create another acceptance event for the key.
+    severity: critical
+    assurance_required: maximal
+    surfaces:
+      - acceptance_path
+      - accepted_history_store
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Explore the gate's already-accepted and create branches under overlapping
+            requests; an already-accepted decision can never yield a create outcome.
+    kind: leaf
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - accepted_history_log
+      - server_authoritative_ot
+  L22_initial_history_matches_frontier:
+    statement: At document-state initialization, authoritative state represents one gap-free
+      accepted-revision prefix ending exactly at latest_revision, with no accepted revision above
+      that frontier.
+    severity: critical
+    assurance_required: maximal
+    surfaces:
+      - accepted_history_store
+      - document_initialization
+      - revision_frontier
+    verification:
+      verifiers:
+        - kind: integration_test
+          intent: Exercise every document creation or bootstrap path and compare the initialized
+            logical accepted-revision prefix with latest_revision.
+    kind: leaf
+    source_refs:
+      - accepted_change_log
+      - authoritative_truth
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - accepted_history_log
+      - revision_frontier_guard
+  C15_snapshot_catchup_returns_checkpoint_and_exact_tail:
+    statement: Whenever catch-up selects snapshot-replacement mode and checkpoint (content, S) at
+      authoritative response head H, the response uses replacement semantics and returns that one
+      checkpoint identity together with every and only canonical accepted change in S+1..H exactly
+      once and in increasing revision order.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - accepted_history_store
+      - catchup
+      - snapshot_store
+    kind: derived
+    depends_on:
+      - L25_snapshot_catchup_uses_selected_checkpoint_replacement
+      - L26_snapshot_catchup_returns_exact_canonical_tail
+    source_refs:
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - accepted_history_log
+      - catchup_protocol
+      - snapshot_checkpoint
+  L25_snapshot_catchup_uses_selected_checkpoint_replacement:
+    statement: When catch-up selects checkpoint (content, S), the snapshot-mode response identifies
+      exactly that checkpoint and specifies that its content replaces the client's prior document
+      state rather than being appended or patched onto it.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - catchup
+      - client_sync
+      - snapshot_store
+    verification:
+      verifiers:
+        - kind: integration_test
+          intent: Verify checkpoint identity serialization and replacement-mode dispatch
+            independently of tail selection.
+        - kind: state_machine
+          intent: Starting from stale local states, applying the snapshot response replaces prior
+            state with exactly the selected checkpoint.
+    kind: leaf
+    source_refs:
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - catchup_protocol
+      - client_revision_continuity
+      - snapshot_checkpoint
+  L26_snapshot_catchup_returns_exact_canonical_tail:
+    statement: For selected checkpoint frontier S and authoritative response head H, the
+      snapshot-mode response returns every and only canonical accepted change with revision in
+      S+1..H exactly once and in increasing revision order.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - accepted_history_store
+      - catchup
+    verification:
+      verifiers:
+        - kind: property_test
+          intent: Generate S and H across compaction and pagination boundaries and compare the
+            response tail exactly with canonical accepted history S+1..H.
+    kind: leaf
+    source_refs:
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - accepted_history_log
+      - catchup_protocol
+  L27_concurrent_first_acceptance_is_atomically_arbitrated:
+    statement: For overlapping transitions mediated by the authoritative accepted-key gate for the
+      same initially absent key, the absent-key decision and create outcome are atomically
+      arbitrated so that at most one transition can produce an acceptance event; every other
+      contender cannot create an acceptance event for that key.
+    severity: critical
+    assurance_required: maximal
+    surfaces:
+      - acceptance_path
+      - accepted_history_store
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Explore lookup, reservation, insert, commit, conflict, and retry interleavings
+            from an absent key; at most one create outcome may occur.
+        - kind: integration_test
+          intent: Race submissions with one key and observe a single acceptance-event identity even
+            for conflict and upsert implementations.
+    kind: leaf
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - accepted_history_log
+      - server_authoritative_ot
+  L28_authoritative_epoch_never_regresses_or_reuses:
+    statement: After an authoritative epoch value has been superseded by a strictly greater epoch,
+      authoritative recovery, restart, delayed metadata publication, and other lifecycle transitions
+      never decrease document_current_epoch or restore any superseded value.
+    severity: critical
+    assurance_required: maximal
+    surfaces:
+      - owner_recovery
+      - ownership
+      - routing
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Starting after a higher epoch is authoritative, explore crash recovery, restart,
+            delayed publication, and coordinator transitions; the current epoch never decreases and
+            no superseded value becomes authoritative.
+    kind: leaf
+    source_refs:
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - owner_epoch_fencing
+      - recovery_replay
+  C16_non_append_lifecycle_preserves_logical_revision_prefix:
+    statement: Any authoritative snapshotting, compaction, cleanup, or recovery-publication
+      transition that changes representation without accepting a new edit preserves the same logical
+      gap-free accepted-revision prefix and latest_revision; any physically removed revisions in
+      that prefix remain represented by an authoritative equivalent.
+    severity: critical
+    assurance_required: maximal
+    surfaces:
+      - accepted_history_store
+      - history_compaction
+      - owner_recovery
+      - snapshot_store
+    kind: derived
+    depends_on:
+      - L29_non_append_lifecycle_preserves_revision_domain
+      - L30_non_append_lifecycle_preserves_prefix_semantics
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - accepted_history_log
+      - recovery_replay
+      - snapshot_checkpoint
+  L29_non_append_lifecycle_preserves_revision_domain:
+    statement: A representation-changing authoritative lifecycle transition that accepts no new edit
+      preserves exactly the same logical gap-free accepted-revision prefix ending at H and preserves
+      latest_revision = H.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - accepted_history_store
+      - owner_recovery
+      - revision_frontier
+      - snapshot_store
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Generate gap-free histories and exercise snapshotting, compaction, cleanup, and
+            recovery-publication transitions that accept no edit; compare the pre-state and
+            post-state logical revision-domain projection and latest_revision exactly.
+    kind: leaf
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - owner_failover
+      - final_architecture
+    mechanisms:
+      - accepted_history_log
+      - recovery_replay
+      - revision_frontier_guard
+      - snapshot_checkpoint
+  L30_non_append_lifecycle_preserves_prefix_semantics:
+    statement: If a non-append authoritative lifecycle transition physically removes or replaces
+      accepted revision records, the post-state authoritative representation denotes the same
+      accepted-prefix document state as the pre-state representation or canonical replay.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - accepted_history_store
+      - owner_recovery
+      - snapshot_store
+    verification:
+      verifiers:
+        - kind: differential_test
+          intent: Across generated histories and representation-changing transitions, compare the
+            post-transition authoritative projection with canonical replay and the valid
+            pre-transition projection.
+    kind: leaf
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - owner_failover
+      - final_architecture
+    mechanisms:
+      - accepted_history_log
+      - recovery_replay
+      - snapshot_checkpoint
+  L31_committed_append_sets_frontier_to_revision:
+    statement: For every committed accepted-change append carrying revision r, the authoritative
+      post-state has latest_revision = r.
+    formal_intent: commit(accepted_change@r) => post.latest_revision == r
+    severity: critical
+    assurance_required: maximal
+    surfaces:
+      - acceptance_path
+      - revision_frontier
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Explore successful appends and assert that the committed authoritative frontier
+            equals the appended revision exactly, including conflict, retry, and failover
+            interleavings.
+        - kind: integration_test
+          intent: Inspect the accepted-change row and authoritative frontier after each committed
+            append and require equality of their revision values.
+    kind: leaf
+    source_refs:
+      - accepted_change_log
+      - reconnect_revision_boundary
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - revision_frontier_guard
+      - server_authoritative_ot
+  L32_catchup_selects_complete_mode_for_response_head:
+    statement: For client frontier L and one authoritative response head H, catch-up selects
+      retained-delta mode exactly when the complete canonical range L+1..H is retained and readable;
+      otherwise it selects snapshot-replacement mode.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - catchup
+      - history_compaction
+      - snapshot_store
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Vary L, H, retention and compaction boundaries; require delta mode exactly for a
+            complete readable L+1..H range and snapshot-replacement mode for every incomplete range.
+    kind: leaf
+    source_refs:
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - accepted_history_log
+      - catchup_protocol
+      - snapshot_checkpoint
+  L33_committed_append_preserves_existing_revision_prefix:
+    statement: For every committed accepted-change append carrying revision r, the authoritative
+      post-state logical accepted-revision domain equals the pre-state logical accepted-revision
+      domain union {r}; every pre-existing accepted revision remains authoritatively represented.
+    severity: critical
+    assurance_required: maximal
+    surfaces:
+      - acceptance_path
+      - accepted_history_store
+    verification:
+      verifiers:
+        - kind: property_test
+          intent: Generate valid accepted prefixes and successful appends; compare pre/post logical
+            revision-domain projections and require that the only added position is r and that no
+            existing position is lost.
+        - kind: fault_injection
+          intent: Exercise acceptance paths combined with cleanup, compaction hooks, retries, and
+            failover; every committed append preserves all prior authoritative revision
+            representations.
+    kind: leaf
+    source_refs:
+      - accepted_change_log
+      - reconnect_revision_boundary
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - accepted_history_log
+      - server_authoritative_ot
+  L34_retries_of_logical_edit_reuse_identity:
+    statement: Within a document, every submission and retry of one logical client edit carries the
+      same client_change_id.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - idempotency
+      - retry_resolution
+    verification:
+      verifiers:
+        - kind: property_test
+          intent: Generate ACK loss, reconnect, timeout, and process-retry traces for one logical
+            edit and assert that every emitted attempt retains exactly the original
+            client_change_id.
+    kind: leaf
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+    mechanisms:
+      - idempotency_gate
+      - retry_resolution
+  L35_losing_retry_resolves_through_canonical_acceptance:
+    statement: 'When a reprocessing attempt reaches absent-key arbitration and loses to an overlapping
+      contender, it may remain pending or terminate by timeout or cancellation. If it produces an acceptance-resolution
+      outcome, it either becomes the sole acceptance producer or returns exactly the canonical accepted
+      result for that key; it never exposes arbitration conflict as a successful resolution or creates
+      another acceptance.'
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - acceptance_path
+      - idempotency
+      - retry_resolution
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Explore absent-key lookup, reservation, conflict, winner abort/commit, retry, and
+            result-read interleavings; every completed losing attempt resolves through one of the
+            two permitted outcomes.
+        - kind: integration_test
+          intent: Race identical submissions behind barriers and require every completed caller to
+            observe the unique canonical acceptance result rather than an exposed arbitration
+            conflict.
+    kind: leaf
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - idempotency_gate
+      - retry_resolution
+      - server_authoritative_ot
+  C17_snapshot_mode_selects_checkpoint_not_after_head:
+    statement: When catch-up selects snapshot-replacement mode for an authoritative response head H,
+      it selects an authoritative checkpoint (content, S) with S <= H.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - catchup
+      - snapshot_store
+    kind: derived
+    depends_on:
+      - L37_snapshot_mode_selects_authoritative_checkpoint
+      - L38_selected_checkpoint_does_not_exceed_response_head
+    source_refs:
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - catchup_protocol
+      - snapshot_checkpoint
+  L37_snapshot_mode_selects_authoritative_checkpoint:
+    statement: When catch-up selects snapshot-replacement mode, the selected (content, S) is exactly
+      one atomically published authoritative checkpoint identity.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - catchup
+      - snapshot_lifecycle
+      - snapshot_store
+    verification:
+      verifiers:
+        - kind: integration_test
+          intent: Track atomically published authoritative checkpoint identities and require
+            snapshot selection to return a member of that exact set, rejecting stale-cache,
+            torn-record, and non-authoritative sources.
+    kind: leaf
+    source_refs:
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - catchup_protocol
+      - snapshot_checkpoint
+  L38_selected_checkpoint_does_not_exceed_response_head:
+    statement: For an authoritative response head H, the checkpoint frontier S selected for
+      snapshot-replacement mode satisfies S <= H.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - catchup
+      - snapshot_store
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Capture H, race later checkpoint publication and selection, and require every
+            selected checkpoint frontier to remain at most the captured H.
+    kind: leaf
+    source_refs:
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - catchup_protocol
+      - snapshot_checkpoint
+  L39_recovered_owner_resumes_at_head_plus_one:
+    statement: After recovery reconstructs authoritative state through H = latest_revision, before
+      resuming acceptance the new owner initializes its recovered local head to H and its next
+      candidate revision exactly to H + 1.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - acceptance_path
+      - owner_recovery
+      - revision_frontier
+    verification:
+      verifiers:
+        - kind: integration_test
+          intent: Recover generated snapshots and tails through H, then inspect the new owner's
+            local head and first candidate revision before any append; require H and H+1 exactly
+            across crash and failover paths.
+    kind: leaf
+    source_refs:
+      - authoritative_truth
+      - owner_failover
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - recovery_replay
+      - revision_frontier_guard
+      - server_authoritative_ot
+  L41_recovery_checkpoint_does_not_exceed_recovery_head:
+    statement: For authoritative recovery head H, the checkpoint frontier S selected and loaded by
+      new-owner recovery satisfies S <= H.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - owner_recovery
+      - revision_frontier
+      - snapshot_store
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Capture recovery head H, race later checkpoint publication and lookup, and require
+            every loaded recovery checkpoint frontier to be at most H.
+    kind: leaf
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - owner_failover
+      - final_architecture
+    mechanisms:
+      - recovery_replay
+      - revision_frontier_guard
+      - snapshot_checkpoint
+  C18_recovery_selects_and_loads_authoritative_checkpoint:
+    statement: While holding the per-document lifecycle lock, a new-owner recovery that reaches
+      checkpoint selection chooses exactly one atomically published authoritative checkpoint
+      P=(content,S) and installs exactly P before replay. Checkpoint publication, cleanup, and
+      compaction cannot interleave with that selection-and-load interval; an attempt may crash or
+      abort earlier.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - checkpoint_io
+      - owner_recovery
+      - snapshot_lifecycle
+      - snapshot_store
+    kind: derived
+    depends_on:
+      - L42_recovery_selects_authoritative_checkpoint_identity
+      - L93_recovery_loads_selected_checkpoint_before_replay
+      - L9_snapshot_content_and_frontier_publish_atomically
+      - L95_lifecycle_procedures_share_and_hold_document_lock
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - owner_failover
+      - final_architecture
+    mechanisms:
+      - document_lifecycle_lock
+      - recovery_replay
+      - snapshot_checkpoint
+  L42_recovery_selects_authoritative_checkpoint_identity:
+    statement: If a new-owner recovery attempt reaches checkpoint selection, it selects exactly one
+      checkpoint identity (content, S) present in the authoritative published checkpoint set; the
+      attempt may crash or abort before selection without a completion obligation.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - owner_recovery
+      - snapshot_lifecycle
+      - snapshot_store
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Record the authoritative published checkpoint identities and require every
+            recovery initialization to select exactly one member, including concurrent recovery and
+            cache-refresh executions.
+    kind: leaf
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - owner_failover
+      - final_architecture
+    mechanisms:
+      - recovery_replay
+      - snapshot_checkpoint
+  L54_absent_key_winner_returns_its_canonical_acceptance:
+    statement: When a reprocessing attempt finds its idempotency key absent and is the uncontended
+      or winning acceptance producer, any non-timeout, non-cancellation successful
+      acceptance-resolution outcome is emitted only after exactly that attempt's canonical accepted
+      change commits, and the returned result is exactly that committed canonical record.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - acceptance_path
+      - accepted_history_store
+      - idempotency
+      - retry_resolution
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Exercise uncontended and overlapping absent-key winner paths, inject failures
+            before and after commit, and require every successful non-timeout response to equal the
+            canonical record committed by that attempt; no pre-commit or fabricated success is
+            allowed.
+    kind: leaf
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - accepted_history_log
+      - idempotency_gate
+      - retry_resolution
+      - server_authoritative_ot
+  L55_successful_retry_resolution_paths_are_exhaustive:
+    statement: 'Every non-timeout, non-cancellation successful acceptance-resolution outcome for reprocessing
+      a logical client edit is produced through exactly one authoritative case: returning an already accepted
+      result, winning or uncontended absent-key acceptance, or losing absent-key arbitration and resolving
+      through its winner. No retry, recovery, or fast path may emit such success outside these cases.'
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - acceptance_path
+      - idempotency
+      - owner_recovery
+      - retry_resolution
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Enumerate every successful non-timeout reprocessing response sink and prove its
+            dominating authoritative case is exactly existing-key return, absent-key winner, or
+            loser-through-winner; reject bypass and recovery fast-path success exits.
+    kind: leaf
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - idempotency_gate
+      - recovery_replay
+      - retry_resolution
+      - server_authoritative_ot
+  C25_recovery_derives_complete_ot_metadata_from_truth:
+    statement: For authoritative recovery head H, every OT metadata value installed by recovery is
+      completely derived from the selected authoritative checkpoint and the exact canonical tail
+      through H, and equals an independent clean reconstruction from those inputs. No value whose
+      only provenance is failed-owner volatile memory is retained.
+    severity: critical
+    assurance_required: strong
+    kind: derived
+    depends_on:
+      - L64_recovered_ot_metadata_equals_clean_authoritative_reconstruction
+      - L65_failed_owner_volatile_state_cannot_influence_recovered_metadata
+    source_refs:
+      - authoritative_truth
+      - owner_failover
+      - storage_selection
+      - final_architecture
+  L64_recovered_ot_metadata_equals_clean_authoritative_reconstruction:
+    statement: For authoritative recovery head H, recovery installs the complete set of OT metadata
+      fields required to resume acceptance at H, and both that field set and every field value
+      exactly equal an independent clean reconstruction from the selected authoritative checkpoint
+      and exact canonical tail through H, including all metadata effects through revision H.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - accepted_history_store
+      - ot_state
+      - owner_recovery
+      - snapshot_store
+    verification:
+      verifiers:
+        - kind: differential_test
+          intent: Generate checkpoints and exact canonical tails, independently derive the complete
+            required OT metadata schema and values at H, recover through H, and require exact
+            equality of both installed field set and every field value, including boundary revision
+            H.
+    kind: leaf
+    source_refs:
+      - authoritative_truth
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - accepted_history_log
+      - recovery_replay
+      - server_authoritative_ot
+      - snapshot_checkpoint
+  L65_failed_owner_volatile_state_cannot_influence_recovered_metadata:
+    statement: Let H be the authoritative latest_revision captured for this recovery attempt and let
+      the recovered output be every OT metadata field the new owner will use after recovery. Holding
+      the selected authoritative checkpoint and exact canonical tail (S, H] fixed, changing or
+      removing any non-authoritative runtime data source—including failed-owner volatile memory,
+      new-owner caches, and process-local recovery data—cannot change that output. The selected
+      checkpoint and exact canonical tail through H are the exclusive data provenance of recovered
+      OT metadata.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - ot_state
+      - owner_recovery
+    verification:
+      verifiers:
+        - kind: differential_test
+          intent: Hold the selected checkpoint and exact canonical tail (S, H] fixed; independently
+            remove or poison every reachable non-authoritative runtime source that could supply or
+            alter OT metadata, including failed-owner memory and new-owner caches, and require
+            identical recovered metadata. Complement the differential runs with dataflow or taint
+            inspection proving every installed metadata value originates only from the fixed
+            authoritative checkpoint and tail.
+    kind: leaf
+    source_refs:
+      - authoritative_truth
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - recovery_replay
+      - server_authoritative_ot
+  L79_new_owner_accepts_only_after_reconstruction:
+    statement: A new owner exposes no OT transformation or canonical-acceptance entrypoint until its
+      selected checkpoint is installed, the exact canonical tail through captured head H is
+      replayed, required OT metadata is rebuilt, and local head/next-revision state is initialized
+      through H. This is a local recovery sequencing barrier and requires no durable READY state.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - acceptance_path
+      - ot_state
+      - owner_recovery
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Enumerate new-owner transform and acceptance entry points and prove none becomes
+            reachable before recovery reconstruction through H and local acceptance-state
+            initialization complete.
+        - kind: fault_injection
+          intent: Crash or pause after every recovery step; no partially reconstructed owner may
+            accept an edit.
+    kind: leaf
+    source_refs:
+      - authoritative_truth
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - document_lifecycle_lock
+      - recovery_replay
+      - server_authoritative_ot
+  L92_captured_recovery_head_equals_authoritative_frontier:
+    statement: When new-owner recovery captures recovery head H after its epoch handoff, H equals
+      the authoritative document_latest_revision value read from the authoritative store at that
+      capture event.
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - authoritative_truth
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    surfaces:
+      - accepted_history_store
+      - owner_recovery
+      - ownership
+    mechanisms:
+      - owner_epoch_fencing
+      - recovery_replay
+      - revision_frontier_guard
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Seed distinguishable authoritative frontier values, race recovery start with
+            delayed stale-owner activity, and prove the captured H exactly equals
+            document_latest_revision observed at the authoritative head-capture event.
+        - kind: integration_test
+          intent: Prevent new-owner acceptance, complete epoch handoff, and compare the recovery H
+            used for checkpoint selection and replay directly with the authoritative persisted
+            frontier read at capture.
+    kind: leaf
+  L93_recovery_loads_selected_checkpoint_before_replay:
+    statement: Once new-owner recovery selects authoritative checkpoint P=(content,S), it installs
+      exactly P as the replay base before applying any tail revision; concurrent pointer, cache, or
+      later-checkpoint changes cannot substitute a different checkpoint for P.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - checkpoint_io
+      - owner_recovery
+      - ot_state
+      - snapshot_store
+    kind: leaf
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - owner_failover
+      - final_architecture
+    mechanisms:
+      - document_lifecycle_lock
+      - recovery_replay
+      - snapshot_checkpoint
+    verification:
+      verifiers:
+        - kind: integration_test
+          intent: Select a distinguishable authoritative checkpoint P, make another checkpoint/cache
+            candidate available, and require recovery to install exactly P as the replay base.
+        - kind: fault_injection
+          intent: Pause or crash checkpoint installation at every boundary and require that no
+            canonical tail revision is applied until the selected checkpoint P is completely
+            installed.
+  L94_recovery_starts_after_epoch_handoff:
+    statement: While holding the per-document lifecycle lock, a new-owner recovery advances
+      authoritative document_current_epoch to that owner's strictly greater epoch before it captures
+      recovery head H or selects a checkpoint.
+    severity: critical
+    assurance_required: strong
+    surfaces:
+      - accepted_history_store
+      - owner_recovery
+      - ownership
+      - routing
+      - snapshot_store
+    kind: leaf
+    source_refs:
+      - authoritative_truth
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - document_lifecycle_lock
+      - owner_epoch_fencing
+      - recovery_replay
+      - snapshot_checkpoint
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Instrument lifecycle-lock ownership, the authoritative epoch transition commit,
+            recovery-head capture, and checkpoint selection. Require the transition to the
+            recovering owner's strictly greater epoch to commit while the same-document lifecycle
+            lock is held, and require both H capture and checkpoint selection to occur only
+            afterward.
+  L95_lifecycle_procedures_share_and_hold_document_lock:
+    statement: Every new-owner recovery, checkpoint publication, and checkpoint cleanup/compaction
+      procedure for one document acquires the same per-document session-scoped PostgreSQL advisory
+      lock before entering checkpoint lifecycle work and holds it until that lifecycle procedure
+      completes or aborts.
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    surfaces:
+      - owner_recovery
+      - snapshot_lifecycle
+      - snapshot_store
+    mechanisms:
+      - document_lifecycle_lock
+      - snapshot_checkpoint
+    kind: leaf
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Enumerate every recovery, checkpoint-publication, and
+            checkpoint-cleanup/compaction entry and exit path; require the same document-keyed
+            session advisory lock to be acquired before checkpoint lifecycle work and retained
+            through every normal and exceptional procedure exit.
+        - kind: fault_injection
+          intent: Abort each lifecycle procedure at every boundary and independently observe that
+            the document lifecycle lock remains held until procedure unwinding has ended.
+  L96_recovery_orders_head_selection_replay_and_metadata:
+    statement: In every new-owner recovery that completes and resumes acceptance, recovery captures
+      authoritative head H before selecting a checkpoint, completes application of the exact
+      canonical tail through H before rebuilding the required OT metadata, and completes that
+      metadata rebuild before initializing its local acceptance head and next-revision candidate.
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - owner_failover
+      - final_architecture
+    surfaces:
+      - accepted_history_store
+      - checkpoint_io
+      - ot_state
+      - owner_recovery
+      - snapshot_store
+    mechanisms:
+      - recovery_replay
+      - snapshot_checkpoint
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Enumerate every completing recovery path and prove, in order, that authoritative
+            head capture dominates checkpoint selection, exact tail application through H completes
+            before OT metadata rebuild, and metadata rebuild completes before local acceptance-head
+            and next-revision initialization; value correctness of that initialization is checked by
+            its separate leaf obligation.
+    kind: leaf
+  L97_client_adopts_snapshot_before_tail:
+    statement: When catch-up selects checkpoint P=(content,S), the client installs exactly P with
+      replacement semantics and advances last_applied_revision to S before applying any returned or
+      interleaved revision above S; an interrupted installation cannot expose checkpoint content
+      paired with a different client frontier.
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    surfaces:
+      - catchup
+      - client_sync
+      - snapshot_store
+    mechanisms:
+      - catchup_protocol
+      - client_revision_continuity
+      - snapshot_checkpoint
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Explore snapshot catch-up, interruption, retry, buffered-live, and
+            duplicate-delivery transitions; require exactly the selected checkpoint and frontier S
+            to become the client's replacement base together before any revision above S is applied,
+            with no observable mismatched content/frontier state after interruption.
+    kind: leaf
+  G6_accepted_change_preserves_ot_semantics:
+    statement: Every canonical_accepted_change in authoritative history is exactly the successful
+      OT-engine transformed result for one submitted raw_edit and its client base revision, computed
+      against the canonical committed document prefix immediately preceding the accepted revision,
+      preserves exactly the submitted request's (document_id, client_change_id) as the authoritative
+      identity of that acceptance, and satisfies the OT engine's algorithmic convergence contract
+      for that input and prefix; no canonical acceptance may be created without such a submitted raw
+      edit and successful OT result, and an OT reject or rebase-required outcome cannot create a
+      canonical acceptance.
+    severity: critical
+    assurance_required: maximal
+    source_refs:
+      - ot_input_output
+      - raft_analogy
+      - final_architecture
+    kind: root
+    depends_on:
+      - A2_ot_engine_is_correct
+      - L98_ot_receives_exact_request_and_canonical_context
+      - L99_ot_result_is_bound_to_acceptance_frontier
+      - L100_acceptance_commits_only_ot_success_output
+      - L108_acceptance_preserves_request_identity
+  L98_ot_receives_exact_request_and_canonical_context:
+    statement: Every OT invocation whose success is eligible for canonical acceptance receives
+      exactly the submitted raw_edit and client base revision for that logical request, together
+      with document context representing one canonical committed prefix through a definite revision
+      frontier; speculative, uncommitted, or mismatched document context cannot feed that
+      invocation.
+    severity: critical
+    assurance_required: maximal
+    source_refs:
+      - ot_input_output
+      - accepted_change_log
+      - final_architecture
+    surfaces:
+      - acceptance_path
+      - accepted_history_store
+      - ot_state
+    mechanisms:
+      - server_authoritative_ot
+      - accepted_history_log
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Trace every acceptance-eligible OT invocation from request decode to transform
+            dispatch and require the exact submitted raw edit and base revision to reach the engine
+            together with one committed canonical document context; reject any path using
+            speculative, uncommitted, or context-mismatched state.
+        - kind: integration_test
+          intent: Construct distinguishable request payloads and committed document prefixes, then
+            verify that the acceptance-eligible OT invocation observes exactly the submitted request
+            identity/base and the selected committed canonical context.
+    kind: leaf
+  L99_ot_result_is_bound_to_acceptance_frontier:
+    statement: If an OT success result is computed against the canonical committed prefix through
+      revision N, that result may commit as canonical_accepted_change at revision r only while the
+      authoritative acceptance pre-state still has latest_revision = N and r = N + 1; if that
+      frontier has advanced, the stale result cannot commit without a fresh OT transformation
+      against the new canonical prefix.
+    severity: critical
+    assurance_required: maximal
+    source_refs:
+      - ot_input_output
+      - accepted_change_log
+      - final_architecture
+    surfaces:
+      - acceptance_path
+      - revision_frontier
+      - ot_state
+    mechanisms:
+      - server_authoritative_ot
+      - revision_frontier_guard
+      - acceptance_transaction
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Explore transform/commit races where another acceptance advances latest_revision
+            after OT computation; require a result computed at frontier N to commit only as N+1
+            while the authoritative pre-state remains N, otherwise require
+            re-transform/retry/rejection before any acceptance.
+        - kind: control_flow
+          intent: Prove that the frontier token/context used for OT computation is carried to the
+            authoritative acceptance guard and cannot be replaced by a newer revision number while
+            reusing the stale transformed payload.
+    kind: leaf
+  L100_acceptance_commits_only_ot_success_output:
+    statement: Every path capable of creating a canonical_accepted_change is dominated by a
+      successful OT invocation for one submitted raw_edit corresponding to that acceptance, and the
+      committed transformed payload is exactly the payload returned by that invocation; no path may
+      create canonical accepted history without such OT-success provenance, and no OT reject or
+      rebase-required outcome can create a canonical_accepted_change.
+    severity: critical
+    assurance_required: maximal
+    source_refs:
+      - ot_input_output
+      - accepted_change_log
+      - final_architecture
+    surfaces:
+      - acceptance_path
+      - accepted_history_store
+      - ot_state
+    mechanisms:
+      - server_authoritative_ot
+      - acceptance_transaction
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Enumerate every entry point capable of creating a canonical accepted change; prove
+            each insertion is dominated by a successful OT invocation for its corresponding
+            submitted raw edit, reject and rebase-required exits cannot reach insertion, and the
+            inserted payload preserves exact dataflow identity with that invocation result.
+        - kind: differential_test
+          intent: Perturb successful OT outputs and rejection outcomes while holding request and
+            context fixed across every acceptance-capable entry point; accepted payloads must change
+            exactly with the corresponding successful engine output, while any attempt lacking
+            submitted-raw-edit/OT-success provenance and every reject or rebase-required outcome
+            must produce no canonical acceptance.
+    kind: leaf
+  L101_client_completes_catchup_through_response_head:
+    statement: "A client catch-up attempt for authoritative response head H is considered complete only
+      after the client has consumed the response's entire canonical representation through H: delta mode
+      applies every returned revision L+1..H, while snapshot mode installs the selected checkpoint frontier
+      S and applies every returned tail revision S+1..H; on completion last_applied_revision = H."
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    surfaces:
+      - catchup
+      - client_sync
+    mechanisms:
+      - catchup_protocol
+      - client_revision_continuity
+      - snapshot_checkpoint
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Explore both catch-up modes, pagination, buffered live delivery, interruption, and
+            retry; require every transition that declares completion for response head H to occur
+            only after the selected checkpoint if any and every canonical response revision through
+            H have been consumed, with last_applied_revision exactly H.
+    kind: leaf
+  L102_client_frontier_matches_canonical_base:
+    statement: Before retained-delta catch-up begins from last_applied_revision L,
+      client_local_document equals deterministic application of all and only canonical accepted
+      revisions through L. Every client transition that advances last_applied_revision preserves
+      this paired content/frontier invariant; speculative raw edits are not part of
+      client_local_document.
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    surfaces:
+      - catchup
+      - client_sync
+      - live_delivery
+    mechanisms:
+      - accepted_history_log
+      - catchup_protocol
+      - client_revision_continuity
+      - snapshot_checkpoint
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Model client initialization, contiguous live and catch-up application,
+            duplicate/gap handling, snapshot replacement, interruption, and retry; prove inductively
+            that every reachable retained-delta catch-up entry at frontier L pairs
+            client_local_document with exactly canonical replay through L, and that no
+            frontier-advancing transition exposes mismatched content while speculative raw edits
+            remain outside this canonical base.
+    kind: leaf
+  G7_reconnect_does_not_double_render_accepted_optimistic_edit:
+    statement: During reconnect/resync, the client does not create or apply new speculative local
+      edits for the document while the resync attempt is in progress. For every pending logical
+      client edit identified by client_change_id k at resync start, the catch-up request includes k
+      for authoritative reconciliation through response head H; if that logical edit has a canonical
+      acceptance included in H, authoritative reconciliation identifies that acceptance under the
+      same k and any user-visible publication through H occurs only after the speculative overlay
+      for k has been removed. No intermediate resync candidate may expose a canonical prefix that
+      already contains k together with its overlay, and a stale response may not restore an overlay
+      removed by a newer published reconciliation. Keys with no canonical acceptance through H may
+      leave the client read-only or in conflict/reconciliation state; this claim makes no automatic
+      local-rebase or progress guarantee.
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    kind: root
+    depends_on:
+      - L104_pending_identity_resolution_is_bound_to_response_head
+      - L106_resync_request_covers_start_pending_set
+      - L107_client_freezes_speculative_edits_during_resync
+      - L108_acceptance_preserves_request_identity
+      - L109_resync_publication_is_atomic_and_monotonic
+  L104_pending_identity_resolution_is_bound_to_response_head:
+    statement: 'For every pending client_change_id k supplied in a catch-up request with authoritative
+      response head H, the response classifies k against authoritative acceptance through the same H:
+      it reports accepted at revision r only for the unique canonical acceptance of k with r <= H, and
+      reports unresolved through H only when no canonical acceptance for k exists through H. Snapshotting,
+      compaction, cleanup, and recovery preserve enough accepted-revision or equivalent frontier evidence
+      to make this classification while k may still be presented for reconnect reconciliation.'
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - accepted_change_log
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    surfaces:
+      - catchup
+      - idempotency
+      - accepted_history_store
+      - history_compaction
+    mechanisms:
+      - catchup_protocol
+      - idempotency_gate
+      - accepted_history_log
+      - snapshot_checkpoint
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Vary response head H, acceptance timing for pending client_change_id values,
+            snapshot/compaction/cleanup, and reconnect retries; require each response classification
+            to reflect exactly whether the key has a canonical acceptance at revision r <= H, never
+            a later acceptance, while preserving enough frontier evidence across lifecycle changes.
+        - kind: integration_test
+          intent: Accept selected pending client_change_id values before and after captured head H,
+            compact their original history where allowed, then query reconnect reconciliation and
+            compare every classification with authoritative accepted identity and accepted revision
+            relative to H.
+    kind: leaf
+  L106_resync_request_covers_start_pending_set:
+    statement: For every reconnect/resync attempt, the pending client_change_id set supplied in the
+      catch-up request contains every speculative local edit that is pending for the document when
+      that attempt begins; no such start-pending key is omitted from authoritative reconciliation
+      through the response head for that request.
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    surfaces:
+      - client_sync
+      - catchup
+    mechanisms:
+      - catchup_protocol
+      - client_revision_continuity
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Enumerate reconnect-start transitions and request construction from arbitrary
+            pending-overlay maps; require the request's pending client_change_id set to contain
+            every key pending at that attempt's start, including after interruption and retry,
+            before the request can be sent.
+    kind: leaf
+  L107_client_freezes_speculative_edits_during_resync:
+    statement: From the moment a client begins reconnect/resync and captures the pending
+      client_change_id set for its catch-up request until that attempt either publishes a reconciled
+      canonical state or enters explicit conflict/reconciliation state, the client creates or
+      applies no new speculative local edit to the document being resynchronized.
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    surfaces:
+      - client_sync
+    mechanisms:
+      - catchup_protocol
+      - client_revision_continuity
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Explore user-edit input, reconnect start, request capture/send, catch-up response,
+            reconciliation, interruption, retry, publication, and conflict transitions; require no
+            new speculative edit creation or application for the document from resync start until
+            reconciled publication or explicit conflict/reconciliation entry.
+    kind: leaf
+  L108_acceptance_preserves_request_identity:
+    statement: 'For every canonical acceptance produced from a submitted logical request carrying document_id
+      D and client_change_id k, the authoritative identity of that acceptance is exactly (D, k): the acceptance
+      path does not drop, regenerate, substitute, or bind either identity component to a different request
+      between request admission and canonical commit, and any durable idempotency evidence associated
+      with that acceptance identifies the same (D, k).'
+    severity: critical
+    assurance_required: maximal
+    source_refs:
+      - accepted_change_log
+      - reconnect_revision_boundary
+      - final_architecture
+    surfaces:
+      - acceptance_path
+      - accepted_history_store
+      - idempotency
+      - retry_resolution
+    mechanisms:
+      - acceptance_transaction
+      - idempotency_gate
+      - accepted_history_log
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Trace document_id and client_change_id from request admission through OT dispatch,
+            idempotency arbitration, and every canonical-commit sink; prove every successful
+            acceptance persists exactly the originating request identity and no path can replace,
+            regenerate, cross-bind, or omit either component.
+        - kind: integration_test
+          intent: Submit distinguishable concurrent requests with different
+            document_id/client_change_id pairs, force retries and ACK loss, and assert that each
+            canonical accepted record and its durable idempotency evidence retain exactly the
+            originating pair without cross-binding.
+    kind: leaf
+  L109_resync_publication_is_atomic_and_monotonic:
+    statement: During reconnect/resync, canonical catch-up and pending-identity reconciliation are
+      built in a non-user-visible candidate state. Let F be the currently user-visible canonical
+      frontier when a candidate response through authoritative head H is ready to publish. If H < F,
+      the entire candidate is discarded without mutating the visible canonical base,
+      last_applied_revision, pending-resolution state, or speculative overlays. If H >= F, the
+      client may expose state from that candidate only by one atomic publication after
+      reconciliation has removed every speculative overlay that the same response classifies as
+      accepted within H; no checkpoint/tail/intermediate candidate prefix is user-visible, no
+      previously removed speculative overlay is restored by that response, and the user-visible
+      canonical frontier never decreases.
+    severity: critical
+    assurance_required: maximal
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    surfaces:
+      - catchup
+      - client_sync
+    mechanisms:
+      - catchup_protocol
+      - client_revision_continuity
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Explore overlapping and retried resync attempts with arbitrary response delays,
+            checkpoint/tail progress, pending-key resolutions, and publication order; require all
+            intermediate candidate states to remain unobservable, discard any H below the currently
+            visible frontier, and permit only atomic non-regressing reconciled publication.
+        - kind: integration_test
+          intent: Delay an older resync response behind a newer published response and separately
+            pause catch-up after an accepted pending edit enters an intermediate canonical prefix;
+            assert that neither the stale response nor any intermediate prefix mutates user-visible
+            canonical, frontier, pending, or overlay state before one valid reconciled publication.
+    kind: leaf
+catalog:
+  terms:
+    logical_client_edit:
+      description: One user operation from the client's protocol perspective. Retransmissions of the
+        same logical operation are retries of that edit, not new logical edits.
+    raw_edit:
+      description: The client-submitted edit before server-side transformation/rebase against
+        accepted document history.
+    client_change_id:
+      description: A protocol identifier supplied by the client for a logical client edit. Stability
+        across retries and uniqueness across distinct logical edits are explicit protocol
+        assumptions, not part of this vocabulary definition.
+    canonical_accepted_change:
+      description: The server-authoritative representation of an edit after any required OT
+        transformation and after the system has decided to accept it. Creating two accepted records
+        for one logical client edit counts as duplicate acceptance even if their transformed
+        payloads happen to be equal.
+    accepted_history:
+      description: The authoritative collection/sequence of canonical accepted changes for a
+        document. Properties such as uniqueness, gap freedom, fencing, and durability are proved or
+        assumed elsewhere; this definition alone does not grant them.
+    revision:
+      description: The server-assigned position/identifier used to order a canonical accepted change
+        within one document's accepted history. Contiguity and uniqueness are correctness
+        obligations, not part of this definition.
+    acceptance:
+      description: The system decision that creates a canonical accepted-change record in
+        authoritative history. The exact atomicity conditions for that decision are separate claims.
+    ack:
+      description: A server response informing a client that its submitted edit was accepted. The
+        relationship between ACK emission and durable commit is a separate correctness claim.
+    retry:
+      description: Resubmission caused by uncertainty such as timeout, lost ACK, reconnect, or
+        process failure. A retry may race with the original request or another retry.
+    authoritative_store:
+      description: The persistence layer whose committed contents the model treats as authoritative
+        system state. Durability across failures is not implied by this definition and is
+        represented explicitly as an assumption where needed.
+    owner_epoch:
+      description: A fencing token associated with document ownership. The rule that stale epochs
+        are rejected is a correctness claim rather than part of the term's definition.
+    latest_revision:
+      description: Authoritative per-document frontier equal to the highest canonical accepted
+        revision.
+    current_epoch:
+      description: Shorthand for the authoritative current owner epoch of a document.
+    accepted_change:
+      description: A canonical accepted change record stored in authoritative history.
+    document_id:
+      description: Stable identifier of one collaborative document.
+    last_applied_revision:
+      description: Highest contiguous canonical revision already applied by a client.
+    document_current_epoch:
+      description: Authoritative persisted epoch identifying the current fenced document owner
+        generation.
+    snapshot_revision:
+      description: Canonical revision frontier represented by a published snapshot checkpoint.
+    new_epoch:
+      description: Newly assigned owner epoch that is strictly greater than the superseded epoch.
+    client_change_ids:
+      description: Plural shorthand for multiple client_change_id values.
+    edit_id:
+      description: Abstract identifier of one logical edit in formal ordering notation.
+    buffer_or_gap_recovery:
+      description: Client action that buffers a future revision or triggers recovery when a
+        canonical revision gap is observed.
+    idempotency_key:
+      description: Authoritative deduplication identity for a logical edit, concretely document_id
+        plus client_change_id.
+    acceptance_events:
+      description: Abstract set of canonical acceptance decisions used in formal idempotency
+        notation.
+    snapshot_state:
+      description: Document state represented by a snapshot checkpoint at its declared frontier.
+  state:
+    accepted_change_log:
+      class: authoritative
+      description: Canonical ordered history of accepted changes for a document.
+    document_latest_revision:
+      class: authoritative
+      description: Authoritative persisted canonical revision frontier for a document.
+    document_current_epoch:
+      class: authoritative
+      description: Authoritative persisted fencing epoch for the current document owner.
+    snapshot_content_with_snapshot_revision:
+      class: authoritative
+      description: Atomically published checkpoint content paired with the exact canonical revision
+        frontier it represents.
+    ot_owner_memory:
+      class: derived
+      description: Volatile materialized OT owner state reconstructable from authoritative truth.
+    websocket_live_stream:
+      class: derived
+      description: Best-effort live delivery stream of already accepted canonical changes.
+    client_local_document:
+      class: derived
+      description: Client-side materialized document state reconstructed from canonical revisions.
+    search_index:
+      class: derived
+      description: Derived search representation that is not authoritative collaboration state.
+    cache:
+      class: derived
+      description: Non-authoritative cached data that may be discarded and rebuilt.
+  mechanisms:
+    server_authoritative_ot:
+      description: Server OT owner transforms client edits against canonical accepted history before
+        acceptance.
+      automation_reusable: true
+    accepted_history_log:
+      description: Canonical accepted-change log is the durable source of truth for edit history.
+      automation_reusable: true
+    acceptance_transaction:
+      description: Accepted-change creation and authoritative metadata updates commit as one
+        database transaction.
+      automation_reusable: true
+    revision_frontier_guard:
+      description: Acceptance checks the authoritative latest revision and advances it exactly with
+        the accepted append.
+      automation_reusable: true
+    idempotency_gate:
+      description: Authoritative acceptance is keyed by document_id and client_change_id so one
+        logical edit cannot create multiple acceptances.
+      automation_reusable: true
+    owner_epoch_fencing:
+      description: Every authoritative append is conditioned on the request owner_epoch matching the
+        current document epoch.
+      automation_reusable: true
+    snapshot_checkpoint:
+      description: Snapshots are authoritative checkpoints whose content is bound atomically to a
+        canonical revision frontier.
+      automation_reusable: true
+    recovery_replay:
+      description: A new owner reconstructs state from one authoritative checkpoint plus the exact
+        canonical tail through the captured head.
+      automation_reusable: true
+    catchup_protocol:
+      description: Reconnect catch-up returns either the exact retained canonical suffix or a
+        checkpoint replacement plus exact tail.
+      automation_reusable: true
+    client_revision_continuity:
+      description: Clients apply only the next contiguous canonical revision, ignore duplicates, and
+        recover gaps.
+      automation_reusable: true
+    commit_before_delivery:
+      description: ACK and live broadcast occur only after canonical acceptance is durably
+        committed.
+      automation_reusable: true
+    retry_resolution:
+      description: Retries resolve through the authoritative idempotency/acceptance outcome rather
+        than producing an independent success path.
+      automation_reusable: true
+    document_lifecycle_lock:
+      description: A session-scoped PostgreSQL advisory lock keyed by document_id serializes
+        new-owner recovery, checkpoint publication, and checkpoint cleanup/compaction for one
+        document. The lock spans the low-frequency lifecycle procedure, while normal accepted-edit
+        transactions do not acquire it.
+      automation_reusable: true
+  failure_events:
+    request_delivery_uncertainty:
+      class: allowed
+      description: Request delivery may be delayed, duplicated by retry, or have an uncertain
+        outcome.
+    ack_loss_after_processing:
+      class: allowed
+      description: ACK delivery may be lost after server-side processing.
+    overlapping_requests:
+      class: allowed
+      description: Multiple client requests or retries may overlap in time.
+    owner_crash_restart:
+      class: allowed
+      description: An OT owner process may crash and later restart.
+    ownership_move_with_delayed_old_owner:
+      class: allowed
+      description: Document ownership may move to another owner while an old owner is delayed.
+    catchup_live_interleaving:
+      class: allowed
+      description: Catch-up and live delivery may interleave around reconnect.
+    history_lifecycle_change:
+      class: allowed
+      description: Accepted history may undergo snapshotting, compaction, or lifecycle cleanup.
+    byzantine_behavior:
+      class: excluded
+      description: Byzantine behavior by clients, servers, or storage is excluded.
+    permanent_authoritative_quorum_loss:
+      class: excluded
+      description: Permanent loss of the authoritative storage quorum is excluded.
+  surfaces:
+    acceptance_path:
+      description: Code and transaction paths that transform or create canonical accepted changes.
+    accepted_history_store:
+      description: Persistent representation, schema, and retention of canonical accepted history.
+    revision_frontier:
+      description: Authoritative latest-revision metadata and frontier transition logic.
+    idempotency:
+      description: Logical-edit identity, deduplication index, and retry idempotency checks.
+    ownership:
+      description: Owner assignment, epoch metadata, fencing, and ownership handoff.
+    owner_recovery:
+      description: New-owner reconstruction and recovery orchestration.
+    snapshot_store:
+      description: Checkpoint materialization and persisted snapshot representation.
+    snapshot_lifecycle:
+      description: Checkpoint publication, cleanup, compaction, and lifecycle serialization.
+    checkpoint_io:
+      description: Checkpoint identity resolution, loading, installation, and codec boundaries.
+    catchup:
+      description: Reconnect/catch-up response construction and response-head capture.
+    client_sync:
+      description: Client revision tracking, duplicate suppression, gap detection, and recovery.
+    live_delivery:
+      description: WebSocket or equivalent delivery of committed canonical changes.
+    ot_state:
+      description: OT transform dispatch, reconstructed OT metadata, and materialized document
+        state.
+    routing:
+      description: Document routing and coordinator ownership control.
+    cache:
+      description: Non-authoritative caches that may affect read provenance if misused.
+    document_initialization:
+      description: Document bootstrap and initial authoritative revision state.
+    history_compaction:
+      description: Logical history compaction and representation-preserving lifecycle changes.
+    retry_resolution:
+      description: Retry winner/loser arbitration and canonical success resolution paths.
+  verifier_kinds:
+    schema_constraint:
+      description: Static database/schema constraint inspection.
+    state_machine:
+      description: Bounded or model-based exploration of state transitions and concurrency
+        interleavings.
+    property_test:
+      description: Generated-input property testing of an invariant.
+    integration_test:
+      description: Multi-component contract or end-to-end integration verification.
+    fault_injection:
+      description: Crash, abort, stale-owner, or transaction-boundary fault injection.
+    control_flow:
+      description: Static/symbolic/taint/control-flow proof that all relevant paths pass through a
+        required gate.
+    differential_test:
+      description: Compare two independent reconstructions or implementations for semantic equality.
+    runtime_invariant:
+      description: Runtime trace or invariant observation over executed system behavior.
+    mutation_test:
+      description: Deliberately corrupt implementation semantics and require tests to detect the
+        mutation.
+  sources:
+    ot_input_output:
+      heading: OT 首先要有明确的输入输出
+    accepted_change_log:
+      heading: 从 OT 输出自然推导出 accepted-change-set log
+    authoritative_truth:
+      heading: 谁是 truth，谁只是 materialized state
+    snapshot_frontier:
+      heading: Snapshot 必须绑定 frontier
+    reconnect_revision_boundary:
+      heading: 客户端重连：last revision 是协议边界
+    owner_failover:
+      heading: 服务端崩溃：OT owner 可丢，accepted history 不可丢
+    raft_analogy:
+      heading: 为什么这和 Raft 如此相似
+    crdt_boundary:
+      heading: CRDT 是另一种边界选择
+    storage_selection:
+      heading: 存储选型叙事：先从 DynamoDB 起步，再收敛到 PostgreSQL
+    final_architecture:
+      heading: 最终架构
+  semantic_contracts:
+    acked_edit_failover_survival:
+      class: safety_contract
+      definition: For an edit e accepted at canonical revision r, a success ACK means e was durably
+        accepted before the ACK. For any later owner recovery that completes and resumes service
+        from authoritative frontier H with H >= r, the recovered logical document state equals
+        canonical replay through H; owner failover therefore cannot omit e relative to that replay,
+        although later accepted edits may legitimately overwrite or reverse e's visible effect.
+      excludes:
+        - No guarantee that owner recovery is eventually scheduled, completes, or meets a particular
+          recovery-time objective.
+        - No guarantee that any client eventually reconnects or observes the acknowledged edit.
+        - No guarantee that the individual accepted-change row for the edit remains physically
+          retained or directly queryable after compaction.
+      automation_reusable: true
+    logical_state_equivalence_at_frontier:
+      class: equivalence_relation
+      definition: At a common authoritative frontier H, an optimized authoritative representation or
+        completed recovery is equivalent to canonical replay when it denotes the same logical
+        document state as deterministic replay of accepted revisions through H and preserves
+        latest_revision = H. When the representation is used to resume owner service, it also
+        reconstructs the acceptance-relevant state required to continue from H without changing
+        canonical semantics.
+      excludes:
+        - Physical accepted-row retention, storage layout, checkpoint identity, and cache contents
+          are not observations in this equivalence relation.
+        - Audit-query equivalence for individual compacted revisions is not guaranteed.
+        - Latency, CPU or I/O cost, timing, and internal scheduling are not observations in this
+          equivalence relation.
+      automation_reusable: true
+id_allocator:
+  next_sequence:
+    A: 6
+    G: 8
+    C: 35
+    L: 110
+    D: 7
+    T: 2
+assurance:
+  specification_coverage:
+    status: gap_found
+    auditor_count: 4
+    rationale: 'Final root-coverage audit found two surviving in-scope reconnect publication counterexamples:
+      a delayed older resync response can regress an already published newer canonical frontier and reconciliation
+      state, and an intermediate resync prefix can become visible before accepted speculative overlays
+      are removed. Both expose a missing atomic-and-monotonic client resync publication boundary.'
+    signature: 394277d75ebe1e6b5dd07a7d54bb46e92ac3c8fe007539304df3fe01e6a2475a
+  composition:
+    G0_acked_edit_survives_failover:
+      status: unaudited
+    G1_retry_is_logically_exactly_once:
+      status: unaudited
+    G2_canonical_history_is_linear_and_fenced:
+      status: unaudited
+    G3_snapshot_and_recovery_preserve_state:
+      status: unaudited
+    G4_reconnect_converges_without_gap_or_duplicate:
+      status: unaudited
+    G5_retry_resolves_idempotently:
+      status: unaudited
+    C7_revision_frontier_is_linear:
+      status: unaudited
+    C8_stale_owner_is_fenced:
+      status: unaudited
+    C9_recovery_reconstructs_committed_state:
+      status: unaudited
+    C10_catchup_represents_exact_missing_suffix:
+      status: unaudited
+    C12_live_delivery_contains_only_accepted_changes:
+      status: unaudited
+    C13_idempotency_key_is_temporally_unique:
+      status: unaudited
+    C14_all_acceptance_paths_honor_idempotency_identity:
+      status: unaudited
+    C15_snapshot_catchup_returns_checkpoint_and_exact_tail:
+      status: unaudited
+    C16_non_append_lifecycle_preserves_logical_revision_prefix:
+      status: unaudited
+    C17_snapshot_mode_selects_checkpoint_not_after_head:
+      status: unaudited
+    C18_recovery_selects_and_loads_authoritative_checkpoint:
+      status: unaudited
+    C25_recovery_derives_complete_ot_metadata_from_truth:
+      status: unaudited
+    G6_accepted_change_preserves_ot_semantics:
+      status: unaudited
+    G7_reconnect_does_not_double_render_accepted_optimistic_edit:
+      status: unaudited
+  implementation_evidence:
+    L16_commit_precedes_ack:
+      status: planned
+    L17_commit_precedes_broadcast:
+      status: planned
+    L19_client_applies_only_contiguous_revisions:
+      status: planned
+    L2_retry_returns_existing_acceptance:
+      status: planned
+    L14_accepted_idempotency_identity_survives_lifecycle:
+      status: planned
+    L3_revision_key_is_unique:
+      status: planned
+    L4_append_requires_previous_frontier:
+      status: planned
+    L5_append_requires_current_epoch:
+      status: planned
+    L6_frontier_advance_and_insert_commit_together:
+      status: planned
+    L8_snapshot_is_exact_committed_prefix:
+      status: planned
+    L9_snapshot_content_and_frontier_publish_atomically:
+      status: planned
+    L10_replay_covers_exact_tail_in_order_once:
+      status: planned
+    L12_delta_catchup_reads_canonical_revision_range:
+      status: planned
+    L20_acceptance_paths_are_authoritatively_mediated:
+      status: planned
+    L21_accepted_key_gate_rejects_new_acceptance:
+      status: planned
+    L22_initial_history_matches_frontier:
+      status: planned
+    L25_snapshot_catchup_uses_selected_checkpoint_replacement:
+      status: planned
+    L26_snapshot_catchup_returns_exact_canonical_tail:
+      status: planned
+    L27_concurrent_first_acceptance_is_atomically_arbitrated:
+      status: planned
+    L28_authoritative_epoch_never_regresses_or_reuses:
+      status: planned
+    L29_non_append_lifecycle_preserves_revision_domain:
+      status: planned
+    L30_non_append_lifecycle_preserves_prefix_semantics:
+      status: planned
+    L31_committed_append_sets_frontier_to_revision:
+      status: planned
+    L32_catchup_selects_complete_mode_for_response_head:
+      status: planned
+    L33_committed_append_preserves_existing_revision_prefix:
+      status: planned
+    L34_retries_of_logical_edit_reuse_identity:
+      status: planned
+    L35_losing_retry_resolves_through_canonical_acceptance:
+      status: planned
+    L37_snapshot_mode_selects_authoritative_checkpoint:
+      status: planned
+    L38_selected_checkpoint_does_not_exceed_response_head:
+      status: planned
+    L39_recovered_owner_resumes_at_head_plus_one:
+      status: planned
+    L41_recovery_checkpoint_does_not_exceed_recovery_head:
+      status: planned
+    L42_recovery_selects_authoritative_checkpoint_identity:
+      status: planned
+    L54_absent_key_winner_returns_its_canonical_acceptance:
+      status: planned
+    L55_successful_retry_resolution_paths_are_exhaustive:
+      status: planned
+    L64_recovered_ot_metadata_equals_clean_authoritative_reconstruction:
+      status: planned
+    L65_failed_owner_volatile_state_cannot_influence_recovered_metadata:
+      status: planned
+    L79_new_owner_accepts_only_after_reconstruction:
+      status: planned
+    L92_captured_recovery_head_equals_authoritative_frontier:
+      status: planned
+    L93_recovery_loads_selected_checkpoint_before_replay:
+      status: planned
+    L94_recovery_starts_after_epoch_handoff:
+      status: planned
+    L95_lifecycle_procedures_share_and_hold_document_lock:
+      status: planned
+    L96_recovery_orders_head_selection_replay_and_metadata:
+      status: planned
+    L97_client_adopts_snapshot_before_tail:
+      status: planned
+    L98_ot_receives_exact_request_and_canonical_context:
+      status: planned
+    L99_ot_result_is_bound_to_acceptance_frontier:
+      status: planned
+    L100_acceptance_commits_only_ot_success_output:
+      status: planned
+    L101_client_completes_catchup_through_response_head:
+      status: planned
+    L102_client_frontier_matches_canonical_base:
+      status: planned
+    L104_pending_identity_resolution_is_bound_to_response_head:
+      status: planned
+    L106_resync_request_covers_start_pending_set:
+      status: planned
+    L107_client_freezes_speculative_edits_during_resync:
+      status: planned
+    L108_acceptance_preserves_request_identity:
+      status: planned
+    L109_resync_publication_is_atomic_and_monotonic:
+      status: planned

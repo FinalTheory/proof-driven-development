@@ -1,0 +1,787 @@
+from __future__ import annotations
+
+from typing import Any
+
+SCHEMA_VERSION = "0.11"
+PROOF_SEMANTICS_VERSION = "1"
+SEVERITY_LEVELS = ("critical", "high")
+ASSURANCE_LEVELS = ("maximal", "strong")
+ASSUMPTION_STATUSES = (
+    "external_assumption",
+    "protocol_assumption",
+    "environment_assumption",
+)
+REFINEMENT_STATUSES = ("pending", "stable", "waived")
+SPECIFICATION_COVERAGE_STATUSES = ("unaudited", "gap_found", "closed")
+COMPOSITION_ASSURANCE_STATUSES = (
+    "unaudited",
+    "single_agent_audited",
+    "multi_agent_audited",
+    "machine_checked",
+)
+EVIDENCE_ASSURANCE_STATUSES = ("planned", "implemented", "passing", "failing")
+DECISION_STATUSES = ("open", "resolved")
+TOOLING_BLOCKER_STATUSES = ("open", "resolved")
+
+LOWER_SNAKE = r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$"
+SOURCE_ID = r"^(?!section_[0-9]+$)[a-z][a-z0-9]*(?:_[a-z0-9]+)*$"
+ASSUMPTION_ID = r"^A[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$"
+ROOT_ID = r"^G[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$"
+CLAIM_ID = r"^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$"
+DECISION_ID = r"^D[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$"
+TOOLING_BLOCKER_ID = r"^T[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$"
+HEX64 = r"^[0-9a-f]{64}$"
+
+
+def _string_list(*, min_items: int = 0, pattern: str | None = None) -> dict[str, Any]:
+    item: dict[str, Any] = {"type": "string", "minLength": 1}
+    if pattern:
+        item["pattern"] = pattern
+    result: dict[str, Any] = {
+        "type": "array",
+        "items": item,
+        "uniqueItems": True,
+    }
+    if min_items:
+        result["minItems"] = min_items
+    return result
+
+
+def _closed_object(
+    properties: dict[str, Any],
+    *,
+    required: tuple[str, ...] | list[str] = (),
+    extra: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": properties,
+    }
+    if required:
+        result["required"] = list(required)
+    if extra:
+        result.update(extra)
+    return result
+
+
+NONEMPTY_STRING = {"type": "string", "minLength": 1}
+SOURCE_REFS = _string_list(min_items=1, pattern=SOURCE_ID)
+SURFACE_REFS = _string_list(min_items=1, pattern=LOWER_SNAKE)
+MECHANISM_REFS = _string_list(min_items=1, pattern=LOWER_SNAKE)
+SEMANTIC_CONTRACT_REFS = _string_list(min_items=1, pattern=LOWER_SNAKE)
+DEPENDENCY_REFS = _string_list(min_items=1, pattern=r"^[AGCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
+
+VERIFIER_SCHEMA = _closed_object(
+    {
+        "kind": {
+            "type": "string",
+            "pattern": LOWER_SNAKE,
+            "description": "Verifier strategy category. Must resolve to catalog.verifier_kinds.",
+        },
+        "intent": {
+            **NONEMPTY_STRING,
+            "description": "Scenario-specific observation/check this verifier is expected to perform.",
+        },
+    },
+    required=("kind", "intent"),
+)
+
+VERIFICATION_SCHEMA = _closed_object(
+    {
+        "verifiers": {
+            "type": "array",
+            "minItems": 1,
+            "items": VERIFIER_SCHEMA,
+            "description": "One or more planned verifier strategies whose concrete scenario is described by each intent.",
+        },
+    },
+    required=("verifiers",),
+)
+
+CLAIM_BODY_PROPERTIES: dict[str, Any] = {
+    "statement": {
+        **NONEMPTY_STRING,
+        "description": "Authoritative natural-language proposition represented by this node.",
+    },
+    "severity": {
+        "enum": list(SEVERITY_LEVELS),
+        "description": "Impact classification used for assurance prioritization; excluded from proof semantics/signatures.",
+    },
+    "assurance_required": {
+        "enum": list(ASSURANCE_LEVELS),
+        "description": "Required assurance rigor for the claim; metadata for evidence planning, not part of the proposition.",
+    },
+    "source_refs": {
+        **SOURCE_REFS,
+        "description": "Traceability references into catalog.sources; excluded from proposition semantics.",
+    },
+    "surfaces": {
+        **SURFACE_REFS,
+        "description": "Implementation/change-impact surfaces whose modification may require revalidation.",
+    },
+    "mechanisms": {
+        **MECHANISM_REFS,
+        "description": "Approved architecture mechanisms referenced by the proposition and used for synthesis-boundary checks.",
+    },
+    "semantic_contracts": {
+        **SEMANTIC_CONTRACT_REFS,
+        "description": "Reusable typed semantic contracts that define a safety or equivalence boundary used by this proposition, including any observer exclusions. Contracts define meaning; they are not proof premises.",
+    },
+    "formal_intent": {
+        **NONEMPTY_STRING,
+        "description": "Optional compact/formal restatement of the proposition; included in semantic signatures.",
+    },
+    "depends_on": {
+        **DEPENDENCY_REFS,
+        "description": "Logical proof dependencies. A depends_on B means A is not established unless B holds; this is not runtime order.",
+    },
+    "verification": {
+        **VERIFICATION_SCHEMA,
+        "description": "Planned executable/mechanical evidence attached to the claim. Presence means evidence is planned; implementation/execution state is tracked separately under assurance.implementation_evidence.",
+    },
+}
+
+CLAIM_MUTABLE_FIELDS = tuple(CLAIM_BODY_PROPERTIES)
+
+
+CLAIM_SCHEMA = _closed_object(
+    {"kind": {"enum": ["root", "derived", "leaf"], "description": "Proof-graph role of the claim."}, **CLAIM_BODY_PROPERTIES},
+    required=("kind", "statement", "severity", "assurance_required", "source_refs"),
+    extra={
+        "allOf": [
+            {
+                "if": {"properties": {"kind": {"enum": ["root", "derived"]}}, "required": ["kind"]},
+                "then": {"required": ["depends_on"]},
+            },
+            {
+                "if": {"properties": {"kind": {"const": "leaf"}}, "required": ["kind"]},
+                "then": {
+                    "required": ["surfaces", "mechanisms", "verification"],
+                    "not": {"required": ["depends_on"]},
+                },
+            },
+        ]
+    },
+)
+
+
+ASSUMPTION_BODY_SCHEMA = _closed_object(
+    {
+        "statement": {
+            **NONEMPTY_STRING,
+            "description": "Authoritative proposition accepted as a terminal proof boundary rather than proved inside this DAG.",
+        },
+        "status": {
+            "enum": list(ASSUMPTION_STATUSES),
+            "description": "Classifies whether the assumption is delegated to an external component, protocol participant, or environment/liveness condition.",
+        },
+        "note": {
+            **NONEMPTY_STRING,
+            "description": "Optional clarification of the assumption boundary; included in assumption semantics when present.",
+        },
+        "source_refs": {
+            **SOURCE_REFS,
+            "description": "Traceability references into catalog.sources for this assumption.",
+        },
+    },
+    required=("statement", "status", "source_refs"),
+)
+
+DECISION_BODY_SCHEMA = _closed_object(
+    {
+        "question": {
+            **NONEMPTY_STRING,
+            "description": "Exact system-semantic choice that existing specification cannot determine automatically.",
+        },
+        "reason": {
+            **NONEMPTY_STRING,
+            "description": "Why proof progress requires human architecture/product judgment rather than proof-structure refinement.",
+        },
+        "options": {
+            **_string_list(min_items=1),
+            "description": "Concrete candidate semantic choices presented for human judgment.",
+        },
+        "status": {
+            "enum": list(DECISION_STATUSES),
+            "description": "Whether the semantic decision is still open or has been resolved.",
+        },
+        "resolution": {
+            **NONEMPTY_STRING,
+            "description": "Chosen semantic decision and its operative meaning; required when status is resolved.",
+        },
+    },
+    required=("question", "reason", "options", "status"),
+    extra={
+        "allOf": [
+            {
+                "if": {"properties": {"status": {"const": "resolved"}}, "required": ["status"]},
+                "then": {"required": ["resolution"]},
+            }
+        ]
+    },
+)
+
+TOOLING_BLOCKER_BODY_SCHEMA = _closed_object(
+    {
+        "status": {
+            "enum": list(TOOLING_BLOCKER_STATUSES),
+            "description": "Whether this control-plane defect still globally blocks automated refinement.",
+        },
+        "issue": {
+            **NONEMPTY_STRING,
+            "description": "Concrete defect or limitation in the correctness tooling/control plane.",
+        },
+        "reason": {
+            **NONEMPTY_STRING,
+            "description": "Why continuing despite the tooling defect would make refinement untrustworthy or unrepresentable.",
+        },
+        "suggested_change": {
+            **NONEMPTY_STRING,
+            "description": "Optional proposed tooling repair; advisory rather than a system-semantic decision.",
+        },
+        "resolution": {
+            **NONEMPTY_STRING,
+            "description": "Description of the completed tooling repair; required when status is resolved.",
+        },
+    },
+    required=("status", "issue", "reason"),
+    extra={
+        "allOf": [
+            {
+                "if": {"properties": {"status": {"const": "resolved"}}, "required": ["status"]},
+                "then": {"required": ["resolution"]},
+            }
+        ]
+    },
+)
+
+REFINEMENT_ENTRY_SCHEMA = _closed_object(
+    {
+        "status": {
+            "enum": list(REFINEMENT_STATUSES),
+            "description": "Current audit state for this claim: pending work, stable for its current semantics, or explicitly waived.",
+        },
+        "blocked_by": {
+            **_string_list(pattern=DECISION_ID),
+            "description": "Open human semantic decisions that directly block this pending claim.",
+        },
+        "rationale": {
+            **NONEMPTY_STRING,
+            "description": "Human-readable reason for the current stable/waived judgment; audit history metadata.",
+        },
+        "signature": {
+            "type": "string",
+            "pattern": HEX64,
+            "description": "SHA-256 of this node's current recursive proof semantics and relevant global/catalog semantics.",
+        },
+    },
+    required=("status", "blocked_by"),
+    extra={
+        "allOf": [
+            {
+                "if": {"properties": {"status": {"const": "stable"}}, "required": ["status"]},
+                "then": {"required": ["signature"]},
+            },
+            {
+                "if": {"properties": {"status": {"const": "waived"}}, "required": ["status"]},
+                "then": {"required": ["rationale"]},
+            },
+        ]
+    },
+)
+
+
+SPECIFICATION_COVERAGE_SCHEMA = _closed_object(
+    {
+        "status": {
+            "enum": list(SPECIFICATION_COVERAGE_STATUSES),
+            "description": "Architecture-level root-coverage audit result for the current model semantics. `stale` is derived by tooling from signature mismatch and is never written directly.",
+        },
+        "signature": {
+            "type": "string",
+            "pattern": HEX64,
+            "description": "SHA-256 of the audited root universe, global semantics, assumptions, and canonical design article content.",
+        },
+        "auditor_count": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Number of independent adversarial auditors whose results were incorporated into this coverage judgment.",
+        },
+        "rationale": {
+            **NONEMPTY_STRING,
+            "description": "Concise explanation of the latest root-coverage judgment.",
+        },
+    },
+    required=("status",),
+    extra={
+        "allOf": [
+            {
+                "if": {
+                    "properties": {"status": {"enum": ["gap_found", "closed"]}},
+                    "required": ["status"],
+                },
+                "then": {"required": ["signature", "auditor_count", "rationale"]},
+            }
+        ]
+    },
+)
+
+COMPOSITION_ASSURANCE_ENTRY_SCHEMA = _closed_object(
+    {
+        "status": {
+            "enum": list(COMPOSITION_ASSURANCE_STATUSES),
+            "description": "Assurance level for the logical implication from this non-leaf claim's direct dependencies to the claim itself. `stale` is derived from signature mismatch.",
+        },
+        "signature": {
+            "type": "string",
+            "pattern": HEX64,
+            "description": "Signature of the composition contract: this target proposition plus its direct dependency propositions and interpretation context, excluding deeper dependency decompositions.",
+        },
+        "auditor_count": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Number of independent semantic auditors used for agent-audited composition assurance.",
+        },
+        "artifact_refs": {
+            **_string_list(min_items=1),
+            "description": "Machine-checkable proof/model artifacts supporting machine_checked composition assurance.",
+        },
+        "rationale": {
+            **NONEMPTY_STRING,
+            "description": "Concise explanation of why this dependency composition is believed sound at the recorded level.",
+        },
+    },
+    required=("status",),
+    extra={
+        "allOf": [
+            {
+                "if": {"properties": {"status": {"const": "single_agent_audited"}}, "required": ["status"]},
+                "then": {
+                    "required": ["signature", "auditor_count", "rationale"],
+                    "properties": {"auditor_count": {"const": 1}},
+                },
+            },
+            {
+                "if": {"properties": {"status": {"const": "multi_agent_audited"}}, "required": ["status"]},
+                "then": {
+                    "required": ["signature", "auditor_count", "rationale"],
+                    "properties": {"auditor_count": {"type": "integer", "minimum": 2}},
+                },
+            },
+            {
+                "if": {"properties": {"status": {"const": "machine_checked"}}, "required": ["status"]},
+                "then": {"required": ["signature", "artifact_refs", "rationale"]},
+            },
+        ]
+    },
+)
+
+IMPLEMENTATION_EVIDENCE_ENTRY_SCHEMA = _closed_object(
+    {
+        "status": {
+            "enum": list(EVIDENCE_ASSURANCE_STATUSES),
+            "description": "Lifecycle state of executable implementation evidence for this leaf. `stale` is derived from semantic-signature mismatch rather than written directly.",
+        },
+        "signature": {
+            "type": "string",
+            "pattern": HEX64,
+            "description": "Leaf semantic signature against which the executable evidence was implemented or executed.",
+        },
+        "implementation_revision": {
+            **NONEMPTY_STRING,
+            "description": "Implementation revision/build identifier to which the recorded executable evidence result applies.",
+        },
+        "artifact_refs": {
+            **_string_list(min_items=1),
+            "description": "Paths, CI artifacts, test/model-checker IDs, or equivalent references for the executable evidence.",
+        },
+        "rationale": {
+            **NONEMPTY_STRING,
+            "description": "Optional explanation of the evidence state; required for failing evidence.",
+        },
+    },
+    required=("status",),
+    extra={
+        "allOf": [
+            {
+                "if": {
+                    "properties": {"status": {"enum": ["implemented", "passing", "failing"]}},
+                    "required": ["status"],
+                },
+                "then": {"required": ["signature", "implementation_revision", "artifact_refs"]},
+            },
+            {
+                "if": {"properties": {"status": {"const": "failing"}}, "required": ["status"]},
+                "then": {"required": ["rationale"]},
+            },
+        ]
+    },
+)
+
+ASSURANCE_SCHEMA = _closed_object(
+    {
+        "specification_coverage": {
+            **SPECIFICATION_COVERAGE_SCHEMA,
+            "description": "Global specification-completeness assurance for the current root universe and canonical design.",
+        },
+        "composition": {
+            "type": "object",
+            "patternProperties": {CLAIM_ID: COMPOSITION_ASSURANCE_ENTRY_SCHEMA},
+            "additionalProperties": False,
+            "description": "Per-root/per-derived assurance that direct proof dependencies logically imply the claim.",
+        },
+        "implementation_evidence": {
+            "type": "object",
+            "patternProperties": {CLAIM_ID: IMPLEMENTATION_EVIDENCE_ENTRY_SCHEMA},
+            "additionalProperties": False,
+            "description": "Per-leaf executable evidence state. Planned verifier descriptions remain on claims; execution state lives here.",
+        },
+    },
+    required=("specification_coverage", "composition", "implementation_evidence"),
+)
+
+
+def _catalog_map(entry_schema: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "type": "object",
+        "minProperties": 1,
+        "patternProperties": {LOWER_SNAKE: entry_schema},
+        "additionalProperties": False,
+    }
+
+
+CATALOG_SCHEMA = _closed_object(
+    {
+        "terms": {
+            **_catalog_map(_closed_object(
+                {"description": {**NONEMPTY_STRING, "description": "Definition of this protocol/domain term; vocabulary only, not a correctness premise."}},
+                required=("description",),
+            )),
+            "description": "Protocol/domain vocabulary registry. Dynamic keys must be lower_snake_case term IDs.",
+        },
+        "state": {
+            **_catalog_map(
+                _closed_object(
+                    {
+                        "class": {
+                            "enum": ["authoritative", "derived"],
+                            "description": "Whether this state is source-of-truth state or reconstructable/materialized state.",
+                        },
+                        "description": {
+                            **NONEMPTY_STRING,
+                            "description": "Definition and correctness role of this state item.",
+                        },
+                    },
+                    required=("class", "description"),
+                )
+            ),
+            "description": "Architecture state registry. Dynamic keys identify authoritative or derived state items.",
+        },
+        "mechanisms": {
+            **_catalog_map(
+                _closed_object(
+                    {
+                        "description": {
+                            **NONEMPTY_STRING,
+                            "description": "Definition of an architecture mechanism that claims may reference.",
+                        },
+                        "automation_reusable": {
+                            "type": "boolean",
+                            "description": "Whether automated proof refinement may reuse this already-approved architecture mechanism in new/changed claims.",
+                        },
+                    },
+                    required=("description", "automation_reusable"),
+                )
+            ),
+            "description": "Approved architecture-mechanism registry and automation synthesis boundary.",
+        },
+        "semantic_contracts": {
+            **_catalog_map(
+                _closed_object(
+                    {
+                        "class": {
+                            "enum": ["safety_contract", "equivalence_relation"],
+                            "description": "Semantic role of this reusable contract definition.",
+                        },
+                        "definition": {
+                            **NONEMPTY_STRING,
+                            "description": "Normative meaning of the contract. Referencing claims inherit this interpretation but do not gain any proof premise from it.",
+                        },
+                        "excludes": {
+                            **_string_list(),
+                            "description": "Explicitly excluded observations, horizons, or stronger guarantees that must not be inferred from this contract.",
+                        },
+                        "automation_reusable": {
+                            "type": "boolean",
+                            "description": "Whether automated refinement may reference this already human-approved semantic contract when creating a new proof-structure claim. Changing the semantic-contract association of an existing claim requires human authority.",
+                        },
+                    },
+                    required=("class", "definition", "excludes", "automation_reusable"),
+                )
+            ),
+            "description": "Reusable semantic relations/boundaries shared by claims. These entries define claim meaning rather than asserting that the claim is true.",
+        },
+        "failure_events": {
+            **_catalog_map(
+                _closed_object(
+                    {
+                        "class": {
+                            "enum": ["allowed", "excluded"],
+                            "description": "Whether the event must be tolerated by proofs or is outside the modeled failure envelope.",
+                        },
+                        "description": {
+                            **NONEMPTY_STRING,
+                            "description": "Definition of the failure/concurrency event and its modeled meaning.",
+                        },
+                    },
+                    required=("class", "description"),
+                )
+            ),
+            "description": "Global failure model. Entries apply to every proof audit and participate in semantic signatures.",
+        },
+        "surfaces": {
+            **_catalog_map(_closed_object(
+                {"description": {**NONEMPTY_STRING, "description": "Definition of an implementation/change-impact surface used for revalidation mapping."}},
+                required=("description",),
+            )),
+            "description": "Stable implementation/change-impact taxonomy used to map code changes to proof obligations.",
+        },
+        "verifier_kinds": {
+            **_catalog_map(_closed_object(
+                {"description": {**NONEMPTY_STRING, "description": "Definition of a reusable verifier strategy category."}},
+                required=("description",),
+            )),
+            "description": "Small stable taxonomy of verifier strategies; scenario detail belongs in verifier.intent.",
+        },
+        "sources": {
+            "type": "object",
+            "minProperties": 1,
+            "patternProperties": {
+                SOURCE_ID: _closed_object(
+                    {
+                        "heading": {
+                            **NONEMPTY_STRING,
+                            "description": "Exact semantic H2 heading text in source.article, excluding any leading numeric display prefix such as `6.`.",
+                        },
+                    },
+                    required=("heading",),
+                )
+            },
+            "additionalProperties": False,
+            "description": "Traceability registry keyed by stable semantic source IDs. Positional IDs such as section_6 are forbidden; article numbering is presentation only.",
+        },
+    },
+    required=("terms", "state", "mechanisms", "semantic_contracts", "failure_events", "surfaces", "verifier_kinds", "sources"),
+)
+
+REFINEMENT_SCHEMA = _closed_object(
+    {
+        "decisions": {
+            "type": "object",
+            "patternProperties": {DECISION_ID: DECISION_BODY_SCHEMA},
+            "additionalProperties": False,
+            "description": "Human semantic decisions required when the current system specification does not determine a proof obligation.",
+        },
+        "tooling_blockers": {
+            "type": "object",
+            "patternProperties": {TOOLING_BLOCKER_ID: TOOLING_BLOCKER_BODY_SCHEMA},
+            "additionalProperties": False,
+            "description": "Resolved or open control-plane defects that prevent trustworthy automated refinement.",
+        },
+        "nodes": {
+            "type": "object",
+            "patternProperties": {CLAIM_ID: REFINEMENT_ENTRY_SCHEMA},
+            "additionalProperties": False,
+            "description": "Per-claim refinement execution state. Keys must be existing claim IDs.",
+        },
+    },
+    required=("decisions", "tooling_blockers", "nodes"),
+)
+
+ID_ALLOCATOR_SCHEMA = _closed_object(
+    {
+        "next_sequence": {
+            **_closed_object(
+                {prefix: {"type": "integer", "minimum": 1, "description": f"Next unused sequence for {prefix}-prefixed IDs."} for prefix in ("A", "G", "C", "L", "D", "T")},
+                required=("A", "G", "C", "L", "D", "T"),
+            ),
+            "description": "Next unused sequence number for each node-role prefix. This is mutable allocator state, not proof semantics.",
+        },
+    },
+    required=("next_sequence",),
+)
+
+SYSTEM_SCHEMA = _closed_object(
+    {
+        "id": {
+            "type": "string",
+            "pattern": LOWER_SNAKE,
+            "description": "Stable identifier for the system model.",
+        },
+        "summary": {
+            **NONEMPTY_STRING,
+            "description": "Neutral system summary injected into every local proof audit and included in semantic signatures.",
+        },
+        "liveness_boundary": {
+            **NONEMPTY_STRING,
+            "description": "Global liveness interpretation boundary. Liveness not stated here or in explicit claims/assumptions must not be inferred.",
+        },
+    },
+    required=("id", "summary", "liveness_boundary"),
+)
+
+SCOPE_SCHEMA = _closed_object(
+    {
+        "includes": {
+            **_string_list(min_items=1),
+            "description": "System/protocol concerns whose correctness is modeled by this DAG.",
+        },
+        "excludes": {
+            **_string_list(min_items=1),
+            "description": "Product/protocol concerns intentionally outside this DAG. Failure assumptions belong in catalog.failure_events instead.",
+        },
+    },
+    required=("includes", "excludes"),
+)
+
+CANONICAL_GRAPH_SCHEMA: dict[str, Any] = {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:proof-driven-development:correctness-graph:v0.11",
+    "title": "Proof-Driven Development correctness graph",
+    "description": (
+        "Closed typed representation of one system correctness model. Fixed object fields are schema-defined; "
+        "only semantically dynamic maps such as claim IDs, assumption IDs, decisions, refinement/assurance-node IDs, and "
+        "catalog entry IDs admit dynamic keys, and those keys are pattern-constrained."
+    ),
+    "type": "object",
+    "additionalProperties": False,
+    "required": [
+        "schema_version",
+        "system",
+        "source",
+        "scope",
+        "catalog",
+        "id_allocator",
+        "assumptions",
+        "roots",
+        "claims",
+        "refinement",
+        "assurance",
+    ],
+    "properties": {
+        "schema_version": {
+            "const": SCHEMA_VERSION,
+            "description": "Version of the canonical correctness-document schema.",
+        },
+        "system": {
+            **SYSTEM_SCHEMA,
+            "description": "System-specific global semantic context consumed by every local proof audit.",
+        },
+        "source": {
+            **_closed_object(
+                {
+                    "article": {
+                        **NONEMPTY_STRING,
+                        "description": "Repository-relative architecture document from which the correctness model is derived.",
+                    }
+                },
+                required=("article",),
+            ),
+            "description": "Traceability pointer to the architecture narrative; this pointer is not itself a correctness premise.",
+        },
+        "scope": {
+            **SCOPE_SCHEMA,
+            "description": "Explicit product/protocol boundary of the correctness model. Failure assumptions belong in catalog.failure_events, not here.",
+        },
+        "catalog": {
+            **CATALOG_SCHEMA,
+            "description": "Typed vocabulary, state, mechanisms, reusable semantic contracts, failure events, implementation surfaces, verifier taxonomy, and source-section registry.",
+        },
+        "id_allocator": {
+            **ID_ALLOCATOR_SCHEMA,
+            "description": "Mutable allocator state used only by the single-writer mutation engine. ID format and prefix meanings are tool semantics, not YAML configuration.",
+        },
+        "assumptions": {
+            "type": "object",
+            "minProperties": 1,
+            "patternProperties": {ASSUMPTION_ID: ASSUMPTION_BODY_SCHEMA},
+            "additionalProperties": False,
+            "description": "Explicit terminal proof boundaries supplied by protocol, environment, or external components.",
+        },
+        "roots": {
+            **_string_list(min_items=1, pattern=ROOT_ID),
+            "description": "Claim IDs that define the top-level guarantees of the model.",
+        },
+        "claims": {
+            "type": "object",
+            "minProperties": 1,
+            "patternProperties": {CLAIM_ID: CLAIM_SCHEMA},
+            "additionalProperties": False,
+            "description": "Dynamically keyed proof propositions. Keys encode node role and sequence; each value has a closed claim schema.",
+        },
+        "refinement": {
+            **REFINEMENT_SCHEMA,
+            "description": "Execution state of the adversarial refinement campaign. Scheduler policy itself is defined by correctness.py, not configurable here.",
+        },
+        "assurance": {
+            **ASSURANCE_SCHEMA,
+            "description": "Orthogonal assurance state: specification completeness, dependency-composition review, and executable leaf evidence. These states never act as proof premises or refinement scheduler gates.",
+        },
+    },
+}
+
+# Mutation payloads deliberately omit `kind` because it is carried by add/reclassify operations.
+MUTATION_CLAIM_BODY_SCHEMA = _closed_object(CLAIM_BODY_PROPERTIES, required=("statement",))
+MUTATION_CLAIM_UPDATE_SCHEMA = _closed_object(CLAIM_BODY_PROPERTIES)
+MUTATION_ASSUMPTION_BODY_SCHEMA = ASSUMPTION_BODY_SCHEMA
+MUTATION_DECISION_BODY_SCHEMA = _closed_object(
+    {
+        "question": {
+            **NONEMPTY_STRING,
+            "description": "Exact system-semantic choice that existing specification cannot determine automatically.",
+        },
+        "reason": {
+            **NONEMPTY_STRING,
+            "description": "Why proof progress requires human architecture/product judgment rather than proof-structure refinement.",
+        },
+        "options": {
+            **_string_list(min_items=1),
+            "description": "Concrete candidate semantic choices presented for human judgment.",
+        },
+        "status": {
+            "enum": list(DECISION_STATUSES),
+            "description": "Whether the semantic decision is still open or has been resolved.",
+        },
+        "resolution": {
+            **NONEMPTY_STRING,
+            "description": "Chosen semantic decision and its operative meaning; required when status is resolved.",
+        },
+    },
+    required=("question", "reason", "options"),
+)
+MUTATION_TOOLING_BLOCKER_BODY_SCHEMA = _closed_object(
+    {
+        "status": {
+            "enum": list(TOOLING_BLOCKER_STATUSES),
+            "description": "Whether this control-plane defect still globally blocks automated refinement.",
+        },
+        "issue": {
+            **NONEMPTY_STRING,
+            "description": "Concrete defect or limitation in the correctness tooling/control plane.",
+        },
+        "reason": {
+            **NONEMPTY_STRING,
+            "description": "Why continuing despite the tooling defect would make refinement untrustworthy or unrepresentable.",
+        },
+        "suggested_change": {
+            **NONEMPTY_STRING,
+            "description": "Optional proposed tooling repair; advisory rather than a system-semantic decision.",
+        },
+        "resolution": {
+            **NONEMPTY_STRING,
+            "description": "Description of the completed tooling repair; required when status is resolved.",
+        },
+    },
+    required=("issue", "reason"),
+)
