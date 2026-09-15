@@ -12,7 +12,7 @@ For correctness-refinement work, use these sources in order:
 4. `design/google-docs.md` — source architecture narrative.
 5. `correctness/README.md` — explanatory documentation only.
 
-`correctness/prompt.md` is only a bootstrap prompt for a fresh long-lived orchestrator. It must not duplicate or override the operational contract above.
+`correctness/prompts/` contains thin copy/paste launchers for fresh orchestrator windows. They only select a workflow and bootstrap the live Harness; they must not duplicate or override the operational contract above.
 
 ## Non-negotiable guardrails
 

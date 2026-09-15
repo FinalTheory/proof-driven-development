@@ -490,7 +490,11 @@ The Dockerized collaborative editor, failure scenarios, evidence runner, and `pd
 │
 ├── correctness/
 │   ├── README.md
-│   ├── prompt.md
+│   ├── prompts/
+│   │   ├── README.md
+│   │   ├── refinement.md
+│   │   ├── coverage.md
+│   │   └── composition.md
 │   ├── correctness.yaml
 │   ├── correctness.py
 │   ├── graph_schema.py
