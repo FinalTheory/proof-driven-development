@@ -19,9 +19,9 @@ For correctness-refinement work, use these sources in order:
 - Never edit `correctness/correctness.yaml` directly. All canonical mutations go through `correctness.py mutate`.
 - Treat `correctness.yaml` as a closed typed document. Do not invent fields, catalog vocabulary, semantic contracts, verifier kinds, surfaces, or node IDs outside the current schema/tooling.
 - Automated proof refinement may reorganize proof structure, but it may not silently invent system semantics. A new protocol mechanism, state variable, lock, phase, generation, transaction boundary, source-of-truth rule, guarantee, or failure assumption requires human semantic judgment unless it is already explicitly approved by the current model.
-- A clean verifier must use only `correctness.py audit-prompt <NODE>` as its correctness specification. It must not read the full DAG, source article, repository docs, history, prior audits, sibling results, or old chat context.
-- The long-lived orchestrator may read the current repository and judge clean-verifier results, but its own accumulated context is not independent verification evidence.
-- Follow the scheduler returned by `refinement-status`; do not infer stop/continue behavior from old prompts or historical files.
+- A clean auditor must use only the canonical generated contract for its campaign: `audit-prompt <NODE>` for refinement, `composition-audit-prompt <NODE>` for proof-composition certification, or the role-specific task supplied by a `coverage-audit-prompt` orchestrator. It must obey that contract's isolation boundary and must not import prior audits, sibling results, history, or old chat context.
+- The long-lived orchestrator may read the current repository and judge clean-auditor results, but its own accumulated context is not independent verification evidence.
+- Follow the scheduler for the active campaign: `refinement-status` for refinement and `composition-status` for proof-composition certification. Global specification coverage is driven by `coverage-audit-prompt`. Do not infer stop/continue behavior from old prompts or historical files.
 - Treat `refinement.nodes.*.status: stable` strictly as refinement maturity for the recorded semantic signature. It is not proof-composition certification and not implementation evidence. Read orthogonal confidence state through `correctness.py assurance-status`; never use assurance metadata itself as a proof premise.
 
 ## Local history directory

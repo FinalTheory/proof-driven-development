@@ -1109,6 +1109,10 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("Typed architecture catalog and synthesis boundary", text)
         self.assertIn("automation_reusable", text)
         self.assertIn("single-verifier sufficiency", text)
+        self.assertIn("Assurance certification campaigns", text)
+        self.assertIn("coverage-audit-prompt", text)
+        self.assertIn("composition-status", text)
+        self.assertIn("composition-audit-prompt", text)
         for signal_id in correctness.LEAF_STOPPING_SIGNALS:
             self.assertIn(f"`{signal_id}`", text)
         self.assertIn("Specification wording repair", text)
@@ -1124,6 +1128,9 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("mutation-schema", help_text)
         self.assertIn("assurance-status", help_text)
         self.assertIn("audit-prompt", help_text)
+        self.assertIn("coverage-audit-prompt", help_text)
+        self.assertIn("composition-status", help_text)
+        self.assertIn("composition-audit-prompt", help_text)
 
     def test_duplicate_yaml_key_is_rejected(self):
         content = "claims:\n  A: {statement: one}\n  A: {statement: two}\n"
@@ -1335,6 +1342,111 @@ class CorrectnessToolTests(unittest.TestCase):
             correctness._node_semantic_signature(correctness.Graph(self.base), "G1_primary_goal"),
             correctness._node_semantic_signature(correctness.Graph(doc), "G1_primary_goal"),
         )
+
+
+    def _freeze_refinement_for_certification(self, doc):
+        graph = correctness.Graph(doc)
+        for node_id, entry in doc["refinement"]["nodes"].items():
+            entry["status"] = "stable"
+            entry["blocked_by"] = []
+            entry["signature"] = correctness._node_semantic_signature(graph, node_id)
+        return correctness.Graph(doc)
+
+    def test_composition_status_exposes_only_frozen_unaudited_nonleaf_nodes(self):
+        doc = copy.deepcopy(self.base)
+        graph = self._freeze_refinement_for_certification(doc)
+        snapshot = correctness._composition_campaign_snapshot(graph)
+        self.assertEqual(snapshot["state"], "CONTINUE")
+        self.assertEqual(snapshot["refinement_state"], "COMPLETE")
+        nodes = {item["node"]: item for item in snapshot["runnable"]}
+        self.assertEqual(set(nodes), {"G1_primary_goal", "G2_secondary_goal", "C1_composite_claim"})
+        self.assertEqual(nodes["C1_composite_claim"]["recommended_auditors"], 2)
+        self.assertEqual(nodes["C1_composite_claim"]["suggested_focuses"], ["execution", "quantifier"])
+        self.assertEqual(nodes["G1_primary_goal"]["recommended_auditors"], 3)
+        self.assertEqual(nodes["G1_primary_goal"]["suggested_focuses"], ["execution", "quantifier", "premise"])
+        self.assertEqual(snapshot["target_assurance"], "multi_agent_audited_or_machine_checked")
+        self.assertNotIn("L1_left_boundary", nodes)
+
+    def test_single_agent_composition_remains_on_certification_frontier(self):
+        doc = copy.deepcopy(self.base)
+        self._freeze_refinement_for_certification(doc)
+        plan = {
+            "mutation_version": 1,
+            "authority": "human",
+            "operations": [
+                {
+                    "op": "set_composition_assurance",
+                    "node": "C1_composite_claim",
+                    "status": "single_agent_audited",
+                    "auditor_count": 1,
+                    "rationale": "One clean synthetic auditor found no counterexample.",
+                }
+            ],
+        }
+        correctness._apply_mutation_plan(doc, plan)
+        snapshot = correctness._composition_campaign_snapshot(correctness.Graph(doc))
+        item = next(x for x in snapshot["runnable"] if x["node"] == "C1_composite_claim")
+        self.assertEqual(item["effective"], "single_agent_audited")
+
+    def test_composition_status_waits_for_refinement_complete(self):
+        snapshot = correctness._composition_campaign_snapshot(self.graph())
+        self.assertEqual(snapshot["state"], "REFINEMENT_INCOMPLETE")
+        self.assertEqual(snapshot["runnable"], [])
+
+    def test_composition_audit_prompt_contains_only_direct_premises(self):
+        doc = copy.deepcopy(self.base)
+        graph = self._freeze_refinement_for_certification(doc)
+        args = argparse.Namespace(node="G1_primary_goal", focus="quantifier")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            correctness._cmd_composition_audit_prompt(graph, args)
+        text = out.getvalue()
+        self.assertIn("Direct premises — assume all are true", text)
+        self.assertIn("C1_composite_claim", text)
+        self.assertIn("L3_independent_boundary", text)
+        self.assertIn("A1_fixture_environment", text)
+        self.assertNotIn("L1_left_boundary", text)
+        self.assertNotIn("L2_right_boundary", text)
+        self.assertIn("quantifier/boundary auditor", text)
+        self.assertIn("Composition signature", text)
+
+    def test_composition_audit_prompt_refuses_unfrozen_refinement(self):
+        args = argparse.Namespace(node="G1_primary_goal", focus="general")
+        with self.assertRaises(SystemExit) as ctx:
+            correctness._cmd_composition_audit_prompt(self.graph(), args)
+        self.assertIn("requires a frozen refinement graph", str(ctx.exception))
+
+    def test_composition_focuses_generate_distinct_attack_contracts(self):
+        doc = copy.deepcopy(self.base)
+        graph = self._freeze_refinement_for_certification(doc)
+        rendered = {}
+        for focus in correctness.COMPOSITION_AUDIT_FOCUS:
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                correctness._emit_composition_audit_prompt(graph, "C1_composite_claim", focus)
+            rendered[focus] = out.getvalue()
+        self.assertEqual(len(set(rendered.values())), len(correctness.COMPOSITION_AUDIT_FOCUS))
+        self.assertIn("execution counterexample generator", rendered["execution"])
+        self.assertIn("hidden-premise auditor", rendered["premise"])
+
+    def test_coverage_audit_prompt_binds_current_model_signature_and_roots(self):
+        doc = copy.deepcopy(self.base)
+        graph = self._freeze_refinement_for_certification(doc)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            correctness._cmd_coverage_audit_prompt(graph, argparse.Namespace())
+        text = out.getvalue()
+        self.assertIn(correctness._model_semantic_signature(graph), text)
+        self.assertIn("G1_primary_goal", text)
+        self.assertIn("G2_secondary_goal", text)
+        self.assertIn("all-roots-true execution generator", text)
+        self.assertIn("FINAL VERDICT: CLOSED", text)
+        self.assertIn("semantic alignment", text)
+
+    def test_coverage_audit_prompt_requires_refinement_complete(self):
+        with self.assertRaises(SystemExit) as ctx:
+            correctness._cmd_coverage_audit_prompt(self.graph(), argparse.Namespace())
+        self.assertIn("requires refinement COMPLETE", str(ctx.exception))
 
 
 if __name__ == "__main__":

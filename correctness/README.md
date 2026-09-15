@@ -30,6 +30,9 @@ python3 correctness.py mutation-schema --format yaml
 python3 correctness.py validate
 python3 correctness.py refinement-status --format compact-yaml
 python3 correctness.py assurance-status --format compact-yaml
+python3 correctness.py coverage-audit-prompt
+python3 correctness.py composition-status --format compact-yaml
+python3 correctness.py composition-audit-prompt <ROOT_OR_DERIVED> --focus execution
 python3 correctness.py catalog mechanisms
 python3 correctness.py catalog semantic_contracts
 python3 correctness.py slice G1_retry_is_logically_exactly_once --format prompt
@@ -416,6 +419,10 @@ A5 applying a canonical accepted sequence is deterministic
 这一版仍然没有把 claim 本身标成 `verified`。`verification.verifiers` 只描述准备如何获得机械证据；实际执行状态进入独立的 `assurance.implementation_evidence.<leaf>`，而不是污染 claim proposition。`passing` 必须绑定 leaf semantic signature、具体 implementation revision 和 evidence artifact refs；claim 语义变化后 harness 会把旧结果有效地显示为 `stale`。
 
 同样，`refinement.status: stable` 只表示 proposition/decomposition 已经收敛。non-leaf 的 `dependencies ⇒ target` 可信度由 `assurance.composition` 单独记录；全局 root universe 是否完整由 `assurance.specification_coverage` 单独记录。三类 assurance 与 refinement scheduler 正交。
+
+Refinement 完成后有两条独立的 reasoning certification pipeline。`coverage-audit-prompt` 生成全局 root-coverage/specification-completeness campaign：假设整个 DAG 都成立，继续寻找 scope 内的 material failure，并检查 root/scope/assumption 是否相对 canonical design 发生了语义缩窄。`composition-status` 则列出所有尚未达到至少 `multi_agent_audited` 的 root/derived nodes；对每个 node，`composition-audit-prompt NODE --focus ...` 只暴露 target 与 direct premises，不递归打开 grandchildren。推荐的 focus 是 `execution`、`quantifier`、`premise`，maximal root 额外使用 `general` 作为第四个独立攻击视角。
+
+Composition campaign 的终止条件不是“每个 node 至少问过一个 agent”，而是所有 non-leaf 都达到当前有效的 `multi_agent_audited` 或 `machine_checked`。任何 surviving `deps=true,target=false` counterexample 都必须先被 challenger 尝试击杀，再由 orchestrator 判断是否需要修改 DAG。
 
 “证据必须尽量独立于被验证机制本身”现在是 correctness tooling 的全局 audit rule，而不是每个 leaf 重复：
 

@@ -781,6 +781,38 @@ The refinement scheduler ignores these assurance levels. A graph can correctly b
 specification coverage is `unaudited`, composition assurance is `unaudited`, and leaf evidence is only
 `planned`. This separation is intentional.
 
+## 7.2 Assurance certification campaigns
+
+Once refinement is `COMPLETE`, drive architecture-level specification coverage and node-level proof
+composition as separate frozen-DAG campaigns:
+
+    python3 correctness.py coverage-audit-prompt
+    python3 correctness.py composition-status --format compact-yaml
+    python3 correctness.py composition-audit-prompt NODE --focus execution
+    python3 correctness.py composition-audit-prompt NODE --focus quantifier
+    python3 correctness.py composition-audit-prompt NODE --focus premise
+
+`coverage-audit-prompt` generates the canonical global root-coverage campaign and binds it to the current
+model signature. It asks whether an in-scope material failure can still occur assuming all claims,
+assumptions, and dependency implications are true, and it includes a semantic-alignment check against the
+canonical design. Record an accepted orchestrator result through `set_specification_coverage`; do not edit
+assurance YAML directly.
+
+`composition-status` is a certification scheduler, not the refinement scheduler. It runs only over a
+frozen (`COMPLETE`) refinement graph and targets at least `multi_agent_audited` (or `machine_checked`) for
+each root/derived node. `single_agent_audited` remains eligible for further certification. The status output
+recommends independent auditor counts and adversarial focus roles based on node kind and
+`assurance_required`.
+
+`composition-audit-prompt NODE` exposes exactly the target proposition and its direct dependency
+propositions as opaque premises. It never recursively opens grandchildren and never asks whether those
+premises are themselves true. Independent auditors should use different `--focus` roles; the orchestrator
+accepts `multi_agent_audited` only after reconciling their results and challenging any surviving
+`deps=true, target=false` counterexample. Record the result through `set_composition_assurance`.
+
+These certification prompts are analysis-only. They do not mutate the graph, and assurance metadata must
+never be used as a proof premise.
+
 ## 8. Applying graph refinements
 
 After an accepted automated graph patch:
@@ -861,6 +893,9 @@ improves the proof DAG; it does not by itself verify production code.
     python3 correctness.py assurance-status --format compact-yaml
     python3 correctness.py assurance-status --format yaml    # full per-node assurance view
     python3 correctness.py audit-prompt NODE
+    python3 correctness.py coverage-audit-prompt
+    python3 correctness.py composition-status --format compact-yaml
+    python3 correctness.py composition-audit-prompt NODE --focus execution
     python3 correctness.py mutate --plan PLAN.yaml
     python3 correctness.py slice NODE --format prompt
     python3 correctness.py refinement-signature NODE
@@ -2598,6 +2633,300 @@ def _cmd_audit_prompt(graph: Graph, args: argparse.Namespace) -> int:
     return 0
 
 
+
+
+COMPOSITION_AUDIT_FOCUS: dict[str, str] = {
+    "general": (
+        "Search broadly for any allowed execution in which every direct dependency is exactly true "
+        "but the target proposition is false. Prefer the smallest concrete counterexample."
+    ),
+    "execution": (
+        "Act as an execution counterexample generator. Concentrate on concurrency, delay, retry, crash, "
+        "recovery, observer, and state-transition paths that keep every direct dependency true while "
+        "falsifying the target."
+    ),
+    "quantifier": (
+        "Act as a quantifier/boundary auditor. Concentrate on forall-vs-exists mismatches, same-vs-some "
+        "request/key/document distinctions, observer boundaries, captured frontier/head mismatches, "
+        "before/after timing, and per-attempt versus cross-attempt semantics."
+    ),
+    "premise": (
+        "Act as a hidden-premise auditor. Look for facts used by the target implication that are not "
+        "actually guaranteed by any direct dependency, including vacuous antecedents and identity/provenance "
+        "bridges that the prose may be assuming implicitly."
+    ),
+}
+
+
+def _recommended_composition_auditors(claim: dict[str, Any]) -> int:
+    """Return advisory independent-auditor count for semantic composition certification."""
+    kind = claim.get("kind")
+    rigor = claim.get("assurance_required")
+    if kind == "root":
+        return 4 if rigor == "maximal" else 3
+    if kind == "derived":
+        return 3 if rigor == "maximal" else 2
+    raise SystemExit("Composition assurance applies only to root/derived claims")
+
+
+def _composition_campaign_snapshot(graph: Graph) -> dict[str, Any]:
+    refinement = _refinement_snapshot(graph)
+    assurance = _assurance_snapshot(graph)
+    stable = set(refinement.get("stable", []))
+    waived = set(refinement.get("waived", []))
+    eligible = stable | waived
+
+    items: list[dict[str, Any]] = []
+    for node_id, claim in sorted(graph.claims.items()):
+        if claim.get("kind") not in {"root", "derived"}:
+            continue
+        assurance_item = assurance["composition"].get(node_id, {})
+        effective = assurance_item.get("effective", "unaudited")
+        if effective not in {"unaudited", "stale", "single_agent_audited"}:
+            continue
+        if node_id not in eligible:
+            continue
+        items.append(
+            {
+                "node": node_id,
+                "kind": claim.get("kind"),
+                "severity": claim.get("severity"),
+                "assurance_required": claim.get("assurance_required"),
+                "effective": effective,
+                "composition_signature": _composition_semantic_signature(graph, node_id),
+                "recommended_auditors": _recommended_composition_auditors(claim),
+                "suggested_focuses": (
+                    ["execution", "quantifier"]
+                    if _recommended_composition_auditors(claim) == 2
+                    else ["execution", "quantifier", "premise"]
+                    if _recommended_composition_auditors(claim) == 3
+                    else ["execution", "quantifier", "premise", "general"]
+                ),
+                "priority": 300 if claim.get("kind") == "root" else 200,
+            }
+        )
+    items.sort(key=lambda x: (x["priority"], x["node"]))
+
+    if refinement.get("state") == "TOOLING_BLOCKED":
+        state = "TOOLING_BLOCKED"
+    elif refinement.get("state") != "COMPLETE":
+        state = "REFINEMENT_INCOMPLETE"
+    elif items:
+        state = "CONTINUE"
+    else:
+        state = "COMPLETE"
+    return {
+        "state": state,
+        "model_signature": assurance["model_signature"],
+        "refinement_state": refinement.get("state"),
+        "target_assurance": "multi_agent_audited_or_machine_checked",
+        "runnable": items if state == "CONTINUE" else [],
+        "counts": {
+            "runnable": len(items) if state == "CONTINUE" else 0,
+            "unaudited": sum(1 for x in assurance["composition"].values() if x.get("effective") == "unaudited"),
+            "stale": sum(1 for x in assurance["composition"].values() if x.get("effective") == "stale"),
+            "single_agent_audited": sum(1 for x in assurance["composition"].values() if x.get("effective") == "single_agent_audited"),
+            "multi_agent_audited": sum(1 for x in assurance["composition"].values() if x.get("effective") == "multi_agent_audited"),
+            "machine_checked": sum(1 for x in assurance["composition"].values() if x.get("effective") == "machine_checked"),
+        },
+    }
+
+
+def _cmd_composition_status(graph: Graph, args: argparse.Namespace) -> int:
+    snapshot = _composition_campaign_snapshot(graph)
+    if args.format in {"yaml", "compact-yaml"}:
+        print(yaml.safe_dump(snapshot, sort_keys=False, allow_unicode=True).rstrip())
+        return 0
+    print(f"state={snapshot['state']} refinement_state={snapshot['refinement_state']}")
+    counts = snapshot["counts"]
+    print(" ".join(f"{key}={value}" for key, value in counts.items()))
+    if snapshot["runnable"]:
+        print("\nComposition certification frontier:")
+        for item in snapshot["runnable"]:
+            print(
+                f"- {item['node']} kind={item['kind']} assurance={item['assurance_required']} "
+                f"effective={item['effective']} recommended_auditors={item['recommended_auditors']} "
+                f"focuses={','.join(item['suggested_focuses'])} signature={item['composition_signature']}"
+            )
+    return 0
+
+
+def _emit_composition_audit_prompt(graph: Graph, node_id: str, focus: str) -> None:
+    node = graph.require_node(node_id)
+    if node.node_type != "claim" or node.data.get("kind") not in {"root", "derived"}:
+        raise SystemExit("Composition certification applies only to root/derived claims")
+
+    direct = list(node.dependencies)
+    print("# Clean-context proof-composition certification")
+    print()
+    print(f"Assigned node: `{node_id}`")
+    print(f"Composition signature: `{_composition_semantic_signature(graph, node_id)}`")
+    print(f"Focus: `{focus}`")
+    print()
+    print("Isolation requirement: perform this audit in a fresh context. Use only this generated contract.")
+    print("Do not read the full DAG, source article, history, prior audits, sibling-agent results, or old chat context.")
+    print("Do not audit whether the direct dependencies are themselves true and do not inspect their grandchildren.")
+    print("Assume every direct dependency proposition below is exactly true, then try to make the target false.")
+    print()
+    _emit_system_context(graph, [node_id, *direct])
+    print("## Target")
+    print()
+    print(node.data.get("statement", "").strip())
+    print()
+    print("## Direct premises — assume all are true")
+    print()
+    for dep_id in direct:
+        dep = graph.require_node(dep_id)
+        dep_type = "assumption" if dep.node_type == "assumption" else dep.data.get("kind", "claim")
+        print(f"### `{dep_id}` ({dep_type})")
+        print(dep.data.get("statement", "").strip())
+        print()
+    print("## Adversarial task")
+    print()
+    print(COMPOSITION_AUDIT_FOCUS[focus])
+    print()
+    print("The only soundness question is: can all direct premises remain true while the target is false?")
+    print("A desirable stronger guarantee is not a defect. A counterexample is valid only if it stays within the")
+    print("provided scope/failure model and preserves every direct premise exactly as written.")
+    print("Do not repair the graph, invent architecture, or suggest decomposition unless needed to explain the missing premise.")
+    print()
+    print("Verdicts: `ENTAILED`, `COUNTEREXAMPLE`, or `INCOMPLETE_CONTEXT`.")
+    print()
+    print("## Response format")
+    print("```yaml")
+    print(f"node: {node_id}")
+    print("task: composition_certification")
+    print(f"focus: {focus}")
+    print("verdict: <ENTAILED|COUNTEREXAMPLE|INCOMPLETE_CONTEXT>")
+    print("summary: <concise conclusion>")
+    print("counterexample:")
+    print("  initial_state: <state or null>")
+    print("  execution: <execution or null>")
+    print("  bad_state: <bad state or null>")
+    print("why_direct_premises_still_hold:")
+    print("  - premise: <node-id>")
+    print("    reason: <why it remains true>")
+    print("missing_premise: <smallest missing proposition or null>")
+    print("```")
+
+
+def _cmd_composition_audit_prompt(graph: Graph, args: argparse.Namespace) -> int:
+    refinement = _refinement_snapshot(graph)
+    if refinement.get("state") == "TOOLING_BLOCKED":
+        raise SystemExit("Composition certification is disabled while refinement tooling is TOOLING_BLOCKED")
+    if refinement.get("state") != "COMPLETE":
+        raise SystemExit(
+            f"Composition certification requires a frozen refinement graph; current state={refinement.get('state')}"
+        )
+    node = graph.require_node(args.node)
+    if node.node_type != "claim" or node.data.get("kind") not in {"root", "derived"}:
+        raise SystemExit("Composition certification applies only to root/derived claims")
+    _emit_composition_audit_prompt(graph, args.node, args.focus)
+    return 0
+
+
+def _emit_coverage_audit_prompt(graph: Graph) -> None:
+    assurance = _assurance_snapshot(graph)
+    refinement = _refinement_snapshot(graph)
+    print("# Final root-coverage / specification-completeness audit")
+    print()
+    print(f"Model signature: `{assurance['model_signature']}`")
+    print(f"Refinement state: `{refinement['state']}`")
+    print()
+    print("You are the long-lived orchestrator for an architecture-level adversarial audit of the current model.")
+    print("This is not proof refinement and not implementation verification. Make no repository modifications.")
+    print("Use only the current canonical repository state; do not read history/, prior audit outputs, old chat context, or Git history.")
+    print()
+    print("## Central question")
+    print()
+    print("Assume every current claim, assumption, and declared dependency implication is true. Can the system still")
+    print("produce a material, clearly incorrect outcome inside the explicit scope and allowed failure model?")
+    print("Also check semantic alignment: have roots, scope exclusions, assumptions, or quantifiers silently weakened")
+    print("a guarantee that the canonical design actually commits to?")
+    print()
+    print("A stronger but optional product guarantee is not a gap. If no concrete in-scope all-roots-true counterexample")
+    print("survives, terminate with `FINAL VERDICT: CLOSED`; do not continue refinement for its own sake.")
+    print()
+    print("## Canonical inputs")
+    print()
+    repository_root = str(graph.repository_root) if graph.repository_root is not None else "<repository-root>"
+    source = graph.doc.get("source", {})
+    source_article = source.get("article", "<source.article>") if isinstance(source, dict) else "<source.article>"
+    correctness_dir = str((graph.repository_root / "correctness")) if graph.repository_root is not None else "<repository-root>/correctness"
+    print(f"Repository root: `{repository_root}`")
+    print(f"Correctness directory: `{correctness_dir}`")
+    print(f"Canonical design: `{source_article}`")
+    print("Canonical model: `correctness/correctness.yaml`")
+    print()
+    print("Bootstrap with:")
+    print("```bash")
+    print(f"cd {correctness_dir}")
+    print("python3 correctness.py validate")
+    print("python3 correctness.py refinement-status --format compact-yaml")
+    print("python3 correctness.py assurance-status --format compact-yaml")
+    print("```")
+    print(f"Read `../{source_article}` for canonical intended semantics. For a root-local check, use")
+    print("`python3 correctness.py slice <ROOT_ID> --format prompt`; stable roots are intentionally inspected via slice,")
+    print("not refinement `audit-prompt`.")
+    print()
+    print("## Current roots")
+    print()
+    for root_id in graph.roots:
+        print(f"- `{root_id}` — {graph.claims[root_id].get('statement', '').strip()}")
+    print()
+    print("## Explicit assumptions")
+    print()
+    for assumption_id, assumption in sorted(graph.assumptions.items()):
+        print(f"- `{assumption_id}` — {assumption.get('statement', '').strip()}")
+    print()
+    print("## Multi-agent campaign")
+    print()
+    print("Spawn fresh isolated scouts with non-overlapping attack surfaces:")
+    print("- Scout A — end-to-end semantic pipeline: submission → acceptance → delivery/reconnect → visible client state.")
+    print("- Scout B — authoritative state/provenance: accepted history, identity, fencing, snapshot/recovery, compaction.")
+    print("- Scout C — client observer semantics: reconnect, overlapping attempts, frontier continuity, optimistic identity reconciliation.")
+    print("- Scout D — all-roots-true execution generator: deliberately search for executions where every root remains literally true.")
+    print()
+    print("Each candidate must include: initial state, concrete execution, material bad state, why every relevant root can")
+    print("remain true, why the execution is in scope, and the nearest root(s). Do not accept node-name intuition.")
+    print()
+    print("For each serious candidate, run a fresh local checker against the nearest canonical root slice and classify it as")
+    print("`COVERED`, `BOUNDARY_DEFECT`, or `ORTHOGONAL`. Then run a fresh challenger whose only job is to kill the")
+    print("candidate by showing that it violates an existing claim/assumption, relies on an excluded failure, or asks for an")
+    print("out-of-scope/stronger guarantee.")
+    print()
+    print("## Acceptance gate for a structural finding")
+    print()
+    print("Report `STRUCTURAL GAP FOUND` only if there is a concrete execution such that:")
+    print("1. every current root and assumption can remain true;")
+    print("2. the execution uses only allowed failures;")
+    print("3. the bad outcome is inside the explicit scope and material;")
+    print("4. the canonical design treats the outcome as incorrect;")
+    print("5. the candidate survives a challenger.")
+    print()
+    print("Otherwise terminate with `FINAL VERDICT: CLOSED`.")
+    print()
+    print("## Final response")
+    print()
+    print("Return the baseline validator/scheduler state, a compact scout/checker/challenger ledger, each surviving finding")
+    print("with a minimal repair boundary, and exactly one final verdict. Include the model signature above so the result")
+    print("can later be recorded through `set_specification_coverage` without ambiguity.")
+
+
+def _cmd_coverage_audit_prompt(graph: Graph, args: argparse.Namespace) -> int:
+    del args
+    errors, warnings = validate(graph)
+    if errors or warnings:
+        raise SystemExit("Coverage audit requires VALID with 0 errors and 0 warnings")
+    refinement = _refinement_snapshot(graph)
+    if refinement.get("state") != "COMPLETE":
+        raise SystemExit(
+            f"Coverage audit requires refinement COMPLETE; current state={refinement.get('state')}"
+        )
+    _emit_coverage_audit_prompt(graph)
+    return 0
+
+
 def _cmd_workflow_help(_graph: Graph | None, args: argparse.Namespace) -> int:
     del args
     print(WORKFLOW_HELP.rstrip())
@@ -3676,11 +4005,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Correctness DAG validator, proof slicer, and automated refinement control plane.",
         epilog=(
-            "Agents: run `python3 correctness.py workflow-help` before participating in the "
-            "automated refinement campaign. Orchestrators should drive work from "
-            "`refinement-status --format compact-yaml`, should load `mutation-schema` once per tooling revision before compiling "
-            "mutation plans, must apply graph changes only through `mutate`, and clean sub-agents "
-            "should receive only a runnable node ID and obtain their full contract via `audit-prompt NODE`."
+            "Agents: run `python3 correctness.py workflow-help` before participating in correctness work. "
+            "Drive refinement from `refinement-status --format compact-yaml`; after refinement freezes, "
+            "drive specification coverage via `coverage-audit-prompt` and proof composition via "
+            "`composition-status` / `composition-audit-prompt`. Load `mutation-schema` once per tooling "
+            "revision before compiling mutation plans, apply graph/assurance changes only through `mutate`, "
+            "and keep every clean auditor isolated to its generated contract."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -3758,6 +4088,34 @@ def build_parser() -> argparse.ArgumentParser:
     audit_prompt_parser.add_argument(
         "node",
         help="Runnable claim node ID from refinement-status; non-runnable nodes are rejected.",
+    )
+
+    sub.add_parser(
+        "coverage-audit-prompt",
+        help="Generate the canonical final root-coverage/specification-completeness audit campaign prompt.",
+    )
+
+    composition_status_parser = sub.add_parser(
+        "composition-status",
+        help="Compute the frozen-DAG proof-composition certification frontier.",
+    )
+    composition_status_parser.add_argument(
+        "--format",
+        choices=["text", "yaml", "compact-yaml"],
+        default="text",
+        help="Output concise text or machine-readable campaign state.",
+    )
+
+    composition_prompt_parser = sub.add_parser(
+        "composition-audit-prompt",
+        help="Generate a clean-context direct-premises-imply-target certification prompt for one non-leaf claim.",
+    )
+    composition_prompt_parser.add_argument("node", help="Root/derived claim ID to certify.")
+    composition_prompt_parser.add_argument(
+        "--focus",
+        choices=sorted(COMPOSITION_AUDIT_FOCUS),
+        default="general",
+        help="Adversarial specialization for an independent composition auditor.",
     )
 
     mutate_parser = sub.add_parser(
@@ -3840,6 +4198,12 @@ def main() -> int:
         return _cmd_invalidate(graph, args)
     if args.command == "audit-prompt":
         return _cmd_audit_prompt(graph, args)
+    if args.command == "coverage-audit-prompt":
+        return _cmd_coverage_audit_prompt(graph, args)
+    if args.command == "composition-status":
+        return _cmd_composition_status(graph, args)
+    if args.command == "composition-audit-prompt":
+        return _cmd_composition_audit_prompt(graph, args)
     if args.command == "mutate":
         return _cmd_mutate(graph, args)
     if args.command == "refinement-status":
