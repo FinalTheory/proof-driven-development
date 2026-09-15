@@ -14,6 +14,7 @@ Read `AGENTS.md`, then run:
 
 ```bash
 cd /opt/workspace/proof-driven-development/correctness
+python3 correctness.py workflow-help
 python3 correctness.py validate
 python3 correctness.py composition-status --format compact-yaml
 ```

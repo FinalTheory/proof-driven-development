@@ -96,6 +96,36 @@ def _render_leaf_stopping_signals(*, indent: str = "") -> str:
     return "\n".join(f"{indent}- `{key}`: {description}" for key, description in LEAF_STOPPING_SIGNALS.items())
 
 
+HARNESS_FEEDBACK_CONTRACT = r"""## NON-NORMATIVE HARNESS FEEDBACK
+
+Only after fixing the canonical audit verdict/result, report any meaningful issues encountered while
+executing the Harness contract. This feedback is diagnostic only: it must not alter, reinterpret,
+repair, or serve as a premise for the canonical verdict.
+
+Useful feedback includes semantic/terminology ambiguity, missing context that forced inference, redundant
+context, unclear auditor/orchestrator responsibility, conflicting or hard-to-operationalize instructions,
+insufficient output fields, or opportunities to make the Harness smaller and more deterministic.
+
+Classify each issue as exactly one of:
+- `correctness_model_defect` — the canonical model/context itself is ambiguous or underspecified;
+- `harness_prompt_defect` — generated audit instructions or isolation boundaries are unclear/inadequate;
+- `documentation_ergonomics` — workflow is semantically clear but unnecessarily awkward or noisy.
+
+Do not invent feedback to appear helpful. If there are no meaningful issues, output exactly:
+
+`HARNESS FEEDBACK: none`
+
+Otherwise use:
+```yaml
+HARNESS_FEEDBACK:
+  - category: <correctness_model_defect|harness_prompt_defect|documentation_ergonomics>
+    issue: <specific problem encountered>
+    impact: <how it affected reasoning or execution>
+    suggested_change: <minimal improvement>
+```
+"""
+
+
 MUTATION_PLAN_SCHEMA: dict[str, Any] = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "urn:google-docs-correctness:mutation-plan:v1",
@@ -877,6 +907,13 @@ When correctness tooling itself changes, or after a tooling repair, run the stro
 Never mark planned verifier descriptions as passed evidence. The refinement campaign
 improves the proof DAG; it does not by itself verify production code.
 
+## 10.1 Non-normative Harness dogfood feedback
+
+Every human-invoked audit/certification campaign should keep its canonical result separate from
+Harness feedback. Use the same contract that generated audit prompts append:
+
+__HARNESS_FEEDBACK_CONTRACT__
+
 ## 11. Useful commands
 
     python3 correctness.py --help
@@ -906,6 +943,7 @@ The scheduler, not an agent's intuition, decides whether the campaign should con
 complete, escalate to a human, or report a workflow stall.
 """
 WORKFLOW_HELP = WORKFLOW_HELP.replace("__LEAF_STOPPING_SIGNALS__", _render_leaf_stopping_signals())
+WORKFLOW_HELP = WORKFLOW_HELP.replace("__HARNESS_FEEDBACK_CONTRACT__", HARNESS_FEEDBACK_CONTRACT.rstrip())
 REFINEMENT_STATUSES = set(SCHEMA_REFINEMENT_STATUSES)
 SPECIFICATION_COVERAGE_STATUSES = set(SCHEMA_SPECIFICATION_COVERAGE_STATUSES)
 COMPOSITION_ASSURANCE_STATUSES = set(SCHEMA_COMPOSITION_ASSURANCE_STATUSES)
@@ -2502,6 +2540,11 @@ def _refinement_entry(graph: Graph, node_id: str) -> dict[str, Any]:
     return entry
 
 
+def _emit_non_normative_harness_feedback_contract() -> None:
+    print()
+    print(HARNESS_FEEDBACK_CONTRACT.rstrip())
+
+
 def _emit_audit_prompt(graph: Graph, node_id: str) -> None:
     node = graph.require_node(node_id)
     if node.node_type != "claim":
@@ -2601,6 +2644,7 @@ def _emit_audit_prompt(graph: Graph, node_id: str) -> None:
     print("```")
     print()
     print("Use empty lists when applicable and set both `required` flags explicitly.")
+    _emit_non_normative_harness_feedback_contract()
 
 
 def _cmd_audit_prompt(graph: Graph, args: argparse.Namespace) -> int:
@@ -2808,6 +2852,7 @@ def _emit_composition_audit_prompt(graph: Graph, node_id: str, focus: str) -> No
     print("    reason: <why it remains true>")
     print("missing_premise: <smallest missing proposition or null>")
     print("```")
+    _emit_non_normative_harness_feedback_contract()
 
 
 def _cmd_composition_audit_prompt(graph: Graph, args: argparse.Namespace) -> int:
@@ -2911,6 +2956,7 @@ def _emit_coverage_audit_prompt(graph: Graph) -> None:
     print("Return the baseline validator/scheduler state, a compact scout/checker/challenger ledger, each surviving finding")
     print("with a minimal repair boundary, and exactly one final verdict. Include the model signature above so the result")
     print("can later be recorded through `set_specification_coverage` without ambiguity.")
+    _emit_non_normative_harness_feedback_contract()
 
 
 def _cmd_coverage_audit_prompt(graph: Graph, args: argparse.Namespace) -> int:

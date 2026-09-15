@@ -1102,6 +1102,8 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("TOOLING_BLOCKED", text)
         self.assertIn("refinement-status --format compact-yaml", text)
         self.assertIn("assurance-status --format compact-yaml", text)
+        self.assertIn("NON-NORMATIVE HARNESS FEEDBACK", text)
+        self.assertIn("HARNESS FEEDBACK: none", text)
         self.assertIn("`stable` is a refinement-maturity state only", text)
         self.assertIn("load these schemas once per tooling revision/session", text)
         self.assertIn("`--dry-run` is an optional", text)
@@ -1447,6 +1449,31 @@ class CorrectnessToolTests(unittest.TestCase):
         with self.assertRaises(SystemExit) as ctx:
             correctness._cmd_coverage_audit_prompt(self.graph(), argparse.Namespace())
         self.assertIn("requires refinement COMPLETE", str(ctx.exception))
+
+
+    def test_generated_audit_contracts_append_non_normative_harness_feedback(self):
+        doc = copy.deepcopy(self.base)
+        frozen = self._freeze_refinement_for_certification(doc)
+
+        outputs = []
+        for render in (
+            lambda: correctness._emit_audit_prompt(self.graph(), "L1_left_boundary"),
+            lambda: correctness._emit_composition_audit_prompt(frozen, "G1_primary_goal", "general"),
+            lambda: correctness._emit_coverage_audit_prompt(frozen),
+        ):
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                render()
+            outputs.append(out.getvalue())
+
+        for text in outputs:
+            self.assertIn("NON-NORMATIVE HARNESS FEEDBACK", text)
+            self.assertIn("HARNESS FEEDBACK: none", text)
+            self.assertIn("correctness_model_defect", text)
+            self.assertIn("harness_prompt_defect", text)
+            self.assertIn("documentation_ergonomics", text)
+            self.assertIn("it must not alter, reinterpret,", text)
+            self.assertIn("serve as a premise for the canonical verdict", text)
 
 
 if __name__ == "__main__":
