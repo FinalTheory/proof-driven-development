@@ -1,6 +1,8 @@
 # You Can Draw a Google Docs Design in 10 Minutes. Can You Prove It?
 
-> **Boxes and arrows are cheap. Correctness is not.**
+> **Boxes and arrows on diagram are cheap. System that actually correctly built is expensive.**
+
+[中文版本](README.zh-CN.md)
 
 Most system-design answers stop once the architecture diagram looks plausible:
 
@@ -14,210 +16,134 @@ Collaboration Service
 Database / Cache / Queue / Snapshot Store
 ```
 
-That is enough to describe *where* data flows.
+That is enough to explain where data flows. It is not enough to explain why the system remains correct when requests are retried, owners fail over, stale processes keep running, snapshots replace history, clients reconnect, ACKs disappear, and engineers start “optimizing” the implementation six months later.
 
-It is not enough to explain why the system is correct.
+This repository is an experiment in **Proof-Driven Development**: make a small set of high-impact architectural guarantees explicit, decompose them into independently reviewable proof obligations, and preserve that correctness reasoning as the system evolves.
 
-A production collaborative editor has to survive retry, concurrency, owner failover, stale processes, snapshotting, compaction, reconnect, ACK loss, replay, and partial failure without silently violating its user-visible guarantees. The difficult part is not drawing another box. The difficult part is making the correctness argument explicit enough that another engineer — or an AI agent — can challenge it, change the implementation, and know exactly what must be revalidated.
-
-This repository is being built as an executable case study in **Proof-Driven Development**.
-
-The current repository contains the architecture narrative, the machine-readable correctness DAG, and deterministic refinement/mutation tooling. Local mutation plans and audit scratch are intentionally excluded from version control; Git commits are the durable repository history. The collaborative-editor implementation, executable evidence layer, and deliberate semantic mutations are the next stage of the project.
-
-The goal is not to prove every line of application code.
-
-The goal is to make a small set of **high-impact architectural guarantees** explicit, reusable, and continuously checkable.
-
-## Current status
-
-The correctness model is live and runnable today. The implementation/evidence layer is still under construction. The current graph and its tooling live under [`correctness/`](correctness/); the source architecture is [`design/google-docs.md`](design/google-docs.md); agent/orchestrator rules are in [`AGENTS.md`](AGENTS.md).
-
-```bash
-cd correctness
-python3 -m pip install -r requirements.txt
-python3 correctness.py validate
-python3 correctness.py refinement-status --format compact-yaml
-```
+The goal is not to formally prove every line of application code. The goal is to turn correctness reasoning that senior engineers normally reconstruct from memory into a reusable engineering asset.
 
 ---
 
-## The central idea
+## The core intuition: make the reasoning problem smaller
 
-Traditional development usually looks roughly like this:
+Suppose you open a fresh AI agent and ask only one question:
+
+> Prove `P = NP`, or prove `P != NP`.
+
+We cannot expect any agent in the foreseeable future to solve that correctly. The prompt is one sentence, but the reasoning space behind it is enormous.
+
+Now ask:
+
+> What is `1 + 1`?
+
+It would be surprising for a sufficiently capable model to get that wrong.
+
+The prompts are equally short. The essential difference is the **size and ambiguity of the reasoning task**.
+
+Real distributed-system correctness lives somewhere between those extremes. For example:
+
+> Is this collaborative editor correct under retry, failover, reconnect, snapshotting, history compaction, and concurrent ownership changes?
+
+That question is too large to trust as one monolithic LLM judgment. Even a very strong model has to reconstruct too many hidden assumptions, cover too many failure paths, and maintain too many state and semantic relationships in one context.
+
+Formal methods attack this by defining semantics precisely enough for a proof system or model checker. They can provide much stronger guarantees, but the main cost is often not “running the proof.” It is defining the formal state space, transition system, abstraction boundaries, and their correspondence to the real implementation. For an ordinary production system, that modeling cost is usually too high to pay everywhere.
+
+Proof-Driven Development explores a middle ground:
+
+> **Do not ask one agent to reason about the whole system at once. Keep decomposing the correctness argument until each local proof obligation is narrow, explicit, adversarially checkable, and difficult for a strong verifier to misunderstand.**
+
+No local audit is assumed to be infallible. The bet is statistical and economic: when each obligation has precise semantics and a small context, independent strong auditors are much less likely to make the same reasoning mistake than when they are all asked to judge one giant architecture prompt.
+
+The Harness exists to make that decomposition, context isolation, proof reuse, and revalidation systematic.
+
+---
+
+## From architecture to proof obligations
+
+Traditional development often looks roughly like this:
 
 ```text
 requirements
-→ architecture
+→ system design
+→ architecture spec
 → implementation
 → tests
 → code review
 ```
 
-The correctness argument is mostly implicit. It lives in design discussions, reviewer memory, historical incidents, and whatever assumptions happened to survive implementation.
+The correctness argument is usually implicit. It lives in design discussions, reviewer memory, old incidents, and assumptions that happened to survive implementation.
 
-Proof-Driven Development turns that relationship around:
+Proof-Driven Development makes that chain explicit:
 
 ```text
 workload + product requirements
         ↓
-candidate architecture
+ candidate architecture
         ↓
-root correctness guarantees
+ root correctness guarantees
         ↓
-proof-obligation decomposition
+ proof-obligation decomposition
         ↓
-leaf contracts / assumptions
+ local proof boundaries / assumptions
         ↓
-implementation
+ implementation
         ↓
-executable evidence
+ executable evidence
 ```
 
-The architecture and the correctness argument evolve together.
+A node in the correctness graph is a **proposition**, not a service, class, file, or box in an architecture diagram. An edge means logical proof dependency: if a lower-level proposition is no longer trusted, every guarantee that depends on it must be reconsidered.
 
-A code change is therefore not reviewed only as a diff. It is also treated as a potential change to a proof dependency:
+That makes the correctness model resemble a build dependency graph:
 
 ```text
-implementation change
-        ↓
-affected correctness leaf
-        ↓
-transitive proof invalidation
-        ↓
-parent guarantees become stale
-        ↓
-required evidence is rerun or redesigned
+semantic change
+      ↓
+affected proof obligation
+      ↓
+transitive invalidation
+      ↓
+re-establish only the affected guarantees
 ```
 
-This is similar to a build system, except the dependency graph does not describe which source files must be recompiled. It describes **which system guarantees must be re-established**.
+A compiler rebuilds artifacts after source dependencies change. The Harness tries to do something analogous for correctness reasoning.
+
+The detailed Harness semantics and type system live in [`correctness/SPEC.md`](correctness/SPEC.md); the current machine-readable model lives in [`correctness/correctness.yaml`](correctness/correctness.yaml).
 
 ---
 
 ## Why Google Docs?
 
-A collaborative editor is a useful test case because the product is easy to understand while the correctness model is not.
+A collaborative editor is a useful case study because the product is intuitive while the correctness argument is not.
 
 At the UI level, the requirement sounds simple:
 
 > Multiple users edit the same document and eventually see the same result.
 
-But a real design quickly depends on properties such as:
+But the architecture quickly depends on harder properties:
 
-- acknowledged edits must survive owner crash or failover;
+- an acknowledged edit must survive owner crash or failover;
 - retrying one logical edit must not create a second canonical operation;
 - accepted revisions must form one gap-free authoritative history;
-- a stale owner must not append after ownership has moved;
-- snapshot + replay must reconstruct the same observable document state as full history replay;
-- reconnect must neither omit nor double-apply accepted revisions;
-- snapshotting or compaction must not silently destroy idempotency or recovery evidence.
+- after ownership has moved, the stale owner must not continue appending;
+- snapshot plus replay must reconstruct the same observable state as authoritative history;
+- reconnect must neither omit nor double-apply accepted changes;
+- lifecycle operations must not silently destroy the identity or provenance needed for retry and recovery.
 
-These are not implementation details. They are the properties that make the architecture *mean what we think it means*.
-
-The repository models them explicitly.
+These are not merely implementation details. They determine whether the architecture is actually the architecture we think it is.
 
 ---
 
-## The system
+## A locally reasonable optimization can break a global proof
 
-The implementation uses a server-authoritative collaboration model.
+Consider a simplified example.
 
-A client submits a logical edit. The active document owner transforms/rebases it against committed history, then attempts to create a canonical accepted change. The authoritative persistence layer stores the accepted history, revision frontier, ownership epoch, snapshot state, and the identity needed for idempotent retry.
+Suppose `documents.latest_revision` is updated synchronously for every accepted edit. Someone notices that it has become a per-document hot row and proposes:
 
-A simplified data flow looks like:
+> Let `accepted_changes` be the source of truth and update `latest_revision` asynchronously.
 
-```text
-Client raw edit
-     ↓
-Active OT owner
-     ↓
-transform against committed prefix
-     ↓
-authoritative acceptance transaction
-     ├── accepted change
-     ├── latest revision
-     ├── idempotency identity
-     └── owner epoch check
-     ↓
-commit
-     ↓
-ACK + live broadcast
-```
+At the database level, this sounds like an ordinary performance optimization.
 
-Recovery reconstructs owner state from:
-
-```text
-published snapshot @ S
-        +
-canonical accepted tail S+1..H
-        ↓
-recovered state @ H
-        ↓
-resume acceptance at H+1
-```
-
-Reconnect uses either retained deltas or a snapshot-replacement response plus an exact canonical tail.
-
-The interesting part of the project is not the presence of these components. It is the explicit argument for why their composition preserves the intended guarantees.
-
----
-
-## The Correctness Assurance DAG
-
-The repository represents correctness as a directed acyclic graph of claims.
-
-Nodes are not services, classes, or files. A node is a proposition that can be challenged independently.
-
-Edges mean **logical proof dependency**.
-
-For example, one branch looks conceptually like this:
-
-```text
-G2: canonical history is linear and fenced
-│
-├── C7: revision frontier is linear
-│   ├── initial history matches frontier
-│   ├── append r requires pre.frontier = r-1
-│   ├── accepted-change insert and frontier advance commit atomically
-│   ├── committed append r leaves post.frontier = r
-│   ├── append preserves the existing revision prefix
-│   └── non-append lifecycle transitions preserve the revision domain
-│
-└── C8: stale owner is fenced
-    ├── append requires current owner epoch
-    └── authoritative epoch never regresses or reuses an old value
-```
-
-The important distinction is that these claims fail for different reasons.
-
-For example:
-
-```text
-insert accepted_change@101
-set latest_revision = 105
-commit atomically
-```
-
-can satisfy the requirement that the row insert and frontier update occur in one transaction while still violating the stronger property that the committed frontier is exactly the revision that was appended.
-
-That is why atomicity and frontier correctness are separate proof obligations.
-
-The DAG makes that difference explicit.
-
----
-
-## A performance optimization that breaks the proof
-
-One of the most useful examples in this project came from an optimization that sounds completely reasonable in isolation.
-
-Suppose `documents.latest_revision` is updated for every accepted edit. Someone notices that it is a per-document hot row and proposes:
-
-> Let `accepted_changes` be the truth and update `latest_revision` asynchronously.
-
-At the database level this sounds like a normal performance improvement.
-
-At the system level it is not.
-
-The current correctness argument uses the authoritative frontier as part of the serialization contract:
+But suppose the current correctness argument uses the revision frontier as part of the serialization contract:
 
 ```text
 append revision r may commit only if
@@ -227,410 +153,243 @@ and after commit
 post.latest_revision == r
 ```
 
-If `latest_revision` becomes eventually consistent, it can no longer play that role.
+If `latest_revision` becomes eventually consistent, it can no longer carry that proof responsibility.
 
-The change therefore invalidates the proof path for gap-free canonical history.
+That does not automatically forbid the optimization. The engineer can replace it with an authoritative tail lookup, sequencer, lock, transactional append primitive, or some other mechanism that proves the same property.
 
-That does **not** mean the optimization is forbidden.
+The important distinction is:
 
-It means the engineer must provide a replacement mechanism that carries the same proof responsibility: an authoritative tail lookup, per-document lock, sequencer, transactional append primitive, or some other mechanism that proves every accepted append extends exactly the current canonical tail.
+> **Replacing an implementation is fine. Silently deleting the proof responsibility it carried is not.**
 
-This is the difference between implementation replacement and semantic regression.
-
-> **A performance optimization is not an optimization if it silently invalidates the correctness argument.**
-
----
-
-## What changes during code review?
-
-Without a correctness model, a review of the previous change might look like:
+Without an explicit correctness model, code review might stop at:
 
 ```text
-remove synchronous latest_revision update
-→ lower database contention
+remove synchronous frontier update
+→ reduce contention
 → looks good
 ```
 
-With the DAG:
+With a proof graph:
 
 ```text
-latest_revision semantics changed
+frontier semantics changed
         ↓
-append-precondition obligation affected
-append-postcondition obligation affected
+serialization proof obligations affected
         ↓
-revision-frontier proof stale
+dependent guarantees become stale
         ↓
-canonical-history guarantee requires revalidation
+replacement reasoning or evidence required
 ```
 
-The reviewer no longer has to reconstruct the entire architecture from memory to realize that the field carries a system-level invariant.
-
-This is the intended role of the tooling in this repository:
-
-> **Ordinary AI review starts from a diff and guesses what may be dangerous. Proof-driven review starts from declared guarantees and asks which proof obligations the diff may have invalidated.**
+This is the practical value of the proof graph: the reviewer no longer has to reconstruct the whole architecture from memory before realizing that a seemingly local field carries a system-level invariant.
 
 ---
 
-## This project does not try to prove everything
+## The Harness is not trying to make LLMs authoritative
 
-A production application contains enormous amounts of domain-specific behavior:
+The initial decomposition is not assumed to be correct. It must be attacked continuously and adversarially.
+
+A local verifier receives only the context required to judge the current proposition: the target, its direct premises or local proof boundary, relevant system semantics, and the failure model. Its first job is to construct a counterexample, not to produce a persuasive explanation.
+
+That process can expose several different defects:
 
 ```text
-if customer_type == ...
-if feature_flag == ...
-if document_mode == ...
+missing premise
+wrong dependency
+one claim bundles multiple independent obligations
+missing lifecycle transition
+incorrect provenance assumption
+genuine ambiguity in the system semantics
 ```
 
-A missing branch may absolutely create a customer-visible bug.
+Context isolation does not mean “a short prompt magically becomes a proof.” It means each verifier faces a narrower problem with less room to smuggle in unstated assumptions.
 
-That does not mean every product rule belongs in a formal correctness DAG.
+The Harness then surrounds the uncertain reasoning step with machinery that is as deterministic as practical:
 
-Proof-Driven Development is most useful for a smaller class of properties that are:
+```text
+clean-context local audit
+        ↓
+semantic judgment
+        ↓
+typed mutation
+        ↓
+validation
+        ↓
+signature-based invalidation propagation
+        ↓
+next local audit frontier
+```
 
-- high blast-radius;
-- relatively stable over time;
-- architectural rather than feature-specific;
-- sensitive to concurrency, retry, failure, recovery, or lifecycle behavior;
-- expensive to rediscover during every review.
+Lower-level propositions that have already been audited can be reused as opaque contracts instead of reopening the entire subtree every time a parent is examined. If the lower-level semantics change, recursive signatures automatically reopen the affected reasoning.
 
-Typical examples include:
+This is where the methodology tries to improve reliability without paying the full modeling cost of formal verification: **keep human/LLM reasoning as local as possible, and make the control machinery around that reasoning as deterministic as possible.**
+
+---
+
+## Proof obligations eventually have to touch the real implementation
+
+A beautifully decomposed DAG is still only a specification artifact if its leaves are not connected to implementation evidence.
+
+Different properties deserve different verification mechanisms. A leaf might ultimately be checked by:
+
+```text
+schema / uniqueness constraint
+transaction contract test
+control-flow / static-dataflow analysis
+state-machine / property-based test
+concurrency test
+fault injection
+replay / differential test
+runtime invariant
+model checker
+```
+
+The engineering question is not “How do we formally prove everything?” It is:
+
+> **For this particular proof obligation, what is the cheapest independent verifier that still provides enough assurance?**
+
+That distinction matters. A database uniqueness property should not require an LLM to reread the whole service. A crash-durability claim should not be considered proven merely because the code says it flushes. Evidence should observe the real property through an independent and economical boundary whenever possible.
+
+---
+
+## This project deliberately does not model everything
+
+Production systems contain enormous amounts of feature-specific behavior. Many bugs matter to users without belonging in an architectural correctness DAG.
+
+Proof-Driven Development is aimed at properties that are repeatedly depended on over time and are easy for later changes to break accidentally:
 
 ```text
 idempotency
 ordering
 fencing
 durability
-atomic state transition
-tenant isolation
-snapshot/replay equivalence
-migration safety
-recovery invariants
+atomic state transitions
+state invariants
+provenance bindings
+snapshot / replay equivalence
+recovery / migration safety
 ```
 
-The objective is not “prove the whole product correct.”
+The useful boundary is not “important bug versus unimportant bug.” It is closer to:
 
-The objective is:
+> **Is this a stable, high-blast-radius correctness responsibility that many future changes must keep preserving?**
 
-> **Make the small set of things that absolutely must not be accidentally broken explicit enough that the system can continuously defend them.**
+If not, ordinary tests and code review may be cheaper.
 
 ---
 
-## Adversarial refinement
+## Correctness cost should follow blast radius
 
-The initial DAG is not assumed to be correct.
+A proof system that reruns expensive whole-system reasoning for every one-line change is economically useless.
 
-It is refined adversarially.
-
-Each runnable claim is given to a fresh clean-context verifier that receives only a local proof slice:
+The target workflow must remain local:
 
 ```text
-minimal system context
-+ target proposition
-+ explicit assumptions
-+ direct proof obligations
-+ failure model
-```
-
-The verifier first tries to construct a counterexample.
-
-It may conclude that:
-
-- the dependencies are sufficient;
-- a premise is missing;
-- a dependency is unrelated or stronger than necessary;
-- a leaf actually bundles multiple independent correctness boundaries;
-- the system specification itself is ambiguous and requires a human decision.
-
-The clean verifier cannot mutate the graph.
-
-A long-lived orchestrator acts as skeptical semantic judge and mutation compiler. It decides whether the counterexample is valid, whether the proposed decomposition is actually useful, whether an existing node already captures the property, and whether a suggested change would silently alter the architecture rather than refine its proof structure.
-
-Only then can the DAG change.
-
-This distinction is intentional:
-
-```text
-clean verifier
-    = adversarial discovery
-
-orchestrator
-    = semantic judgment
-
-deterministic tooling
-    = mutation safety + scheduling + invalidation
-```
-
----
-
-## Proof reuse instead of repeated reasoning
-
-Once a lower-level claim has been audited, parent claims treat it as a reusable contract.
-
-For example, when proving:
-
-```text
-C10: catch-up represents exactly the missing suffix
-```
-
-an auditor does not reopen every snapshot and range-property proof underneath it. Stable direct dependencies become opaque proof boundaries.
-
-This keeps proof composition modular:
-
-```text
-prove leaf once
+implementation change
       ↓
-reuse proposition as contract
+map to affected implementation surfaces
       ↓
-only reopen it if its semantics change
+no relevant correctness obligation? ───→ ordinary review
+      ↓
+affected proof obligations
+      ↓
+local invalidation
+      ↓
+reasoning / evidence only where needed
 ```
 
-Recursive semantic signatures make this mechanical. If a descendant proposition changes, dependent claims automatically become stale and re-enter the audit frontier.
+Most code changes should never trigger deep correctness work.
+
+Maintenance cost should scale with **blast radius**, not repository size or diff size.
+
+That locality is one of the central hypotheses this project is testing. If every change eventually invalidates the entire graph, the methodology has failed operationally even if the model is theoretically correct.
 
 ---
 
-## Executable evidence
+## Why this matters more when AI writes the code
 
-A correctness claim is useful only if it eventually connects to something observable.
+AI makes implementation cheaper. It does not automatically make trustworthy implementation cheaper.
 
-Different leaves use different verification mechanisms depending on the property:
+As code-generation throughput rises, a new bottleneck becomes visible: humans still have to decide whether the generated system preserves the right semantics.
 
-```text
-schema / uniqueness constraint
-transaction contract test
-state-machine test
-property-based test
-concurrency test
-fault injection
-replay / differential test
-mutation test
-runtime invariant
-static analysis
-LLM adversarial audit
-human semantic decision
-```
-
-The project deliberately avoids pretending that every claim should receive the same kind of proof.
-
-The engineering question is:
-
-> **What is the cheapest verifier that provides enough assurance for this property?**
-
----
-
-## Break it on purpose
-
-The target executable demo will include deliberately incorrect implementation mutations that exercise the assurance system.
-
-Examples include:
-
-```text
-async-latest-revision
-broadcast-before-commit
-remove-idempotency-evidence-after-compaction
-allow-stale-owner-append
-snapshot-frontier-mismatch
-incomplete-reconnect-tail
-```
-
-Each mutation is designed to look locally plausible while violating a system-level property.
-
-The intended end-state demo workflow is intentionally simple:
-
-```bash
-# Run the correct implementation
-./pdd verify
-
-# Inject a plausible but unsafe optimization
-./pdd mutate async-latest-revision
-
-# Recompute correctness impact and run affected evidence
-./pdd verify
-```
-
-The output shows which proof obligations are affected and which root guarantees can no longer be trusted until new evidence is supplied.
-
-This is the core demonstration the implementation phase is intended to deliver.
-
----
-
-## Quick start
-
-Today, the runnable artifact is the correctness model and refinement control plane:
-
-```bash
-git clone <repo-url>
-cd proof-driven-development/correctness
-python3 -m pip install -r requirements.txt
-
-python3 correctness.py validate
-python3 correctness.py refinement-status --format compact-yaml
-python3 correctness.py catalog mechanisms
-python3 correctness.py slice G1_retry_is_logically_exactly_once --format prompt
-```
-
-Run the control-plane regression suite after tooling changes:
-
-```bash
-python3 -m unittest -v test_correctness.py
-```
-
-The Dockerized collaborative editor, failure scenarios, evidence runner, and `pdd` wrapper shown elsewhere in this README describe the planned executable layer rather than functionality that is already shipped.
-
----
-
-## Repository layout
-
-```text
-.
-├── README.md
-├── AGENTS.md
-├── design/
-│   └── google-docs.md
-│
-├── correctness/
-│   ├── SPEC.md
-│   ├── SCHEMA.md
-│   ├── prompts/
-│   │   ├── README.md
-│   │   ├── refinement.md
-│   │   ├── coverage.md
-│   │   └── composition.md
-│   ├── correctness.yaml
-│   ├── correctness.py
-│   ├── graph_schema.py
-│   ├── test_correctness.py
-│   ├── requirements.txt
-│   └── generated/
-│
-└── history/
-    ├── README.md
-    └── .gitignore
-```
-
-`history/` is local ignored scratch space for temporary mutation plans, audit notes, and diagnostics. Its runtime contents are not part of the repository contract and are not committed.
-
-The implementation and verification directories will be added as the executable case study is built. The correctness model intentionally remains usable before that layer exists.
-
----
-
-## Correctness cost should follow semantic blast radius
-
-Proof-Driven Development is not intended to run an expensive full-system reasoning pass for every one-line change.
-
-A practical review pipeline looks more like:
-
-```text
-PR diff
-  ↓
-deterministic implementation-surface mapping
-  ↓
-cheap high-recall relevance screening
-  ↓
-no correctness impact? ───────→ ordinary review
-  ↓
-possibly affected claims
-  ↓
-local proof invalidation
-  ↓
-expensive reasoning / evidence only where needed
-```
-
-Most changes should never invoke deep correctness reasoning.
-
-The cost should scale with semantic risk, not repository size or diff size.
-
-> **Correctness assurance cost should scale with semantic blast radius.**
-
----
-
-## Why this matters for AI coding
-
-AI makes implementation cheap.
-
-It does not automatically make trustworthy implementation cheap.
-
-As code-generation throughput increases, repeatedly asking a senior engineer to reconstruct every system invariant during every code review does not scale.
-
-The higher-leverage alternative is to amortize that reasoning:
+If every code review requires a senior engineer to reconstruct distributed invariants from scratch, that process does not scale. The higher-leverage alternative is to amortize the reasoning cost:
 
 ```text
 senior / staff reasoning once
         ↓
-explicit invariant / proof obligation
+explicit guarantee / proof obligation
         ↓
-reusable verification artifact
+reusable verification boundary
         ↓
-future agents continuously reapply it
+future humans and agents reuse it
 ```
 
-Human reasoning is still essential. Its highest-value role changes.
-
-Instead of manually re-performing the same validation forever, engineers define:
-
-- what the system actually guarantees;
-- which assumptions are acceptable;
-- which failure models matter;
-- which tradeoffs require product or architecture decisions;
-- what evidence is strong enough to trust a change.
-
-Automation then helps preserve those decisions over time.
+Human judgment remains essential, but its role changes. Engineers decide what the system actually promises, which assumptions are acceptable, which failure models must be covered, and what evidence is strong enough to trust. Automation helps preserve those decisions instead of rediscovering them every time.
 
 > **Senior engineers find correctness bugs. Staff engineers try to make the entire class of bugs harder to reintroduce.**
 
 ---
 
-## What this project is trying to answer
+## What this project is actually testing
 
-This repository is also an experiment.
+This repository is an experiment, not a claim that the methodology already works universally.
 
-The interesting questions are not whether a DAG can be drawn or whether an LLM can generate long design documents. The real questions are economic and operational:
+The hard questions are economic and operational:
 
-1. Can a non-trivial distributed system's correctness argument be decomposed into claims that remain understandable and stable over time?
-2. Can code changes be mapped to affected correctness obligations with sufficiently high recall?
-3. Can most leaf obligations eventually be discharged by mechanical evidence rather than repeated full-system reasoning?
-4. Does the graph reduce reviewer cognitive load, or merely create a second specification that also becomes stale?
-5. Can proof invalidation remain local enough that the cost of maintaining the model is lower than repeatedly rediscovering the same reasoning?
-6. Can AI agents use an explicit correctness model to catch semantic regressions that ordinary diff-based review misses?
+1. Can a non-trivial distributed system be decomposed into proof obligations that remain understandable over time?
+2. Can local proof obligations become precise enough that multiple independent AI auditors are sufficiently reliable on them?
+3. Can specification gaps and bad decompositions be discovered without repeatedly reopening the entire system context?
+4. Can implementation changes be mapped to affected proof obligations with sufficiently high recall?
+5. Can enough leaf obligations ultimately be discharged by mechanical evidence that the model reduces, rather than increases, human review cost?
+6. Can invalidation propagation remain local enough for the methodology to survive real system evolution?
 
-If the answers are mostly no, Proof-Driven Development is specification bureaucracy.
+If the answers are mostly no, Proof-Driven Development becomes specification bureaucracy.
 
-If the answers are mostly yes, correctness reasoning becomes a reusable engineering asset rather than a transient property of whoever happened to review the last PR.
+If the answers are mostly yes, correctness reasoning can become a reusable and maintainable engineering asset instead of something that existed briefly in the previous reviewer’s head.
 
 ---
 
 ## What this is not
 
-This is not:
+This is not a claim that ordinary application code should all be formally proven, that tests or code review become unnecessary, or that LLM judgments are authoritative.
 
-- a claim that ordinary application code can or should be formally proven;
-- a replacement for tests;
-- a replacement for code review;
-- a replacement for canary deployment, observability, rollback, or incident response;
-- an attempt to turn every business rule into a theorem;
-- a claim that LLM judgments are authoritative.
-
-It is an attempt to connect these pieces into a stronger chain:
+It is an attempt to connect several existing practices into a stronger chain:
 
 ```text
 system guarantee
 → proof responsibility
+→ local reasoning boundary
 → implementation surface
-→ executable evidence
+→ independent evidence
 → change impact
-→ revalidation
+→ targeted revalidation
 ```
+
+Formal methods remain the right tool when the risk and economics justify them. Ordinary tests remain the right tool for most ordinary behavior. Proof-Driven Development explores the space in between.
 
 ---
 
-## The thesis
+## Explore the repository
+
+The repository deliberately separates the target-system design from the Correctness Harness:
+
+- [`design/google-docs.md`](design/google-docs.md) — the collaborative-editor architecture being analyzed;
+- [`correctness/SPEC.md`](correctness/SPEC.md) — the human-readable mental model for the Correctness Harness;
+- [`correctness/SCHEMA.md`](correctness/SCHEMA.md) — the canonical model field/type reference;
+- [`correctness/correctness.yaml`](correctness/correctness.yaml) — the current machine-readable correctness model;
+- [`correctness/correctness.py`](correctness/correctness.py) — validation, slicing, scheduling, semantic signatures, assurance state, and controlled mutation;
+- [`AGENTS.md`](AGENTS.md) — repository operating rules for agents.
+
+---
+
+## Conclusion
 
 A ten-minute architecture diagram can show where requests go.
 
-A serious system design must also explain what remains true when requests race, retries overlap, machines fail, ownership changes, snapshots replace history, and engineers optimize the implementation six months later.
+A serious system design must also explain what remains true when requests race, retries overlap, machines fail, ownership changes, snapshots replace history, and future engineers start optimizing the implementation.
 
-That is the difference between a plausible architecture and an engineering argument.
+The core insight of this project is that we do not need one human or AI to hold the entire proof in its head at once.
 
-> **You can draw a Google Docs design in 10 minutes. The interesting question is whether you can still explain why it works after the first failure, retry, optimization, and migration.**
+If we can keep decomposing the argument into small enough proof obligations, give each verifier exactly the context it needs, attack those obligations from multiple independent perspectives, connect the leaves to real implementation evidence, and deterministically reopen the right reasoning when semantics change, then trustworthy correctness reasoning may become much cheaper to maintain over time.
 
-That is what this repository is trying to make executable.
+> **Do not ask one agent to prove the whole system correct. Build a proof system that keeps giving AI questions small enough that errors become hard to hide.**

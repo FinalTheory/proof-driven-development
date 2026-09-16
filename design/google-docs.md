@@ -39,7 +39,7 @@ Output:
   or reject / rebase-required
 ```
 
-这里的 `base_revision` 不是一个可以独立填写的普通 metadata。对于任何可能进入服务端 OT 并最终成为 canonical acceptance 的请求，客户端必须把 **server-visible `raw edit` 的语义与生成它时所依据的 canonical client base 绑定在一起**：如果该 canonical base 表示 through revision `F` 的状态，那么请求携带的 `base_revision` 必须就是 `F`。请求构造、序列化和重试都不能把同一个 raw edit 换绑到另一个 revision。correctness model 把这条关系命名为 `request_authoring_frontier_binding`。
+这里的 `base_revision` 不是一个可以独立填写的普通 metadata。对于任何可能进入服务端 OT 并最终成为 canonical acceptance 的请求，客户端必须把 **请求的 `document_id`、server-visible `raw edit`，以及生成它时所依据的 canonical client base 绑定成同一个 authoring tuple**：如果该请求针对文档 `D`，而该文档的 canonical client base 表示 through revision `F` 的状态，那么 `raw edit` 必须是基于这个 `D@F` authoring state 产生或编码的，请求携带的 `document_id` 必须仍是 `D`，`base_revision` 必须就是 `F`。请求构造、序列化和重试都不能把同一个 raw edit 换绑到另一个 document 或 revision。correctness model 把这条关系命名为 `request_authoring_frontier_binding`。
 
 客户端 UI 可以存在 speculative state；本文并不因此承诺完整的 client-side OT。这里要求的是更窄的 server protocol boundary：真正提交给 server OT 的 raw edit 必须已经具有相对于其声明 canonical base 的明确语义。如果客户端仍有无法安全映射到新 canonical base 的 unresolved speculative edit，就不能靠随手改一个 `base_revision` 继续发送正常编辑请求；后文的 reconnect/conflict boundary 会明确处理这一点。
 
@@ -311,7 +311,7 @@ correctness model 把这条持续 observer invariant 命名为 `visible_canonica
 
 `last_applied_revision` 只能描述客户端已经吸收的 canonical history。真实客户端还会有另一类状态：已经在本地 optimistic 展示、但尚未得到服务端确定结果的 logical edits。它们必须继续保留原始 `client_change_id`，因为 reconnect 后客户端不能仅凭 payload 判断某个本地 edit 是否已经被 canonical history 吸收：raw edit 和服务端 OT 后的 canonical change 本来就可能不同。
 
-因此重连请求除了 `last_applied_revision=L`，还携带当前 pending edit 的 `client_change_id` 集合。客户端进入 resync 状态后可以暂时禁止新的编辑；这是一种有意选择的简单 UX，用来避免在 canonical base 正在切换时继续制造新的 speculative state。
+因此，对文档 `D` 的重连请求除了 `last_applied_revision=L`，还携带当前 pending edit 的 `client_change_id` 集合；这些 key 的完整语义身份始终是 `(document_id=D, client_change_id=k)`。客户端进入 resync 状态后可以暂时禁止新的编辑；这是一种有意选择的简单 UX，用来避免在 canonical base 正在切换时继续制造新的 speculative state。
 
 服务端为一次 catch-up 在一个明确的 authoritative-store read / linearization point 读取 `document_latest_revision`，并把当时读到的值固定为这次响应的 authoritative response head `H`。后续 canonical range / snapshot mode selection、pending-key reconciliation、completion 与 publication 都必须使用这个同一个 captured `H`；`H` 捕获之后系统当然可以继续接受新的 revision，这些更晚的 acceptance 不属于本次 response，也不要求本次 catch-up 追上一个持续移动的 head。
 
@@ -322,25 +322,25 @@ canonical catch-up through H:
   retained deltas L+1..H
   or snapshot(frontier=S) + tail S+1..H
 
-pending resolution through H:
-  for each pending client_change_id k:
-    accepted at revision r <= H
-    or unresolved through H
+pending resolution through H for catch-up document D:
+  for each pending identity (D, k):
+    accepted at revision r <= H only for canonical acceptance(D,k)
+    or unresolved through H when no acceptance(D,k) exists through H
 ```
 
-这里 `unresolved through H` 只表示 authoritative history through `H` 尚不能证明该 key 已被接受；它不是“永远不会被接受”的终态承诺。为了让这个判断在 snapshot / compaction 之后仍然可靠，accepted-key lifecycle 不能只保留“这个 key 以后不可复用”的 tombstone；它还必须保留 accepted revision，或等价的 frontier evidence，使服务端能够判断某个 pending key 是否已经包含在指定 response head `H` 中。原始 accepted row 可以被压缩，但这项 identity-to-frontier 证据不能在客户端仍可能拿该 key 来 reconciliation 时丢失。
+这里 `unresolved through H` 只表示 authoritative history through `H` 尚不能证明同一完整 identity `(D,k)` 已被接受；它不是“永远不会被接受”的终态承诺。另一个文档 `D2` 上即使存在相同 `client_change_id=k` 的 acceptance，也与 `D` 的这次 reconciliation 无关。为了让这个判断在 snapshot / compaction 之后仍然可靠，accepted-key lifecycle 不能只保留“这个 key 以后不可复用”的 tombstone；它还必须保留同一 `(D,k)` 的 accepted revision，或等价的 frontier evidence，使服务端能够判断该 pending identity 是否已经包含在指定 response head `H` 中。原始 accepted row 可以被压缩，但这项 identity-to-frontier 证据不能在客户端仍可能拿 `(D,k)` 来 reconciliation 时丢失。
 
-客户端的 safety boundary 是：**整个 resync 先在不可见的 candidate state 中完成 canonical base adoption 与 pending reconciliation，随后只能以一次原子、单调的 publication 切换对用户可见状态。** 如果 response 证明 `client_change_id=k` 已经在 revision `r <= H` 被接受，那么 candidate canonical base through `H` 已经包含这个 logical edit；客户端不得在任何 user-visible resync 中间态里再把同一个 `k` 的 speculative overlay 叠加到已经包含它的 canonical prefix 上。
+客户端的 safety boundary 是：**整个 resync 先在不可见的 candidate state 中完成 canonical base adoption 与 pending reconciliation，随后只能以一次原子、单调的 publication 切换对用户可见状态。** 如果 response 证明同一完整 identity `(D,k)` 已经在 revision `r <= H` 被接受，那么 candidate canonical base through `H` 已经包含这个 logical edit；客户端不得在任何 user-visible resync 中间态里再把同一个 `(D,k)` 的 speculative overlay 叠加到已经包含它的 canonical prefix 上。
 
 ```text
-accepted_revision(k) <= candidate_frontier(H)
+accepted_revision(D,k) <= candidate_frontier(H_D)
     =>
-k must be absent from the candidate's visible speculative overlay before publication
+speculative_overlay(D,k) must be absent before publication
 ```
 
 多个 reconnect/resync attempt 还可能因为网络延迟或 retry 重叠。设当前已经对用户可见的 canonical frontier 为 `F`。一个 response through `H` 到达时，如果 `H < F`，它已经是 stale response：**整个 response 必须被丢弃，不能回退 visible canonical base / last_applied_revision，也不能恢复已经被较新 reconciliation 删除的 speculative overlay 或 pending state。** 正确性真正依赖的是 canonical frontier 的单调 publication，而不是 request 发起顺序；因此不要求为 correctness 引入独立的 attempt-generation ordering。
 
-客户端也不能一边增量应用 response、一边把未完成 reconciliation 的 prefix 暴露给用户。例如 `k` 在 revision 105 已被接受、response head 为 110 时，不能先暴露 canonical@105 且仍保留 overlay `k`，然后到 110 才清理。更简单的状态转换是：
+客户端也不能一边增量应用 response、一边把未完成 reconciliation 的 prefix 暴露给用户。例如 `(D,k)` 在 revision 105 已被接受、response head 为 110 时，不能先暴露 canonical@105 且仍保留 overlay `(D,k)`，然后到 110 才清理。更简单的状态转换是：
 
 ```text
 freeze editing
@@ -837,7 +837,7 @@ state invariants:
 
 provenance bindings:
   request_authoring_frontier_binding
-    submitted base_revision 与 server-visible raw_edit 的真实 canonical authoring base 绑定
+    submitted document_id / raw_edit / base_revision 与同一文档的真实 canonical authoring state 绑定
 
   catchup_head_binding
     catch-up response head 来自一次 authoritative document_latest_revision capture，并贯穿该 response

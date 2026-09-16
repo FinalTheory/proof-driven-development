@@ -106,7 +106,7 @@ downstream correctness != provenance correctness
 
 因此 `state_invariant` 不能只检查几个被点名的 transition，而必须检查：它如何建立，以及所有能够修改参与 state 的 in-scope mutator 是否都保持它。
 
-`provenance_binding` 也不能因为 downstream 使用正确，就反推 provenance 正确。它必须单独证明 producer、source、capture/binding point 以及最终关联到哪个 execution/state/identity。
+`provenance_binding` 也不能因为 downstream 使用正确，就反推 provenance 正确。它必须单独证明 producer、source、capture/binding point 以及最终关联到哪个 execution/state/identity。对于复合 identity / semantic tuple，还必须证明所有用于区分实体的坐标来自同一个 source/execution；分别正确的 field-level provenance 并不能证明 `(document_id, key)`、`(document_id, frontier)` 或 authoring-state/request tuple 指向同一个语义实体。
 
 ## Refinement 与 invalidation
 

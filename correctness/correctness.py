@@ -514,6 +514,12 @@ sub-agent proposes reasoning-level changes; the orchestrator transforms the acce
 structured `mutate` operations, attaches current semantic-signature preconditions, and submits the plan
 through the locked mutation API. A rejected or superseded recommendation produces no graph mutation.
 
+Canonical model text is current-state specification, not a changelog. When compiling claims, contracts,
+verification intents, or refinement rationale, state what is true now. Do not encode edit history such as
+"previously X, now Y", "after the repair", "reclassified from", or why an older wording was wrong unless
+that history is itself part of the current system semantics. Git/history and external audit artifacts carry
+change narrative; `correctness.yaml` should remain a clean statement of the present model.
+
 When several clean audits complete in parallel, the orchestrator may judge them in any order, but it
 must treat each result as based on the signature captured when that audit started. `STALE_MUTATION`
 means the relevant branch changed before commit; do not force-apply the old recommendation. Re-audit or
@@ -1235,7 +1241,7 @@ def _node_semantic_signature(
 
 
 ASSURANCE_SEMANTICS_VERSION = "1"
-COVERAGE_AUDIT_SEMANTICS_VERSION = "2"
+COVERAGE_AUDIT_SEMANTICS_VERSION = "3"
 
 
 def _node_proposition_signature(graph: Graph, node_id: str) -> str:
@@ -2035,6 +2041,18 @@ def validate(graph: Graph) -> tuple[list[str], list[str]]:
                             f"catalog.semantic_contracts.{contract_id}.{field} references unknown semantic symbol {symbol!r}"
                         )
 
+    if graph.repository_root is not None:
+        referenced_contracts: set[str] = set()
+        for claim in graph.claims.values():
+            refs = claim.get("semantic_contracts", [])
+            if isinstance(refs, list):
+                referenced_contracts.update(ref for ref in refs if isinstance(ref, str))
+        for contract_id in sorted(set(contracts) - referenced_contracts):
+            warnings.append(
+                f"catalog.semantic_contracts.{contract_id} is not referenced by any claim; "
+                "verify that the relation is intentionally unused rather than a missing correctness proposition"
+            )
+
     id_allocator = doc.get("id_allocator")
     next_sequence = id_allocator.get("next_sequence") if isinstance(id_allocator, dict) else None
     prefixes = ("A", "G", "C", "L", "D", "T")
@@ -2648,6 +2666,9 @@ def _emit_audit_prompt(graph: Graph, node_id: str) -> None:
     print("This slice is the complete specification for the clean audit. Do not open the full DAG or source")
     print("article. The orchestrator handles graph reuse, invalidation analysis, and mutation compilation.")
     print()
+    print("If you propose replacement proposition or verifier wording, write only the intended current semantics.")
+    print("Do not embed audit/edit history such as 'previously', 'after the repair', or explanations of superseded wording.")
+    print()
 
     if task == "leaf_boundary_audit":
         print("## Question")
@@ -2901,6 +2922,7 @@ def _emit_composition_audit_prompt(graph: Graph, node_id: str, focus: str) -> No
     print("provided scope/failure model and preserves every direct premise exactly as written.")
     print("Do not repair the graph, invent architecture, or suggest decomposition unless needed to explain the missing premise.")
     print()
+    print("If you name a missing proposition, phrase it as the required current-state semantics, not as edit history or a correction of superseded wording.")
     print("Verdicts: `ENTAILED`, `COUNTEREXAMPLE`, or `INCOMPLETE_CONTEXT`.")
     print()
     print("## Response format")
@@ -3006,6 +3028,7 @@ def _emit_coverage_audit_prompt(graph: Graph) -> None:
     print("2. **Semantic provenance/binding closure**")
     print("   - Inventory every token/field/state whose downstream meaning depends on where or when it was produced (for example frontiers, epochs, request bases, identities, snapshot heads, accepted evidence).")
     print("   - For each one, identify producer, required source state, capture/linearization point, bound execution/identity/state, and downstream consumers.")
+    print("   - For composite identities or semantic tuples, require tuple closure: every coordinate that distinguishes the entity must be bound to the same source/execution. Separately correct field-level provenance does not prove that `(document_id, key)`, `(document_id, frontier)`, or an authoring-state/request tuple refers to one semantic entity.")
     print("   - Require a `provenance_binding` semantic contract plus a claim when correctness depends on that origin/binding relation. Correct downstream processing of a submitted or captured value does not prove that the value came from the right source.")
     print("   - Search explicitly for stale, substituted, cross-bound, cached, or otherwise semantically valid-looking values with the wrong provenance.")
     print()
@@ -3043,6 +3066,7 @@ def _emit_coverage_audit_prompt(graph: Graph) -> None:
     print("Return the baseline validator/scheduler state, a compact scout/checker/challenger ledger, each surviving finding")
     print("with a minimal repair boundary, and exactly one final verdict. Include the model signature above so the result")
     print("can later be recorded through `set_specification_coverage` without ambiguity.")
+    print("Describe proposed canonical wording as present-tense/current-state semantics only; do not encode audit history or superseded wording into claims/contracts.")
     _emit_non_normative_harness_feedback_contract()
 
 

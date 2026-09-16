@@ -1622,6 +1622,16 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("semantic alignment", text)
         self.assertIn(".venv/bin/python3 correctness.py validate", text)
 
+    def test_repository_validation_warns_on_unreferenced_semantic_contract(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write_fixture(tmp)
+            graph = correctness.Graph.load(path)
+            errors, warnings = correctness.validate(graph)
+        self.assertEqual(errors, [])
+        self.assertTrue(
+            any("synthetic_safety_contract is not referenced by any claim" in warning for warning in warnings)
+        )
+
     def test_coverage_audit_prompt_requires_semantic_closure_and_clean_assurance_bootstrap(self):
         doc = copy.deepcopy(self.base)
         graph = self._freeze_refinement_for_certification(doc)
@@ -1632,6 +1642,8 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("Mandatory semantic-closure pass", text)
         self.assertIn("Inductive state-invariant closure", text)
         self.assertIn("Semantic provenance/binding closure", text)
+        self.assertIn("composite identities or semantic tuples", text)
+        self.assertIn("tuple closure", text)
         self.assertIn("--omit-specification-coverage", text)
 
     def test_assurance_status_can_omit_prior_specification_coverage(self):
@@ -1659,6 +1671,22 @@ class CorrectnessToolTests(unittest.TestCase):
             correctness._cmd_coverage_audit_prompt(self.graph(), argparse.Namespace())
         self.assertIn("requires refinement COMPLETE", str(ctx.exception))
 
+
+    def test_generated_audit_contracts_keep_canonical_wording_history_free(self):
+        frozen = self._freeze_refinement_for_certification(copy.deepcopy(self.base))
+        outputs = []
+        for render in (
+            lambda: correctness._emit_audit_prompt(self.graph(), "L1_left_boundary"),
+            lambda: correctness._emit_composition_audit_prompt(frozen, "G1_primary_goal", "general"),
+            lambda: correctness._emit_coverage_audit_prompt(frozen),
+        ):
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                render()
+            outputs.append(out.getvalue())
+        self.assertIn("intended current semantics", outputs[0])
+        self.assertIn("current-state semantics", outputs[1])
+        self.assertIn("present-tense/current-state semantics", outputs[2])
 
     def test_generated_audit_contracts_append_non_normative_harness_feedback(self):
         doc = copy.deepcopy(self.base)
