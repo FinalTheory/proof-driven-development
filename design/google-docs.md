@@ -39,6 +39,10 @@ Output:
   or reject / rebase-required
 ```
 
+这里的 `base_revision` 不是一个可以独立填写的普通 metadata。对于任何可能进入服务端 OT 并最终成为 canonical acceptance 的请求，客户端必须把 **server-visible `raw edit` 的语义与生成它时所依据的 canonical client base 绑定在一起**：如果该 canonical base 表示 through revision `F` 的状态，那么请求携带的 `base_revision` 必须就是 `F`。请求构造、序列化和重试都不能把同一个 raw edit 换绑到另一个 revision。correctness model 把这条关系命名为 `request_authoring_frontier_binding`。
+
+客户端 UI 可以存在 speculative state；本文并不因此承诺完整的 client-side OT。这里要求的是更窄的 server protocol boundary：真正提交给 server OT 的 raw edit 必须已经具有相对于其声明 canonical base 的明确语义。如果客户端仍有无法安全映射到新 canonical base 的 unresolved speculative edit，就不能靠随手改一个 `base_revision` 继续发送正常编辑请求；后文的 reconnect/conflict boundary 会明确处理这一点。
+
 举个简单例子。客户端看到的是 revision 100，它发来一个 edit：“在 position 10 插入字符 X”。但服务端此时可能已经接受了 revision 101 到 105。position 10 在最新文档里可能已经不再对应客户端当时看到的位置。OT control layer 的职责，就是根据 revision 101 到 105 的 accepted history，把这个 raw edit transform 成当前 canonical history 下的下一个合法 edit。
 
 所以 OT 的能力边界应该说清楚：
@@ -277,6 +281,8 @@ if change set.revision <= last_applied_revision:
 
 WebSocket 是 delivery。Revision log 才是 ordering proof。
 
+`last_applied_revision` 还必须和客户端保存的 canonical materialization 构成一个持续状态不变量，而不能只在 catch-up 或 revision 前进的瞬间正确。correctness model 把它命名为 `client_canonical_frontier_coherence`：**在每一个 user-visible client state 中，`client_local_document` 都必须等于 canonical accepted history replay through `last_applied_revision` 的结果。** 任何能够修改或恢复 canonical document、frontier 或把它们重新发布给用户的 transition，都必须保持这对关系，即使该 transition 根本没有推进 revision。resync 内部尚未 publication 的 private candidate state 不属于这个 user-visible observer boundary。
+
 这里还需要一条与 revision continuity 正交的客户端 observer invariant。真实用户看到的不是单独的 canonical base，而是 **canonical base + speculative overlays** 的组合。即使 canonical base 本身已经严格等于 replay through frontier F，如果同一个 logical edit 又以 optimistic overlay 的形式继续可见，用户仍然会看到重复结果。
 
 因此，任何把新的 canonical frontier `F` 暴露给用户的路径——普通 live delivery、catch-up 后 buffered live delivery、或 reconnect/resync publication——都必须遵守同一个规则：如果新 canonical prefix through `F` 已经包含 identity `(document_id=D, client_change_id=k)` 的 acceptance，而客户端此刻仍有同一个 `(D,k)` 的 speculative overlay，那么该 overlay 必须在 `state@F` 对用户可见之前被移除或 suppress，或者与 frontier publication 在同一个原子可见切换里一起消失。客户端不能先展示 canonical `k`，再异步清理 speculative `k`；是否是同一个 logical edit 依赖稳定的 `client_change_id` identity，而不是比较 raw/canonical payload 是否相同。
@@ -296,6 +302,8 @@ visible canonical prefix contains acceptance(D,k)
 for every subsequent user-visible client state while that acceptance remains visible:
     speculative_overlay(D,k) is absent
 ```
+
+correctness model 把这条持续 observer invariant 命名为 `visible_canonical_speculative_exclusion`。它约束的是整个 user-visible state space，而不是某一次 publication event。
 
 下面的 reconnect reconciliation 只是这个持续 observer invariant 在 snapshot/catch-up 场景下更复杂的一种实现：除了不能 double-render，还必须处理 response head、unresolved pending identity、stale response 和原子 publication。
 
@@ -345,7 +353,9 @@ freeze editing
 
 因此 user-visible canonical frontier 在 resync publication 上永不倒退，也不存在 user-visible 的 checkpoint/tail 中间 prefix。不同 attempt 可以并行计算 candidate，但只有满足上述 publication guard 的完整 reconciled candidate 才能影响可见状态。
 
-对于仍然 `unresolved through H` 的 local edits，本文**不承诺自动把它们 rebase 到新的 canonical base 上，也不承诺 reconnect 后立即恢复可编辑状态**。客户端可以继续保持文档 locked，并把这些 edits 进入 conflict / reconciliation flow；最终 UI 可以像版本冲突一样保留用户原始内容并要求人工处理，但这属于本文 scope 之外。
+对于仍然 `unresolved through H` 的 local edits，本文**不承诺自动把它们 rebase 到新的 canonical base 上，也不承诺它们最终一定能够自动解决**。但这里有一个必须持续成立的 safety boundary：只要仍存在没有被安全 reconciliation 掉的 pending edit，客户端就不能回到 normal editable mode，也不能继续创建新的 acceptance-eligible speculative edit。它必须保持 read-only / conflict / reconciliation 一类非正常编辑状态，直到 unresolved set 被显式 reconciliation 清空。correctness model 把这条 control-state invariant 命名为 `unresolved_pending_blocks_normal_editing`。
+
+这个约束没有引入新的 progress guarantee。系统完全可以长时间停在 conflict 状态；最终 UI 也可以像版本冲突一样保留用户原始内容并要求人工处理，而具体冲突解决语义仍属于本文 scope 之外。
 
 这个限制是有意的。特别是在 snapshot catch-up 中，如果客户端从旧 frontier `L` 直接跳到 `snapshot@S` 且 `S > L`，`L+1..S` 的 operation-level history 可能已经被压缩进 checkpoint。仅凭新的 document state，客户端通常没有足够信息证明一个基于旧 speculative state 产生的 unresolved edit 应如何 transform 到新 base。完整的 client-side OT / CRDT、多个 pending edit 之间的 local rebase、以及无缝保持可编辑 UX 都是独立问题，不由这套 server-authoritative correctness model 解决。
 
@@ -716,10 +726,13 @@ it makes that boundary local, cheaper, and easier to reason about.
 Client:
   - local optimistic edit
   - sends edit with client_change_id and base_revision
+  - binds every server-visible raw edit to the canonical client frontier declared by base_revision
   - tracks last_applied_revision
+  - keeps client_local_document coherent with last_applied_revision in every user-visible state
   - tracks unresolved optimistic edits by client_change_id
   - applies only continuous revisions
   - freezes editing during reconnect reconciliation
+  - while unresolved pending edits remain, keeps normal editing disabled until explicit reconciliation clears them
   - while the visible canonical prefix contains acceptance (D,k), keeps speculative overlay (D,k) absent across every subsequent user-visible client transition; canonical publication cannot retire it only temporarily
   - unresolved edits may enter conflict handling; automatic local rebase is out of scope
 
@@ -798,6 +811,57 @@ client freezes editing
 → client atomically exposes the reconciled state
 → if unresolved pending edits remain, enter conflict / reconciliation flow
 → otherwise resume live stream and editing
+```
+
+为了让 correctness DAG 能系统检查 state closure 与 provenance closure，而不是继续依赖 path-by-path 的文字枚举，当前模型给关键跨边界关系使用以下 typed semantic contracts。它们定义 proposition 的语义边界，本身不作为 proof premise：
+
+```text
+state invariants:
+  accepted_history_frontier_coherence
+    accepted_change_log 与 document_latest_revision 始终表示同一个 gap-free canonical prefix
+
+  snapshot_frontier_coherence
+    每个 authoritative published snapshot 的 content 与 snapshot_revision 表示同一个 canonical prefix
+
+  client_canonical_frontier_coherence
+    每个 user-visible client state 中，client_local_document = Replay(last_applied_revision)
+
+  visible_canonical_speculative_exclusion
+    visible canonical prefix 已包含 acceptance(D,k) 时，不得同时存在 matching speculative overlay(D,k)
+
+  unresolved_pending_blocks_normal_editing
+    unresolved pending edits 非空时，client 不能进入 normal editable mode
+
+  accepted_evidence_correspondence
+    authoritative already-accepted evidence 与 committed canonical acceptance 保持事实对应
+
+provenance bindings:
+  request_authoring_frontier_binding
+    submitted base_revision 与 server-visible raw_edit 的真实 canonical authoring base 绑定
+
+  catchup_head_binding
+    catch-up response head 来自一次 authoritative document_latest_revision capture，并贯穿该 response
+
+  recovery_head_binding
+    recovery head 来自 post-handoff authoritative document_latest_revision capture
+
+  acceptance_request_identity_binding
+    submitted (document_id, client_change_id) 原样成为 canonical acceptance / idempotency identity
+
+  accepted_evidence_provenance
+    already-accepted evidence 只能来自 matching committed canonical acceptance
+
+  recovered_ot_state_provenance
+    recovered OT state 只能来自 selected authoritative checkpoint + exact canonical tail
+
+  ot_success_acceptance_binding
+    canonical accepted payload 必须来自对应 submitted raw edit 的 successful OT result
+
+  ot_result_frontier_binding
+    OT result 必须继续绑定它计算时的 canonical frontier，并在同一 frontier 上才能 commit
+
+  live_delivery_acceptance_binding
+    live delivery 只能派生自 committed canonical accepted history
 ```
 
 这套设计的核心不在组件数量，而在不变量清楚：

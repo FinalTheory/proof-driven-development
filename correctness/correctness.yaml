@@ -228,12 +228,11 @@ refinement:
         decomposition maturity is preserved under the new semantic signature.
       signature: f0ffa587f011bb04294146e56606b85670693f81ce1ee986e475fdce863b660d
     C7_revision_frontier_is_linear:
-      status: stable
+      status: pending
       blocked_by: []
       rationale: Verification-plan metadata was refined to expose the existing transaction proof
         basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
         decomposition maturity is preserved under the new semantic signature.
-      signature: 57bd74e1fd4b9533cbce9023c00cfd6d7a3ecc1bf3ee9c8e92f82994c49c2670
     C8_stale_owner_is_fenced:
       status: stable
       blocked_by: []
@@ -260,11 +259,10 @@ refinement:
       rationale: The three revision cases form one localized client state machine.
       signature: 301cf4291aba1f9bebc5238007d83eabadcdfdc793b6ce9a2ed5affd4a87e89e
     C12_live_delivery_contains_only_accepted_changes:
-      status: stable
+      status: pending
       blocked_by: []
       rationale: Same-change commit-before-broadcast implication exactly proves live-stream
         provenance.
-      signature: fd520e9b35d407e155ddb6c7feb173c3b29728c34294930c321fed50830c7816
     L2_retry_returns_existing_acceptance:
       status: stable
       blocked_by: []
@@ -311,11 +309,10 @@ refinement:
         decomposition maturity is preserved under the new semantic signature.
       signature: cd42e0b0e77f0e52c68a90f5ab8a9d557a160f992942e1fd21e38b0ec75f0193
     L8_snapshot_is_exact_committed_prefix:
-      status: stable
+      status: pending
       blocked_by: []
       rationale: Snapshot versus canonical-prefix replay equivalence is one localized
         materialization invariant.
-      signature: 133423725454a7ff184c3fec231869acf032a01aa47f6489a859d6ad781b9389
     L9_snapshot_content_and_frontier_publish_atomically:
       status: stable
       blocked_by: []
@@ -494,12 +491,11 @@ refinement:
         authoritative existing-key, absent-key winner, or loser-through- winner case.
       signature: 936d2abf7a8a18732703894c669ad98ed8918401b25d25598b58813c0b55a881
     C25_recovery_derives_complete_ot_metadata_from_truth:
-      status: stable
+      status: pending
       blocked_by: []
       rationale: Its two proof premises remain the same metadata-equivalence and
         authoritative-provenance obligations; removing generation terminology from L65 does not
         change the composition argument.
-      signature: aa8aad55c6dadfbf3819b7f2738f3939af30adc4f5a153bbe5cff10b33a1693d
     L64_recovered_ot_metadata_equals_clean_authoritative_reconstruction:
       status: stable
       blocked_by: []
@@ -521,11 +517,10 @@ refinement:
         metadata reconstruction, and local frontier initialization all complete.
       signature: f30518b231b42995e3c47a321842ceb017596522302628a347f3a8f8f50246e3
     L92_captured_recovery_head_equals_authoritative_frontier:
-      status: stable
+      status: pending
       blocked_by: []
       rationale: Captured recovery head H and the authoritative frontier read result at the same
         post-handoff capture event form one local mechanically observable equality invariant.
-      signature: fe1e89cde5d1cc9df15dab45d9beab0bea80215196eb67d818e2d0782bfcc074
     L93_recovery_loads_selected_checkpoint_before_replay:
       status: stable
       blocked_by: []
@@ -547,47 +542,42 @@ refinement:
       blocked_by: []
       signature: dc7c47fb45bf379dd9d72dfc74becc262a9c1300298058a6cb94894a6b486950
     G6_accepted_change_preserves_ot_semantics:
-      status: stable
+      status: pending
       blocked_by: []
       rationale: Verification-plan metadata was refined to expose the existing transaction proof
         basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
         decomposition maturity is preserved under the new semantic signature.
-      signature: 7e43c45c203c0f3c1005131af0dcec9382f4033aca6c67b94ab8c66bb61da498
     L98_ot_receives_exact_request_and_canonical_context:
       status: stable
       blocked_by: []
       signature: 92ce2cd3bbd4090798be6a9cd89b3b10bff1b56d1c808095cefec293902bdf06
     L99_ot_result_is_bound_to_acceptance_frontier:
-      status: stable
+      status: pending
       blocked_by: []
       rationale: Verification-plan metadata was refined to expose the existing transaction proof
         basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
         decomposition maturity is preserved under the new semantic signature.
-      signature: 7af2df661dfaf277aa6198cd43b02b0f51e9ce98548b771cec68e859c6442b97
     L100_acceptance_commits_only_ot_success_output:
-      status: stable
+      status: pending
       blocked_by: []
       rationale: One localized control-flow and dataflow verifier can prove OT-success dominance,
         exact output provenance, and rejection-path non-reachability across the canonical producer
         boundary.
-      signature: b9ca70a8c7e6c66aba7cfdfd5695fe4c0b28c9eb967d017ab11aa1f059f048e7
     L101_client_completes_catchup_through_response_head:
       status: stable
       blocked_by: []
       signature: c4f81922770e1e994b49cbf1563f8f59fa9c5641ff21975a8f59e9c33f546f22
     L102_client_frontier_matches_canonical_base:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: a7f517ce86c8ffadc794824d7226ef31d58565c48d6bdf5267ca4ff2306b408f
     G7_reconnect_does_not_double_render_accepted_optimistic_edit:
-      status: stable
+      status: pending
       blocked_by: []
       rationale: 'The strengthened L110 is intentionally a reusable global observer invariant and is stronger
         than the reconnect-only target. Together with reconnect pending-set capture, response-head identity
         reconciliation, request-identity preservation, editing freeze, and atomic monotonic resync publication,
         it establishes the narrower reconnect no-double-render guarantee without duplicating a reconnect-specific
         overlay leaf.'
-      signature: fccbbbbfbb8b7168de36b4831ee19499734c284ed1d3b6e5f001c5a3529124ca
     L104_pending_identity_resolution_is_bound_to_response_head:
       status: stable
       blocked_by: []
@@ -603,22 +593,20 @@ refinement:
         retry interleavings.
       signature: 6ac10f4ad98338a46ea21bf7342ffaadc2f8af1cbf7f52f2d3d4b31915abcd3b
     L107_client_freezes_speculative_edits_during_resync:
-      status: stable
+      status: pending
       blocked_by: []
       rationale: 'The proposition is a localized reconnect client state-machine invariant: from resync
         start until reconciled publication or explicit conflict entry, user-edit transitions for that
         document must be unreachable. One bounded state-machine/control-flow verifier can decide the whole
         property without reconstructing parent protocol semantics, so further decomposition would add
         no independent verification boundary.'
-      signature: aafc76281732cc9e6ae8b8779d4d41fe2dadb1b0075ee589bd1fe0d353d5694e
     L108_acceptance_preserves_request_identity:
-      status: stable
+      status: pending
       blocked_by: []
       rationale: The complete proposition is one localized request-to-commit identity-provenance
         property. A bounded acceptance-path control-flow/dataflow check, reinforced by integration
         tests with distinguishable identities, can directly establish the whole statement without
         reconstructing any parent retry, OT, or reconnect protocol.
-      signature: 7c6d6361bb87d282e0cc8b58daf52e6c4f874322a089fed46cfc4678ac83c323
     L109_resync_publication_is_atomic_and_monotonic:
       status: stable
       blocked_by: []
@@ -627,45 +615,45 @@ refinement:
         frontier semantics without reconstructing a parent protocol.'
       signature: 0471fe70dbccf6eff7a7cffe0095f512f5b28b201804aa2f82183a3161854d2f
     L110_client_retires_matching_speculative_overlay_before_canonical_publication:
-      status: stable
+      status: pending
       blocked_by: []
       rationale: 'The strengthened proposition is one localized client visible-state invariant: enumerate
         canonical-publication and overlay create/restore/reactivate transitions and mechanically require
         matching overlay (D,k) to stay absent while the visible canonical prefix contains acceptance (D,k).
         State-machine/control-flow evidence can decide the complete proposition without reconstructing
         a broader protocol.'
-      signature: bfbb9e1209103747a691e1b609894eba8e51cbff6d022ebbdd20ad0e73dd2b4a
     G8_user_visible_state_does_not_double_render_accepted_optimistic_edit:
-      status: stable
+      status: pending
       blocked_by: []
       rationale: 'A3 supplies stable logical-edit identity, L108 preserves that identity into canonical
         acceptance, and strengthened L110 enforces persistent absence of the matching speculative overlay
         across every user-visible client transition while that acceptance remains in the visible canonical
         prefix. These dependencies directly establish the persistent observer invariant, including non-frontier-advancing
         bookkeeping paths.'
-      signature: 9098cc9f17fd63d2b9d5bf2065a337cc4ad1ef8f0400e78fa7a7344352a9a008
     L111_accepted_key_classification_requires_committed_acceptance:
-      status: stable
+      status: pending
       blocked_by: []
       rationale: 'Verification-plan metadata was refined to expose the existing transaction proof basis;
         proposition text, dependencies, and architecture semantics are unchanged, so prior decomposition
         maturity is preserved under the new semantic signature.'
-      signature: 502c78bebefd2523be5de953e561ffb51850d10c479293b837077ca7cf50b978
     G9_accepted_idempotency_evidence_matches_committed_acceptance:
-      status: stable
+      status: pending
       blocked_by: []
       rationale: "Verification-plan metadata was refined to expose the existing transaction proof basis;
         proposition text, dependencies, and architecture semantics are unchanged, so prior decomposition
         maturity is preserved under the new semantic signature."
-      signature: 4bf96f4c3b5717c86f430ed5f4e743f222b724ba0484d3ad5008871e33ec9b9f
     L112_catchup_response_head_is_captured_from_authoritative_frontier:
-      status: stable
+      status: pending
       blocked_by: []
       rationale: 'This is one localized catch-up provenance boundary: capture H from authoritative document_latest_revision
         at one read point and carry that exact value through the response pipeline. A bounded protocol/state-machine
         plus integration provenance check can decide the whole proposition; later frontier advancement
         is explicitly outside the captured response rather than a new proof obligation.'
-      signature: d3190d4a9035b502af6a594c2979f0dbb7251979b18c8fd432ec79e1bfba3c4f
+    L113_request_raw_edit_is_bound_to_authoring_frontier:
+      status: pending
+      blocked_by: []
+      rationale: New semantic-closure leaf introduced to close the authoring-frontier provenance
+        gap; requires a fresh leaf-boundary audit.
 assumptions:
   A1_storage_commit_is_durable:
     statement: A successful authoritative-store commit remains recoverable across the server-process
@@ -903,6 +891,9 @@ claims:
       - owner_failover
       - storage_selection
       - final_architecture
+    formal_intent: accepted_history_frontier_coherence
+    semantic_contracts:
+      - accepted_history_frontier_coherence
   C8_stale_owner_is_fenced:
     kind: derived
     statement: >-
@@ -1024,6 +1015,9 @@ claims:
     mechanisms:
       - accepted_history_log
       - commit_before_delivery
+    formal_intent: live_delivery_acceptance_binding
+    semantic_contracts:
+      - live_delivery_acceptance_binding
   L2_retry_returns_existing_acceptance:
     kind: leaf
     statement: >-
@@ -1211,7 +1205,7 @@ claims:
     statement: >-
       snapshot(content, S) represents exactly the document state after applying all and
       only canonical accepted changes through revision S.
-    formal_intent: "snapshot_state(S) == replay(accepted[1..S])"
+    formal_intent: "snapshot_frontier_coherence; snapshot_state(S) == replay(accepted[1..S])"
     severity: critical
     assurance_required: strong
     surfaces:
@@ -1231,6 +1225,8 @@ claims:
     mechanisms:
       - accepted_history_log
       - snapshot_checkpoint
+    semantic_contracts:
+      - snapshot_frontier_coherence
   L9_snapshot_content_and_frontier_publish_atomically:
     kind: leaf
     statement: >-
@@ -2002,6 +1998,9 @@ claims:
       - owner_failover
       - storage_selection
       - final_architecture
+    formal_intent: recovered_ot_state_provenance
+    semantic_contracts:
+      - recovered_ot_state_provenance
   L64_recovered_ot_metadata_equals_clean_authoritative_reconstruction:
     statement: For authoritative recovery head H, recovery installs the complete set of OT metadata
       fields required to resume acceptance at H, and both that field set and every field value
@@ -2123,6 +2122,9 @@ claims:
             used for checkpoint selection and replay directly with the authoritative persisted
             frontier read at capture.
     kind: leaf
+    formal_intent: recovery_head_binding
+    semantic_contracts:
+      - recovery_head_binding
   L93_recovery_loads_selected_checkpoint_before_replay:
     statement: Once new-owner recovery selects authoritative checkpoint P=(content,S), it installs
       exactly P as the replay base before applying any tail revision; concurrent pointer, cache, or
@@ -2274,13 +2276,14 @@ claims:
     kind: leaf
   G6_accepted_change_preserves_ot_semantics:
     statement: Every canonical_accepted_change in authoritative history is exactly the successful
-      OT-engine transformed result for one submitted raw_edit and its client base revision, computed
-      against the canonical committed document prefix immediately preceding the accepted revision,
-      preserves exactly the submitted request's (document_id, client_change_id) as the authoritative
-      identity of that acceptance, and satisfies the OT engine's algorithmic convergence contract
-      for that input and prefix; no canonical acceptance may be created without such a submitted raw
-      edit and successful OT result, and an OT reject or rebase-required outcome cannot create a
-      canonical acceptance.
+      OT-engine transformed result for one submitted raw_edit whose submitted base_revision is bound
+      to the canonical client frontier against which that server-visible raw_edit was authored or
+      encoded, computed against the canonical committed document prefix immediately preceding the
+      accepted revision, preserves exactly the submitted request's (document_id, client_change_id)
+      as the authoritative identity of that acceptance, and satisfies the OT engine's algorithmic
+      convergence contract for that input and prefix; no canonical acceptance may be created without
+      such a submitted raw edit and successful OT result, and an OT reject or rebase-required
+      outcome cannot create a canonical acceptance.
     severity: critical
     assurance_required: maximal
     source_refs:
@@ -2294,6 +2297,15 @@ claims:
       - L99_ot_result_is_bound_to_acceptance_frontier
       - L100_acceptance_commits_only_ot_success_output
       - L108_acceptance_preserves_request_identity
+      - L113_request_raw_edit_is_bound_to_authoring_frontier
+      - L102_client_frontier_matches_canonical_base
+    formal_intent: request_authoring_frontier_binding; ot_success_acceptance_binding;
+      ot_result_frontier_binding; acceptance_request_identity_binding
+    semantic_contracts:
+      - request_authoring_frontier_binding
+      - ot_success_acceptance_binding
+      - ot_result_frontier_binding
+      - acceptance_request_identity_binding
   L98_ot_receives_exact_request_and_canonical_context:
     statement: Every OT invocation whose success is eligible for canonical acceptance receives
       exactly the submitted raw_edit and client base revision for that logical request, together
@@ -2362,6 +2374,9 @@ claims:
             authoritative acceptance guard and cannot be replaced by a newer revision number while
             reusing the stale transformed payload.
     kind: leaf
+    formal_intent: ot_result_frontier_binding
+    semantic_contracts:
+      - ot_result_frontier_binding
   L100_acceptance_commits_only_ot_success_output:
     statement: Every path capable of creating a canonical_accepted_change is dominated by a
       successful OT invocation for one submitted raw_edit corresponding to that acceptance, and the
@@ -2395,6 +2410,9 @@ claims:
             submitted-raw-edit/OT-success provenance and every reject or rebase-required outcome
             must produce no canonical acceptance.
     kind: leaf
+    formal_intent: ot_success_acceptance_binding
+    semantic_contracts:
+      - ot_success_acceptance_binding
   L101_client_completes_catchup_through_response_head:
     statement: "A client catch-up attempt for authoritative response head H is considered complete only
       after the client has consumed the response's entire canonical representation through H: delta mode
@@ -2422,11 +2440,13 @@ claims:
             H have been consumed, with last_applied_revision exactly H.
     kind: leaf
   L102_client_frontier_matches_canonical_base:
-    statement: Before retained-delta catch-up begins from last_applied_revision L,
-      client_local_document equals deterministic application of all and only canonical accepted
-      revisions through L. Every client transition that advances last_applied_revision preserves
-      this paired content/frontier invariant; speculative raw edits are not part of
-      client_local_document.
+    statement: 'At every user-visible client state, client_canonical_frontier_coherence holds: client_local_document
+      equals deterministic application of all and only canonical accepted revisions through last_applied_revision.
+      The invariant is established at client initialization or canonical publication and preserved by
+      every user-visible transition capable of mutating, restoring, or publishing client_local_document
+      or last_applied_revision, including transitions that leave the frontier unchanged. Speculative raw
+      edits are not part of client_local_document, and private client_resync_candidate construction is
+      outside this observer boundary until atomic publication.'
     severity: critical
     assurance_required: strong
     source_refs:
@@ -2447,24 +2467,36 @@ claims:
       verifiers:
         - kind: state_machine
           intent: Model client initialization, contiguous live and catch-up application,
-            duplicate/gap handling, snapshot replacement, interruption, and retry; prove inductively
-            that every reachable retained-delta catch-up entry at frontier L pairs
-            client_local_document with exactly canonical replay through L, and that no
-            frontier-advancing transition exposes mismatched content while speculative raw edits
-            remain outside this canonical base.
+            duplicate/gap handling, snapshot replacement, interruption, retry/pending bookkeeping,
+            UI/local-state restoration, buffered live delivery, reconnect publication, and every
+            other transition that can mutate, restore, or publish client_local_document or
+            last_applied_revision. Prove inductively that every user-visible reachable state
+            satisfies client_canonical_frontier_coherence, including transitions that leave the
+            frontier unchanged; private resync candidates may violate it only while remaining
+            unobservable.
+        - kind: control_flow
+          intent: Enumerate every implementation path that can assign, restore, swap, or publish
+            client_local_document or last_applied_revision and prove it either preserves their
+            canonical replay relation atomically or operates only on non-user-visible
+            client_resync_candidate state.
     kind: leaf
+    formal_intent: client_canonical_frontier_coherence
+    semantic_contracts:
+      - client_canonical_frontier_coherence
   G7_reconnect_does_not_double_render_accepted_optimistic_edit:
-    statement: During reconnect/resync, the client does not create or apply new speculative local
-      edits for the document while the resync attempt is in progress. For every pending logical
-      client edit identified by client_change_id k at resync start, the catch-up request includes k
-      for authoritative reconciliation through response head H; if that logical edit has a canonical
-      acceptance included in H, authoritative reconciliation identifies that acceptance under the
-      same k and any user-visible publication through H occurs only after the speculative overlay
-      for k has been removed. No intermediate resync candidate may expose a canonical prefix that
-      already contains k together with its overlay, and a stale response may not restore an overlay
-      removed by a newer published reconciliation. Keys with no canonical acceptance through H may
-      leave the client read-only or in conflict/reconciliation state; this claim makes no automatic
-      local-rebase or progress guarantee.
+    statement: 'During reconnect/resync, the client does not create or apply new speculative local edits
+      for the document while the resync attempt is in progress. For every pending logical client edit
+      identified by client_change_id k at resync start, the catch-up request includes k for authoritative
+      reconciliation through response head H; if that logical edit has a canonical acceptance included
+      in H, authoritative reconciliation identifies that acceptance under the same k and any user-visible
+      publication through H occurs only after the speculative overlay for k has been removed. No intermediate
+      resync candidate may expose a canonical prefix that already contains k together with its overlay,
+      and a stale response may not restore an overlay removed by a newer published reconciliation. If
+      any pending edit remains unresolved after reconciled publication or conflict entry, unresolved_pending_blocks_normal_editing
+      holds: the client remains non-normal-editable/read-only or in explicit conflict/reconciliation state
+      and creates no new acceptance-eligible speculative edit until those unresolved edits are explicitly
+      reconciled or removed. This claim makes no automatic local-rebase, conflict-resolution, or progress
+      guarantee.'
     severity: critical
     assurance_required: strong
     source_refs:
@@ -2478,6 +2510,9 @@ claims:
       - L108_acceptance_preserves_request_identity
       - L109_resync_publication_is_atomic_and_monotonic
       - L110_client_retires_matching_speculative_overlay_before_canonical_publication
+    formal_intent: unresolved_pending_blocks_normal_editing
+    semantic_contracts:
+      - unresolved_pending_blocks_normal_editing
   L104_pending_identity_resolution_is_bound_to_response_head:
     statement: 'For every pending client_change_id k supplied in a catch-up request with authoritative
       response head H, the response classifies k against authoritative acceptance through the same H:
@@ -2540,10 +2575,14 @@ claims:
             before the request can be sent.
     kind: leaf
   L107_client_freezes_speculative_edits_during_resync:
-    statement: From the moment a client begins reconnect/resync and captures the pending
-      client_change_id set for its catch-up request until that attempt either publishes a reconciled
-      canonical state or enters explicit conflict/reconciliation state, the client creates or
-      applies no new speculative local edit to the document being resynchronized.
+    statement: 'From the moment a client begins reconnect/resync and captures the pending client_change_id
+      set for its catch-up request until that attempt either publishes a reconciled canonical state or
+      enters explicit conflict/reconciliation state, the client creates or applies no new speculative
+      local edit to the document being resynchronized. After publication or conflict entry, if client_pending_edits
+      still contains any unresolved edit, unresolved_pending_blocks_normal_editing continues to hold:
+      normal editable mode remains disabled and no new acceptance-eligible speculative edit is created
+      or applied until explicit reconciliation clears those unresolved edits. No eventual resolution or
+      automatic local-rebase guarantee is implied.'
     severity: critical
     assurance_required: strong
     source_refs:
@@ -2558,10 +2597,19 @@ claims:
       verifiers:
         - kind: state_machine
           intent: Explore user-edit input, reconnect start, request capture/send, catch-up response,
-            reconciliation, interruption, retry, publication, and conflict transitions; require no
-            new speculative edit creation or application for the document from resync start until
-            reconciled publication or explicit conflict/reconciliation entry.
+            reconciliation, interruption, retry, atomic publication, conflict entry, repeated
+            conflict/reconciliation transitions, and attempted return to normal editing. Require
+            editing to remain frozen during resync and, whenever unresolved client_pending_edits
+            remain afterward, require client_editing_mode to stay non-normal and all new
+            acceptance-eligible speculative-edit transitions to remain unreachable.
+        - kind: control_flow
+          intent: Enumerate every path that enables normal editing or creates a new
+            acceptance-eligible speculative edit and prove each is guarded by an empty/reconciled
+            unresolved-pending set after reconnect/conflict handling.
     kind: leaf
+    formal_intent: unresolved_pending_blocks_normal_editing
+    semantic_contracts:
+      - unresolved_pending_blocks_normal_editing
   L108_acceptance_preserves_request_identity:
     statement: 'For every canonical acceptance produced from a submitted logical request carrying document_id
       D and client_change_id k, the authoritative identity of that acceptance is exactly (D, k): the acceptance
@@ -2596,6 +2644,9 @@ claims:
             canonical accepted record and its durable idempotency evidence retain exactly the
             originating pair without cross-binding.
     kind: leaf
+    formal_intent: acceptance_request_identity_binding
+    semantic_contracts:
+      - acceptance_request_identity_binding
   L109_resync_publication_is_atomic_and_monotonic:
     statement: During reconnect/resync, canonical catch-up and pending-identity reconciliation are
       built in a non-user-visible candidate state. Let F be the currently user-visible canonical
@@ -2669,6 +2720,9 @@ claims:
             already contains acceptance (D,k), and that the first canonical publication containing
             (D,k) retires the matching overlay before exposure.
     kind: leaf
+    formal_intent: visible_canonical_speculative_exclusion
+    semantic_contracts:
+      - visible_canonical_speculative_exclusion
   G8_user_visible_state_does_not_double_render_accepted_optimistic_edit:
     statement: At every user-visible client state, for every logical client edit identified by
       (document_id=D, client_change_id=k), if the currently visible canonical prefix contains the
@@ -2691,6 +2745,9 @@ claims:
       - A3_client_change_id_identifies_logical_edit
       - L108_acceptance_preserves_request_identity
       - L110_client_retires_matching_speculative_overlay_before_canonical_publication
+    formal_intent: visible_canonical_speculative_exclusion
+    semantic_contracts:
+      - visible_canonical_speculative_exclusion
   L111_accepted_key_classification_requires_committed_acceptance:
     statement: On the normal acceptance path, authoritative durable state may acquire protocol
       semantics already-accepted(D,k) for identity (document_id=D, client_change_id=k) only if the
@@ -2739,6 +2796,9 @@ claims:
             did not commit; a timeout/cancellation without committed acceptance must not leave a
             phantom accepted marker.
     kind: leaf
+    formal_intent: accepted_evidence_provenance
+    semantic_contracts:
+      - accepted_evidence_provenance
   G9_accepted_idempotency_evidence_matches_committed_acceptance:
     statement: For every (document_id=D, client_change_id=k) while an execution carrying that
       identity may still reach acceptance or retry-resolution logic, authoritative state contains
@@ -2762,6 +2822,10 @@ claims:
       - C13_idempotency_key_is_temporally_unique
       - L14_accepted_idempotency_identity_survives_lifecycle
       - L111_accepted_key_classification_requires_committed_acceptance
+    formal_intent: accepted_evidence_correspondence; accepted_evidence_provenance
+    semantic_contracts:
+      - accepted_evidence_correspondence
+      - accepted_evidence_provenance
   L112_catchup_response_head_is_captured_from_authoritative_frontier:
     statement: Every catch-up/reconnect response that may become eligible for client completion or
       publication captures one response head H at a defined authoritative-store read point where H
@@ -2796,6 +2860,46 @@ claims:
             completion, and publication metadata use the frontier value read from the authoritative
             store at capture; then advance the frontier after capture and verify the response
             remains correctly bounded by the original H.
+    kind: leaf
+    formal_intent: catchup_head_binding
+    semantic_contracts:
+      - catchup_head_binding
+  L113_request_raw_edit_is_bound_to_authoring_frontier:
+    statement: "For every submitted request whose OT result may become a canonical acceptance, request_authoring_frontier_binding
+      holds: the server-visible raw_edit and submitted base_revision are captured from one client request-authoring
+      base state with last_applied_revision F, base_revision equals F, and request construction, serialization,
+      or retry cannot substitute another frontier for that raw_edit. Correctness of the source state's
+      canonical content/frontier relation is proved separately."
+    formal_intent: request_authoring_frontier_binding
+    severity: critical
+    assurance_required: maximal
+    source_refs:
+      - ot_input_output
+      - reconnect_revision_boundary
+      - final_architecture
+    surfaces:
+      - client_sync
+      - acceptance_path
+      - ot_state
+    mechanisms:
+      - client_revision_continuity
+      - server_authoritative_ot
+    semantic_contracts:
+      - request_authoring_frontier_binding
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Trace every acceptance-eligible client request construction and OT-dispatch path;
+            prove the serialized raw_edit and base_revision are captured from one request-authoring
+            state, base_revision equals that state's last_applied_revision, and no
+            retry/serialization path can cross-bind the same raw_edit to a different frontier. Treat
+            canonical correctness of that source state as a separate proof obligation rather than
+            re-proving it here.
+        - kind: integration_test
+          intent: Construct distinguishable client authoring states and raw edits, then perturb or
+            restore stale frontier metadata during request construction; any request reaching
+            acceptance-eligible OT dispatch must retain the exact raw_edit/base pair captured from
+            its authoring state.
     kind: leaf
 catalog:
   terms:
@@ -2871,6 +2975,23 @@ catalog:
         notation.
     snapshot_state:
       description: Document state represented by a snapshot checkpoint at its declared frontier.
+    base_revision:
+      description: Canonical client revision frontier that a submitted server-visible raw_edit
+        declares as its authoring base; correctness of that declaration is a separate
+        provenance-binding obligation.
+    catchup_response_head:
+      description: One authoritative revision frontier captured for a catch-up response and used to
+        bound that response's canonical range, reconciliation, completion, and publication.
+    recovery_head:
+      description: Authoritative revision frontier captured by new-owner recovery after epoch
+        handoff and used to bound checkpoint selection, replay, metadata reconstruction, and
+        resumption.
+    ot_success_result:
+      description: Successful transformed payload returned by the OT engine for one raw_edit,
+        declared base_revision, and canonical committed context.
+    ot_computation_frontier:
+      description: Canonical committed revision frontier N against which one OT success result was
+        computed before acceptance arbitration.
   state:
     accepted_change_log:
       class: authoritative
@@ -2900,6 +3021,28 @@ catalog:
     cache:
       class: derived
       description: Non-authoritative cached data that may be discarded and rebuilt.
+    client_speculative_overlays:
+      class: speculative
+      description: User-visible or locally retained optimistic representations of logical edits that
+        have not yet been reconciled into the visible canonical client base.
+    client_pending_edits:
+      class: speculative
+      description: Unresolved logical client edits retained by client_change_id while their
+        canonical acceptance outcome or conflict disposition is not yet known.
+    client_editing_mode:
+      class: control
+      description: Client protocol mode controlling whether normal user edits may create
+        acceptance-eligible speculative requests, including resyncing, conflict/reconciliation,
+        read-only, and normal-editable states.
+    client_resync_candidate:
+      class: control
+      description: Non-user-visible candidate canonical/pending/overlay state built during reconnect
+        reconciliation before atomic publication or discard.
+    accepted_idempotency_evidence:
+      class: authoritative
+      description: Logical durable evidence that an idempotency key has a committed canonical
+        acceptance, represented by the accepted row/unique identity itself or lifecycle-derived
+        equivalent evidence.
   mechanisms:
     server_authoritative_ot:
       description: Server OT owner transforms client edits against canonical accepted history before
@@ -3099,12 +3242,257 @@ catalog:
         - Latency, CPU or I/O cost, timing, and internal scheduling are not observations in this
           equivalence relation.
       automation_reusable: true
+    accepted_history_frontier_coherence:
+      class: state_invariant
+      definition: In every authoritative state, accepted_change_log and document_latest_revision
+        denote one gap-free canonical accepted prefix ending exactly at document_latest_revision;
+        representation-changing lifecycle transitions that accept no edit preserve the same logical
+        prefix/frontier relation.
+      state_symbols:
+        - accepted_change_log
+        - document_latest_revision
+      observation_scope: authoritative_states
+      excludes:
+        - Does not require physical retention of every accepted row after semantics-preserving
+          compaction.
+        - Does not by itself prove storage durability or owner fencing.
+      automation_reusable: true
+    snapshot_frontier_coherence:
+      class: state_invariant
+      definition: Every authoritative published snapshot_content_with_snapshot_revision at
+        snapshot_revision S denotes exactly canonical replay through S, and no authoritative
+        published checkpoint exposes content paired with a different frontier.
+      state_symbols:
+        - snapshot_content_with_snapshot_revision
+        - accepted_change_log
+        - snapshot_revision
+      observation_scope: authoritative_states
+      excludes:
+        - Private snapshot-build scratch state and non-authoritative caches are outside this
+          invariant until publication.
+        - No guarantee is made that the newest possible snapshot is eventually produced.
+      automation_reusable: true
+    client_canonical_frontier_coherence:
+      class: state_invariant
+      definition: At every user-visible client state, client_local_document equals deterministic
+        canonical replay through last_applied_revision. The invariant is established at
+        initialization or canonical publication and preserved by every user-visible transition
+        capable of mutating, restoring, or publishing either participating value, including
+        transitions that leave last_applied_revision unchanged.
+      state_symbols:
+        - client_local_document
+        - last_applied_revision
+      observation_scope: user_visible_states
+      excludes:
+        - Speculative overlays are not part of client_local_document and are governed by separate
+          observer invariants.
+        - Private client_resync_candidate state is outside the user-visible boundary until atomic
+          publication.
+      automation_reusable: true
+    visible_canonical_speculative_exclusion:
+      class: state_invariant
+      definition: At every user-visible client state, if the visible canonical prefix represented by
+        client_local_document through last_applied_revision contains canonical acceptance identified
+        by (document_id, client_change_id), client_speculative_overlays contains no matching
+        speculative representation for that same logical edit. Every later user-visible transition
+        preserves the exclusion while that acceptance remains visible.
+      state_symbols:
+        - client_local_document
+        - last_applied_revision
+        - client_speculative_overlays
+      observation_scope: user_visible_states
+      excludes:
+        - A distinct new logical edit with a distinct client_change_id may create a new speculative
+          overlay.
+        - An unresolved edit with no acceptance in the visible canonical prefix is not suppressed by
+          this contract alone.
+      automation_reusable: true
+    unresolved_pending_blocks_normal_editing:
+      class: state_invariant
+      definition: In every reachable client protocol state, if client_pending_edits contains any
+        unresolved logical edit that has not been safely reconciled or explicitly removed,
+        client_editing_mode is not normal-editable and no normal editing transition may create or
+        apply a new acceptance-eligible speculative edit for that document.
+      state_symbols:
+        - client_pending_edits
+        - client_editing_mode
+      observation_scope: all_reachable_states
+      excludes:
+        - Does not require automatic client-side OT/rebase of unresolved edits.
+        - Does not require eventual conflict resolution, eventual editability, or any particular
+          conflict-resolution UI.
+      automation_reusable: true
+    accepted_evidence_correspondence:
+      class: state_invariant
+      definition: While an idempotency identity may still reach acceptance or retry-resolution
+        logic, authoritative accepted_idempotency_evidence means already-accepted(D,k) if and only
+        if accepted_change_log contains exactly one committed canonical acceptance for the same
+        idempotency_key; lifecycle representation changes preserve this logical correspondence.
+      state_symbols:
+        - accepted_change_log
+        - accepted_idempotency_evidence
+        - idempotency_key
+      observation_scope: authoritative_states
+      excludes:
+        - Physical evidence representation may change after compaction if the same logical accepted
+          fact remains authoritative.
+        - Timeout, cancellation, reservation, or in-progress arbitration need not create terminal
+          failure evidence.
+      automation_reusable: true
+    request_authoring_frontier_binding:
+      class: provenance_binding
+      definition: "For every request eligible for server-side OT and canonical acceptance, the server-visible
+        raw_edit and submitted base_revision are bound to one client request-authoring base state: base_revision
+        equals that state's last_applied_revision F, and request construction, serialization, and retry
+        preserve the exact raw_edit/base pair through OT dispatch. Whether client_local_document at F
+        actually equals canonical replay through F is a separate state-invariant obligation."
+      source_symbols:
+        - client_local_document
+        - last_applied_revision
+      bound_symbols:
+        - raw_edit
+        - base_revision
+      excludes:
+        - Does not itself prove client_canonical_frontier_coherence for the source authoring state.
+        - Does not prove correctness of a client-side OT/rebase algorithm for unresolved speculative
+          edits.
+        - Does not require the client to remain editable when it cannot produce a raw_edit with a
+          valid canonical authoring base.
+      automation_reusable: true
+    catchup_head_binding:
+      class: provenance_binding
+      definition: Every catch-up response eligible for completion or publication binds
+        catchup_response_head to document_latest_revision read at one authoritative-store capture
+        event, and that exact captured value is preserved through range or snapshot selection,
+        pending reconciliation, completion, and publication.
+      source_symbols:
+        - document_latest_revision
+      bound_symbols:
+        - catchup_response_head
+      excludes:
+        - Later canonical acceptances may advance document_latest_revision after capture and are
+          outside the already captured response.
+      automation_reusable: true
+    recovery_head_binding:
+      class: provenance_binding
+      definition: New-owner recovery binds recovery_head to document_latest_revision read from
+        authoritative state after epoch handoff, and the same captured recovery_head governs
+        checkpoint selection, exact tail replay, recovered metadata reconstruction, and acceptance
+        resumption for that recovery attempt.
+      source_symbols:
+        - document_latest_revision
+      bound_symbols:
+        - recovery_head
+      excludes:
+        - Does not itself prove checkpoint validity, replay correctness, or recovered metadata
+          correctness.
+      automation_reusable: true
+    acceptance_request_identity_binding:
+      class: provenance_binding
+      definition: When one submitted request carrying (document_id, client_change_id) produces a
+        canonical acceptance, that exact identity is preserved as the identity of
+        canonical_accepted_change and its authoritative idempotency_key; no admission, OT,
+        arbitration, retry, or commit path may regenerate, substitute, drop, or cross-bind either
+        identity component.
+      source_symbols:
+        - document_id
+        - client_change_id
+      bound_symbols:
+        - canonical_accepted_change
+        - idempotency_key
+      excludes:
+        - Does not establish uniqueness of client_change_id across distinct logical edits; that is a
+          separate protocol assumption.
+      automation_reusable: true
+    accepted_evidence_provenance:
+      class: provenance_binding
+      definition: 'Authoritative accepted_idempotency_evidence for idempotency_key (D,k) may be created
+        only from the matching committed canonical_accepted_change in accepted_change_log: on the hot
+        path it is the committed row/identity itself or commits atomically with it, and lifecycle replacement
+        evidence is derived only from that prior committed acceptance.'
+      source_symbols:
+        - canonical_accepted_change
+        - accepted_change_log
+      bound_symbols:
+        - accepted_idempotency_evidence
+        - idempotency_key
+      excludes:
+        - Reservation, in-progress arbitration, timeout, cancellation, or another never-committed
+          attempt is not accepted evidence.
+        - The physical accepted row need not be retained forever after semantics-preserving
+          compaction.
+      automation_reusable: true
+    recovered_ot_state_provenance:
+      class: provenance_binding
+      definition: OT state installed by completed new-owner recovery is derived exclusively from the
+        selected snapshot_content_with_snapshot_revision and the exact accepted_change_log tail
+        through recovery_head; failed-owner memory, caches, or other non-authoritative runtime state
+        cannot influence the recovered ot_owner_memory.
+      source_symbols:
+        - snapshot_content_with_snapshot_revision
+        - accepted_change_log
+        - recovery_head
+      bound_symbols:
+        - ot_owner_memory
+      excludes:
+        - Does not prove the OT transformation algorithm itself correct.
+        - Does not require recovery to eventually complete.
+      automation_reusable: true
+    ot_success_acceptance_binding:
+      class: provenance_binding
+      definition: Every canonical_accepted_change payload is bound to the exact ot_success_result
+        produced for its corresponding submitted raw_edit and base_revision; no acceptance path may
+        synthesize, substitute, or commit a payload without that successful OT-result provenance,
+        and reject/rebase-required outcomes cannot produce canonical acceptance.
+      source_symbols:
+        - raw_edit
+        - base_revision
+        - ot_success_result
+      bound_symbols:
+        - canonical_accepted_change
+      excludes:
+        - Does not prove the OT algorithmic convergence contract; that remains an explicit
+          assumption.
+        - Does not prove that base_revision was sourced from the correct client authoring frontier;
+          request_authoring_frontier_binding is separate.
+      automation_reusable: true
+    ot_result_frontier_binding:
+      class: provenance_binding
+      definition: Each ot_success_result remains bound to the ot_computation_frontier N representing
+        the canonical committed prefix against which it was computed; that result may become
+        canonical_accepted_change only if the authoritative acceptance pre-state still has
+        document_latest_revision = N and the accepted revision is N+1, otherwise a fresh transform
+        is required.
+      source_symbols:
+        - accepted_change_log
+        - document_latest_revision
+      bound_symbols:
+        - ot_computation_frontier
+        - ot_success_result
+        - canonical_accepted_change
+      excludes:
+        - Does not prove correctness of the transformed payload itself.
+        - Does not allow a stale transformed payload to be rebound to a newer frontier merely by
+          changing a revision field.
+      automation_reusable: true
+    live_delivery_acceptance_binding:
+      class: provenance_binding
+      definition: Every change exposed through websocket_live_stream is derived from a committed
+        record in accepted_change_log; live delivery may duplicate or reorder across reconnect
+        boundaries but cannot invent or expose a never-committed canonical change.
+      source_symbols:
+        - accepted_change_log
+      bound_symbols:
+        - websocket_live_stream
+      excludes:
+        - Does not guarantee exactly-once, ordered, timely, or eventually successful delivery.
+      automation_reusable: true
 id_allocator:
   next_sequence:
     A: 6
     G: 10
     C: 35
-    L: 113
+    L: 114
     D: 7
     T: 2
 assurance:
@@ -3281,4 +3669,6 @@ assurance:
     L111_accepted_key_classification_requires_committed_acceptance:
       status: planned
     L112_catchup_response_head_is_captured_from_authoritative_frontier:
+      status: planned
+    L113_request_raw_edit_is_bound_to_authoring_frontier:
       status: planned
