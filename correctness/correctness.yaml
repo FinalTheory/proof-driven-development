@@ -204,10 +204,12 @@ refinement:
     G4_reconnect_converges_without_gap_or_duplicate:
       status: stable
       blocked_by: []
-      rationale: "Verification-plan metadata was refined to expose the existing transaction proof basis;
-        proposition text, dependencies, and architecture semantics are unchanged, so prior decomposition
-        maturity is preserved under the new semantic signature."
-      signature: ffe373bb8c036d8f640030771ec443408e37d82a356e43e87a465089ac5c941e
+      rationale: "L112 closes the previously implicit response-head provenance premise: every catch-up
+        response eligible for completion/publication captures H from authoritative document_latest_revision
+        and carries that exact H through the response pipeline. Existing catch-up representation, client-continuity,
+        completion, and atomic publication dependencies then establish the target through that captured
+        H without requiring pursuit of later frontier advances."
+      signature: a32d3b2f9720c94df2ebe7d59212ed4c16c6ce1d1c94a1e848b3714aef50e7e0
     L16_commit_precedes_ack:
       status: stable
       blocked_by: []
@@ -580,11 +582,12 @@ refinement:
     G7_reconnect_does_not_double_render_accepted_optimistic_edit:
       status: stable
       blocked_by: []
-      rationale: 'SUPPORTED: start-pending coverage, freeze, response-head classification, request identity
-        preservation, atomic/monotonic resync publication, and global matching-overlay retirement jointly
-        imply the reconnect-specific no-double-render and stale-response guarantees without relying on
-        reconnect-only overlay logic inside L109.'
-      signature: 3cbda914d791fa1f3a6501540e78c5a09256be1e0beffb322fd0ff660296c5f8
+      rationale: 'The strengthened L110 is intentionally a reusable global observer invariant and is stronger
+        than the reconnect-only target. Together with reconnect pending-set capture, response-head identity
+        reconciliation, request-identity preservation, editing freeze, and atomic monotonic resync publication,
+        it establishes the narrower reconnect no-double-render guarantee without duplicating a reconnect-specific
+        overlay leaf.'
+      signature: fccbbbbfbb8b7168de36b4831ee19499734c284ed1d3b6e5f001c5a3529124ca
     L104_pending_identity_resolution_is_bound_to_response_head:
       status: stable
       blocked_by: []
@@ -626,18 +629,21 @@ refinement:
     L110_client_retires_matching_speculative_overlay_before_canonical_publication:
       status: stable
       blocked_by: []
-      rationale: 'GOOD_LEAF: all covered cases are publication exits of the same client canonical/speculative
-        composition state machine, so one localized transition/control-flow verifier can establish matching-overlay
-        retirement across live, buffered, and resync publication without useful further decomposition.'
-      signature: dc3a30e28d769819b37a3bee932bf68f9787fea7e18d6e3f9e3ea434b6efbe84
+      rationale: 'The strengthened proposition is one localized client visible-state invariant: enumerate
+        canonical-publication and overlay create/restore/reactivate transitions and mechanically require
+        matching overlay (D,k) to stay absent while the visible canonical prefix contains acceptance (D,k).
+        State-machine/control-flow evidence can decide the complete proposition without reconstructing
+        a broader protocol.'
+      signature: bfbb9e1209103747a691e1b609894eba8e51cbff6d022ebbdd20ad0e73dd2b4a
     G8_user_visible_state_does_not_double_render_accepted_optimistic_edit:
       status: stable
       blocked_by: []
-      rationale: 'SUPPORTED: A3 gives logical-edit identity stability, L108 preserves that identity into
-        canonical acceptance, and L110 covers every user-visible canonical publication sink; together
-        they rule out simultaneous canonical and speculative representations of the same accepted logical
-        edit across live, buffered, and resync paths.'
-      signature: 49a82e30a88ace2804481e384e12fcafd7561245360215ce038a9c10e0cd13b4
+      rationale: 'A3 supplies stable logical-edit identity, L108 preserves that identity into canonical
+        acceptance, and strengthened L110 enforces persistent absence of the matching speculative overlay
+        across every user-visible client transition while that acceptance remains in the visible canonical
+        prefix. These dependencies directly establish the persistent observer invariant, including non-frontier-advancing
+        bookkeeping paths.'
+      signature: 9098cc9f17fd63d2b9d5bf2065a337cc4ad1ef8f0400e78fa7a7344352a9a008
     L111_accepted_key_classification_requires_committed_acceptance:
       status: stable
       blocked_by: []
@@ -652,6 +658,14 @@ refinement:
         proposition text, dependencies, and architecture semantics are unchanged, so prior decomposition
         maturity is preserved under the new semantic signature."
       signature: 4bf96f4c3b5717c86f430ed5f4e743f222b724ba0484d3ad5008871e33ec9b9f
+    L112_catchup_response_head_is_captured_from_authoritative_frontier:
+      status: stable
+      blocked_by: []
+      rationale: 'This is one localized catch-up provenance boundary: capture H from authoritative document_latest_revision
+        at one read point and carry that exact value through the response pipeline. A bounded protocol/state-machine
+        plus integration provenance check can decide the whole proposition; later frontier advancement
+        is explicitly outside the captured response rather than a new proof obligation.'
+      signature: d3190d4a9035b502af6a594c2979f0dbb7251979b18c8fd432ec79e1bfba3c4f
 assumptions:
   A1_storage_commit_is_durable:
     statement: A successful authoritative-store commit remains recoverable across the server-process
@@ -791,6 +805,7 @@ claims:
       - C7_revision_frontier_is_linear
       - L102_client_frontier_matches_canonical_base
       - L109_resync_publication_is_atomic_and_monotonic
+      - L112_catchup_response_head_is_captured_from_authoritative_frontier
     source_refs:
       - reconnect_revision_boundary
       - owner_failover
@@ -2617,14 +2632,15 @@ claims:
             canonical, frontier, pending, or overlay state before one valid reconciled publication.
     kind: leaf
   L110_client_retires_matching_speculative_overlay_before_canonical_publication:
-    statement: Every client transition that can make a canonical acceptance identified by
-      (document_id=D, client_change_id=k) newly user-visible at canonical frontier F removes or
-      suppresses any currently visible speculative overlay identified by the same (D,k) before, or
-      atomically with, publication of the first user-visible canonical state through F that contains
-      that acceptance. This applies to ordinary live delivery, buffered live delivery after
-      catch-up/resync, and reconnect/resync publication; no user-visible publication sink may expose
-      the canonical acceptance together with the matching speculative overlay merely because the
-      canonical base itself is otherwise correct.
+    statement: For every logical client edit identified by (document_id=D, client_change_id=k), once
+      the user-visible canonical prefix contains the canonical acceptance identified by (D,k), every
+      user-visible client transition keeps speculative overlay (D,k) absent for as long as that
+      canonical acceptance remains visible. The transition that first makes the acceptance visible
+      must remove or suppress any matching overlay before or atomically with that publication, and
+      later overlay-only, ACK/retry/pending-bookkeeping, UI-restore, buffered-live,
+      reconnect/resync, or other client transitions cannot recreate or re-enable the same overlay.
+      Only a distinct new logical edit with a distinct client_change_id may create a new speculative
+      representation.
     severity: critical
     assurance_required: maximal
     source_refs:
@@ -2640,27 +2656,31 @@ claims:
     verification:
       verifiers:
         - kind: state_machine
-          intent: Enumerate every client transition that can advance a user-visible canonical
-            frontier through ordinary live delivery, buffered post-catch-up delivery, or resync
-            publication while arbitrary speculative overlays are present; whenever the newly visible
-            canonical prefix contains acceptance (D,k), require matching overlay (D,k) to be absent
-            in that publication and in every subsequently visible state unless a distinct new
-            logical edit creates a new identity.
+          intent: Explore ordinary live delivery, buffered post-catch-up delivery, resync
+            publication, ACK loss, retry/pending bookkeeping, UI state restoration, reconnect
+            completion, and arbitrary later client transitions. Once the visible canonical prefix
+            contains acceptance (D,k), require speculative overlay (D,k) to remain absent in every
+            subsequently visible state while that acceptance remains visible; only a distinct new
+            logical edit with a distinct client_change_id may create a new speculative overlay.
         - kind: control_flow
-          intent: Enumerate all user-visible canonical publication sinks and prove that each path
-            routes matching (document_id, client_change_id) overlay retirement or suppression before
-            the publication sink, with no live or buffered-delivery bypass.
+          intent: Enumerate every transition that can publish canonical state or create, restore,
+            reactivate, or expose a speculative overlay. Prove that any path producing a
+            user-visible overlay (D,k) is blocked whenever the currently visible canonical prefix
+            already contains acceptance (D,k), and that the first canonical publication containing
+            (D,k) retires the matching overlay before exposure.
     kind: leaf
   G8_user_visible_state_does_not_double_render_accepted_optimistic_edit:
-    statement: For every user-visible client canonical publication to frontier F, if canonical
-      history through F contains the canonical acceptance identified by (document_id=D,
-      client_change_id=k) for a logical client edit and the client has a speculative representation
-      of that same logical edit identified by (D,k), the published user-visible state contains the
-      canonical representation but not the matching speculative overlay. This guarantee is
-      independent of whether the canonical acceptance becomes visible through ordinary live
-      delivery, buffered post-catch-up delivery, or reconnect/resync publication; it makes no claim
-      that an unresolved edit with no acceptance through the published frontier must be rebased,
-      discarded, or made editable.
+    statement: At every user-visible client state, for every logical client edit identified by
+      (document_id=D, client_change_id=k), if the currently visible canonical prefix contains the
+      canonical acceptance identified by (D,k), the same user-visible state contains no speculative
+      overlay identified by (D,k). This invariant must remain true across the canonical publication
+      that first exposes the acceptance and across every later user-visible client transition while
+      that canonical acceptance remains visible, including ACK/retry/pending bookkeeping and other
+      transitions that do not advance the canonical frontier. Ordinary live delivery, buffered
+      post-catch-up delivery, and reconnect/resync publication are all covered. A genuinely new
+      logical edit may create a new speculative overlay only under its distinct client_change_id;
+      this claim makes no automatic local-rebase or progress guarantee for unresolved edits with no
+      acceptance in the visible canonical prefix.
     severity: critical
     assurance_required: maximal
     source_refs:
@@ -2742,6 +2762,41 @@ claims:
       - C13_idempotency_key_is_temporally_unique
       - L14_accepted_idempotency_identity_survives_lifecycle
       - L111_accepted_key_classification_requires_committed_acceptance
+  L112_catchup_response_head_is_captured_from_authoritative_frontier:
+    statement: Every catch-up/reconnect response that may become eligible for client completion or
+      publication captures one response head H at a defined authoritative-store read point where H
+      equals authoritative document_latest_revision. That exact captured H is the response head
+      subsequently used for canonical range or snapshot selection, pending-identity reconciliation,
+      completion, and publication. Later canonical acceptances may advance document_latest_revision
+      after this capture and are not required to be included in the already captured response.
+    severity: critical
+    assurance_required: maximal
+    source_refs:
+      - authoritative_truth
+      - reconnect_revision_boundary
+      - final_architecture
+    surfaces:
+      - catchup
+      - revision_frontier
+    mechanisms:
+      - catchup_protocol
+      - revision_frontier_guard
+      - accepted_history_log
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Vary authoritative document_latest_revision, stale caches/materialized state,
+            response construction timing, and later concurrent acceptances. Require every response
+            eligible for completion/publication to capture H exactly from the authoritative frontier
+            at one read point, then use that same H throughout mode selection, reconciliation,
+            completion, and publication without requiring H to track later frontier advances.
+        - kind: integration_test
+          intent: Seed an authoritative frontier H distinct from stale owner/cache values, start
+            catch-up, and assert that the response head and all range/snapshot, pending-resolution,
+            completion, and publication metadata use the frontier value read from the authoritative
+            store at capture; then advance the frontier after capture and verify the response
+            remains correctly bounded by the original H.
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -3049,24 +3104,26 @@ id_allocator:
     A: 6
     G: 10
     C: 35
-    L: 112
+    L: 113
     D: 7
     T: 2
 assurance:
   specification_coverage:
     status: gap_found
-    auditor_count: 4
+    auditor_count: 3
     rationale: Fresh final root-coverage audit for model signature
-      3cd128427ca346b858245b852795f60d34ef3395faf3199b92ae57118ee9e105 found two independent
-      surviving in-scope structural gaps. First, ordinary live or post-resync canonical publication
-      can expose a canonical acceptance together with the same client_change_id's still-visible
-      speculative overlay because the current no-double-render obligation is
-      reconnect-head-specific. Second, authoritative accepted-key evidence can classify a key as
-      already accepted without any committed canonical acceptance for that identity because the
-      model proves acceptance-to-evidence persistence and duplicate blocking but not
-      evidence-to-committed-acceptance soundness. Both candidates preserved all current roots and
-      assumptions and survived fresh challengers.
-    signature: 3cd128427ca346b858245b852795f60d34ef3395faf3199b92ae57118ee9e105
+      1ec5019286151c346142f3a7731eb77201d0e51db5e0dd12bc4e062c5f3de99a found two independent
+      surviving in-scope structural gaps. First, the no-double-render proposition constrains the
+      canonical publication that first exposes acceptance (D,k), but does not forbid a later
+      overlay-only client transition from resurrecting speculative (D,k) while that canonical
+      acceptance remains visible. Second, catch-up/reconnect obligations reason relative to an
+      already-authoritative response head H but no current proposition requires every response
+      eligible for completion/publication to capture H from authoritative document_latest_revision
+      at a defined authoritative-store read point. Both candidates survived clean root checking and
+      fresh challengers. Three required scout surfaces completed; the authoritative-state scout
+      stalled and its fresh replacement did not finish before the execution window closed, so
+      enumeration may be incomplete but the structural-gap verdict is determined.
+    signature: 1ec5019286151c346142f3a7731eb77201d0e51db5e0dd12bc4e062c5f3de99a
   composition:
     G0_acked_edit_survives_failover:
       status: unaudited
@@ -3222,4 +3279,6 @@ assurance:
     L110_client_retires_matching_speculative_overlay_before_canonical_publication:
       status: planned
     L111_accepted_key_classification_requires_committed_acceptance:
+      status: planned
+    L112_catchup_response_head_is_captured_from_authoritative_frontier:
       status: planned

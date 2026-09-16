@@ -288,7 +288,16 @@ AND speculative_overlay(D,k) exists
 visible publication of state@F must not contain speculative_overlay(D,k)
 ```
 
-这条规则不是 reconnect 特例。下面的 reconnect reconciliation 只是它在 snapshot/catch-up 场景下更复杂的一种实现：除了不能 double-render，还必须处理 response head、unresolved pending identity、stale response 和原子 publication。
+这条规则不是 reconnect 特例，而且它也不能只在“canonical acceptance 第一次 publication”的瞬间成立。**只要当前 user-visible canonical prefix 仍然包含 acceptance `(D,k)`，任何后续 user-visible client transition 都必须继续保持 matching speculative overlay `(D,k)` 不可见。** ACK uncertainty、retry/pending bookkeeping、UI state restore 或其他不推进 canonical frontier 的本地状态转换，都不能把已经被 canonical representation 吸收的同一 logical edit 重新渲染出来。只有用户真正产生一个新的 logical edit，并因此获得新的 `client_change_id`，才可以创建新的 speculative representation。
+
+```text
+visible canonical prefix contains acceptance(D,k)
+    =>
+for every subsequent user-visible client state while that acceptance remains visible:
+    speculative_overlay(D,k) is absent
+```
+
+下面的 reconnect reconciliation 只是这个持续 observer invariant 在 snapshot/catch-up 场景下更复杂的一种实现：除了不能 double-render，还必须处理 response head、unresolved pending identity、stale response 和原子 publication。
 
 ### 5.1 Pending optimistic edit：重连只保证 identity reconciliation，不保证自动 local rebase
 
@@ -296,7 +305,9 @@ visible publication of state@F must not contain speculative_overlay(D,k)
 
 因此重连请求除了 `last_applied_revision=L`，还携带当前 pending edit 的 `client_change_id` 集合。客户端进入 resync 状态后可以暂时禁止新的编辑；这是一种有意选择的简单 UX，用来避免在 canonical base 正在切换时继续制造新的 speculative state。
 
-服务端为一次 catch-up 捕获同一个 authoritative response head `H`，并在同一个逻辑响应中返回两类信息：
+服务端为一次 catch-up 在一个明确的 authoritative-store read / linearization point 读取 `document_latest_revision`，并把当时读到的值固定为这次响应的 authoritative response head `H`。后续 canonical range / snapshot mode selection、pending-key reconciliation、completion 与 publication 都必须使用这个同一个 captured `H`；`H` 捕获之后系统当然可以继续接受新的 revision，这些更晚的 acceptance 不属于本次 response，也不要求本次 catch-up 追上一个持续移动的 head。
+
+然后服务端在同一个逻辑响应中返回两类信息：
 
 ```text
 canonical catch-up through H:
@@ -709,7 +720,7 @@ Client:
   - tracks unresolved optimistic edits by client_change_id
   - applies only continuous revisions
   - freezes editing during reconnect reconciliation
-  - removes any optimistic edit already represented in the adopted canonical frontier before exposing that state
+  - while the visible canonical prefix contains acceptance (D,k), keeps speculative overlay (D,k) absent across every subsequent user-visible client transition; canonical publication cannot retire it only temporarily
   - unresolved edits may enter conflict handling; automatic local rebase is out of scope
 
 WebSocket Gateway:
