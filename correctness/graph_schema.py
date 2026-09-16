@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-SCHEMA_VERSION = "0.11"
+SCHEMA_VERSION = "0.12"
 PROOF_SEMANTICS_VERSION = "1"
 SEVERITY_LEVELS = ("critical", "high")
 ASSURANCE_LEVELS = ("maximal", "strong")
@@ -70,6 +70,7 @@ SOURCE_REFS = _string_list(min_items=1, pattern=SOURCE_ID)
 SURFACE_REFS = _string_list(min_items=1, pattern=LOWER_SNAKE)
 MECHANISM_REFS = _string_list(min_items=1, pattern=LOWER_SNAKE)
 SEMANTIC_CONTRACT_REFS = _string_list(min_items=1, pattern=LOWER_SNAKE)
+SEMANTIC_SYMBOL_REFS = _string_list(min_items=1, pattern=LOWER_SNAKE)
 DEPENDENCY_REFS = _string_list(min_items=1, pattern=r"^[AGCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
 
 VERIFIER_SCHEMA = _closed_object(
@@ -465,8 +466,8 @@ CATALOG_SCHEMA = _closed_object(
                 _closed_object(
                     {
                         "class": {
-                            "enum": ["authoritative", "derived"],
-                            "description": "Whether this state is source-of-truth state or reconstructable/materialized state.",
+                            "enum": ["authoritative", "derived", "speculative", "control"],
+                            "description": "Semantic state class: source-of-truth authoritative state, reconstructable/materialized derived state, uncommitted speculative intent, or protocol/control state that coordinates execution without itself being canonical truth.",
                         },
                         "description": {
                             **NONEMPTY_STRING,
@@ -476,7 +477,7 @@ CATALOG_SCHEMA = _closed_object(
                     required=("class", "description"),
                 )
             ),
-            "description": "Architecture state registry. Dynamic keys identify authoritative or derived state items.",
+            "description": "Architecture state registry. Dynamic keys identify authoritative, derived/materialized, speculative, or protocol/control state items.",
         },
         "mechanisms": {
             **_catalog_map(
@@ -501,7 +502,12 @@ CATALOG_SCHEMA = _closed_object(
                 _closed_object(
                     {
                         "class": {
-                            "enum": ["safety_contract", "equivalence_relation"],
+                            "enum": [
+                                "safety_contract",
+                                "equivalence_relation",
+                                "state_invariant",
+                                "provenance_binding",
+                            ],
                             "description": "Semantic role of this reusable contract definition.",
                         },
                         "definition": {
@@ -516,11 +522,50 @@ CATALOG_SCHEMA = _closed_object(
                             "type": "boolean",
                             "description": "Whether automated refinement may reference this already human-approved semantic contract when creating a new proof-structure claim. Changing the semantic-contract association of an existing claim requires human authority.",
                         },
+                        "state_symbols": {
+                            **SEMANTIC_SYMBOL_REFS,
+                            "description": "Typed catalog term/state identifiers whose relation forms a state_invariant predicate.",
+                        },
+                        "observation_scope": {
+                            "enum": [
+                                "all_reachable_states",
+                                "authoritative_states",
+                                "user_visible_states",
+                                "protocol_internal_states",
+                            ],
+                            "description": "State horizon over which a state_invariant is interpreted inductively.",
+                        },
+                        "source_symbols": {
+                            **SEMANTIC_SYMBOL_REFS,
+                            "description": "Typed catalog term/state identifiers that are the semantic source of a provenance_binding.",
+                        },
+                        "bound_symbols": {
+                            **SEMANTIC_SYMBOL_REFS,
+                            "description": "Typed catalog term/state identifiers whose meaning is bound to source_symbols by a provenance_binding.",
+                        },
                     },
                     required=("class", "definition", "excludes", "automation_reusable"),
+                    extra={
+                        "allOf": [
+                            {
+                                "if": {
+                                    "properties": {"class": {"const": "state_invariant"}},
+                                    "required": ["class"],
+                                },
+                                "then": {"required": ["state_symbols", "observation_scope"]},
+                            },
+                            {
+                                "if": {
+                                    "properties": {"class": {"const": "provenance_binding"}},
+                                    "required": ["class"],
+                                },
+                                "then": {"required": ["source_symbols", "bound_symbols"]},
+                            },
+                        ]
+                    },
                 )
             ),
-            "description": "Reusable semantic relations/boundaries shared by claims. These entries define claim meaning rather than asserting that the claim is true.",
+            "description": "Reusable semantic relations/boundaries shared by claims. state_invariant contracts define inductive state predicates; provenance_binding contracts define typed origin/binding relations. These entries define claim meaning rather than asserting that the claim is true.",
         },
         "failure_events": {
             **_catalog_map(

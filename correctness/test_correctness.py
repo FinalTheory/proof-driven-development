@@ -30,7 +30,7 @@ def _leaf(statement: str):
 def make_fixture():
     """Immutable synthetic DAG used only for correctness.py tool regression tests."""
     return {
-        "schema_version": "0.11",
+        "schema_version": "0.12",
         "system": {
             "id": "synthetic_correctness_tool_fixture",
             "summary": "Synthetic system used only to test correctness.py algorithms.",
@@ -787,6 +787,114 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertTrue(any("catalog.semantic_contracts.synthetic_safety_contract.class" in e for e in errors))
         self.assertTrue(any("catalog.semantic_contracts.synthetic_safety_contract" in e and "free_form_extra" in e and "Additional properties" in e for e in errors))
 
+    def test_state_catalog_supports_speculative_and_control_classes(self):
+        for state_class in ("speculative", "control"):
+            doc = copy.deepcopy(self.base)
+            doc["catalog"]["state"][f"synthetic_{state_class}_state"] = {
+                "class": state_class,
+                "description": f"Synthetic {state_class} state.",
+            }
+            errors, _ = correctness.validate(correctness.Graph(doc))
+            self.assertFalse(any(f"synthetic_{state_class}_state" in e for e in errors))
+
+        doc = copy.deepcopy(self.base)
+        doc["catalog"]["state"]["bad_state"] = {
+            "class": "mystery",
+            "description": "Invalid state class.",
+        }
+        errors, _ = correctness.validate(correctness.Graph(doc))
+        self.assertTrue(any("catalog.state.bad_state.class" in e for e in errors))
+
+    def test_state_invariant_contract_requires_typed_scope_and_known_symbols(self):
+        doc = copy.deepcopy(self.base)
+        doc["catalog"]["semantic_contracts"]["synthetic_state_invariant"] = {
+            "class": "state_invariant",
+            "definition": "Synthetic state relation remains true across its observation scope.",
+            "excludes": [],
+            "automation_reusable": True,
+        }
+        errors, _ = correctness.validate(correctness.Graph(doc))
+        self.assertTrue(any("state_symbols" in e for e in errors))
+        self.assertTrue(any("observation_scope" in e for e in errors))
+
+        doc["catalog"]["semantic_contracts"]["synthetic_state_invariant"]["state_symbols"] = [
+            "synthetic_state",
+            "missing_state_symbol",
+        ]
+        doc["catalog"]["semantic_contracts"]["synthetic_state_invariant"]["observation_scope"] = "user_visible_states"
+        errors, _ = correctness.validate(correctness.Graph(doc))
+        self.assertTrue(any("unknown semantic symbol 'missing_state_symbol'" in e for e in errors))
+
+    def test_provenance_binding_contract_requires_typed_source_and_bound_symbols(self):
+        doc = copy.deepcopy(self.base)
+        doc["catalog"]["semantic_contracts"]["synthetic_binding"] = {
+            "class": "provenance_binding",
+            "definition": "A synthetic bound value is produced from one required source.",
+            "excludes": [],
+            "automation_reusable": True,
+        }
+        errors, _ = correctness.validate(correctness.Graph(doc))
+        self.assertTrue(any("source_symbols" in e for e in errors))
+        self.assertTrue(any("bound_symbols" in e for e in errors))
+
+        binding = doc["catalog"]["semantic_contracts"]["synthetic_binding"]
+        binding["source_symbols"] = ["synthetic_state"]
+        binding["bound_symbols"] = ["synthetic_key", "missing_bound_symbol"]
+        errors, _ = correctness.validate(correctness.Graph(doc))
+        self.assertTrue(any("unknown semantic symbol 'missing_bound_symbol'" in e for e in errors))
+
+    def test_typed_semantic_contracts_render_specialized_audit_semantics(self):
+        doc = copy.deepcopy(self.base)
+        doc["catalog"]["semantic_contracts"]["synthetic_state_invariant"] = {
+            "class": "state_invariant",
+            "definition": "synthetic_state remains coherent.",
+            "state_symbols": ["synthetic_state"],
+            "observation_scope": "user_visible_states",
+            "excludes": [],
+            "automation_reusable": True,
+        }
+        claim = doc["claims"]["L1_left_boundary"]
+        claim["semantic_contracts"] = ["synthetic_state_invariant"]
+        claim["formal_intent"] = "synthetic_state_invariant"
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            correctness._emit_slice_markdown(
+                correctness.Graph(doc),
+                "L1_left_boundary",
+                set(),
+                prompt=True,
+                include_verification_task=False,
+            )
+        text = out.getvalue()
+        self.assertIn("Observation scope: user_visible_states", text)
+        self.assertIn("treat this as an inductive invariant", text)
+
+        doc = copy.deepcopy(self.base)
+        doc["catalog"]["semantic_contracts"]["synthetic_binding"] = {
+            "class": "provenance_binding",
+            "definition": "synthetic_key is bound to synthetic_state.",
+            "source_symbols": ["synthetic_state"],
+            "bound_symbols": ["synthetic_key"],
+            "excludes": [],
+            "automation_reusable": True,
+        }
+        claim = doc["claims"]["L1_left_boundary"]
+        claim["semantic_contracts"] = ["synthetic_binding"]
+        claim["formal_intent"] = "synthetic_binding"
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            correctness._emit_slice_markdown(
+                correctness.Graph(doc),
+                "L1_left_boundary",
+                set(),
+                prompt=True,
+                include_verification_task=False,
+            )
+        text = out.getvalue()
+        self.assertIn("Source symbols: synthetic_state", text)
+        self.assertIn("Bound symbols: synthetic_key", text)
+        self.assertIn("Correct downstream processing", text)
+
     def test_unknown_semantic_contract_reference_is_rejected(self):
         doc = copy.deepcopy(self.base)
         doc["claims"]["L1_left_boundary"]["semantic_contracts"] = ["does_not_exist"]
@@ -1446,6 +1554,38 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("FINAL VERDICT: CLOSED", text)
         self.assertIn("semantic alignment", text)
         self.assertIn(".venv/bin/python3 correctness.py validate", text)
+
+    def test_coverage_audit_prompt_requires_semantic_closure_and_clean_assurance_bootstrap(self):
+        doc = copy.deepcopy(self.base)
+        graph = self._freeze_refinement_for_certification(doc)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            correctness._cmd_coverage_audit_prompt(graph, argparse.Namespace())
+        text = out.getvalue()
+        self.assertIn("Mandatory semantic-closure pass", text)
+        self.assertIn("Inductive state-invariant closure", text)
+        self.assertIn("Semantic provenance/binding closure", text)
+        self.assertIn("--omit-specification-coverage", text)
+
+    def test_assurance_status_can_omit_prior_specification_coverage(self):
+        doc = copy.deepcopy(self.base)
+        graph = self._freeze_refinement_for_certification(doc)
+        doc = graph.doc
+        doc["assurance"]["specification_coverage"] = {
+            "status": "gap_found",
+            "signature": "0" * 64,
+            "auditor_count": 4,
+            "rationale": "Prior finding that must not contaminate a fresh audit.",
+        }
+        graph = correctness.Graph(doc)
+        args = argparse.Namespace(format="compact-yaml", omit_specification_coverage=True)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            correctness._cmd_assurance_status(graph, args)
+        text = out.getvalue()
+        self.assertIn("model_signature:", text)
+        self.assertNotIn("specification_coverage:", text)
+        self.assertNotIn("Prior finding", text)
 
     def test_coverage_audit_prompt_requires_refinement_complete(self):
         with self.assertRaises(SystemExit) as ctx:

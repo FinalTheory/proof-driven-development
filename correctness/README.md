@@ -74,7 +74,7 @@ claim.kind                 root | derived | leaf
 claim.severity             critical | high
 claim.assurance_required   maximal | strong
 claim.depends_on           typed node refs + kind-conditional presence
-claim.semantic_contracts   typed reusable safety/equivalence boundaries
+claim.semantic_contracts   typed reusable safety/equivalence/invariant/provenance boundaries
 verification.verifiers     typed verifier kind + intent
 refinement.status          pending | stable | waived
 assurance.specification    unaudited | gap_found | closed
@@ -89,7 +89,7 @@ Leaf claims are terminal proof boundaries: they must declare `surfaces`, `mechan
 
 ### Model semantics vs tool policy
 
-`schema_version: 0.11` adds an orthogonal assurance layer without changing proposition semantics or the refinement scheduler. `stable` remains refinement maturity only; specification completeness, dependency-composition review, and executable leaf evidence are tracked separately. The 0.10 source-traceability model remains unchanged: `catalog.sources` is keyed by stable semantic IDs and stores only the exact semantic H2 `heading`; Markdown numeric prefixes such as `6.` are presentation only. Earlier cleanup removed fields that looked configurable or stateful but carried no independent information: `refinement.policy`, `node_id_policy.format/meanings/rules`, `composition_rules`, `status_legend`, YAML-level interpretation-rule prose, `claim.status: specified`, `verification.status: planned`, repeated evidence policy, persisted refinement `task/priority`, and the redundant source `section/title/description` triple.
+`schema_version: 0.12` extends typed semantic contracts with first-class `state_invariant` and `provenance_binding` relations. `state_invariant` carries typed participating symbols plus an observation scope so audits treat it as an inductive property rather than a list of named events. `provenance_binding` carries typed source and bound symbols so audits distinguish correct downstream processing from correct origin/binding. The 0.11 orthogonal assurance layer remains unchanged: `stable` is refinement maturity only; specification completeness, dependency-composition review, and executable leaf evidence are tracked separately. The 0.10 source-traceability model also remains unchanged: `catalog.sources` is keyed by stable semantic IDs and stores only the exact semantic H2 `heading`; Markdown numeric prefixes such as `6.` are presentation only.
 
 The rule is now:
 
@@ -158,9 +158,9 @@ The `catalog` is the registry for reusable names that carry stable domain meanin
 
 ```text
 catalog.terms            protocol vocabulary and snake_case shorthand
-catalog.state            authoritative / derived state
+catalog.state            authoritative / derived / speculative / control state
 catalog.mechanisms       architecture mechanisms + automation reuse authority
-catalog.semantic_contracts  reusable safety/equivalence semantics + automation reuse authority
+catalog.semantic_contracts  reusable safety/equivalence/invariant/provenance semantics + automation reuse authority
 catalog.failure_events   allowed / excluded failure model
 catalog.surfaces         change-impact / implementation surfaces
 catalog.verifier_kinds   small stable evidence taxonomy
@@ -169,7 +169,9 @@ catalog.sources          stable semantic source identity → exact H2 heading tr
 
 Every catalog namespace has a closed schema. A snake_case protocol/state/semantic identifier such as `client_change_id`, `latest_revision`, `document_current_epoch`, or `logical_state_equivalence_at_frontier` used in a proposition must resolve to the typed catalog; verifier and agent memory are not allowed to supply an implicit definition.
 
-`semantic_contracts` are deliberately stronger than glossary terms but weaker than proof nodes. They define *what a proposition means*—for example which observations count in an equivalence relation and which stronger liveness/history guarantees are excluded. Referencing a semantic contract does not establish that the contract holds; the claim's dependencies/evidence still have to prove the proposition. Contract definitions participate in semantic signatures, so changing the abstraction boundary reopens only the claims that reference it.
+`semantic_contracts` are deliberately stronger than glossary terms but weaker than proof nodes. They define *what a proposition means* without asserting that the proposition is true. `safety_contract` and `equivalence_relation` define reusable behavioral/observation boundaries. `state_invariant` defines an inductive relation over typed `state_symbols` within an explicit `observation_scope`; audits must check establishment plus preservation across every in-scope mutator, not merely a few named transitions. `provenance_binding` defines a typed origin relation from `source_symbols` to `bound_symbols`; audits must establish producer/source/capture binding rather than infer provenance from correct downstream use. Referencing any contract does not establish it; the claim's dependencies/evidence still have to prove the proposition. Contract definitions participate in semantic signatures, so changing the abstraction boundary reopens only the claims that reference it.
+
+`catalog.state.class` distinguishes four semantic roles: `authoritative` source-of-truth state, `derived` state reconstructable/materializable from authoritative truth, `speculative` uncommitted intent such as optimistic client overlays, and `control` protocol/runtime coordination state such as pending/reconciliation or editing-mode state. This distinction matters for invariant closure: a relation over canonical, speculative, and control state should name all participating symbols instead of hiding non-authoritative state in prose.
 
 A semantic-contract reference is also required to be explicit in both model and source prose. If a claim declares `semantic_contracts: [X]`, the exact identifier `X` must occur in that claim's `statement` or `formal_intent`, and must also occur in at least one `source_refs` section of `source.article`. Validation resolves each stable source ID through its exact `heading`; a leading numeric Markdown prefix such as `## 6.` is ignored when matching. This prevents a contract from existing only as hidden YAML metadata or from being "supported" by an unrelated occurrence elsewhere in the article.
 
@@ -423,7 +425,7 @@ A5 applying a canonical accepted sequence is deterministic
 
 同样，`refinement.status: stable` 只表示 proposition/decomposition 已经收敛。non-leaf 的 `dependencies ⇒ target` 可信度由 `assurance.composition` 单独记录；全局 root universe 是否完整由 `assurance.specification_coverage` 单独记录。三类 assurance 与 refinement scheduler 正交。
 
-Refinement 完成后有两条独立的 reasoning certification pipeline。`coverage-audit-prompt` 生成全局 root-coverage/specification-completeness campaign：假设整个 DAG 都成立，继续寻找 scope 内的 material failure，并检查 root/scope/assumption 是否相对 canonical design 发生了语义缩窄。`composition-status` 则列出所有尚未达到至少 `multi_agent_audited` 的 root/derived nodes；对每个 node，`composition-audit-prompt NODE --focus ...` 只暴露 target 与 direct premises，不递归打开 grandchildren。推荐的 focus 是 `execution`、`quantifier`、`premise`，maximal root 额外使用 `general` 作为第四个独立攻击视角。
+Refinement 完成后有两条独立的 reasoning certification pipeline。`coverage-audit-prompt` 生成全局 root-coverage/specification-completeness campaign：假设整个 DAG 都成立，继续寻找 scope 内的 material failure，并检查 root/scope/assumption 是否相对 canonical design 发生了语义缩窄。Coverage 在自由形式 scouts 之前必须先跑一次 semantic-closure pre-pass：一条检查设计级 state relations 是否被建模成真正的 inductive `state_invariant`（而不是若干 named event guarantee），另一条检查有语义的 token/state 是否有 producer/source/capture/consumer 闭包并在需要时由 `provenance_binding` 明确定义。`composition-status` 则列出所有尚未达到至少 `multi_agent_audited` 的 root/derived nodes；对每个 node，`composition-audit-prompt NODE --focus ...` 只暴露 target 与 direct premises，不递归打开 grandchildren。推荐的 focus 是 `execution`、`quantifier`、`premise`，maximal root 额外使用 `general` 作为第四个独立攻击视角。
 
 Composition campaign 的终止条件不是“每个 node 至少问过一个 agent”，而是所有 non-leaf 都达到当前有效的 `multi_agent_audited` 或 `machine_checked`。任何 surviving `deps=true,target=false` counterexample 都必须先被 challenger 尝试击杀，再由 orchestrator 判断是否需要修改 DAG。
 

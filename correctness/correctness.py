@@ -569,14 +569,32 @@ would alter the system specification, including:
 System vocabulary is centrally defined under `catalog`. Claims may reference catalog mechanisms,
 semantic contracts, implementation surfaces, source sections, and verifier kinds, while underscore-style
 protocol terms must resolve to a catalog term/state/mechanism/semantic-contract definition. Semantic
-contracts define reusable proposition meaning (for example an observation or equivalence boundary); they
-are not proof premises. Automation may reuse only mechanisms whose `automation_reusable` flag is true,
-and may reference an approved reusable semantic contract when creating a new proof-structure claim.
-Changing or removing the semantic-contract association of an existing claim requires human authority,
-because that changes the proposition's interpretation boundary. A semantic-contract association is never
-hidden metadata: every referenced contract ID must appear exactly in the claim's `statement` or `formal_intent`
-and in at least one of that claim's `source_refs` article sections. `catalog.sources` stable semantic IDs resolve through exact H2 `heading` text; numeric Markdown section prefixes are presentation-only and ignored. Automation may not create catalog entries or introduce an
-unapproved mechanism/contract merely to close a proof hole; report a human semantic decision instead.
+contracts define reusable proposition meaning rather than proof premises. In addition to generic
+`safety_contract` and `equivalence_relation` boundaries, the type system has two relation-specific forms:
+
+- `state_invariant`: an inductive predicate over typed `state_symbols` and an explicit `observation_scope`.
+  A referencing proof must establish the predicate at the relevant entry/publication boundary and preserve
+  it across every in-scope transition capable of mutating any participating symbol. Listing several named
+  transitions is not enough unless all other mutators are explicitly outside the contract.
+`catalog.state` distinguishes `authoritative`, `derived`, `speculative`, and `control` state. In particular,
+optimistic/uncommitted user intent must not be mislabeled as derived canonical state, and protocol modes or
+pending/reconciliation bookkeeping may be represented as control state when they participate in correctness
+relations.
+
+- `provenance_binding`: a typed origin/binding relation from `source_symbols` to `bound_symbols`. A
+  referencing proof must establish producer/source/capture identity and preserve that binding through
+  downstream use. Correct processing of a value does not establish that the value was sourced from or
+  bound to the correct execution/state.
+
+Automation may reuse only mechanisms whose `automation_reusable` flag is true, and may reference an
+approved reusable semantic contract when creating a new proof-structure claim. Changing or removing the
+semantic-contract association of an existing claim requires human authority, because that changes the
+proposition's interpretation boundary. A semantic-contract association is never hidden metadata: every
+referenced contract ID must appear exactly in the claim's `statement` or `formal_intent` and in at least one
+of that claim's `source_refs` article sections. `catalog.sources` stable semantic IDs resolve through exact
+H2 `heading` text; numeric Markdown section prefixes are presentation-only and ignored. Automation may not
+create catalog entries or introduce an unapproved mechanism/contract merely to close a proof hole; report a
+human semantic decision instead.
 
 Verifier `kind` values come from the small canonical `catalog.verifier_kinds` taxonomy. Scenario-specific
 details belong in verifier `intent`, not in newly invented verifier kinds.
@@ -1957,9 +1975,14 @@ def validate(graph: Graph) -> tuple[list[str], list[str]]:
                 definition = entry.get("definition")
                 if not isinstance(definition, str) or not definition.strip():
                     errors.append(f"catalog.semantic_contracts.{key}.definition must be non-empty")
-                if entry.get("class") not in {"safety_contract", "equivalence_relation"}:
+                if entry.get("class") not in {
+                    "safety_contract",
+                    "equivalence_relation",
+                    "state_invariant",
+                    "provenance_binding",
+                }:
                     errors.append(
-                        f"catalog.semantic_contracts.{key}.class must be safety_contract or equivalence_relation"
+                        f"catalog.semantic_contracts.{key}.class must be safety_contract, equivalence_relation, state_invariant, or provenance_binding"
                     )
                 excludes = entry.get("excludes")
                 if not _as_string_list(excludes):
@@ -1970,8 +1993,8 @@ def validate(graph: Graph) -> tuple[list[str], list[str]]:
                 description = entry.get("description")
                 if not isinstance(description, str) or not description.strip():
                     errors.append(f"catalog.{namespace}.{key}.description must be non-empty")
-            if namespace == "state" and entry.get("class") not in {"authoritative", "derived"}:
-                errors.append(f"catalog.state.{key}.class must be authoritative or derived")
+            if namespace == "state" and entry.get("class") not in {"authoritative", "derived", "speculative", "control"}:
+                errors.append(f"catalog.state.{key}.class must be authoritative, derived, speculative, or control")
             if namespace == "mechanisms" and not isinstance(entry.get("automation_reusable"), bool):
                 errors.append(f"catalog.mechanisms.{key}.automation_reusable must be boolean")
             if namespace == "failure_events" and entry.get("class") not in {"allowed", "excluded"}:
@@ -1983,6 +2006,26 @@ def validate(graph: Graph) -> tuple[list[str], list[str]]:
                     )
                 if not isinstance(entry.get("heading"), str) or not entry.get("heading", "").strip():
                     errors.append(f"catalog.sources.{key}.heading must be non-empty")
+
+    semantic_symbols = set(_catalog_namespace(graph, "terms")) | set(_catalog_namespace(graph, "state"))
+    contracts = _catalog_namespace(graph, "semantic_contracts")
+    for contract_id, entry in contracts.items():
+        if not isinstance(entry, dict):
+            continue
+        contract_class = entry.get("class")
+        if contract_class == "state_invariant":
+            for symbol in entry.get("state_symbols", []):
+                if isinstance(symbol, str) and symbol not in semantic_symbols:
+                    errors.append(
+                        f"catalog.semantic_contracts.{contract_id}.state_symbols references unknown semantic symbol {symbol!r}"
+                    )
+        elif contract_class == "provenance_binding":
+            for field in ("source_symbols", "bound_symbols"):
+                for symbol in entry.get(field, []):
+                    if isinstance(symbol, str) and symbol not in semantic_symbols:
+                        errors.append(
+                            f"catalog.semantic_contracts.{contract_id}.{field} references unknown semantic symbol {symbol!r}"
+                        )
 
     id_allocator = doc.get("id_allocator")
     next_sequence = id_allocator.get("next_sequence") if isinstance(id_allocator, dict) else None
@@ -2369,7 +2412,22 @@ def _emit_system_context(graph: Graph, node_ids: Iterable[str]) -> None:
         for key, entry in semantic_contracts.items():
             if not isinstance(entry, dict):
                 continue
-            print(f"- **{key}** [{entry.get('class', '?')}]: {str(entry.get('definition', '')).strip()}")
+            contract_class = entry.get("class", "?")
+            print(f"- **{key}** [{contract_class}]: {str(entry.get('definition', '')).strip()}")
+            if contract_class == "state_invariant":
+                symbols = entry.get("state_symbols", [])
+                print(f"  Observation scope: {entry.get('observation_scope', '?')}")
+                if isinstance(symbols, list):
+                    print("  State symbols: " + ", ".join(str(x) for x in symbols))
+                print("  Audit semantics: treat this as an inductive invariant over the observation scope; establish it at entry/publication and preserve it across every in-scope transition that can mutate any listed symbol. Named transitions are not exhaustive unless explicitly excluded.")
+            elif contract_class == "provenance_binding":
+                sources = entry.get("source_symbols", [])
+                bound = entry.get("bound_symbols", [])
+                if isinstance(sources, list):
+                    print("  Source symbols: " + ", ".join(str(x) for x in sources))
+                if isinstance(bound, list):
+                    print("  Bound symbols: " + ", ".join(str(x) for x in bound))
+                print("  Audit semantics: trace producer/source/capture/binding through every consumer. Correct downstream processing of a bound value does not establish that the value came from the required source or was bound to the correct execution/state.")
             excludes = entry.get("excludes", [])
             if isinstance(excludes, list) and excludes:
                 print("  Excludes:")
@@ -2909,7 +2967,7 @@ def _emit_coverage_audit_prompt(graph: Graph) -> None:
     print(f"cd {correctness_dir}")
     print(".venv/bin/python3 correctness.py validate")
     print(".venv/bin/python3 correctness.py refinement-status --format compact-yaml")
-    print(".venv/bin/python3 correctness.py assurance-status --format compact-yaml")
+    print(".venv/bin/python3 correctness.py assurance-status --format compact-yaml --omit-specification-coverage")
     print("```")
     print(f"Read `../{source_article}` for canonical intended semantics. For a root-local check, use")
     print("`.venv/bin/python3 correctness.py slice <ROOT_ID> --format prompt`; stable roots are intentionally inspected via slice,")
@@ -2924,6 +2982,25 @@ def _emit_coverage_audit_prompt(graph: Graph) -> None:
     print()
     for assumption_id, assumption in sorted(graph.assumptions.items()):
         print(f"- `{assumption_id}` — {assumption.get('statement', '').strip()}")
+    print()
+    print("## Mandatory semantic-closure pass")
+    print()
+    print("Before free-form scouting, perform two structured completeness passes against the canonical design and typed model.")
+    print("These passes search for missing propositions/contracts; they do not assume that existing claim wording is complete.")
+    print()
+    print("1. **Inductive state-invariant closure**")
+    print("   - Inventory design-critical relations among authoritative, derived, speculative, and observer-visible state.")
+    print("   - For each relation, identify its observation scope, establishment/publication boundary, and every in-scope transition class capable of mutating any participating state symbol.")
+    print("   - If the intended property must hold at every state in that scope, require a `state_invariant` semantic contract plus a claim whose wording is genuinely inductive. A guarantee attached only to named events or frontier-advancing transitions is insufficient unless other mutators are explicitly excluded.")
+    print("   - Look especially for paired-state coherence, visibility suppression, mode/state compatibility, and representation/frontier relations.")
+    print()
+    print("2. **Semantic provenance/binding closure**")
+    print("   - Inventory every token/field/state whose downstream meaning depends on where or when it was produced (for example frontiers, epochs, request bases, identities, snapshot heads, accepted evidence).")
+    print("   - For each one, identify producer, required source state, capture/linearization point, bound execution/identity/state, and downstream consumers.")
+    print("   - Require a `provenance_binding` semantic contract plus a claim when correctness depends on that origin/binding relation. Correct downstream processing of a submitted or captured value does not prove that the value came from the right source.")
+    print("   - Search explicitly for stale, substituted, cross-bound, cached, or otherwise semantically valid-looking values with the wrong provenance.")
+    print()
+    print("A missing typed contract alone is not automatically a structural gap if the design does not require the relation, but any design-critical relation that current roots can leave false is a serious candidate for the normal checker/challenger gate below.")
     print()
     print("## Multi-agent campaign")
     print()
@@ -3256,13 +3333,17 @@ def _cmd_refinement_status(graph: Graph, args: argparse.Namespace) -> int:
 
 def _cmd_assurance_status(graph: Graph, args: argparse.Namespace) -> int:
     snapshot = _assurance_snapshot(graph)
+    omit_specification_coverage = bool(getattr(args, "omit_specification_coverage", False))
     if args.format == "yaml":
-        print(yaml.safe_dump(snapshot, sort_keys=False, allow_unicode=True).rstrip())
+        rendered = dict(snapshot)
+        if omit_specification_coverage:
+            rendered.pop("specification_coverage", None)
+        print(yaml.safe_dump(rendered, sort_keys=False, allow_unicode=True).rstrip())
         return 0
     if args.format == "compact-yaml":
         compact = {
             "model_signature": snapshot["model_signature"],
-            "specification_coverage": snapshot["specification_coverage"],
+            **({} if omit_specification_coverage else {"specification_coverage": snapshot["specification_coverage"]}),
             "counts": snapshot["counts"],
             "stale_composition": sorted(
                 node_id for node_id, item in snapshot["composition"].items()
@@ -3279,10 +3360,11 @@ def _cmd_assurance_status(graph: Graph, args: argparse.Namespace) -> int:
 
     spec = snapshot["specification_coverage"]
     print(f"model_signature={snapshot['model_signature']}")
-    print(
-        "specification_coverage "
-        f"declared={spec['declared']} effective={spec['effective']}"
-    )
+    if not omit_specification_coverage:
+        print(
+            "specification_coverage "
+            f"declared={spec['declared']} effective={spec['effective']}"
+        )
     print("composition " + " ".join(
         f"{key}={value}" for key, value in snapshot["counts"]["composition"].items()
     ))
@@ -4205,6 +4287,11 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["text", "yaml", "compact-yaml"],
         default="text",
         help="Output concise text, full per-node YAML, or compact assurance summary YAML.",
+    )
+    assurance_status_parser.add_argument(
+        "--omit-specification-coverage",
+        action="store_true",
+        help="Omit prior specification-coverage status/provenance; intended for fresh coverage-audit bootstrap isolation.",
     )
 
     refinement_signature_parser = sub.add_parser(
