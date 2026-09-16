@@ -10,7 +10,7 @@ For correctness-refinement work, use these sources in order:
 2. `correctness/graph_schema.py` and the schemas exposed by `correctness.py` — canonical structural contract.
 3. `correctness/correctness.yaml` — current system/proof model and campaign state.
 4. `design/google-docs.md` — source architecture narrative.
-5. `correctness/README.md` — explanatory documentation only.
+5. `correctness/SPEC.md` — concise human-readable semantic model of the Harness; explanatory, not an operational source of truth.
 
 `correctness/prompts/` contains thin copy/paste launchers for fresh orchestrator windows. They only select a workflow and bootstrap the live Harness; they must not duplicate or override the operational contract above.
 
@@ -37,6 +37,8 @@ See `history/README.md` for the local layout convention.
 For ordinary correctness-DAG/workflow-state mutations, use the validation sequence specified by `workflow-help`.
 
 Run the full tooling regression suite only when correctness tooling itself changes (`correctness.py`, `graph_schema.py`, mutation/validation/scheduler logic, or the test harness), or when validating a tooling repair.
+
+When a substantial correctness-tooling change alters the Harness concepts or semantic boundaries described in `correctness/SPEC.md`, review that document and update only the affected prose/table rows in the same change. Keep it concise and conceptual; do not add current graph contents or code-level anchors merely to synchronize documentation with implementation. Canonical YAML field/enum drift is checked automatically against `correctness/SCHEMA.md` by the Harness.
 
 ## Correctness tooling environment
 

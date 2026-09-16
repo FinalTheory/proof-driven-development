@@ -489,7 +489,8 @@ The Dockerized collaborative editor, failure scenarios, evidence runner, and `pd
 │   └── google-docs.md
 │
 ├── correctness/
-│   ├── README.md
+│   ├── SPEC.md
+│   ├── SCHEMA.md
 │   ├── prompts/
 │   │   ├── README.md
 │   │   ├── refinement.md

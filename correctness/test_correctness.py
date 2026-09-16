@@ -605,6 +605,38 @@ class CorrectnessToolTests(unittest.TestCase):
             correctness._cmd_mutation_schema(None, argparse.Namespace(format="yaml"))
         self.assertIn("mutation_version", output.getvalue())
 
+    def test_schema_reference_index_tracks_canonical_fields_and_constraints(self):
+        inventory = correctness._canonical_field_inventory()
+        lines = [correctness.SCHEMA_INDEX_START]
+        lines.extend(
+            f"- `{row['path']}` => {row['presence']}; {row['constraint']}"
+            for row in inventory
+        )
+        lines.append(correctness.SCHEMA_INDEX_END)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "SCHEMA.md"
+            path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            self.assertEqual([], correctness._schema_reference_contract_errors(path))
+
+            broken = path.read_text(encoding="utf-8").replace(
+                f"- `{inventory[0]['path']}` => {inventory[0]['presence']}; {inventory[0]['constraint']}\n",
+                "",
+                1,
+            )
+            path.write_text(broken, encoding="utf-8")
+            errors = correctness._schema_reference_contract_errors(path)
+            self.assertTrue(any(f"missing field: {inventory[0]['path']}" in error for error in errors))
+
+            path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            first = inventory[0]
+            original = f"- `{first['path']}` => {first['presence']}; {first['constraint']}"
+            path.write_text(
+                path.read_text(encoding="utf-8").replace(original, original + " drift", 1),
+                encoding="utf-8",
+            )
+            errors = correctness._schema_reference_contract_errors(path)
+            self.assertTrue(any(f"constraint drift for {first['path']}" in error for error in errors))
+
     def test_undefined_snake_case_term_is_rejected(self):
         doc = copy.deepcopy(self.base)
         doc["claims"]["L1_left_boundary"]["statement"] = "The unknown_protocol_token must hold."

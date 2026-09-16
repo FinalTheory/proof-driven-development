@@ -57,6 +57,10 @@ from graph_schema import (
 
 
 GRAPH_PATH = Path(__file__).with_name("correctness.yaml")
+SCHEMA_REFERENCE_PATH = Path(__file__).with_name("SCHEMA.md")
+SCHEMA_INDEX_START = "<!-- canonical-schema-index:start -->"
+SCHEMA_INDEX_END = "<!-- canonical-schema-index:end -->"
+SCHEMA_INDEX_LINE_RE = re.compile(r"^- `([^`]+)` => (.+)$")
 
 
 def _repository_root_for_graph_path(path: Path) -> Path:
@@ -1738,6 +1742,8 @@ def validate(graph: Graph) -> tuple[list[str], list[str]]:
     for error in schema_errors:
         errors.append(f"schema {_format_schema_path(error)}: {error.message}")
 
+    errors.extend(_schema_reference_contract_errors())
+
     required_top_level = {
         "schema_version",
         "system",
@@ -3219,6 +3225,69 @@ def _canonical_field_inventory() -> list[dict[str, Any]]:
 
     walk(CANONICAL_GRAPH_SCHEMA, ())
     return [rows[key] for key in sorted(rows)]
+
+
+def _schema_reference_contract_errors(path: Path = SCHEMA_REFERENCE_PATH) -> list[str]:
+    """Check SCHEMA.md's compact machine index against the canonical graph schema.
+
+    The prose remains intentionally human-maintained. This only guarantees that every
+    canonical field path appears exactly once and that its presence/structural constraint
+    summary has not drifted from graph_schema.py.
+    """
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        return [f"schema reference unavailable at {path}: {exc}"]
+
+    if text.count(SCHEMA_INDEX_START) != 1 or text.count(SCHEMA_INDEX_END) != 1:
+        return [
+            "SCHEMA.md must contain exactly one canonical schema index bounded by "
+            f"{SCHEMA_INDEX_START!r} and {SCHEMA_INDEX_END!r}"
+        ]
+
+    remainder = text.split(SCHEMA_INDEX_START, 1)[1]
+    index_text = remainder.split(SCHEMA_INDEX_END, 1)[0]
+
+    documented: dict[str, list[str]] = collections.defaultdict(list)
+    malformed_lines: list[str] = []
+    for raw_line in index_text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        match = SCHEMA_INDEX_LINE_RE.fullmatch(line)
+        if match is None:
+            malformed_lines.append(line)
+            continue
+        documented[match.group(1)].append(match.group(2).strip())
+
+    errors: list[str] = []
+    for line in malformed_lines:
+        errors.append(f"SCHEMA.md canonical schema index has malformed line: {line}")
+
+    expected = {
+        row["path"]: f"{row['presence']}; {row['constraint']}"
+        for row in _canonical_field_inventory()
+    }
+    documented_paths = set(documented)
+    expected_paths = set(expected)
+
+    for field_path in sorted(expected_paths - documented_paths):
+        errors.append(f"SCHEMA.md canonical schema index missing field: {field_path}")
+    for field_path in sorted(documented_paths - expected_paths):
+        errors.append(f"SCHEMA.md canonical schema index has stale/unknown field: {field_path}")
+    for field_path in sorted(expected_paths & documented_paths):
+        values = documented[field_path]
+        if len(values) != 1:
+            errors.append(
+                f"SCHEMA.md canonical schema index must document {field_path} exactly once; found {len(values)}"
+            )
+            continue
+        if values[0] != expected[field_path]:
+            errors.append(
+                f"SCHEMA.md canonical schema constraint drift for {field_path}: "
+                f"documented={values[0]!r}, expected={expected[field_path]!r}"
+            )
+    return errors
 
 
 def _cmd_schema_fields(_graph: Graph | None, args: argparse.Namespace) -> int:
