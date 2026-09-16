@@ -14,7 +14,7 @@ Read `AGENTS.md`, then run:
 
 ```bash
 cd /opt/workspace/proof-driven-development/correctness
-python3 correctness.py coverage-audit-prompt
+.venv/bin/python3 correctness.py coverage-audit-prompt
 ```
 
 Treat the generated output as the complete canonical audit contract. Execute that campaign exactly as specified.

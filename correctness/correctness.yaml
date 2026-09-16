@@ -198,12 +198,11 @@ refinement:
     G4_reconnect_converges_without_gap_or_duplicate:
       status: stable
       blocked_by: []
-      rationale: Existing catch-up representation, deterministic application, revision continuity,
-        and content/frontier pairing establish the correct canonical candidate through H. L109
-        separately closes the publication boundary by keeping intermediate candidate prefixes
-        unobservable and rejecting any response head below the already visible frontier, so
-        overlapping/retried resync attempts cannot regress a previously published canonical state.
-      signature: 8126752677e22bbb5fab8f62ef104b1d1a2ce3802dd5f19e3d8dd1695124ff12
+      rationale: "SUPPORTED: existing catch-up representation/continuity obligations establish canonical
+        replay through H, while narrowed L109 supplies exactly the atomic and monotonic resync-publication
+        semantics stated by G4; speculative-overlay retirement is intentionally outside this root's canonical-state
+        proposition."
+      signature: 0b1c86b740f01240a6c1951d31494be09f2804030f1ce1d688b7d54bea311c5b
     L16_commit_precedes_ack:
       status: stable
       blocked_by: []
@@ -566,12 +565,11 @@ refinement:
     G7_reconnect_does_not_double_render_accepted_optimistic_edit:
       status: stable
       blocked_by: []
-      rationale: 'L106 covers every start-pending key, L107 closes the speculative-edit set during resync,
-        L108 preserves request identity into acceptance, and L104 classifies each key against the same
-        response head H. L109 then permits only one atomic non-regressing publication after every accepted-within-H
-        overlay is removed and prevents stale responses from restoring removed overlays, closing both
-        intermediate-prefix and cross-attempt double-render executions.'
-      signature: 0ee271091f3a34b57cac2356e40a0f900875fb02f81405dcc9a6092c107c6e26
+      rationale: 'SUPPORTED: start-pending coverage, freeze, response-head classification, request identity
+        preservation, atomic/monotonic resync publication, and global matching-overlay retirement jointly
+        imply the reconnect-specific no-double-render and stale-response guarantees without relying on
+        reconnect-only overlay logic inside L109.'
+      signature: 3cbda914d791fa1f3a6501540e78c5a09256be1e0beffb322fd0ff660296c5f8
     L104_pending_identity_resolution_is_bound_to_response_head:
       status: stable
       blocked_by: []
@@ -606,12 +604,41 @@ refinement:
     L109_resync_publication_is_atomic_and_monotonic:
       status: stable
       blocked_by: []
-      rationale: The complete proposition is one localized bounded client-resync publication
-        state-machine property over candidate construction, publication eligibility, atomic
-        exposure, and visible frontier monotonicity. One state-machine verifier can directly decide
-        the whole transition boundary, so further decomposition would not create an independent
-        verification or invalidation surface.
-      signature: 1a1dc9c20ea10a160430388cec49050cf39e4f3a64ed94b8c7d0ec148288beba
+      rationale: 'GOOD_LEAF: one localized bounded client resync-publication state-machine verifier can
+        decide candidate invisibility, stale-response inertness, atomic publication, and non-regressing
+        frontier semantics without reconstructing a parent protocol.'
+      signature: 0471fe70dbccf6eff7a7cffe0095f512f5b28b201804aa2f82183a3161854d2f
+    L110_client_retires_matching_speculative_overlay_before_canonical_publication:
+      status: stable
+      blocked_by: []
+      rationale: 'GOOD_LEAF: all covered cases are publication exits of the same client canonical/speculative
+        composition state machine, so one localized transition/control-flow verifier can establish matching-overlay
+        retirement across live, buffered, and resync publication without useful further decomposition.'
+      signature: dc3a30e28d769819b37a3bee932bf68f9787fea7e18d6e3f9e3ea434b6efbe84
+    G8_user_visible_state_does_not_double_render_accepted_optimistic_edit:
+      status: stable
+      blocked_by: []
+      rationale: 'SUPPORTED: A3 gives logical-edit identity stability, L108 preserves that identity into
+        canonical acceptance, and L110 covers every user-visible canonical publication sink; together
+        they rule out simultaneous canonical and speculative representations of the same accepted logical
+        edit across live, buffered, and resync paths.'
+      signature: 49a82e30a88ace2804481e384e12fcafd7561245360215ce038a9c10e0cd13b4
+    L111_accepted_key_classification_requires_committed_acceptance:
+      status: stable
+      blocked_by: []
+      rationale: 'GOOD_LEAF: accepted-key evidence soundness is one localized authoritative idempotency/acceptance-transaction
+        state-machine property; provisional versus accepted evidence and crash boundaries can be checked
+        mechanically without further proof decomposition.'
+      signature: 05e42fd0a954171a727b5ca4bd937054b1ec4a6a2db20b413407607fcf7a2ddc
+    G9_accepted_idempotency_evidence_matches_committed_acceptance:
+      status: stable
+      blocked_by: []
+      rationale: "SUPPORTED: L14 supplies the acceptance-to-durable-evidence direction while the identity
+        can still influence acceptance/retry, L111 supplies the converse soundness that accepted evidence
+        implies a real committed acceptance for the same identity, and C13 supplies at-most-one uniqueness;
+        together they establish the root's exactly-one accepted-evidence equivalence while excluding provisional
+        reservation state."
+      signature: ae8ded89e42d1e9b2cea025f8aaf2819b583fe06ed93add70fefa63fec249122
 assumptions:
   A1_storage_commit_is_durable:
     statement: A successful authoritative-store commit remains recoverable across the server-process
@@ -657,6 +684,8 @@ roots:
   - G5_retry_resolves_idempotently
   - G6_accepted_change_preserves_ot_semantics
   - G7_reconnect_does_not_double_render_accepted_optimistic_edit
+  - G8_user_visible_state_does_not_double_render_accepted_optimistic_edit
+  - G9_accepted_idempotency_evidence_matches_committed_acceptance
 claims:
   G0_acked_edit_survives_failover:
     kind: root
@@ -2387,6 +2416,7 @@ claims:
       - L107_client_freezes_speculative_edits_during_resync
       - L108_acceptance_preserves_request_identity
       - L109_resync_publication_is_atomic_and_monotonic
+      - L110_client_retires_matching_speculative_overlay_before_canonical_publication
   L104_pending_identity_resolution_is_bound_to_response_head:
     statement: 'For every pending client_change_id k supplied in a catch-up request with authoritative
       response head H, the response classifies k against authoritative acceptance through the same H:
@@ -2511,11 +2541,11 @@ claims:
       frontier when a candidate response through authoritative head H is ready to publish. If H < F,
       the entire candidate is discarded without mutating the visible canonical base,
       last_applied_revision, pending-resolution state, or speculative overlays. If H >= F, the
-      client may expose state from that candidate only by one atomic publication after
-      reconciliation has removed every speculative overlay that the same response classifies as
-      accepted within H; no checkpoint/tail/intermediate candidate prefix is user-visible, no
-      previously removed speculative overlay is restored by that response, and the user-visible
-      canonical frontier never decreases.
+      client may expose state from that candidate only by one atomic publication after the
+      candidate's specified reconciliation work is complete; no checkpoint/tail/intermediate
+      candidate prefix is user-visible, no previously removed speculative overlay or
+      pending-resolution state is restored by that response, and the user-visible canonical frontier
+      never decreases.
     severity: critical
     assurance_required: maximal
     source_refs:
@@ -2540,6 +2570,116 @@ claims:
             assert that neither the stale response nor any intermediate prefix mutates user-visible
             canonical, frontier, pending, or overlay state before one valid reconciled publication.
     kind: leaf
+  L110_client_retires_matching_speculative_overlay_before_canonical_publication:
+    statement: Every client transition that can make a canonical acceptance identified by
+      (document_id=D, client_change_id=k) newly user-visible at canonical frontier F removes or
+      suppresses any currently visible speculative overlay identified by the same (D,k) before, or
+      atomically with, publication of the first user-visible canonical state through F that contains
+      that acceptance. This applies to ordinary live delivery, buffered live delivery after
+      catch-up/resync, and reconnect/resync publication; no user-visible publication sink may expose
+      the canonical acceptance together with the matching speculative overlay merely because the
+      canonical base itself is otherwise correct.
+    severity: critical
+    assurance_required: maximal
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    surfaces:
+      - client_sync
+      - live_delivery
+      - catchup
+    mechanisms:
+      - client_revision_continuity
+      - catchup_protocol
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Enumerate every client transition that can advance a user-visible canonical
+            frontier through ordinary live delivery, buffered post-catch-up delivery, or resync
+            publication while arbitrary speculative overlays are present; whenever the newly visible
+            canonical prefix contains acceptance (D,k), require matching overlay (D,k) to be absent
+            in that publication and in every subsequently visible state unless a distinct new
+            logical edit creates a new identity.
+        - kind: control_flow
+          intent: Enumerate all user-visible canonical publication sinks and prove that each path
+            routes matching (document_id, client_change_id) overlay retirement or suppression before
+            the publication sink, with no live or buffered-delivery bypass.
+    kind: leaf
+  G8_user_visible_state_does_not_double_render_accepted_optimistic_edit:
+    statement: For every user-visible client canonical publication to frontier F, if canonical
+      history through F contains the canonical acceptance identified by (document_id=D,
+      client_change_id=k) for a logical client edit and the client has a speculative representation
+      of that same logical edit identified by (D,k), the published user-visible state contains the
+      canonical representation but not the matching speculative overlay. This guarantee is
+      independent of whether the canonical acceptance becomes visible through ordinary live
+      delivery, buffered post-catch-up delivery, or reconnect/resync publication; it makes no claim
+      that an unresolved edit with no acceptance through the published frontier must be rebased,
+      discarded, or made editable.
+    severity: critical
+    assurance_required: maximal
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    kind: root
+    depends_on:
+      - A3_client_change_id_identifies_logical_edit
+      - L108_acceptance_preserves_request_identity
+      - L110_client_retires_matching_speculative_overlay_before_canonical_publication
+  L111_accepted_key_classification_requires_committed_acceptance:
+    statement: Whenever authoritative durable idempotency or retry-resolution evidence for identity
+      (document_id=D, client_change_id=k) is interpreted by the protocol as meaning that (D,k) is
+      already accepted, authoritative canonical history contains a committed canonical acceptance
+      identified by the same (D,k). Reservation, in-progress arbitration, pre-commit ownership, or
+      other provisional state cannot serve as accepted evidence; any durable evidence carrying
+      already-accepted semantics is either derived from the committed canonical acceptance itself or
+      becomes durable in the same acceptance transaction as that canonical commit.
+    severity: critical
+    assurance_required: maximal
+    source_refs:
+      - accepted_change_log
+      - authoritative_truth
+      - final_architecture
+    surfaces:
+      - idempotency
+      - retry_resolution
+      - acceptance_path
+      - accepted_history_store
+    mechanisms:
+      - acceptance_transaction
+      - idempotency_gate
+      - accepted_history_log
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Explore reservation, arbitration, acceptance commit, crash, rollback, retry, and
+            recovery transitions; require every state observed as already-accepted(D,k) to have a
+            committed canonical acceptance(D,k), and require pre-commit or aborted reservation
+            states to remain distinguishable from accepted.
+        - kind: fault_injection
+          intent: Crash or abort at every boundary between idempotency arbitration/evidence writes
+            and canonical acceptance commit; after recovery, assert that no durable already-accepted
+            classification survives unless the matching canonical acceptance committed.
+    kind: leaf
+  G9_accepted_idempotency_evidence_matches_committed_acceptance:
+    statement: For every (document_id=D, client_change_id=k) while an execution carrying that
+      identity may still reach acceptance or retry-resolution logic, authoritative state contains
+      durable accepted-key evidence whose protocol meaning is already-accepted(D,k) if and only if
+      canonical history contains exactly one committed canonical acceptance identified by the same
+      (D,k). Lifecycle compaction may change the physical evidence representation but cannot create
+      already-accepted evidence without a real acceptance or erase the non-reusable accepted
+      evidence while the key can still reach acceptance; reservation or in-progress arbitration
+      state is not accepted evidence.
+    severity: critical
+    assurance_required: maximal
+    source_refs:
+      - accepted_change_log
+      - authoritative_truth
+      - final_architecture
+    kind: root
+    depends_on:
+      - C13_idempotency_key_is_temporally_unique
+      - L14_accepted_idempotency_identity_survives_lifecycle
+      - L111_accepted_key_classification_requires_committed_acceptance
 catalog:
   terms:
     logical_client_edit:
@@ -2840,20 +2980,26 @@ catalog:
 id_allocator:
   next_sequence:
     A: 6
-    G: 8
+    G: 10
     C: 35
-    L: 110
+    L: 112
     D: 7
     T: 2
 assurance:
   specification_coverage:
     status: gap_found
     auditor_count: 4
-    rationale: 'Final root-coverage audit found two surviving in-scope reconnect publication counterexamples:
-      a delayed older resync response can regress an already published newer canonical frontier and reconciliation
-      state, and an intermediate resync prefix can become visible before accepted speculative overlays
-      are removed. Both expose a missing atomic-and-monotonic client resync publication boundary.'
-    signature: 394277d75ebe1e6b5dd07a7d54bb46e92ac3c8fe007539304df3fe01e6a2475a
+    rationale: Fresh final root-coverage audit for model signature
+      3cd128427ca346b858245b852795f60d34ef3395faf3199b92ae57118ee9e105 found two independent
+      surviving in-scope structural gaps. First, ordinary live or post-resync canonical publication
+      can expose a canonical acceptance together with the same client_change_id's still-visible
+      speculative overlay because the current no-double-render obligation is
+      reconnect-head-specific. Second, authoritative accepted-key evidence can classify a key as
+      already accepted without any committed canonical acceptance for that identity because the
+      model proves acceptance-to-evidence persistence and duplicate blocking but not
+      evidence-to-committed-acceptance soundness. Both candidates preserved all current roots and
+      assumptions and survived fresh challengers.
+    signature: 3cd128427ca346b858245b852795f60d34ef3395faf3199b92ae57118ee9e105
   composition:
     G0_acked_edit_survives_failover:
       status: unaudited
@@ -2894,6 +3040,10 @@ assurance:
     G6_accepted_change_preserves_ot_semantics:
       status: unaudited
     G7_reconnect_does_not_double_render_accepted_optimistic_edit:
+      status: unaudited
+    G8_user_visible_state_does_not_double_render_accepted_optimistic_edit:
+      status: unaudited
+    G9_accepted_idempotency_evidence_matches_committed_acceptance:
       status: unaudited
   implementation_evidence:
     L16_commit_precedes_ack:
@@ -3001,4 +3151,8 @@ assurance:
     L108_acceptance_preserves_request_identity:
       status: planned
     L109_resync_publication_is_atomic_and_monotonic:
+      status: planned
+    L110_client_retires_matching_speculative_overlay_before_canonical_publication:
+      status: planned
+    L111_accepted_key_classification_requires_committed_acceptance:
       status: planned

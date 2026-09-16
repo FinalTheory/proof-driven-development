@@ -38,6 +38,14 @@ For ordinary correctness-DAG/workflow-state mutations, use the validation sequen
 
 Run the full tooling regression suite only when correctness tooling itself changes (`correctness.py`, `graph_schema.py`, mutation/validation/scheduler logic, or the test harness), or when validating a tooling repair.
 
+## Correctness tooling environment
+
+The correctness tooling has a repository-local virtual environment at `correctness/.venv`.
+
+- Bootstrap or refresh it with `cd correctness && python3 -m venv .venv && .venv/bin/python3 -m pip install -r requirements.txt`.
+- Run correctness commands with `correctness/.venv/bin/python3 correctness/correctness.py ...` from the repository root, or `.venv/bin/python3 correctness.py ...` from `correctness/`.
+- Do not rely on globally installed Python packages for correctness workflows.
+
 ## Repository hygiene
 
 - Keep generated/runtime scratch out of Git unless it is intentionally part of the public artifact.

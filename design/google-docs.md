@@ -106,6 +106,10 @@ unacked = retryable
 
 另一个容易漏掉的边界是时间：只要协议仍允许某个旧 edit 被 retry，系统就必须保留足以证明这个 key 已经 accepted 的 authoritative evidence。即使 accepted-change history 被 snapshot / compact，也不能因为原 row 消失就让同一个 key 再次产生新的 acceptance；实现上可以保留原记录，或者把 dedupe identity 压缩进独立的 durable idempotency index / tombstone。
 
+但这份 evidence 还必须满足反方向的 soundness：**authoritative state 只有在同一个 `(document_id, client_change_id)` 已经存在 committed canonical acceptance 时，才能把这个 identity 分类为 `accepted`。** 幂等 gate 内部可以有 reservation、in-progress arbitration 或 transient ownership state，但这些状态必须与 `accepted` 明确区分，不能提前充当“已经接受”的事实。实现上，accepted evidence 可以直接来自 canonical accepted row / unique index，也可以是与 accepted append 在同一提交边界内原子产生的 durable index；不能先永久写下 `accepted(k)`，再尝试另一个可能失败的 canonical append。否则如果 accepted marker 已持久化而 append 没发生，客户端 retry 会被一个不存在的成功结果永久挡住：系统既没有接受这次 edit，也不再允许它被接受。
+
+因此，对于协议仍可能查询的 idempotency identity，`accepted` evidence 与 canonical acceptance 的关系不是单向的“接受以后记住 key”，而是事实对应关系：evidence 不能漏掉真实 acceptance，也不能凭空制造不存在的 acceptance。
+
 这和 Raft 里 client retry 的问题非常相似。client command 被 leader 收到，不代表 committed；只有进入 committed log 后，状态机才应该把它当作事实。ACK 丢失不应该导致 command 重复生效。
 
 Google Docs 里也是一样。客户端 raw edit 被 OT owner 收到，不代表 accepted。只有 accepted-change-set log commit 成功，才是系统事实。
@@ -266,6 +270,19 @@ if change set.revision <= last_applied_revision:
 这个规则很便宜，但它把客户端从“相信推送顺序”提升为“验证自己的历史是否连续”。
 
 WebSocket 是 delivery。Revision log 才是 ordering proof。
+
+这里还需要一条与 revision continuity 正交的客户端 observer invariant。真实用户看到的不是单独的 canonical base，而是 **canonical base + speculative overlays** 的组合。即使 canonical base 本身已经严格等于 replay through frontier F，如果同一个 logical edit 又以 optimistic overlay 的形式继续可见，用户仍然会看到重复结果。
+
+因此，任何把新的 canonical frontier `F` 暴露给用户的路径——普通 live delivery、catch-up 后 buffered live delivery、或 reconnect/resync publication——都必须遵守同一个规则：如果新 canonical prefix through `F` 已经包含 identity `(document_id=D, client_change_id=k)` 的 acceptance，而客户端此刻仍有同一个 `(D,k)` 的 speculative overlay，那么该 overlay 必须在 `state@F` 对用户可见之前被移除或 suppress，或者与 frontier publication 在同一个原子可见切换里一起消失。客户端不能先展示 canonical `k`，再异步清理 speculative `k`；是否是同一个 logical edit 依赖稳定的 `client_change_id` identity，而不是比较 raw/canonical payload 是否相同。
+
+```text
+canonical_frontier F newly includes acceptance(D,k)
+AND speculative_overlay(D,k) exists
+    =>
+visible publication of state@F must not contain speculative_overlay(D,k)
+```
+
+这条规则不是 reconnect 特例。下面的 reconnect reconciliation 只是它在 snapshot/catch-up 场景下更复杂的一种实现：除了不能 double-render，还必须处理 response head、unresolved pending identity、stale response 和原子 publication。
 
 ### 5.1 Pending optimistic edit：重连只保证 identity reconciliation，不保证自动 local rebase
 

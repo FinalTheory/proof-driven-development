@@ -442,7 +442,7 @@ construct executions, but it must not invent guarantees absent from its generate
 
 For a runnable node NODE, the clean sub-agent should run:
 
-    python3 correctness.py audit-prompt NODE
+    .venv/bin/python3 correctness.py audit-prompt NODE
 
 and treat that output as its complete audit specification. The clean verifier must not read the
 full correctness.yaml, README, source article, prior audits, mutation history, or sibling-agent
@@ -453,8 +453,8 @@ long-lived orchestrator.
 
 Always start a round with:
 
-    python3 correctness.py validate
-    python3 correctness.py refinement-status --format compact-yaml
+    .venv/bin/python3 correctness.py validate
+    .venv/bin/python3 correctness.py refinement-status --format compact-yaml
 
 Interpret `state` mechanically:
 
@@ -585,20 +585,20 @@ details belong in verifier `intent`, not in newly invented verifier kinds.
 `correctness.yaml` is a closed typed document, not an extensible metadata bag. The canonical graph
 JSON Schema rejects unknown fields and constrains enums/types before graph-semantic validation runs:
 
-    python3 correctness.py graph-schema --format yaml
-    python3 correctness.py graph-schema --format json
+    .venv/bin/python3 correctness.py graph-schema --format yaml
+    .venv/bin/python3 correctness.py graph-schema --format json
 
 For a deduplicated human-readable inventory of every canonical YAML field path, including presence rules, structural constraints, and semantic descriptions:
 
-    python3 correctness.py schema-fields --format text
+    .venv/bin/python3 correctness.py schema-fields --format text
 
 Only system/proof semantics and mutable campaign state belong in the YAML. Tool-intrinsic rules such as bottom-up scheduling, stop-state names, node-prefix meanings, dependency direction, audit interpretation rules, and the signature algorithm are defined by this program and are intentionally not duplicated as editable YAML policy. `id_allocator.next_sequence` remains YAML state because the writer must persist allocation progress.
 
 Agents MUST NOT edit `correctness.yaml` directly. The canonical mutation-plan contract is also
 machine-readable JSON Schema and is available with:
 
-    python3 correctness.py mutation-schema --format yaml
-    python3 correctness.py mutation-schema --format json
+    .venv/bin/python3 correctness.py mutation-schema --format yaml
+    .venv/bin/python3 correctness.py mutation-schema --format json
 
 A long-lived orchestrator should load these schemas once per tooling revision/session and cache them.
 Do not re-read the full schema before every graph mutation; reload it only after correctness tooling
@@ -606,7 +606,7 @@ changes or when a schema mismatch indicates that the cached contract is stale.
 
 Every structured graph/refinement mutation must then enter through:
 
-    python3 correctness.py mutate --plan PLAN.yaml
+    .venv/bin/python3 correctness.py mutate --plan PLAN.yaml
 
 or stdin with `--plan -`. `mutate` validates the plan against the same in-process schema object before
 performing semantic/authority checks, so the displayed schema and the runtime structural contract
@@ -764,7 +764,7 @@ has known refinement work for the exact recursive proof semantics that were audi
 implementation-verification result and not an independent proof-composition certificate. After a
 successful refinement audit, record the current signature:
 
-    python3 correctness.py refinement-signature NODE
+    .venv/bin/python3 correctness.py refinement-signature NODE
 
 Then set:
 
@@ -805,7 +805,7 @@ proof layers. Ordinary proposition changes do not erase assurance records; they 
 
 Read the current assurance envelope with:
 
-    python3 correctness.py assurance-status --format compact-yaml
+    .venv/bin/python3 correctness.py assurance-status --format compact-yaml
 
 The refinement scheduler ignores these assurance levels. A graph can correctly be `COMPLETE` while
 specification coverage is `unaudited`, composition assurance is `unaudited`, and leaf evidence is only
@@ -816,11 +816,11 @@ specification coverage is `unaudited`, composition assurance is `unaudited`, and
 Once refinement is `COMPLETE`, drive architecture-level specification coverage and node-level proof
 composition as separate frozen-DAG campaigns:
 
-    python3 correctness.py coverage-audit-prompt
-    python3 correctness.py composition-status --format compact-yaml
-    python3 correctness.py composition-audit-prompt NODE --focus execution
-    python3 correctness.py composition-audit-prompt NODE --focus quantifier
-    python3 correctness.py composition-audit-prompt NODE --focus premise
+    .venv/bin/python3 correctness.py coverage-audit-prompt
+    .venv/bin/python3 correctness.py composition-status --format compact-yaml
+    .venv/bin/python3 correctness.py composition-audit-prompt NODE --focus execution
+    .venv/bin/python3 correctness.py composition-audit-prompt NODE --focus quantifier
+    .venv/bin/python3 correctness.py composition-audit-prompt NODE --focus premise
 
 `coverage-audit-prompt` generates the canonical global root-coverage campaign and binds it to the current
 model signature. It asks whether an in-scope material failure can still occur assuming all claims,
@@ -895,14 +895,14 @@ or merge them as one leaf.
 
 After an ordinary DAG/workflow-state mutation that does not change correctness tooling, run:
 
-    python3 correctness.py validate
-    python3 correctness.py refinement-status --format compact-yaml
+    .venv/bin/python3 correctness.py validate
+    .venv/bin/python3 correctness.py refinement-status --format compact-yaml
 
 When correctness tooling itself changes, or after a tooling repair, run the stronger gate:
 
-    python3 correctness.py validate
+    .venv/bin/python3 correctness.py validate
     python3 -m unittest -v test_correctness.py
-    python3 correctness.py refinement-status --format compact-yaml
+    .venv/bin/python3 correctness.py refinement-status --format compact-yaml
 
 Never mark planned verifier descriptions as passed evidence. The refinement campaign
 improves the proof DAG; it does not by itself verify production code.
@@ -916,28 +916,28 @@ __HARNESS_FEEDBACK_CONTRACT__
 
 ## 11. Useful commands
 
-    python3 correctness.py --help
-    python3 correctness.py workflow-help
-    python3 correctness.py catalog mechanisms
-    python3 correctness.py catalog semantic_contracts
-    python3 correctness.py catalog terms client_change_id
-    python3 correctness.py graph-schema --format yaml
-    python3 correctness.py schema-fields --format text
-    python3 correctness.py mutation-schema --format yaml
-    python3 correctness.py validate
-    python3 correctness.py refinement-status --format compact-yaml
-    python3 correctness.py refinement-status --format yaml   # full diagnostic view
-    python3 correctness.py assurance-status --format compact-yaml
-    python3 correctness.py assurance-status --format yaml    # full per-node assurance view
-    python3 correctness.py audit-prompt NODE
-    python3 correctness.py coverage-audit-prompt
-    python3 correctness.py composition-status --format compact-yaml
-    python3 correctness.py composition-audit-prompt NODE --focus execution
-    python3 correctness.py mutate --plan PLAN.yaml
-    python3 correctness.py slice NODE --format prompt
-    python3 correctness.py refinement-signature NODE
-    python3 correctness.py invalidate NODE
-    python3 correctness.py render NODE
+    .venv/bin/python3 correctness.py --help
+    .venv/bin/python3 correctness.py workflow-help
+    .venv/bin/python3 correctness.py catalog mechanisms
+    .venv/bin/python3 correctness.py catalog semantic_contracts
+    .venv/bin/python3 correctness.py catalog terms client_change_id
+    .venv/bin/python3 correctness.py graph-schema --format yaml
+    .venv/bin/python3 correctness.py schema-fields --format text
+    .venv/bin/python3 correctness.py mutation-schema --format yaml
+    .venv/bin/python3 correctness.py validate
+    .venv/bin/python3 correctness.py refinement-status --format compact-yaml
+    .venv/bin/python3 correctness.py refinement-status --format yaml   # full diagnostic view
+    .venv/bin/python3 correctness.py assurance-status --format compact-yaml
+    .venv/bin/python3 correctness.py assurance-status --format yaml    # full per-node assurance view
+    .venv/bin/python3 correctness.py audit-prompt NODE
+    .venv/bin/python3 correctness.py coverage-audit-prompt
+    .venv/bin/python3 correctness.py composition-status --format compact-yaml
+    .venv/bin/python3 correctness.py composition-audit-prompt NODE --focus execution
+    .venv/bin/python3 correctness.py mutate --plan PLAN.yaml
+    .venv/bin/python3 correctness.py slice NODE --format prompt
+    .venv/bin/python3 correctness.py refinement-signature NODE
+    .venv/bin/python3 correctness.py invalidate NODE
+    .venv/bin/python3 correctness.py render NODE
 
 The scheduler, not an agent's intuition, decides whether the campaign should continue,
 complete, escalate to a human, or report a workflow stall.
@@ -2906,12 +2906,12 @@ def _emit_coverage_audit_prompt(graph: Graph) -> None:
     print("Bootstrap with:")
     print("```bash")
     print(f"cd {correctness_dir}")
-    print("python3 correctness.py validate")
-    print("python3 correctness.py refinement-status --format compact-yaml")
-    print("python3 correctness.py assurance-status --format compact-yaml")
+    print(".venv/bin/python3 correctness.py validate")
+    print(".venv/bin/python3 correctness.py refinement-status --format compact-yaml")
+    print(".venv/bin/python3 correctness.py assurance-status --format compact-yaml")
     print("```")
     print(f"Read `../{source_article}` for canonical intended semantics. For a root-local check, use")
-    print("`python3 correctness.py slice <ROOT_ID> --format prompt`; stable roots are intentionally inspected via slice,")
+    print("`.venv/bin/python3 correctness.py slice <ROOT_ID> --format prompt`; stable roots are intentionally inspected via slice,")
     print("not refinement `audit-prompt`.")
     print()
     print("## Current roots")
@@ -4051,7 +4051,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Correctness DAG validator, proof slicer, and automated refinement control plane.",
         epilog=(
-            "Agents: run `python3 correctness.py workflow-help` before participating in correctness work. "
+            "Agents: run `.venv/bin/python3 correctness.py workflow-help` before participating in correctness work. "
             "Drive refinement from `refinement-status --format compact-yaml`; after refinement freezes, "
             "drive specification coverage via `coverage-audit-prompt` and proof composition via "
             "`composition-status` / `composition-audit-prompt`. Load `mutation-schema` once per tooling "

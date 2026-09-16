@@ -1102,6 +1102,7 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("TOOLING_BLOCKED", text)
         self.assertIn("refinement-status --format compact-yaml", text)
         self.assertIn("assurance-status --format compact-yaml", text)
+        self.assertIn(".venv/bin/python3 correctness.py", text)
         self.assertIn("NON-NORMATIVE HARNESS FEEDBACK", text)
         self.assertIn("HARNESS FEEDBACK: none", text)
         self.assertIn("`stable` is a refinement-maturity state only", text)
@@ -1444,6 +1445,7 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("all-roots-true execution generator", text)
         self.assertIn("FINAL VERDICT: CLOSED", text)
         self.assertIn("semantic alignment", text)
+        self.assertIn(".venv/bin/python3 correctness.py validate", text)
 
     def test_coverage_audit_prompt_requires_refinement_complete(self):
         with self.assertRaises(SystemExit) as ctx:
