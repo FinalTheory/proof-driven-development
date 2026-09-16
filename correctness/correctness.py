@@ -1231,6 +1231,7 @@ def _node_semantic_signature(
 
 
 ASSURANCE_SEMANTICS_VERSION = "1"
+COVERAGE_AUDIT_SEMANTICS_VERSION = "2"
 
 
 def _node_proposition_signature(graph: Graph, node_id: str) -> str:
@@ -1312,6 +1313,7 @@ def _model_semantic_signature(graph: Graph) -> str:
     failure_events = catalog.get("failure_events", {}) if isinstance(catalog, dict) else {}
     payload = {
         "assurance_semantics_version": ASSURANCE_SEMANTICS_VERSION,
+        "coverage_audit_semantics_version": COVERAGE_AUDIT_SEMANTICS_VERSION,
         "proof_semantics_version": PROOF_SEMANTICS_VERSION,
         "roots": [
             {"id": root_id, "signature": _node_semantic_signature(graph, root_id, memo)}
@@ -2935,6 +2937,7 @@ def _emit_coverage_audit_prompt(graph: Graph) -> None:
     print("# Final root-coverage / specification-completeness audit")
     print()
     print(f"Model signature: `{assurance['model_signature']}`")
+    print(f"Coverage-audit semantics: `{COVERAGE_AUDIT_SEMANTICS_VERSION}`")
     print(f"Refinement state: `{refinement['state']}`")
     print()
     print("You are the long-lived orchestrator for an architecture-level adversarial audit of the current model.")

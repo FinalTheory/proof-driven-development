@@ -552,14 +552,36 @@ CATALOG_SCHEMA = _closed_object(
                                     "properties": {"class": {"const": "state_invariant"}},
                                     "required": ["class"],
                                 },
-                                "then": {"required": ["state_symbols", "observation_scope"]},
+                                "then": {
+                                    "required": ["state_symbols", "observation_scope"],
+                                    "not": {"anyOf": [{"required": ["source_symbols"]}, {"required": ["bound_symbols"]}]},
+                                },
                             },
                             {
                                 "if": {
                                     "properties": {"class": {"const": "provenance_binding"}},
                                     "required": ["class"],
                                 },
-                                "then": {"required": ["source_symbols", "bound_symbols"]},
+                                "then": {
+                                    "required": ["source_symbols", "bound_symbols"],
+                                    "not": {"anyOf": [{"required": ["state_symbols"]}, {"required": ["observation_scope"]}]},
+                                },
+                            },
+                            {
+                                "if": {
+                                    "properties": {"class": {"enum": ["safety_contract", "equivalence_relation"]}},
+                                    "required": ["class"],
+                                },
+                                "then": {
+                                    "not": {
+                                        "anyOf": [
+                                            {"required": ["state_symbols"]},
+                                            {"required": ["observation_scope"]},
+                                            {"required": ["source_symbols"]},
+                                            {"required": ["bound_symbols"]},
+                                        ]
+                                    }
+                                },
                             },
                         ]
                     },

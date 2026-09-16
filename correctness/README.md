@@ -426,6 +426,8 @@ A5 applying a canonical accepted sequence is deterministic
 同样，`refinement.status: stable` 只表示 proposition/decomposition 已经收敛。non-leaf 的 `dependencies ⇒ target` 可信度由 `assurance.composition` 单独记录；全局 root universe 是否完整由 `assurance.specification_coverage` 单独记录。三类 assurance 与 refinement scheduler 正交。
 
 Refinement 完成后有两条独立的 reasoning certification pipeline。`coverage-audit-prompt` 生成全局 root-coverage/specification-completeness campaign：假设整个 DAG 都成立，继续寻找 scope 内的 material failure，并检查 root/scope/assumption 是否相对 canonical design 发生了语义缩窄。Coverage 在自由形式 scouts 之前必须先跑一次 semantic-closure pre-pass：一条检查设计级 state relations 是否被建模成真正的 inductive `state_invariant`（而不是若干 named event guarantee），另一条检查有语义的 token/state 是否有 producer/source/capture/consumer 闭包并在需要时由 `provenance_binding` 明确定义。`composition-status` 则列出所有尚未达到至少 `multi_agent_audited` 的 root/derived nodes；对每个 node，`composition-audit-prompt NODE --focus ...` 只暴露 target 与 direct premises，不递归打开 grandchildren。推荐的 focus 是 `execution`、`quantifier`、`premise`，maximal root 额外使用 `general` 作为第四个独立攻击视角。
+Coverage audit semantics have their own tooling version and participate in the global model/coverage signature. Strengthening the coverage campaign itself therefore invalidates an older `closed`/`gap_found` coverage result even when the modeled system has not changed, without reopening local refinement or composition signatures whose proposition semantics are unchanged.
+
 
 Composition campaign 的终止条件不是“每个 node 至少问过一个 agent”，而是所有 non-leaf 都达到当前有效的 `multi_agent_audited` 或 `machine_checked`。任何 surviving `deps=true,target=false` counterexample 都必须先被 challenger 尝试击杀，再由 orchestrator 判断是否需要修改 DAG。
 

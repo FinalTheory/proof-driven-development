@@ -825,6 +825,25 @@ class CorrectnessToolTests(unittest.TestCase):
         errors, _ = correctness.validate(correctness.Graph(doc))
         self.assertTrue(any("unknown semantic symbol 'missing_state_symbol'" in e for e in errors))
 
+    def test_semantic_contract_specialized_fields_are_class_specific(self):
+        doc = copy.deepcopy(self.base)
+        doc["catalog"]["semantic_contracts"]["synthetic_safety_contract"]["state_symbols"] = ["synthetic_state"]
+        errors, _ = correctness.validate(correctness.Graph(doc))
+        self.assertTrue(any("synthetic_safety_contract" in error for error in errors))
+
+        doc = copy.deepcopy(self.base)
+        doc["catalog"]["semantic_contracts"]["synthetic_state_invariant"] = {
+            "class": "state_invariant",
+            "definition": "Synthetic state invariant.",
+            "state_symbols": ["synthetic_state"],
+            "observation_scope": "all_reachable_states",
+            "source_symbols": ["synthetic_state"],
+            "excludes": [],
+            "automation_reusable": True,
+        }
+        errors, _ = correctness.validate(correctness.Graph(doc))
+        self.assertTrue(any("synthetic_state_invariant" in error for error in errors))
+
     def test_provenance_binding_contract_requires_typed_source_and_bound_symbols(self):
         doc = copy.deepcopy(self.base)
         doc["catalog"]["semantic_contracts"]["synthetic_binding"] = {
@@ -1307,6 +1326,22 @@ class CorrectnessToolTests(unittest.TestCase):
         doc["claims"]["L1_left_boundary"]["statement"] = "Changed left boundary semantics."
         snapshot = correctness._assurance_snapshot(correctness.Graph(doc))
         self.assertEqual(snapshot["implementation_evidence"]["L1_left_boundary"]["effective"], "stale")
+
+    def test_coverage_audit_semantics_version_only_invalidates_model_coverage_signature(self):
+        doc = copy.deepcopy(self.base)
+        graph = correctness.Graph(doc)
+        node_sig_before = correctness._node_semantic_signature(graph, "L1_left_boundary")
+        model_sig_before = correctness._model_semantic_signature(graph)
+        old_version = correctness.COVERAGE_AUDIT_SEMANTICS_VERSION
+        try:
+            correctness.COVERAGE_AUDIT_SEMANTICS_VERSION = old_version + "-changed"
+            self.assertEqual(
+                correctness._node_semantic_signature(graph, "L1_left_boundary"),
+                node_sig_before,
+            )
+            self.assertNotEqual(correctness._model_semantic_signature(graph), model_sig_before)
+        finally:
+            correctness.COVERAGE_AUDIT_SEMANTICS_VERSION = old_version
 
     def test_specification_coverage_becomes_stale_when_design_article_changes(self):
         with tempfile.TemporaryDirectory() as tmp:
