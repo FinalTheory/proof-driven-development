@@ -626,19 +626,21 @@ refinement:
     L111_accepted_key_classification_requires_committed_acceptance:
       status: stable
       blocked_by: []
-      rationale: 'GOOD_LEAF: accepted-key evidence soundness is one localized authoritative idempotency/acceptance-transaction
-        state-machine property; provisional versus accepted evidence and crash boundaries can be checked
-        mechanically without further proof decomposition.'
-      signature: 05e42fd0a954171a727b5ca4bd937054b1ec4a6a2db20b413407607fcf7a2ddc
+      rationale: 'GOOD_LEAF. The proposition remains one bounded idempotency-evidence state machine: on
+        the hot path, accepted semantics are tied mechanically to the acceptance transaction or committed
+        accepted row; after compaction, replacement accepted evidence must be derived from a prior committed
+        acceptance. One localized state-machine/fault-injection verifier can decide the complete proposition
+        without reconstructing parent retry semantics.'
+      signature: 44c711494b82e87c443f9074cbe0e6229901e2412a3f42cb7f848b0da10e3d81
     G9_accepted_idempotency_evidence_matches_committed_acceptance:
       status: stable
       blocked_by: []
-      rationale: "SUPPORTED: L14 supplies the acceptance-to-durable-evidence direction while the identity
-        can still influence acceptance/retry, L111 supplies the converse soundness that accepted evidence
-        implies a real committed acceptance for the same identity, and C13 supplies at-most-one uniqueness;
-        together they establish the root's exactly-one accepted-evidence equivalence while excluding provisional
-        reservation state."
-      signature: ae8ded89e42d1e9b2cea025f8aaf2819b583fe06ed93add70fefa63fec249122
+      rationale: "SUPPORTED. L111 proves accepted-evidence soundness and makes the hot-path correspondence
+        concrete through the same acceptance transaction or the committed accepted row itself. L14 proves
+        the converse persistence direction while the key remains relevant, including lifecycle replacement.
+        C13 supplies uniqueness, so the durable already-accepted evidence corresponds to exactly one committed
+        canonical acceptance."
+      signature: 28a2c454ea958bede7406bf207fe0b18bc7f9958cd96a4229a785f015466f80a
 assumptions:
   A1_storage_commit_is_durable:
     statement: A successful authoritative-store commit remains recoverable across the server-process
@@ -2626,13 +2628,17 @@ claims:
       - L108_acceptance_preserves_request_identity
       - L110_client_retires_matching_speculative_overlay_before_canonical_publication
   L111_accepted_key_classification_requires_committed_acceptance:
-    statement: Whenever authoritative durable idempotency or retry-resolution evidence for identity
-      (document_id=D, client_change_id=k) is interpreted by the protocol as meaning that (D,k) is
-      already accepted, authoritative canonical history contains a committed canonical acceptance
-      identified by the same (D,k). Reservation, in-progress arbitration, pre-commit ownership, or
-      other provisional state cannot serve as accepted evidence; any durable evidence carrying
-      already-accepted semantics is either derived from the committed canonical acceptance itself or
-      becomes durable in the same acceptance transaction as that canonical commit.
+    statement: On the normal acceptance path, authoritative durable state may acquire protocol
+      semantics already-accepted(D,k) for identity (document_id=D, client_change_id=k) only if the
+      matching canonical acceptance(D,k) commits. If the committed accepted row / unique identity
+      itself is the idempotency success evidence, that committed row is the evidence; if a separate
+      hot-path accepted-key record or index exists, that record and the canonical acceptance must
+      commit or abort in the same acceptance transaction. Reservation, in-progress arbitration,
+      pre-commit ownership, or other provisional state cannot serve as accepted evidence. After
+      accepted-history compaction, replacement evidence may be derived only from a previously
+      committed acceptance for the same (D,k), never from a never-committed attempt. An aborted,
+      timed-out, or cancelled attempt with no committed acceptance need not create a terminal
+      failure record and cannot by itself make (D,k) already accepted.
     severity: critical
     assurance_required: maximal
     source_refs:
@@ -2651,24 +2657,32 @@ claims:
     verification:
       verifiers:
         - kind: state_machine
-          intent: Explore reservation, arbitration, acceptance commit, crash, rollback, retry, and
-            recovery transitions; require every state observed as already-accepted(D,k) to have a
-            committed canonical acceptance(D,k), and require pre-commit or aborted reservation
-            states to remain distinguishable from accepted.
+          intent: Explore first submission, existing-key retry, reservation, arbitration,
+            transaction begin/commit/rollback, crash, timeout, cancellation, recovery, and
+            compaction transitions. Require every state interpreted as already-accepted(D,k) to be
+            either the committed canonical accepted row/identity itself, a separate record that
+            committed atomically with that acceptance, or lifecycle replacement evidence derived
+            from a prior committed acceptance; pre-commit and aborted states remain distinguishable
+            from accepted.
         - kind: fault_injection
-          intent: Crash or abort at every boundary between idempotency arbitration/evidence writes
-            and canonical acceptance commit; after recovery, assert that no durable already-accepted
-            classification survives unless the matching canonical acceptance committed.
+          intent: Crash or abort before, during, and after the acceptance transaction and around any
+            separate accepted-key evidence write. After recovery, assert that canonical
+            acceptance(D,k) and any hot-path already-accepted evidence either both committed or both
+            did not commit; a timeout/cancellation without committed acceptance must not leave a
+            phantom accepted marker.
     kind: leaf
   G9_accepted_idempotency_evidence_matches_committed_acceptance:
     statement: For every (document_id=D, client_change_id=k) while an execution carrying that
       identity may still reach acceptance or retry-resolution logic, authoritative state contains
       durable accepted-key evidence whose protocol meaning is already-accepted(D,k) if and only if
       canonical history contains exactly one committed canonical acceptance identified by the same
-      (D,k). Lifecycle compaction may change the physical evidence representation but cannot create
-      already-accepted evidence without a real acceptance or erase the non-reusable accepted
-      evidence while the key can still reach acceptance; reservation or in-progress arbitration
-      state is not accepted evidence.
+      (D,k). On the normal hot path this correspondence is established either because the committed
+      accepted row / unique identity itself is the success evidence, or because any separate
+      accepted-key success record commits and aborts atomically with the canonical acceptance in the
+      same acceptance transaction. Lifecycle compaction may replace the physical evidence only by
+      deriving equivalent evidence from a previously committed acceptance; reservation, in-progress
+      arbitration, timeout, cancellation, or another non-committed attempt is not accepted evidence
+      and need not create a terminal failure record.
     severity: critical
     assurance_required: maximal
     source_refs:

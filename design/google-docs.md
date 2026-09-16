@@ -110,6 +110,12 @@ unacked = retryable
 
 因此，对于协议仍可能查询的 idempotency identity，`accepted` evidence 与 canonical acceptance 的关系不是单向的“接受以后记住 key”，而是事实对应关系：evidence 不能漏掉真实 acceptance，也不能凭空制造不存在的 acceptance。
 
+在正常 hot path 上，最简单的实现其实不需要第二套“成功状态表”：`accepted_changes` 中带 `UNIQUE (document_id, client_change_id)` 的 committed row 本身就可以同时作为 canonical acceptance 和 idempotency success evidence。若实现为了查询或生命周期管理另外维护 accepted-key index，那么该 index 不能成为独立 truth；它必须与 canonical append 在同一个数据库 acceptance transaction 中一起 commit 或一起 rollback。也就是说，事务提交以后可以观察到“canonical acceptance + accepted evidence”，事务未提交或 abort 后只能观察到“两者都没有”，不能留下一个 phantom `already accepted` marker。
+
+这里也不要求每一次失败 attempt 都持久化 terminal `FAILED`。timeout、crash-before-commit、cancellation 等只说明本次 attempt 没有得到确定的 committed success；只要不存在 committed canonical acceptance / accepted evidence，同一个 logical edit 仍可按原 `client_change_id` 重试。只有未来协议显式引入“可重放的永久 rejection”时，才需要把 terminal rejection 作为另一类 durable outcome 建模。
+
+history compaction 是这个简单关系唯一会发生物理表示变化的地方：原始 accepted row 可以被压缩，但替代它的 tombstone / idempotency index 只能从已经 committed 的 acceptance 派生，并继续代表同一个 `(document_id, client_change_id)` 的既有事实，而不能成为新的 acceptance source of truth。
+
 这和 Raft 里 client retry 的问题非常相似。client command 被 leader 收到，不代表 committed；只有进入 committed log 后，状态机才应该把它当作事实。ACK 丢失不应该导致 command 重复生效。
 
 Google Docs 里也是一样。客户端 raw edit 被 OT owner 收到，不代表 accepted。只有 accepted-change-set log commit 成功，才是系统事实。
@@ -631,7 +637,14 @@ INSERT INTO accepted_changes (
   transformed_change
 )
 VALUES (...)
-ON CONFLICT DO NOTHING;
+ON CONFLICT DO NOTHING
+RETURNING revision;
+
+-- only the transaction that actually inserted this acceptance may advance the frontier
+-- if INSERT returned 0 rows because (document_id, client_change_id) already exists:
+--     ROLLBACK and return the existing canonical acceptance
+-- if INSERT returned 0 rows because the revision lost arbitration:
+--     ROLLBACK and retry / retransform as appropriate
 
 UPDATE documents
 SET latest_revision = $revision
@@ -639,12 +652,12 @@ WHERE document_id = $doc_id
   AND owner_epoch = $epoch
   AND latest_revision = $revision - 1;
 
--- application must check affected rows
--- if UPDATE rowcount = 0: ROLLBACK and return fenced/conflict
+-- require UPDATE rowcount = 1
+-- otherwise ROLLBACK and return fenced/conflict
 COMMIT;
 ```
 
-这段 SQL 在文中是简化表达，关键约束是：`UPDATE` 必须命中 1 行才允许提交；若命中 0 行，应用层必须中止事务，避免出现“fencing 失败但 accepted change 已落库”。
+这段 SQL 在文中仍是简化表达，但事务成功必须同时满足两个局部事实：`INSERT ... RETURNING` 确认当前 attempt 确实创建了这一条 canonical acceptance，随后 `UPDATE` 也必须恰好命中 1 行。任一条件失败都不能提交。这样 `(document_id, client_change_id)` 的 committed accepted row 本身就可以作为 hot-path idempotency success evidence；如果另有 accepted-key index，它也必须放进同一个事务，使 canonical append、accepted evidence 和 frontier advance 一起 commit 或一起 rollback。不能出现 `INSERT` 因 conflict 实际没有创建 acceptance，却仍然推进 `latest_revision` 的半成功状态。
 
 更干净的 schema 是把顺序和幂等约束放进同一张表：
 
