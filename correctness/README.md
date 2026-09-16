@@ -177,6 +177,8 @@ The catalog is also the architecture/semantic-synthesis boundary. Automation may
 
 `surfaces` and `verifier_kinds` are likewise closed taxonomies. Scenario-specific detail belongs in verifier `intent`, not in a newly invented verifier type.
 
+`transaction_atomicity` is the narrow verifier kind for leaves whose local proof boundary is an actual database transaction commit/rollback boundary. It establishes only all-or-nothing coupling of the authoritative writes or success evidence named by the leaf. It does **not** by itself prove uniqueness, conditional-guard correctness, isolation/serialization, or higher-level protocol ordering; those still require `schema_constraint`, state-machine, control-flow, or other evidence as appropriate. Do not use this verifier merely because an execution path happens to run inside a transaction.
+
 Global system context is no longer stored in a generic `reasoning_context` prose bag. Schema 0.7 gives the semantically relevant pieces explicit homes:
 
 ```yaml

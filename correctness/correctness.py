@@ -84,6 +84,7 @@ AUDIT_INTERPRETATION_RULES = (
 LEAF_STOPPING_SIGNALS: dict[str, str] = {
     "deterministic_transition": "The complete proposition is a pure-function or deterministic state-transition property with explicit inputs and a mechanically checkable output relation.",
     "schema_constraint": "A database/schema/type constraint can directly establish the complete proposition from authoritative implementation metadata.",
+    "transaction_atomicity": "One localized database transaction boundary can directly establish all-or-nothing coupling of the authoritative writes or success evidence named by the proposition; this signal does not by itself establish uniqueness, predicate correctness, or concurrency serialization.",
     "control_flow": "A localized control-flow dominance, reachability, or ordering analysis can decide the complete proposition.",
     "static_dataflow": "A localized static dataflow, provenance, or taint analysis can decide the complete proposition.",
     "bounded_state_machine": "A bounded state-machine/model checker can decide the complete proposition without reconstructing the parent protocol.",

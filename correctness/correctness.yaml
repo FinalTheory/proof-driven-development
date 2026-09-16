@@ -176,33 +176,38 @@ refinement:
     G0_acked_edit_survives_failover:
       status: stable
       blocked_by: []
-      signature: cbbdaf6fb103e613e2a5fb85b1307fb04077721a46e9082d1aee416a8cce039e
+      rationale: Verification-plan metadata was refined to expose the existing transaction proof
+        basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
+        decomposition maturity is preserved under the new semantic signature.
+      signature: 1f2c77e72c8a22cea9a93d1f2af96bf41c784870e2404da1514437e632fc4ec3
     G1_retry_is_logically_exactly_once:
       status: stable
       blocked_by: []
-      rationale: Retry identity stability gives one client_change_id for the logical edit, exact
-        request-to-acceptance identity preservation binds every acceptance back to that same key,
-        and temporal key uniqueness permits at most one canonical acceptance for it.
-      signature: 9f8b6f69bc47e22625d4aa30c2eb6f6bf8e0f0cf95bc9a072da45f63eedd2ff1
+      rationale: Verification-plan metadata was refined to expose the existing transaction proof
+        basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
+        decomposition maturity is preserved under the new semantic signature.
+      signature: 3b2a0ed2c0aee1ae6b9306e5175b086643b33701363dea73b9b1bc18d8a6578f
     G2_canonical_history_is_linear_and_fenced:
       status: stable
       blocked_by: []
-      rationale: C7 exactly proves the single gap-free history conjunct and C8 exactly proves
-        stale-owner fencing; C6 is redundant at this level and L18 concerns payload semantics not
-        the root's structural wording.
-      signature: 5252d1896ae098d11abfc127b573cbaf95f64be21f089c683c15dee360c926d0
+      rationale: Verification-plan metadata was refined to expose the existing transaction proof
+        basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
+        decomposition maturity is preserved under the new semantic signature.
+      signature: 52684bfbc6bf11808ff366d22d61d6c29b77b3810aa1f0c9e4d72f8037c194ad
     G3_snapshot_and_recovery_preserve_state:
       status: stable
       blocked_by: []
-      signature: 8708f225883c862ab320237b6df5b88b2464e0f1b31bd3bd91adfcb820d613da
+      rationale: Verification-plan metadata was refined to expose the existing transaction proof
+        basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
+        decomposition maturity is preserved under the new semantic signature.
+      signature: bf11993c6b36a9c8204305437a158a958628ebe777c1c8c00a610495dd54c397
     G4_reconnect_converges_without_gap_or_duplicate:
       status: stable
       blocked_by: []
-      rationale: "SUPPORTED: existing catch-up representation/continuity obligations establish canonical
-        replay through H, while narrowed L109 supplies exactly the atomic and monotonic resync-publication
-        semantics stated by G4; speculative-overlay retirement is intentionally outside this root's canonical-state
-        proposition."
-      signature: 0b1c86b740f01240a6c1951d31494be09f2804030f1ce1d688b7d54bea311c5b
+      rationale: "Verification-plan metadata was refined to expose the existing transaction proof basis;
+        proposition text, dependencies, and architecture semantics are unchanged, so prior decomposition
+        maturity is preserved under the new semantic signature."
+      signature: ffe373bb8c036d8f640030771ec443408e37d82a356e43e87a465089ac5c941e
     L16_commit_precedes_ack:
       status: stable
       blocked_by: []
@@ -216,32 +221,31 @@ refinement:
     G5_retry_resolves_idempotently:
       status: stable
       blocked_by: []
-      rationale: The retry-resolution case split is exhaustive and already bounds every successful
-        path; request-to-acceptance identity preservation closes the previously missing bridge from
-        the logical edit's stable client_change_id to the authoritative accepted identity used by
-        those paths.
-      signature: 46f116721d8d069e7198e8ebdb1522f2ce0b61c2a0de181984e587344b670de2
+      rationale: Verification-plan metadata was refined to expose the existing transaction proof
+        basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
+        decomposition maturity is preserved under the new semantic signature.
+      signature: f0ffa587f011bb04294146e56606b85670693f81ce1ee986e475fdce863b660d
     C7_revision_frontier_is_linear:
       status: stable
       blocked_by: []
-      rationale: Initialization establishes the prefix; every append preserves it, adds exactly the
-        next revision, atomically sets the matching frontier, and lifecycle transitions preserve the
-        invariant.
-      signature: 3bf3abc245b9723812874c70735f4021205c961797fc2d48346a2b8f76696f31
+      rationale: Verification-plan metadata was refined to expose the existing transaction proof
+        basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
+        decomposition maturity is preserved under the new semantic signature.
+      signature: 57bd74e1fd4b9533cbce9023c00cfd6d7a3ecc1bf3ee9c8e92f82994c49c2670
     C8_stale_owner_is_fenced:
       status: stable
       blocked_by: []
-      rationale: L5 requires commit-time equality with the authoritative epoch and L28 prevents any
-        superseded older epoch from becoming authoritative again.
-      signature: 24b15032847cdfaccdfad5c7be37bfd9d73046e206c5798b86201fd4e4cc5fab
+      rationale: Verification-plan metadata was refined to expose the existing transaction proof
+        basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
+        decomposition maturity is preserved under the new semantic signature.
+      signature: 367656f54fb6eb9a6aefcb9992cc3c21959b8dc32fb0465636fa88494af020b7
     C9_recovery_reconstructs_committed_state:
       status: stable
       blocked_by: []
-      rationale: Epoch handoff and fencing stabilize authoritative H; exact authoritative checkpoint
-        plus deterministic exact-tail replay reconstructs document state through H; metadata and
-        local frontier are rebuilt from truth while lifecycle lock continuity and the acceptance
-        barrier close interleavings.
-      signature: 56adec1d654572b7fe493365015d95ad53dec34f60e09b9ae30a2160c63e7075
+      rationale: Verification-plan metadata was refined to expose the existing transaction proof
+        basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
+        decomposition maturity is preserved under the new semantic signature.
+      signature: 8d4f98170bafa832ab866672f5f612511f9fc536098837f35ea8926dd490faad
     C10_catchup_represents_exact_missing_suffix:
       status: stable
       blocked_by: []
@@ -268,10 +272,10 @@ refinement:
     C13_idempotency_key_is_temporally_unique:
       status: stable
       blocked_by: []
-      rationale: Concurrent first acceptance is excluded by L27 and every later reacceptance by
-        persistent gate identity plus acceptance-path mediation; snapshot record uniqueness is
-        redundant.
-      signature: fc1f4fdcd203533809fd9374eb4bce581fef67e30525c50fe80b59b0bfa52d23
+      rationale: Verification-plan metadata was refined to expose the existing transaction proof
+        basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
+        decomposition maturity is preserved under the new semantic signature.
+      signature: aac85767b8923a0a51eb4458dbba43c748a5e280b26aeb613f857f5c96897219
     L14_accepted_idempotency_identity_survives_lifecycle:
       status: stable
       blocked_by: []
@@ -286,18 +290,24 @@ refinement:
     L4_append_requires_previous_frontier:
       status: stable
       blocked_by: []
-      rationale: Commit-time predecessor-frontier predicate is one localized transaction invariant.
-      signature: ab8a27fff6b9ef61f01cbb4296e91058173115aa204fd6b6a63c9ef27d13b9f8
+      rationale: Verification-plan metadata was refined to expose the existing transaction proof
+        basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
+        decomposition maturity is preserved under the new semantic signature.
+      signature: 6fdb61b62fe7e6e8774a43566fcbc77d8ca8dd9fbfa2409499d37bcbb55c852f
     L5_append_requires_current_epoch:
       status: stable
       blocked_by: []
-      rationale: Commit-time epoch equality is one localized authoritative append predicate.
-      signature: 4c898dd1d798af7dea37d24e5d1598abd444929d1f624746af6f4d54c5ae9d38
+      rationale: Verification-plan metadata was refined to expose the existing transaction proof
+        basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
+        decomposition maturity is preserved under the new semantic signature.
+      signature: bc497a2288e6b35d0f39cdbbde96d28ebd1cefa1c84808f77e5468026eac7321
     L6_frontier_advance_and_insert_commit_together:
       status: stable
       blocked_by: []
-      rationale: Insert/frontier atomicity is one localized transaction boundary.
-      signature: bffef8f5279acb489d2f495982d44ff96e9d5201d9cc06046a7c3d82acd7d58c
+      rationale: Verification-plan metadata was refined to expose the existing transaction proof
+        basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
+        decomposition maturity is preserved under the new semantic signature.
+      signature: cd42e0b0e77f0e52c68a90f5ab8a9d557a160f992942e1fd21e38b0ec75f0193
     L8_snapshot_is_exact_committed_prefix:
       status: stable
       blocked_by: []
@@ -363,9 +373,10 @@ refinement:
     L27_concurrent_first_acceptance_is_atomically_arbitrated:
       status: stable
       blocked_by: []
-      rationale: Concurrent absent-key arbitration is one localized atomic check-and-create
-        invariant.
-      signature: 40bb19737118c611b24e92da2c8fd23dbc6725322853f3ae75fb831914470963
+      rationale: Verification-plan metadata was refined to expose the existing transaction proof
+        basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
+        decomposition maturity is preserved under the new semantic signature.
+      signature: c8c98d72251d8a32fa699932307969d45da4fddf860d58ccda72fd9c6d62c829
     L28_authoritative_epoch_never_regresses_or_reuses:
       status: stable
       blocked_by: []
@@ -393,9 +404,10 @@ refinement:
     L31_committed_append_sets_frontier_to_revision:
       status: stable
       blocked_by: []
-      rationale: Exact equality between the committed append revision and immediate post-state
-        frontier is one localized transaction postcondition.
-      signature: 8e14e660f7f5ef628cb0db99adfdb8d818006b0788618c0fd58dba9608b8e6b6
+      rationale: Verification-plan metadata was refined to expose the existing transaction proof
+        basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
+        decomposition maturity is preserved under the new semantic signature.
+      signature: 2fcbc53f82c0946e9ee01632814f9a717bc2823df137f110f7ed0f6b8a5add43
     L32_catchup_selects_complete_mode_for_response_head:
       status: stable
       blocked_by: []
@@ -535,10 +547,10 @@ refinement:
     G6_accepted_change_preserves_ot_semantics:
       status: stable
       blocked_by: []
-      rationale: Exact OT input/context binding, frontier binding, exclusive successful-output
-        provenance, algorithm correctness, and exact request-identity preservation jointly establish
-        payload, context, and protocol-identity provenance for every canonical acceptance.
-      signature: 424935b865af54aad84d952c36742399fe05e6b2b4ab9128e7758b33dce3e6cd
+      rationale: Verification-plan metadata was refined to expose the existing transaction proof
+        basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
+        decomposition maturity is preserved under the new semantic signature.
+      signature: 7e43c45c203c0f3c1005131af0dcec9382f4033aca6c67b94ab8c66bb61da498
     L98_ot_receives_exact_request_and_canonical_context:
       status: stable
       blocked_by: []
@@ -546,7 +558,10 @@ refinement:
     L99_ot_result_is_bound_to_acceptance_frontier:
       status: stable
       blocked_by: []
-      signature: e6d8df497cac0b5e6fc8ab81ab7c23aeee51276db1e40092f280f13613c7e3aa
+      rationale: Verification-plan metadata was refined to expose the existing transaction proof
+        basis; proposition text, dependencies, and architecture semantics are unchanged, so prior
+        decomposition maturity is preserved under the new semantic signature.
+      signature: 7af2df661dfaf277aa6198cd43b02b0f51e9ce98548b771cec68e859c6442b97
     L100_acceptance_commits_only_ot_success_output:
       status: stable
       blocked_by: []
@@ -626,21 +641,17 @@ refinement:
     L111_accepted_key_classification_requires_committed_acceptance:
       status: stable
       blocked_by: []
-      rationale: 'GOOD_LEAF. The proposition remains one bounded idempotency-evidence state machine: on
-        the hot path, accepted semantics are tied mechanically to the acceptance transaction or committed
-        accepted row; after compaction, replacement accepted evidence must be derived from a prior committed
-        acceptance. One localized state-machine/fault-injection verifier can decide the complete proposition
-        without reconstructing parent retry semantics.'
-      signature: 44c711494b82e87c443f9074cbe0e6229901e2412a3f42cb7f848b0da10e3d81
+      rationale: 'Verification-plan metadata was refined to expose the existing transaction proof basis;
+        proposition text, dependencies, and architecture semantics are unchanged, so prior decomposition
+        maturity is preserved under the new semantic signature.'
+      signature: 502c78bebefd2523be5de953e561ffb51850d10c479293b837077ca7cf50b978
     G9_accepted_idempotency_evidence_matches_committed_acceptance:
       status: stable
       blocked_by: []
-      rationale: "SUPPORTED. L111 proves accepted-evidence soundness and makes the hot-path correspondence
-        concrete through the same acceptance transaction or the committed accepted row itself. L14 proves
-        the converse persistence direction while the key remains relevant, including lifecycle replacement.
-        C13 supplies uniqueness, so the durable already-accepted evidence corresponds to exactly one committed
-        canonical acceptance."
-      signature: 28a2c454ea958bede7406bf207fe0b18bc7f9958cd96a4229a785f015466f80a
+      rationale: "Verification-plan metadata was refined to expose the existing transaction proof basis;
+        proposition text, dependencies, and architecture semantics are unchanged, so prior decomposition
+        maturity is preserved under the new semantic signature."
+      signature: 4bf96f4c3b5717c86f430ed5f4e743f222b724ba0484d3ad5008871e33ec9b9f
 assumptions:
   A1_storage_commit_is_durable:
     statement: A successful authoritative-store commit remains recoverable across the server-process
@@ -1108,6 +1119,11 @@ claims:
       - revision_frontier
     verification:
       verifiers:
+        - kind: transaction_atomicity
+          intent: Inspect the acceptance transaction and require the canonical append plus
+            conditional latest_revision == r - 1 frontier update to share one commit/rollback
+            boundary; if the guard updates zero rows, the transaction aborts so no accepted row can
+            commit.
         - kind: integration_test
           intent: Stale or skipped-frontier appends fail without partial commit.
         - kind: state_machine
@@ -1133,6 +1149,11 @@ claims:
       - ownership
     verification:
       verifiers:
+        - kind: transaction_atomicity
+          intent: Inspect the acceptance transaction and require the canonical append plus
+            conditional owner_epoch == document_current_epoch guard to share one commit/rollback
+            boundary; a failed epoch guard aborts the transaction so no stale-owner accepted row can
+            commit.
         - kind: fault_injection
           intent: Old owner resumes after takeover and every append is rejected downstream.
         - kind: state_machine
@@ -1157,6 +1178,10 @@ claims:
       - accepted_history_store
     verification:
       verifiers:
+        - kind: transaction_atomicity
+          intent: Inspect the acceptance transaction boundary and prove the accepted-change insert
+            and authoritative frontier update are committed by the same database transaction, with
+            rollback/crash leaving neither authoritative effect visible.
         - kind: fault_injection
           intent: Abort/crash at each transaction boundary; no torn acceptance state is observable.
     source_refs:
@@ -1448,6 +1473,16 @@ claims:
       - accepted_history_store
     verification:
       verifiers:
+        - kind: transaction_atomicity
+          intent: Inspect the concurrent acceptance transaction path and prove a losing contender
+            cannot retain any partial accepted state after UNIQUE(document_id, client_change_id) or
+            equivalent arbitration rejects its create attempt; transaction rollback removes all
+            loser-side authoritative writes.
+        - kind: schema_constraint
+          intent: Inspect the authoritative accepted-change/idempotency schema and require
+            UNIQUE(document_id, client_change_id) or an equivalent database constraint so two
+            concurrent first-acceptance transactions for the same identity cannot both create
+            canonical accepted rows.
         - kind: state_machine
           intent: Explore lookup, reservation, insert, commit, conflict, and retry interleavings
             from an absent key; at most one create outcome may occur.
@@ -1579,6 +1614,10 @@ claims:
       - revision_frontier
     verification:
       verifiers:
+        - kind: transaction_atomicity
+          intent: Inspect the acceptance transaction postcondition and require every committed
+            accepted-change row at revision r to commit together with the authoritative frontier
+            assignment latest_revision = r; rollback leaves neither post-state visible.
         - kind: state_machine
           intent: Explore successful appends and assert that the committed authoritative frontier
             equals the appended revision exactly, including conflict, retry, and failover
@@ -2293,6 +2332,11 @@ claims:
       - acceptance_transaction
     verification:
       verifiers:
+        - kind: transaction_atomicity
+          intent: Inspect the acceptance transaction and require the OT computation frontier N to be
+            checked by the same transaction that would commit the transformed result; if
+            latest_revision != N, the transaction cannot commit any canonical acceptance for that
+            stale result.
         - kind: state_machine
           intent: Explore transform/commit races where another acceptance advances latest_revision
             after OT computation; require a result computed at frontier N to commit only as N+1
@@ -2656,6 +2700,10 @@ claims:
       - accepted_history_log
     verification:
       verifiers:
+        - kind: transaction_atomicity
+          intent: Inspect the acceptance transaction and prove any separate hot-path
+            already-accepted success evidence for (D,k) commits or aborts atomically with the
+            canonical acceptance(D,k); crash or rollback cannot leave one durable without the other.
         - kind: state_machine
           intent: Explore first submission, existing-key retry, reservation, arbitration,
             transaction begin/commit/rollback, crash, timeout, cancellation, recovery, and
@@ -2940,6 +2988,11 @@ catalog:
     mutation_test:
       description: Deliberately corrupt implementation semantics and require tests to detect the
         mutation.
+    transaction_atomicity:
+      description: Static transaction-boundary inspection that proves the named authoritative writes
+        or success evidence share one database transaction and therefore commit or roll back
+        all-or-nothing. It does not by itself prove uniqueness, guard correctness, or concurrency
+        serialization.
   sources:
     ot_input_output:
       heading: OT 首先要有明确的输入输出
