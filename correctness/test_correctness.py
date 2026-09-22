@@ -10,6 +10,8 @@ import unittest
 from pathlib import Path
 
 import correctness
+from harness import contracts as harness_contracts
+from harness import signatures as harness_signatures
 
 
 def _leaf(statement: str):
@@ -752,13 +754,13 @@ class CorrectnessToolTests(unittest.TestCase):
         entry = doc["refinement"]["nodes"]["L2_right_boundary"]
         entry["status"] = "stable"
         entry["signature"] = correctness._node_semantic_signature(graph, "L2_right_boundary")
-        original = correctness.AUDIT_INTERPRETATION_RULES
+        original = harness_signatures.AUDIT_INTERPRETATION_RULES
         try:
-            correctness.AUDIT_INTERPRETATION_RULES = original + ("Synthetic changed audit semantics.",)
+            harness_signatures.AUDIT_INTERPRETATION_RULES = original + ("Synthetic changed audit semantics.",)
             snapshot = correctness._refinement_snapshot(correctness.Graph(doc))
             self.assertIn("L2_right_boundary", snapshot["stale"])
         finally:
-            correctness.AUDIT_INTERPRETATION_RULES = original
+            harness_signatures.AUDIT_INTERPRETATION_RULES = original
 
     def test_global_scope_change_reopens_stable_proof(self):
         doc = copy.deepcopy(self.base)
@@ -1395,16 +1397,16 @@ class CorrectnessToolTests(unittest.TestCase):
         graph = correctness.Graph(doc)
         node_sig_before = correctness._node_semantic_signature(graph, "L1_left_boundary")
         model_sig_before = correctness._model_semantic_signature(graph)
-        old_version = correctness.COVERAGE_AUDIT_SEMANTICS_VERSION
+        old_version = harness_signatures.COVERAGE_AUDIT_SEMANTICS_VERSION
         try:
-            correctness.COVERAGE_AUDIT_SEMANTICS_VERSION = old_version + "-changed"
+            harness_signatures.COVERAGE_AUDIT_SEMANTICS_VERSION = old_version + "-changed"
             self.assertEqual(
                 correctness._node_semantic_signature(graph, "L1_left_boundary"),
                 node_sig_before,
             )
             self.assertNotEqual(correctness._model_semantic_signature(graph), model_sig_before)
         finally:
-            correctness.COVERAGE_AUDIT_SEMANTICS_VERSION = old_version
+            harness_signatures.COVERAGE_AUDIT_SEMANTICS_VERSION = old_version
 
     def test_specification_coverage_becomes_stale_when_design_article_changes(self):
         with tempfile.TemporaryDirectory() as tmp:
