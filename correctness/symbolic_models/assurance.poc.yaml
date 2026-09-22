@@ -101,3 +101,64 @@ records:
           recovery_head and the authoritative document_latest_revision value observed
           at the capture event. It does not add guarantees beyond the source proposition.
         differences: []
+  claim:L108_acceptance_preserves_request_identity:
+    kind: claim
+    subject_id: L108_acceptance_preserves_request_identity
+    subject_signature: 8a3cb1db1c096fb4251f1fd10395b7f915df3f4eb24b4371847e1878a5d92d75
+    roundtrip:
+      subject_signature: 8a3cb1db1c096fb4251f1fd10395b7f915df3f4eb24b4371847e1878a5d92d75
+      status: TRANSLATED
+      natural_language: 'For every acceptance a and request r, if acceptance a was
+        produced from submitted request r, then all of the following hold: the document
+        identity preserved in acceptance a is equal to the document identity carried
+        by request r; the client change identity preserved in acceptance a is equal
+        to the client change identity carried by request r; the authoritative idempotency
+        identity associated with acceptance a exactly matches the request''s (document_id,
+        client_change_id) identity; the identity of acceptance a is preserved end
+        to end from request admission through OT dispatch, idempotency arbitration,
+        retry handling, and canonical commit, such that neither document_id nor client_change_id
+        is dropped, regenerated, substituted, or cross-bound and every identity handoff
+        for acceptance a remains the originating request r identity. Additionally,
+        for every durable idempotency evidence record e, if e is associated with canonical
+        acceptance a, then e identifies exactly the same (document_id, client_change_id)
+        identity as originating request r.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 8a3cb1db1c096fb4251f1fd10395b7f915df3f4eb24b4371847e1878a5d92d75
+        verdict: EQUIVALENT
+        reason: The formula preserves the source claim's universal scope over canonical
+          acceptances produced from requests, requires both identity coordinates to
+          remain equal, requires end-to-end preservation, and constrains durable idempotency
+          evidence exactly when it is associated with the acceptance.
+        differences: []
+      strengthening:
+        subject_signature: 8a3cb1db1c096fb4251f1fd10395b7f915df3f4eb24b4371847e1878a5d92d75
+        verdict: EQUIVALENT
+        reason: The formula preserves the source claim's applicability boundary, requiring
+          the identity conditions only for canonical acceptances produced from submitted
+          requests. It captures both identity coordinates, end-to-end preservation,
+          and the conditional durable idempotency evidence binding without adding
+          extra cardinality, uniqueness, or out-of-scope guarantees.
+        differences: []
+    roundtrip_reviews:
+      weakening:
+        subject_signature: 8a3cb1db1c096fb4251f1fd10395b7f915df3f4eb24b4371847e1878a5d92d75
+        verdict: EQUIVALENT
+        reason: 'The round-trip rendering preserves the original contract: it keeps
+          the same applicability condition, preserves both identity coordinates (document_id
+          and client_change_id), maintains provenance from the originating request
+          through acceptance, and requires matching durable idempotency evidence.
+          The added path details and identity handoff wording elaborate the acceptance
+          path without introducing a stronger or different guarantee.'
+        differences: []
+      strengthening:
+        subject_signature: 8a3cb1db1c096fb4251f1fd10395b7f915df3f4eb24b4371847e1878a5d92d75
+        verdict: EQUIVALENT
+        reason: The rendering preserves the original acceptance identity binding contract.
+          It keeps the same applicability boundary (accepted canonical acceptance
+          produced from a submitted request), preserves both identity coordinates
+          (document_id and client_change_id), preserves provenance from request admission
+          through canonical commit, and retains the same durable idempotency evidence
+          requirement without adding a new independent uniqueness or cardinality guarantee.
+        differences: []
