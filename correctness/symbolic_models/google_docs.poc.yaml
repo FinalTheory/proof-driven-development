@@ -1,0 +1,112 @@
+version: 1
+
+sorts:
+  - ClientState
+  - Document
+  - Revision
+  - Overlay
+  - Request
+
+functions:
+  visible_document:
+    args: [ClientState]
+    returns: Document
+    catalog_symbols: [client_document_id]
+
+  visible_frontier:
+    args: [ClientState]
+    returns: Revision
+    catalog_symbols: [last_applied_revision]
+
+  canonical_content_matches:
+    args: [ClientState, Document, Revision]
+    returns: Bool
+    catalog_symbols: [client_local_document]
+
+  visible_overlay:
+    args: [ClientState, Overlay]
+    returns: Bool
+    catalog_symbols: [client_speculative_overlays]
+
+  canonical_contains_same_edit:
+    args: [ClientState, Overlay]
+    returns: Bool
+    catalog_symbols: [client_local_document, last_applied_revision]
+
+  overlay_document:
+    args: [Overlay]
+    returns: Document
+    catalog_symbols: []
+
+  authored_from:
+    args: [Request, ClientState]
+    returns: Bool
+    catalog_symbols: []
+
+  request_document:
+    args: [Request]
+    returns: Document
+    catalog_symbols: [document_id]
+
+  request_base_revision:
+    args: [Request]
+    returns: Revision
+    catalog_symbols: [base_revision]
+
+  request_raw_edit_bound_to_source_content:
+    args: [Request, ClientState]
+    returns: Bool
+    catalog_symbols: [raw_edit, client_local_document]
+
+contracts:
+  client_canonical_frontier_coherence:
+    class: state_invariant
+    observation_scope: user_visible_states
+    formula:
+      forall:
+        vars:
+          s: ClientState
+        body:
+          call:
+            fn: canonical_content_matches
+            args:
+              - {var: s}
+              - {call: {fn: visible_document, args: [{var: s}]}}
+              - {call: {fn: visible_frontier, args: [{var: s}]}}
+
+  visible_canonical_speculative_exclusion:
+    class: state_invariant
+    observation_scope: user_visible_states
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          o: Overlay
+        body:
+          implies:
+            - {call: {fn: canonical_contains_same_edit, args: [{var: s}, {var: o}]}}
+            - not:
+                call:
+                  fn: visible_overlay
+                  args: [{var: s}, {var: o}]
+
+  request_authoring_frontier_binding:
+    class: provenance_binding
+    formula:
+      forall:
+        vars:
+          r: Request
+          s: ClientState
+        body:
+          implies:
+            - {call: {fn: authored_from, args: [{var: r}, {var: s}]}}
+            - and:
+                - eq:
+                    - {call: {fn: request_document, args: [{var: r}]}}
+                    - {call: {fn: visible_document, args: [{var: s}]}}
+                - eq:
+                    - {call: {fn: request_base_revision, args: [{var: r}]}}
+                    - {call: {fn: visible_frontier, args: [{var: s}]}}
+                - call:
+                    fn: request_raw_edit_bound_to_source_content
+                    args: [{var: r}, {var: s}]

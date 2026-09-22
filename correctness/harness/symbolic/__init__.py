@@ -1,5 +1,6 @@
 """Generic typed symbolic IR and SMT backend for PDD experiments."""
 
+from .bridge import ContractMapping, SymbolicBridge, SymbolicBridgeError
 from .dsl import ParsedProgram, parse_program
 from .ir import (
     BOOL,
@@ -26,6 +27,7 @@ __all__ = [
     "BoolConst",
     "Call",
     "CheckResult",
+    "ContractMapping",
     "Eq",
     "Exists",
     "Expr",
@@ -37,6 +39,8 @@ __all__ = [
     "Or",
     "ParsedProgram",
     "Sort",
+    "SymbolicBridge",
+    "SymbolicBridgeError",
     "Var",
     "Z3_AVAILABLE",
     "check_program",
