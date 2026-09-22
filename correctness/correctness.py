@@ -109,6 +109,7 @@ from harness.workflow import (
     _audit_task_priority,
     _refinement_snapshot,
 )
+from harness.symbolic.cli import add_symbolic_subparsers, handle_symbolic_command
 from harness.validation import (
     _canonical_field_inventory,
     _condition_summary,
@@ -1828,6 +1829,7 @@ def build_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     sub = parser.add_subparsers(dest="command", required=True)
+    add_symbolic_subparsers(sub)
 
     sub.add_parser("workflow-help", help="Print the canonical automated-refinement agent protocol.")
     catalog_parser = sub.add_parser(
@@ -2006,6 +2008,9 @@ def main() -> int:
         return _cmd_schema_fields(None, args)
 
     graph = Graph.load()
+    symbolic_result = handle_symbolic_command(graph, args)
+    if symbolic_result is not None:
+        return symbolic_result
     if args.command == "catalog":
         return _cmd_catalog(graph, args)
     if args.command == "validate":

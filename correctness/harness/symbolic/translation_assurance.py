@@ -1,0 +1,622 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import Enum
+import hashlib
+import json
+import re
+from typing import Any, Iterable
+
+import yaml
+
+from ..model import Graph, _catalog_namespace
+from .bridge import SymbolicBridge
+
+
+class TranslationReviewError(ValueError):
+    """Raised when a translation-assurance artifact violates the review contract."""
+
+
+class ComparisonVerdict(str, Enum):
+    EQUIVALENT = "EQUIVALENT"
+    WEAKER = "WEAKER"
+    STRONGER = "STRONGER"
+    MISMATCH = "MISMATCH"
+    INCOMPLETE = "INCOMPLETE"
+
+
+class TranslationStatus(str, Enum):
+    TRANSLATED = "TRANSLATED"
+    INCOMPLETE = "INCOMPLETE"
+
+
+class AssuranceStatus(str, Enum):
+    TRUSTED = "TRUSTED"
+    REJECTED = "REJECTED"
+    INCOMPLETE = "INCOMPLETE"
+
+
+@dataclass(frozen=True)
+class RoundTripTranslation:
+    status: TranslationStatus
+    natural_language: str
+    ambiguities: tuple[str, ...]
+    subject_signature: str = ""
+
+
+@dataclass(frozen=True)
+class ComparisonReview:
+    verdict: ComparisonVerdict
+    reason: str
+    differences: tuple[str, ...]
+    subject_signature: str = ""
+
+
+@dataclass(frozen=True)
+class TranslationAssuranceSummary:
+    status: AssuranceStatus
+    direct_reviews: tuple[ComparisonReview, ...]
+    roundtrip_reviews: tuple[ComparisonReview, ...]
+    reason: str
+
+
+@dataclass(frozen=True)
+class TranslationSubject:
+    contract_id: str
+    canonical_contract: dict[str, Any]
+    contract_class: str
+    observation_scope: str | None
+    formula: dict[str, Any]
+    functions: dict[str, dict[str, Any]]
+    catalog_symbols: dict[str, Any]
+
+    def symbolic_context(self) -> str:
+        payload = {
+            "contract_semantics": {
+                "class": self.contract_class,
+                "observation_scope": self.observation_scope,
+                "interpretation": _contract_class_interpretation(
+                    self.contract_class, self.observation_scope
+                ),
+            },
+            "functions": self.functions,
+            "formula": self.formula,
+            "catalog_symbols": self.catalog_symbols,
+        }
+        return yaml.safe_dump(payload, sort_keys=False, allow_unicode=True)
+
+    def source_context(self) -> str:
+        payload = {
+            "canonical_contract": {
+                "contract_id": self.contract_id,
+                **self.canonical_contract,
+            },
+            "canonical_vocabulary": self.catalog_symbols,
+            "contract_semantics": {
+                "class": self.contract_class,
+                "observation_scope": self.observation_scope,
+                "interpretation": _contract_class_interpretation(
+                    self.contract_class, self.observation_scope
+                ),
+            },
+        }
+        return yaml.safe_dump(payload, sort_keys=False, allow_unicode=True)
+
+
+@dataclass(frozen=True)
+class ClaimTranslationSubject:
+    claim_id: str
+    canonical_claim: dict[str, Any]
+    contract_ids: tuple[str, ...]
+    canonical_contracts: dict[str, dict[str, Any]]
+    formula: dict[str, Any]
+    functions: dict[str, dict[str, Any]]
+    catalog_symbols: dict[str, Any]
+
+    def symbolic_context(self) -> str:
+        payload = {
+            "claim_mapping_semantics": (
+                "This formula is the explicit symbolic translation of the claim statement. "
+                "The referenced semantic contracts provide canonical vocabulary/relations, "
+                "but their entire formulas are not implicitly conjoined into the claim."
+            ),
+            "referenced_semantic_contracts": list(self.contract_ids),
+            "functions": self.functions,
+            "formula": self.formula,
+            "catalog_symbols": self.catalog_symbols,
+        }
+        return yaml.safe_dump(payload, sort_keys=False, allow_unicode=True)
+
+    def source_context(self) -> str:
+        selected = {
+            "canonical_claim": {
+                "claim_id": self.claim_id,
+                "kind": self.canonical_claim.get("kind"),
+                "statement": self.canonical_claim.get("statement"),
+                "formal_intent": self.canonical_claim.get("formal_intent"),
+                "semantic_contracts": self.canonical_claim.get("semantic_contracts", []),
+            },
+            "referenced_semantic_contracts_context_only": self.canonical_contracts,
+            "canonical_vocabulary": self.catalog_symbols,
+            "interpretation": (
+                "Referenced semantic contracts and vocabulary define terms/relations used by "
+                "the claim. They are context only; the claim's guarantee is exactly its own "
+                "statement/formal intent and is not automatically strengthened to the full "
+                "referenced contract definitions."
+            ),
+        }
+        return yaml.safe_dump(selected, sort_keys=False, allow_unicode=True)
+
+
+def build_claim_translation_subject(
+    graph: Graph,
+    bridge: SymbolicBridge,
+    claim_id: str,
+) -> ClaimTranslationSubject:
+    bridge.validate_against_graph(graph)
+    mapping = bridge.claims.get(claim_id)
+    if mapping is None:
+        raise TranslationReviewError(f"no symbolic claim mapping for {claim_id}")
+    claim = graph.claims.get(claim_id)
+    if not isinstance(claim, dict):
+        raise TranslationReviewError(f"unknown canonical claim {claim_id}")
+
+    semantic_contracts = _catalog_namespace(graph, "semantic_contracts")
+    canonical_contracts: dict[str, dict[str, Any]] = {}
+    for contract_id in mapping.contract_ids:
+        contract = semantic_contracts.get(contract_id)
+        if not isinstance(contract, dict):
+            raise TranslationReviewError(
+                f"claim {claim_id} references missing canonical semantic contract {contract_id}"
+            )
+        canonical_contracts[contract_id] = dict(contract)
+
+    function_names = _formula_function_names(mapping.formula)
+    functions = {
+        name: bridge.functions[name]
+        for name in sorted(function_names)
+    }
+    terms = _catalog_namespace(graph, "terms")
+    state = _catalog_namespace(graph, "state")
+    symbol_defs: dict[str, Any] = {}
+    for symbol in sorted(mapping.catalog_symbols):
+        if symbol in terms:
+            symbol_defs[symbol] = {"namespace": "terms", "definition": terms[symbol]}
+        elif symbol in state:
+            symbol_defs[symbol] = {"namespace": "state", "definition": state[symbol]}
+        else:
+            raise TranslationReviewError(
+                f"symbolic claim mapping references undefined catalog symbol {symbol}"
+            )
+
+    return ClaimTranslationSubject(
+        claim_id=claim_id,
+        canonical_claim=dict(claim),
+        contract_ids=mapping.contract_ids,
+        canonical_contracts=canonical_contracts,
+        formula=mapping.formula,
+        functions=functions,
+        catalog_symbols=symbol_defs,
+    )
+
+
+def build_translation_subject(
+    graph: Graph,
+    bridge: SymbolicBridge,
+    contract_id: str,
+) -> TranslationSubject:
+    bridge.validate_against_graph(graph)
+    mapping = bridge.contracts.get(contract_id)
+    if mapping is None:
+        raise TranslationReviewError(f"no symbolic mapping for {contract_id}")
+
+    semantic_contracts = _catalog_namespace(graph, "semantic_contracts")
+    canonical = semantic_contracts.get(contract_id)
+    if not isinstance(canonical, dict):
+        raise TranslationReviewError(f"unknown canonical semantic contract {contract_id}")
+
+    function_names = _formula_function_names(mapping.formula)
+    functions = {
+        name: bridge.functions[name]
+        for name in sorted(function_names)
+    }
+
+    terms = _catalog_namespace(graph, "terms")
+    state = _catalog_namespace(graph, "state")
+    symbol_defs: dict[str, Any] = {}
+    for symbol in sorted(mapping.catalog_symbols):
+        if symbol in terms:
+            symbol_defs[symbol] = {"namespace": "terms", "definition": terms[symbol]}
+        elif symbol in state:
+            symbol_defs[symbol] = {"namespace": "state", "definition": state[symbol]}
+        else:  # guarded by bridge validation, retained as a hard invariant
+            raise TranslationReviewError(
+                f"symbolic mapping references undefined catalog symbol {symbol}"
+            )
+
+    return TranslationSubject(
+        contract_id=contract_id,
+        canonical_contract=dict(canonical),
+        contract_class=mapping.contract_class,
+        observation_scope=mapping.observation_scope,
+        formula=mapping.formula,
+        functions=functions,
+        catalog_symbols=symbol_defs,
+    )
+
+
+def translation_subject_signature(
+    subject: TranslationSubject | ClaimTranslationSubject,
+) -> str:
+    """Digest the exact semantic source context and symbolic translation under review."""
+
+    payload = {
+        "source": yaml.safe_load(subject.source_context()),
+        "symbolic": yaml.safe_load(subject.symbolic_context()),
+    }
+    encoded = json.dumps(
+        payload,
+        sort_keys=True,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def build_roundtrip_translation_prompt(
+    subject: TranslationSubject | ClaimTranslationSubject,
+) -> str:
+    """Blind symbolic -> NL translation. Deliberately excludes the source contract text."""
+
+    subject_signature = translation_subject_signature(subject)
+    return f"""You are performing a blind semantic round-trip for one symbolic correctness proposition.
+
+You MUST NOT infer or reconstruct any unavailable source prose. Interpret only the typed symbolic material below.
+
+SUBJECT SIGNATURE
+{subject_signature}
+
+SYMBOLIC MATERIAL
+{subject.symbolic_context()}
+
+TASK
+Translate the formula into precise natural-language semantics.
+Preserve every quantifier, implication guard, equality/inequality, existence requirement, scope condition encoded by predicates, and conjunction/disjunction.
+Do not strengthen the formula. Do not add likely product requirements. Do not omit awkward conditions.
+Predicate/function meanings above are authoritative for this task.
+
+Return exactly one YAML object:
+subject_signature: {subject_signature}
+status: TRANSLATED | INCOMPLETE
+natural_language: >-
+  <complete standalone natural-language proposition>
+ambiguities:
+  - <only if the symbolic material itself is insufficient or ambiguous; use ambiguities: [] when none>
+
+Echo subject_signature exactly as supplied above.
+Always emit the ambiguities field; use ambiguities: [] when there are none.
+Use INCOMPLETE rather than guessing if a predicate meaning or binding is insufficient.
+"""
+
+
+def build_roundtrip_comparison_prompt(
+    subject: TranslationSubject | ClaimTranslationSubject,
+    roundtrip_natural_language: str,
+    *,
+    focus: str = "balanced",
+) -> str:
+    focus_instruction = _comparison_focus(focus)
+    subject_signature = translation_subject_signature(subject)
+    return f"""You are independently auditing semantic equivalence between two natural-language propositions.
+
+SUBJECT SIGNATURE
+{subject_signature}
+
+ORIGINAL CANONICAL PROPOSITION
+{subject.source_context()}
+
+BLIND ROUND-TRIP RENDERING
+{roundtrip_natural_language}
+
+Your only question is whether the round-trip rendering preserves the original contract's semantics.
+Check quantifiers, applicability/precondition boundaries, identity coordinates, provenance direction, cardinality, observation scope, exclusions, and whether either side makes a stronger guarantee.
+{focus_instruction}
+
+Do not redesign the system and do not propose missing product requirements.
+Verdict semantics are strict:
+- WEAKER: the compared rendering/formula omits at least one source requirement.
+- STRONGER: it adds at least one requirement outside the source contract.
+- MISMATCH: the two differ in both directions or encode materially different relations.
+- INCOMPLETE: the supplied material is insufficient to decide equivalence. Do not use INCOMPLETE merely because you found a concrete difference.
+
+Return exactly one YAML object:
+subject_signature: {subject_signature}
+verdict: EQUIVALENT | WEAKER | STRONGER | MISMATCH | INCOMPLETE
+reason: >-
+  <short precise justification>
+If verdict is EQUIVALENT, emit exactly:
+differences: []
+Otherwise emit:
+differences:
+  - >-
+    <specific semantic difference>
+
+Echo subject_signature exactly as supplied above.
+"""
+
+
+def build_direct_comparison_prompt(
+    subject: TranslationSubject | ClaimTranslationSubject,
+    *,
+    focus: str = "balanced",
+) -> str:
+    focus_instruction = _comparison_focus(focus)
+    subject_signature = translation_subject_signature(subject)
+    return f"""You are independently auditing whether a typed symbolic formula faithfully translates one canonical natural-language correctness proposition.
+
+SUBJECT SIGNATURE
+{subject_signature}
+
+ORIGINAL CANONICAL PROPOSITION
+{subject.source_context()}
+
+SYMBOLIC TRANSLATION
+{subject.symbolic_context()}
+
+Compare the original contract directly against the formula using the supplied typed predicate meanings and catalog definitions.
+Check quantifiers, applicability/precondition boundaries, identity coordinates, provenance direction, cardinality, observation scope, exclusions, and any silent strengthening or weakening.
+{focus_instruction}
+
+Do not judge whether the original proposition is a good requirement. Judge only translation fidelity.
+Verdict semantics are strict:
+- WEAKER: the symbolic translation omits at least one source requirement.
+- STRONGER: it adds at least one requirement outside the source contract.
+- MISMATCH: the two differ in both directions or encode materially different relations.
+- INCOMPLETE: the supplied material is insufficient to decide equivalence. Do not use INCOMPLETE merely because you found a concrete difference.
+
+Return exactly one YAML object:
+subject_signature: {subject_signature}
+verdict: EQUIVALENT | WEAKER | STRONGER | MISMATCH | INCOMPLETE
+reason: >-
+  <short precise justification>
+If verdict is EQUIVALENT, emit exactly:
+differences: []
+Otherwise emit:
+differences:
+  - >-
+    <specific semantic difference>
+
+Echo subject_signature exactly as supplied above.
+"""
+
+
+def parse_roundtrip_translation(text: str) -> RoundTripTranslation:
+    data = _parse_yaml_object(text, "round-trip translation")
+    if set(data) != {"subject_signature", "status", "natural_language", "ambiguities"}:
+        raise TranslationReviewError(
+            "round-trip output must contain exactly subject_signature, status, natural_language, ambiguities"
+        )
+    subject_signature = _parse_subject_signature(
+        data["subject_signature"], "round-trip subject_signature"
+    )
+    try:
+        status = TranslationStatus(data["status"])
+    except (TypeError, ValueError) as exc:
+        raise TranslationReviewError(f"invalid round-trip status {data.get('status')!r}") from exc
+    natural_language = data["natural_language"]
+    ambiguities = data["ambiguities"]
+    if not isinstance(natural_language, str):
+        raise TranslationReviewError("natural_language must be a string")
+    if not isinstance(ambiguities, list) or not all(
+        isinstance(item, str) for item in ambiguities
+    ):
+        raise TranslationReviewError("ambiguities must be a list of strings")
+    if status == TranslationStatus.TRANSLATED and not natural_language.strip():
+        raise TranslationReviewError("TRANSLATED requires non-empty natural_language")
+    return RoundTripTranslation(
+        status=status,
+        natural_language=natural_language.strip(),
+        ambiguities=tuple(ambiguities),
+        subject_signature=subject_signature,
+    )
+
+
+def parse_comparison_review(text: str) -> ComparisonReview:
+    data = _parse_yaml_object(text, "comparison review")
+    if set(data) != {"subject_signature", "verdict", "reason", "differences"}:
+        raise TranslationReviewError(
+            "comparison output must contain exactly subject_signature, verdict, reason, differences"
+        )
+    subject_signature = _parse_subject_signature(
+        data["subject_signature"], "comparison subject_signature"
+    )
+    try:
+        verdict = ComparisonVerdict(data["verdict"])
+    except (TypeError, ValueError) as exc:
+        raise TranslationReviewError(f"invalid comparison verdict {data.get('verdict')!r}") from exc
+    reason = data["reason"]
+    differences = data["differences"]
+    if not isinstance(reason, str) or not reason.strip():
+        raise TranslationReviewError("comparison reason must be a non-empty string")
+    if not isinstance(differences, list) or not all(
+        isinstance(item, str) for item in differences
+    ):
+        raise TranslationReviewError("differences must be a list of strings")
+    if verdict == ComparisonVerdict.EQUIVALENT and differences:
+        raise TranslationReviewError("EQUIVALENT review must have an empty differences list")
+    return ComparisonReview(verdict, reason.strip(), tuple(differences), subject_signature)
+
+
+
+def parse_roundtrip_translation_or_incomplete(text: str) -> RoundTripTranslation:
+    try:
+        return parse_roundtrip_translation(text)
+    except TranslationReviewError as exc:
+        return RoundTripTranslation(
+            status=TranslationStatus.INCOMPLETE,
+            natural_language="",
+            ambiguities=(f"invalid reviewer artifact: {exc}",),
+        )
+
+
+def parse_comparison_review_or_incomplete(text: str) -> ComparisonReview:
+    try:
+        return parse_comparison_review(text)
+    except TranslationReviewError as exc:
+        return ComparisonReview(
+            verdict=ComparisonVerdict.INCOMPLETE,
+            reason=f"invalid reviewer artifact: {exc}",
+            differences=(),
+        )
+
+
+def aggregate_translation_assurance(
+    *,
+    direct_reviews: Iterable[ComparisonReview],
+    roundtrip_reviews: Iterable[ComparisonReview],
+    min_direct_reviews: int = 2,
+    min_roundtrip_reviews: int = 2,
+) -> TranslationAssuranceSummary:
+    direct = tuple(direct_reviews)
+    roundtrip = tuple(roundtrip_reviews)
+
+    all_reviews = direct + roundtrip
+    rejected = [
+        review
+        for review in all_reviews
+        if review.verdict
+        in {
+            ComparisonVerdict.WEAKER,
+            ComparisonVerdict.STRONGER,
+            ComparisonVerdict.MISMATCH,
+        }
+    ]
+    if rejected:
+        return TranslationAssuranceSummary(
+            status=AssuranceStatus.REJECTED,
+            direct_reviews=direct,
+            roundtrip_reviews=roundtrip,
+            reason="at least one independent semantic reviewer found a translation mismatch",
+        )
+
+    incomplete = [
+        review for review in all_reviews if review.verdict == ComparisonVerdict.INCOMPLETE
+    ]
+    if incomplete:
+        return TranslationAssuranceSummary(
+            status=AssuranceStatus.INCOMPLETE,
+            direct_reviews=direct,
+            roundtrip_reviews=roundtrip,
+            reason="at least one independent semantic reviewer could not determine equivalence",
+        )
+
+    if len(direct) < min_direct_reviews or len(roundtrip) < min_roundtrip_reviews:
+        return TranslationAssuranceSummary(
+            status=AssuranceStatus.INCOMPLETE,
+            direct_reviews=direct,
+            roundtrip_reviews=roundtrip,
+            reason=(
+                f"insufficient completed reviews: direct={len(direct)}/{min_direct_reviews}, "
+                f"roundtrip={len(roundtrip)}/{min_roundtrip_reviews}"
+            ),
+        )
+
+    if all(review.verdict == ComparisonVerdict.EQUIVALENT for review in all_reviews):
+        return TranslationAssuranceSummary(
+            status=AssuranceStatus.TRUSTED,
+            direct_reviews=direct,
+            roundtrip_reviews=roundtrip,
+            reason="all required independent reviewers judged the translation equivalent",
+        )
+
+    return TranslationAssuranceSummary(
+        status=AssuranceStatus.INCOMPLETE,
+        direct_reviews=direct,
+        roundtrip_reviews=roundtrip,
+        reason="review set did not satisfy a terminal assurance condition",
+    )
+
+
+def _comparison_focus(focus: str) -> str:
+    if focus == "weakening":
+        return (
+            "Adversarial focus: look especially for omitted requirements, dropped guards, "
+            "weakened cardinality, lost identity components, or existential witnesses that "
+            "the symbolic/round-trip version no longer requires."
+        )
+    if focus == "strengthening":
+        return (
+            "Adversarial focus: look especially for stronger universal scope, missing applicability "
+            "guards, extra equality/cardinality requirements, or guarantees accidentally extended "
+            "outside the original boundary."
+        )
+    if focus == "balanced":
+        return "Adversarial focus: search symmetrically for both weakening and strengthening."
+    raise TranslationReviewError(f"unknown comparison focus {focus!r}")
+
+
+def _parse_subject_signature(value: Any, where: str) -> str:
+    if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{64}", value) is None:
+        raise TranslationReviewError(f"{where} must be a sha256 hex string")
+    return value
+
+
+def _parse_yaml_object(text: str, what: str) -> dict[str, Any]:
+    text = _strip_writer_completion_sentinel(text)
+    try:
+        data = yaml.safe_load(text)
+    except yaml.YAMLError as exc:
+        raise TranslationReviewError(f"invalid YAML in {what}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise TranslationReviewError(f"{what} must be exactly one YAML mapping")
+    return data
+
+
+
+_WRITER_COMPLETION_RE = re.compile(r"^WRITERSUBAGENTCOMPLETE[A-Z0-9]+$")
+
+
+def _strip_writer_completion_sentinel(text: str) -> str:
+    lines = [
+        line
+        for line in text.splitlines()
+        if not _WRITER_COMPLETION_RE.fullmatch(line.strip())
+    ]
+    return "\n".join(lines).strip()
+
+
+def _contract_class_interpretation(
+    contract_class: str, observation_scope: str | None
+) -> str:
+    if contract_class == "state_invariant":
+        return (
+            "A state_invariant must hold at every state inside its observation_scope. "
+            "Therefore any transition whose resulting state remains in that scope may not "
+            "produce a post-state that violates the invariant. A lifecycle-preservation "
+            "sentence that merely restates continued truth of the same invariant across "
+            "in-scope states need not be represented as a separate transition predicate."
+        )
+    if contract_class == "provenance_binding":
+        return (
+            "A provenance_binding constrains the identity/provenance relation between its "
+            "source and bound symbols for every modeled occurrence covered by the formula. "
+            "It does not imply liveness, delivery, ordering, or additional temporal behavior "
+            "unless those are explicitly encoded."
+        )
+    return (
+        "No additional Harness-level semantic interpretation is defined for this contract class."
+    )
+
+def _formula_function_names(node: Any) -> set[str]:
+    names: set[str] = set()
+    if isinstance(node, dict):
+        if set(node) == {"call"} and isinstance(node["call"], dict):
+            fn = node["call"].get("fn")
+            if isinstance(fn, str):
+                names.add(fn)
+        for value in node.values():
+            names.update(_formula_function_names(value))
+    elif isinstance(node, list):
+        for value in node:
+            names.update(_formula_function_names(value))
+    return names

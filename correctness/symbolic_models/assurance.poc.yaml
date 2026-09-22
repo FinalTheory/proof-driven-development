@@ -1,0 +1,103 @@
+version: 1
+records:
+  contract:accepted_evidence_correspondence:
+    kind: contract
+    subject_id: accepted_evidence_correspondence
+    subject_signature: 109acabd77450b243070b130d03bbedb2768aa4a80cdb198eb026cae8aa2a0dd
+    roundtrip:
+      subject_signature: 109acabd77450b243070b130d03bbedb2768aa4a80cdb198eb026cae8aa2a0dd
+      status: TRANSLATED
+      natural_language: 'For every authoritative state s and every idempotency key
+        k, if the composite authoritative idempotency identity k = (document_id, client_change_id)
+        is within the 30-day normal retry/reconnect eligibility horizon in authoritative
+        state s, then the following two implications must hold: if authoritative accepted_idempotency_evidence
+        exists in state s for the same composite idempotency key k, then accepted_change_log
+        in authoritative state s contains exactly one committed canonical acceptance
+        whose authoritative idempotency_key is the same composite identity k; and
+        if accepted_change_log in authoritative state s contains exactly one committed
+        canonical acceptance whose authoritative idempotency_key is the same composite
+        identity k, then authoritative accepted_idempotency_evidence exists in state
+        s for the same composite idempotency key k.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 109acabd77450b243070b130d03bbedb2768aa4a80cdb198eb026cae8aa2a0dd
+        verdict: EQUIVALENT
+        reason: The formula preserves the original iff correspondence between accepted_idempotency_evidence
+          and exactly one committed canonical acceptance within the 30-day eligibility
+          scope, with the same idempotency identity and authoritative-state observation
+          boundary.
+        differences: []
+      strengthening:
+        subject_signature: 109acabd77450b243070b130d03bbedb2768aa4a80cdb198eb026cae8aa2a0dd
+        verdict: EQUIVALENT
+        reason: The formula preserves the source contract's applicability boundary,
+          identity coordinates, bidirectional correspondence, cardinality requirement,
+          and authoritative-state observation scope. The lifecycle preservation statement
+          is represented by the state invariant semantics rather than an additional
+          predicate.
+        differences: []
+    roundtrip_reviews:
+      weakening:
+        subject_signature: 109acabd77450b243070b130d03bbedb2768aa4a80cdb198eb026cae8aa2a0dd
+        verdict: EQUIVALENT
+        reason: The round-trip rendering preserves the bidirectional correspondence,
+          identity coordinates, 30-day eligibility boundary, authoritative state scope,
+          and exactly-one committed canonical acceptance cardinality of the source
+          invariant.
+        differences: []
+      strengthening:
+        subject_signature: 109acabd77450b243070b130d03bbedb2768aa4a80cdb198eb026cae8aa2a0dd
+        verdict: EQUIVALENT
+        reason: The rendering preserves the original state invariant, applicability
+          horizon, authoritative observation scope, identity coordinates, bidirectional
+          correspondence, and exactly-one cardinality requirement without adding guarantees
+          outside the contract boundary.
+        differences: []
+  claim:L92_captured_recovery_head_equals_authoritative_frontier:
+    kind: claim
+    subject_id: L92_captured_recovery_head_equals_authoritative_frontier
+    subject_signature: af9ce92ddced7847779f198c4cd75dada8cf26f0f598c7d14812f41870bbd6b5
+    roundtrip:
+      subject_signature: af9ce92ddced7847779f198c4cd75dada8cf26f0f598c7d14812f41870bbd6b5
+      status: TRANSLATED
+      natural_language: For every recovery attempt r, if r has reached the new-owner
+        recovery-head capture event after epoch handoff, then the recovery_head value
+        bound to r is equal to the authoritative document_latest_revision value read
+        when r captures its recovery frontier.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: af9ce92ddced7847779f198c4cd75dada8cf26f0f598c7d14812f41870bbd6b5
+        verdict: EQUIVALENT
+        reason: 'The formula exactly captures the source proposition: for every recovery
+          attempt, after the recovery-head capture event, recovery_head_value equals
+          the authoritative document_latest_revision value captured at that event.
+          No additional guarantees from the contextual semantic contract are introduced.'
+        differences: []
+      strengthening:
+        subject_signature: af9ce92ddced7847779f198c4cd75dada8cf26f0f598c7d14812f41870bbd6b5
+        verdict: EQUIVALENT
+        reason: 'The symbolic formula matches the canonical proposition: after the
+          capture event, the recovery_head value equals the authoritative revision
+          value captured at that event. No additional guarantees or missing requirements
+          are introduced.'
+        differences: []
+    roundtrip_reviews:
+      weakening:
+        subject_signature: af9ce92ddced7847779f198c4cd75dada8cf26f0f598c7d14812f41870bbd6b5
+        verdict: EQUIVALENT
+        reason: The rendering preserves the original contract's applicability boundary
+          after epoch handoff, the capture-event condition, the equality relation,
+          the authoritative source of document_latest_revision, and the binding of
+          recovery_head to that captured value. No quantifier, provenance direction,
+          identity component, or guarantee scope is changed.
+        differences: []
+      strengthening:
+        subject_signature: af9ce92ddced7847779f198c4cd75dada8cf26f0f598c7d14812f41870bbd6b5
+        verdict: EQUIVALENT
+        reason: The rendering preserves the original applicability boundary, epoch
+          handoff precondition, provenance direction, and equality relation between
+          recovery_head and the authoritative document_latest_revision value observed
+          at the capture event. It does not add guarantees beyond the source proposition.
+        differences: []

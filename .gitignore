@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 correctness.yaml.lock
 correctness/.venv/
+correctness/.translation-review/

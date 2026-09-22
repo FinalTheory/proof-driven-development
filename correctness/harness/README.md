@@ -64,5 +64,47 @@ This means the bridge can reject a structurally incomplete or over-scoped transl
 
 - `SymbolicVerifier.check(query, contracts=[...])` asks whether the selected canonical contract mappings admit a candidate execution.
 - `SymbolicVerifier.exclusion_check(query, contracts=[...])` compares the candidate without those contracts against the candidate with them. `closes_counterexample` is true only for the intended `SAT -> UNSAT` transition.
+- `SymbolicVerifier.check_claims(query, claims=[...])` and `claim_exclusion_check(...)` provide the same interface for explicitly formalized DAG claims rather than reusable semantic contracts.
 
 Contract applicability must be explicit in the structured formula. A guarantee scoped to an eligible request, eligible response, bounded retention horizon, or other semantic precondition must encode that condition as the implication guard. Tests should also assert that a corresponding out-of-scope violation remains satisfiable when the canonical contract intentionally makes no guarantee there. This prevents the SMT mapping from silently strengthening the natural-language specification.
+
+
+### Translation assurance
+
+`symbolic/translation_assurance.py` treats natural-language-to-symbolic lowering as a probabilistic semantic compilation step surrounded by deterministic checks.
+
+For one mapping, the intended fresh-agent gate is:
+
+1. one blind round-trip agent sees only typed predicate meanings, catalog vocabulary, Harness contract-class semantics, and the formula, then renders the symbolic proposition back into natural language;
+2. two direct reviewers compare the original proposition with the symbolic formula, one biased toward finding weakening/omission and one toward strengthening/scope expansion;
+3. two round-trip reviewers compare the original proposition only with the blind natural-language rendering, again with complementary weakening/strengthening attack directions.
+
+The default aggregation rule requires at least two direct and two round-trip `EQUIVALENT` verdicts. Any concrete `WEAKER`, `STRONGER`, or `MISMATCH` verdict rejects the mapping. Reviewer execution/format failures or unresolved ambiguity produce `INCOMPLETE`, never a trusted result.
+
+Predicate declarations include explicit natural-language `meaning`; identifiers alone are not semantic authority. Review context also includes generic Harness semantics such as: a `state_invariant` holds at every state in its `observation_scope`, while a `provenance_binding` does not imply liveness or ordering unless explicitly encoded.
+
+Experimental claim mappings reuse the typed predicates/vocabulary of already-formalized semantic contracts but carry their own explicit claim formula. Deterministic validation requires a claim mapping to reference exactly the canonical claim's declared `semantic_contracts` and to cover the same catalog-symbol boundary; the same translation-assurance reviewers then determine whether the claim formula is actually equivalent to the claim statement. This allows a narrow leaf claim to project only the part of a broader semantic contract that it actually states.
+
+
+### Persisted trust and invalidation
+
+`symbolic/assurance_registry.py` persists normalized translation-review results against a SHA-256 signature of the exact semantic source context and symbolic translation under review. The signature includes canonical proposition text, referenced canonical vocabulary/contract context, typed predicate meanings, and the structured formula.
+
+A review record therefore has four meaningful states:
+
+- `TRUSTED` — current source/mapping signature matches and all required direct + round-trip reviewers judged the translation equivalent;
+- `REJECTED` / `INCOMPLETE` — semantic disagreement, ambiguity, reviewer failure, or insufficient independent reviews;
+- `STALE` — a previously reviewed source or symbolic mapping changed;
+- `UNVERIFIED` — no review record exists.
+
+Only `TRUSTED` mappings are eligible for authoritative symbolic proof use. Ordinary `check()` / `exclusion_check()` remain available as experimental diagnostics; `trusted_check()`, `trusted_exclusion_check()`, and their claim equivalents enforce the registry gate.
+
+### Coverage-facing CLI
+
+The public Harness entry point exposes the experimental symbolic layer without requiring agents to write Python:
+
+- `correctness.py symbolic-status` reports the trust frontier for every mapped contract and claim;
+- `correctness.py symbolic-check --kind contract|claim --subject ... --query bad-state.yaml` compares the candidate bad state with and without the selected mapping and, by default, refuses any mapping that is not currently `TRUSTED`;
+- `--allow-untrusted` exists only for POC/debug work and must not be treated as authoritative coverage evidence.
+
+This makes the intended coverage integration explicit: LLM agents still propose semantically meaningful bad states, while deterministic SMT checks answer whether trusted symbolic specifications already exclude them.

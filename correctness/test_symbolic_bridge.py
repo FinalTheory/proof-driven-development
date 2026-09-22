@@ -37,6 +37,10 @@ def and_(*values):
     return {"and": list(values)}
 
 
+def or_(*values):
+    return {"or": list(values)}
+
+
 def implies(left, right):
     return {"implies": [left, right]}
 
@@ -78,6 +82,25 @@ class SymbolicBridgeTests(unittest.TestCase):
         with self.assertRaises(SymbolicBridgeError) as ctx:
             bridge.validate_against_graph(self.graph)
         self.assertIn("missing=['raw_edit']", str(ctx.exception))
+
+    def test_bridge_requires_explicit_predicate_meaning(self):
+        raw = yaml.load(BRIDGE_PATH.read_text(), Loader=UniqueKeyLoader)
+        broken = copy.deepcopy(raw)
+        del broken["functions"]["visible_document"]["meaning"]
+        with self.assertRaises(SymbolicBridgeError) as ctx:
+            SymbolicBridge.from_data(broken)
+        self.assertIn("meaning", str(ctx.exception))
+
+    def test_bridge_rejects_claim_contract_coverage_drift(self):
+        raw = yaml.load(BRIDGE_PATH.read_text(), Loader=UniqueKeyLoader)
+        broken = copy.deepcopy(raw)
+        broken["claims"]["L108_acceptance_preserves_request_identity"]["contracts"] = [
+            "live_delivery_acceptance_binding"
+        ]
+        bridge = SymbolicBridge.from_data(broken)
+        with self.assertRaises(SymbolicBridgeError) as ctx:
+            bridge.validate_against_graph(self.graph)
+        self.assertIn("symbolic claim-contract coverage mismatch", str(ctx.exception))
 
     def test_bridge_rejects_observation_scope_drift(self):
         raw = yaml.load(BRIDGE_PATH.read_text(), Loader=UniqueKeyLoader)
@@ -311,6 +334,152 @@ class SymbolicBridgeTests(unittest.TestCase):
         )
         self.assertEqual(result.baseline.status, "sat")
         self.assertEqual(result.constrained.status, "unsat")
+        self.assertTrue(result.closes_counterexample)
+
+    def test_acceptance_request_identity_binding_closes_cross_binding(self):
+        bad_identity = exists(
+            {"a": "Acceptance", "r": "Request"},
+            and_(
+                call("acceptance_produced_from_request", var("a"), var("r")),
+                or_(
+                    neq(
+                        call("acceptance_document", var("a")),
+                        call("request_document", var("r")),
+                    ),
+                    neq(
+                        call("acceptance_change_id", var("a")),
+                        call("request_change_id", var("r")),
+                    ),
+                    not_(
+                        call(
+                            "acceptance_idempotency_identity_matches_request",
+                            var("a"),
+                            var("r"),
+                        )
+                    ),
+                ),
+            ),
+        )
+        result = self.verifier.exclusion_check(
+            bad_identity,
+            contracts=["acceptance_request_identity_binding"],
+        )
+        self.assertTrue(result.closes_counterexample)
+
+    def test_live_delivery_acceptance_binding_requires_committed_source(self):
+        missing_source = exists(
+            {"d": "LiveDelivery"},
+            and_(
+                call("live_delivery_record", var("d")),
+                not_(
+                    exists(
+                        {"a": "Acceptance"},
+                        and_(
+                            call("committed_history_record", var("a")),
+                            call("live_delivery_derived_from", var("d"), var("a")),
+                        ),
+                    )
+                ),
+            ),
+        )
+        result = self.verifier.exclusion_check(
+            missing_source,
+            contracts=["live_delivery_acceptance_binding"],
+        )
+        self.assertTrue(result.closes_counterexample)
+
+    def test_recovery_head_binding_closes_capture_or_preservation_violation(self):
+        bad_recovery = exists(
+            {"r": "RecoveryAttempt"},
+            and_(
+                call("recovery_head_capture_event", var("r")),
+                or_(
+                    neq(
+                        call("recovery_head_value", var("r")),
+                        call("captured_recovery_authoritative_head", var("r")),
+                    ),
+                    not_(call("recovery_head_preserved", var("r"))),
+                ),
+            ),
+        )
+        result = self.verifier.exclusion_check(
+            bad_recovery,
+            contracts=["recovery_head_binding"],
+        )
+        self.assertTrue(result.closes_counterexample)
+
+    def test_claim_L92_excludes_wrong_recovery_head_without_lifecycle_overreach(self):
+        bad_head = exists(
+            {"r": "RecoveryAttempt"},
+            and_(
+                call("recovery_head_capture_event", var("r")),
+                neq(
+                    call("recovery_head_value", var("r")),
+                    call("captured_recovery_authoritative_head", var("r")),
+                ),
+            ),
+        )
+        result = self.verifier.claim_exclusion_check(
+            bad_head,
+            claims=["L92_captured_recovery_head_equals_authoritative_frontier"],
+        )
+        self.assertTrue(result.closes_counterexample)
+
+        unrelated_lifecycle_violation = exists(
+            {"r": "RecoveryAttempt"},
+            and_(
+                call("recovery_head_capture_event", var("r")),
+                not_(call("recovery_head_preserved", var("r"))),
+            ),
+        )
+        self.assertEqual(
+            self.verifier.check_claims(
+                unrelated_lifecycle_violation,
+                claims=["L92_captured_recovery_head_equals_authoritative_frontier"],
+            ).status,
+            "sat",
+        )
+
+    def test_claim_L108_excludes_intermediate_identity_breakage(self):
+        broken_path = exists(
+            {"a": "Acceptance", "r": "Request"},
+            and_(
+                call("acceptance_produced_from_request", var("a"), var("r")),
+                not_(
+                    call(
+                        "acceptance_identity_preserved_end_to_end",
+                        var("a"),
+                        var("r"),
+                    )
+                ),
+            ),
+        )
+        result = self.verifier.claim_exclusion_check(
+            broken_path,
+            claims=["L108_acceptance_preserves_request_identity"],
+        )
+        self.assertTrue(result.closes_counterexample)
+
+    def test_claim_L116_excludes_live_delivery_without_committed_source(self):
+        missing_source = exists(
+            {"d": "LiveDelivery"},
+            and_(
+                call("live_delivery_record", var("d")),
+                not_(
+                    exists(
+                        {"a": "Acceptance"},
+                        and_(
+                            call("committed_history_record", var("a")),
+                            call("live_delivery_derived_from", var("d"), var("a")),
+                        ),
+                    )
+                ),
+            ),
+        )
+        result = self.verifier.claim_exclusion_check(
+            missing_source,
+            claims=["L116_live_delivery_is_bound_to_committed_acceptance"],
+        )
         self.assertTrue(result.closes_counterexample)
 
 

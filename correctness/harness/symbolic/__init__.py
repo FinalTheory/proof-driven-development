@@ -1,6 +1,13 @@
 """Generic typed symbolic IR and SMT backend for PDD experiments."""
 
-from .bridge import ContractMapping, SymbolicBridge, SymbolicBridgeError
+from .bridge import ClaimMapping, ContractMapping, SymbolicBridge, SymbolicBridgeError
+from .assurance_registry import (
+    SubjectTrustResult,
+    SubjectTrustStatus,
+    TranslationAssuranceRecord,
+    TranslationAssuranceRegistry,
+    assurance_record_payload,
+)
 from .dsl import ParsedProgram, parse_program
 from .ir import (
     BOOL,
@@ -19,6 +26,27 @@ from .ir import (
     Sort,
     Var,
 )
+from .translation_assurance import (
+    AssuranceStatus,
+    ComparisonReview,
+    ClaimTranslationSubject,
+    ComparisonVerdict,
+    RoundTripTranslation,
+    TranslationReviewError,
+    TranslationSubject,
+    TranslationStatus,
+    aggregate_translation_assurance,
+    build_claim_translation_subject,
+    build_direct_comparison_prompt,
+    build_roundtrip_comparison_prompt,
+    build_roundtrip_translation_prompt,
+    build_translation_subject,
+    parse_comparison_review,
+    parse_comparison_review_or_incomplete,
+    parse_roundtrip_translation,
+    parse_roundtrip_translation_or_incomplete,
+    translation_subject_signature,
+)
 from .verification import ExclusionCheck, SymbolicVerifier
 from .z3_backend import CheckResult, Z3_AVAILABLE, check_program
 
@@ -28,6 +56,8 @@ __all__ = [
     "BoolConst",
     "Call",
     "CheckResult",
+    "ClaimMapping",
+    "ClaimTranslationSubject",
     "ContractMapping",
     "Eq",
     "ExclusionCheck",
@@ -40,11 +70,34 @@ __all__ = [
     "Not",
     "Or",
     "ParsedProgram",
+    "RoundTripTranslation",
     "Sort",
+    "AssuranceStatus",
+    "SubjectTrustResult",
+    "SubjectTrustStatus",
+    "TranslationAssuranceRecord",
+    "TranslationAssuranceRegistry",
+    "ComparisonReview",
+    "ComparisonVerdict",
     "SymbolicBridge",
     "SymbolicBridgeError",
     "SymbolicVerifier",
+    "TranslationReviewError",
+    "TranslationSubject",
+    "TranslationStatus",
     "Var",
+    "aggregate_translation_assurance",
+    "assurance_record_payload",
+    "build_claim_translation_subject",
+    "build_direct_comparison_prompt",
+    "build_roundtrip_comparison_prompt",
+    "build_roundtrip_translation_prompt",
+    "build_translation_subject",
+    "parse_comparison_review",
+    "parse_comparison_review_or_incomplete",
+    "parse_roundtrip_translation",
+    "parse_roundtrip_translation_or_incomplete",
+    "translation_subject_signature",
     "Z3_AVAILABLE",
     "check_program",
     "parse_program",
