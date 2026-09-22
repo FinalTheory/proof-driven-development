@@ -1252,9 +1252,40 @@ class CorrectnessToolTests(unittest.TestCase):
             correctness._apply_mutation_plan(doc, plan)
         self.assertIn("ARCHITECTURE_SYNTHESIS_REQUIRED", str(ctx.exception))
 
+    def test_stable_refinement_does_not_persist_rationale(self):
+        doc = copy.deepcopy(self.base)
+        entry = doc["refinement"]["nodes"]["L1_left_boundary"]
+        entry["status"] = "stable"
+        entry["signature"] = "0" * 64
+        entry["rationale"] = "Historical audit narrative that must not remain canonical."
+        errors, warnings = correctness.validate(correctness.Graph(doc))
+        self.assertEqual(errors, [])
+        self.assertTrue(
+            any("stable node should not retain rationale" in warning for warning in warnings)
+        )
+
+        plan = {
+            "mutation_version": 1,
+            "authority": "human",
+            "operations": [
+                {
+                    "op": "set_refinement",
+                    "node": "L1_left_boundary",
+                    "status": "stable",
+                    "rationale": "Should be rejected rather than persisted.",
+                }
+            ],
+        }
+        with self.assertRaises(SystemExit) as ctx:
+            correctness._apply_mutation_plan(copy.deepcopy(self.base), plan)
+        self.assertIn("stable refinement state may not persist rationale", str(ctx.exception))
+
     def test_workflow_help_contracts(self):
         text = correctness.WORKFLOW_HELP
         self.assertIn("Mandatory clean-context isolation", text)
+        self.assertIn("spawn_chatgpt_subagent", text)
+        self.assertIn("tool discovery", text)
+        self.assertIn("execution/capacity", text)
         self.assertIn("Orchestrator as skeptical judge/compiler", text)
         self.assertIn("MUST NOT edit `correctness.yaml` directly", text)
         self.assertIn("mutation-schema", text)
@@ -1644,6 +1675,9 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("Semantic provenance/binding closure", text)
         self.assertIn("composite identities or semantic tuples", text)
         self.assertIn("tuple closure", text)
+        self.assertIn("spawn_chatgpt_subagent", text)
+        self.assertIn("tool discovery", text)
+        self.assertIn("FINAL VERDICT: EXECUTION INCOMPLETE", text)
         self.assertIn("--omit-specification-coverage", text)
 
     def test_assurance_status_can_omit_prior_specification_coverage(self):

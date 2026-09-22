@@ -442,6 +442,15 @@ Every runnable audit MUST be performed by a NEW isolated sub-agent with no prior
 conversation, no earlier audit transcript, and no knowledge of why the node was created.
 Do not reuse an agent across nodes or refinement rounds.
 
+When the Writer MCP exposes `spawn_chatgpt_subagent`, that is the canonical clean-context
+execution primitive and the orchestrator MUST use it rather than simulating multiple roles
+inside its own context. If that function is not present in the initially loaded tool subset,
+perform Writer-tool discovery before concluding that clean-context execution is unavailable.
+Browser-slot exhaustion or a child-task failure is an execution/capacity
+condition, not evidence that clean-context tooling does not exist: reap/finish existing tasks and
+retry when capacity is available. If a clean sub-agent cannot actually be obtained, do not silently
+downgrade the audit to same-context reasoning and do not claim a clean audit result.
+
 The clean verifier may use general distributed-systems knowledge to understand terms and
 construct executions, but it must not invent guarantees absent from its generated task.
 
@@ -515,10 +524,13 @@ structured `mutate` operations, attaches current semantic-signature precondition
 through the locked mutation API. A rejected or superseded recommendation produces no graph mutation.
 
 Canonical model text is current-state specification, not a changelog. When compiling claims, contracts,
-verification intents, or refinement rationale, state what is true now. Do not encode edit history such as
-"previously X, now Y", "after the repair", "reclassified from", or why an older wording was wrong unless
-that history is itself part of the current system semantics. Git/history and external audit artifacts carry
-change narrative; `correctness.yaml` should remain a clean statement of the present model.
+verification intents, or temporary pending/waiver rationale, state what is true now. Do not encode edit
+history such as "previously X, now Y", "after the repair", "reclassified from", or why an older wording was
+wrong unless that history is itself part of the current system semantics. Stable refinement nodes MUST NOT
+retain rationale at all; their current proposition plus semantic signature is the canonical state. Waived
+nodes still require rationale because the exception itself is current workflow state. Git/history and
+external audit artifacts carry change narrative; `correctness.yaml` should remain a clean statement of the
+present model.
 
 When several clean audits complete in parallel, the orchestrator may judge them in any order, but it
 must treat each result as based on the signature captured when that audit started. `STALE_MUTATION`
@@ -1888,6 +1900,11 @@ def validate(graph: Graph) -> tuple[list[str], list[str]]:
                         errors.append(
                             f"refinement.nodes.{node_id}: stable node requires a 64-hex signature"
                         )
+                    if "rationale" in entry:
+                        warnings.append(
+                            f"refinement.nodes.{node_id}: stable node should not retain rationale; "
+                            "canonical YAML records current state, while audit history belongs outside the model"
+                        )
                 if status == "waived":
                     rationale = entry.get("rationale")
                     if not isinstance(rationale, str) or not rationale.strip():
@@ -3036,6 +3053,16 @@ def _emit_coverage_audit_prompt(graph: Graph) -> None:
     print()
     print("## Multi-agent campaign")
     print()
+    print("Isolation is an execution requirement, not a role-playing convention. When Writer MCP exposes")
+    print("`spawn_chatgpt_subagent`, the orchestrator MUST use it for every scout, checker, and challenger.")
+    print("If it is absent from the initially loaded tool subset, perform Writer-tool discovery before declaring")
+    print("clean-context execution unavailable. Do not reuse this orchestrator context as a substitute for a fresh child conversation.")
+    print("If all browser slots are occupied or a child task fails, treat that as transient capacity/execution failure:")
+    print("finish, reap, or cancel existing child tasks as appropriate and retry when a slot is available.")
+    print("Do not report missing clean-context capability merely because one spawn attempt could not run.")
+    print("If required isolation still cannot be obtained, stop without a coverage certification and return")
+    print("`FINAL VERDICT: EXECUTION INCOMPLETE`; do not record specification coverage from that run.")
+    print()
     print("Spawn fresh isolated scouts with non-overlapping attack surfaces:")
     print("- Scout A — end-to-end semantic pipeline: submission → acceptance → delivery/reconnect → visible client state.")
     print("- Scout B — authoritative state/provenance: accepted history, identity, fencing, snapshot/recovery, compaction.")
@@ -3060,6 +3087,8 @@ def _emit_coverage_audit_prompt(graph: Graph) -> None:
     print("5. the candidate survives a challenger.")
     print()
     print("Otherwise terminate with `FINAL VERDICT: CLOSED`.")
+    print("If mandatory fresh-context execution could not be completed, issue neither CLOSED nor STRUCTURAL GAP FOUND;")
+    print("terminate with `FINAL VERDICT: EXECUTION INCOMPLETE` and do not mutate specification-coverage assurance.")
     print()
     print("## Final response")
     print()
@@ -3882,6 +3911,11 @@ def _apply_mutation_plan(
             node_id = _resolve_ref(raw_op.get("node"), aliases)
             if node_id not in claims or node_id not in refinement_nodes:
                 raise SystemExit(f"operation[{index}]: unknown refinement claim {node_id}")
+            if raw_op.get("status") == "stable" and "rationale" in raw_op:
+                raise SystemExit(
+                    "stable refinement state may not persist rationale; canonical YAML records current state, "
+                    "while audit history belongs outside the model"
+                )
             entry = refinement_nodes[node_id]
             for field in ("status", "blocked_by", "rationale"):
                 if field in raw_op:
@@ -3889,6 +3923,7 @@ def _apply_mutation_plan(
             if entry.get("status") == "stable":
                 stable_later.append(node_id)
                 entry.pop("signature", None)
+                entry.pop("rationale", None)
             else:
                 entry.pop("signature", None)
 

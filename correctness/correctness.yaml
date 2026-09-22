@@ -43,7 +43,7 @@ refinement:
     G1_retry_is_logically_exactly_once:
       status: stable
       blocked_by: []
-      signature: 92aa160d4d490786ff18f9ae05e0c4fdea51480ec2d4d3b291dbec16dbe9cfb0
+      signature: 0a3f2187ee565c2543732e927e8a1727101571a5b3b63405693c803df4b4618d
     G2_canonical_history_is_linear_and_fenced:
       status: stable
       blocked_by: []
@@ -53,8 +53,9 @@ refinement:
       blocked_by: []
       signature: 663757fd51c7cb9756c67c28d48369eb2b9f1c655118a1135efbc8a22cce6f55
     G4_reconnect_converges_without_gap_or_duplicate:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: e1388cadff542e704d883b7fca06b1ff04c569a36724222b5b6e21d613e4ce8f
     L16_commit_precedes_ack:
       status: stable
       blocked_by: []
@@ -62,7 +63,7 @@ refinement:
     G5_retry_resolves_idempotently:
       status: stable
       blocked_by: []
-      signature: f1b1f011aa6c35cfa58ee22c9c39a78b278a3d573cd1425ee30fa3716897be82
+      signature: 9a7c51ad9c79fb2ebd7ef82a5f94c787d0cf6f75ab094bdd538891eb23fb1d2d
     C7_revision_frontier_is_linear:
       status: stable
       blocked_by: []
@@ -90,11 +91,11 @@ refinement:
     C13_idempotency_key_is_temporally_unique:
       status: stable
       blocked_by: []
-      signature: aac85767b8923a0a51eb4458dbba43c748a5e280b26aeb613f857f5c96897219
+      signature: 4d83dfc12b890f96feeb57eebe3be0c919126a1cb88fcc2882fcd0a73c40ff61
     L14_accepted_idempotency_identity_survives_lifecycle:
       status: stable
       blocked_by: []
-      signature: cb0796838bbb93ce1d269b5f089627b64bcbb14e030f522730250b10b3187100
+      signature: 6fd9ec71b48503efcfa5de127b617b030b562351e2947fc23d72d8c8d5d77d61
     L3_revision_key_is_unique:
       status: stable
       blocked_by: []
@@ -272,8 +273,9 @@ refinement:
       blocked_by: []
       signature: dc7c47fb45bf379dd9d72dfc74becc262a9c1300298058a6cb94894a6b486950
     G6_accepted_change_preserves_ot_semantics:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 861b3fca4612f89916211c14f0c3e951d7d1f8178dcaf6acf51c76472ae33d11
     L98_ot_receives_exact_request_and_canonical_context:
       status: stable
       blocked_by: []
@@ -282,27 +284,18 @@ refinement:
       status: stable
       blocked_by: []
       signature: c5c683474a22ac40954b6ffaeab0f1b9dfd39dd6c6857301d016c718c4997c6e
-    L100_acceptance_commits_only_ot_success_output:
-      status: stable
-      blocked_by: []
-      signature: 44b89a03f233bc264efdd01397713da2dea4059ee2f14ee02de613634258b8ca
     L101_client_completes_catchup_through_response_head:
       status: stable
       blocked_by: []
       signature: c4f81922770e1e994b49cbf1563f8f59fa9c5641ff21975a8f59e9c33f546f22
-    L102_client_frontier_matches_canonical_base:
+    G7_reconnect_does_not_double_render_accepted_optimistic_edit:
       status: stable
       blocked_by: []
-      signature: fd0041ee637ee7a160f4bb79fe23c10fdcd3fa9daf33a4dc60965045810134fc
-    G7_reconnect_does_not_double_render_accepted_optimistic_edit:
-      status: pending
-      blocked_by: []
-    L104_pending_identity_resolution_is_bound_to_response_head:
-      status: pending
-      blocked_by: []
+      signature: afdfd1af4bec46a26041dfdd3fa62e86be682caecb6565d9e816823f16b0483e
     L106_resync_request_covers_start_pending_set:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: fdd46ec338be55831fe27c3ab096613edd2bae0a819bc2d569ae05ab48f3380e
     L107_client_freezes_speculative_edits_during_resync:
       status: stable
       blocked_by: []
@@ -326,10 +319,11 @@ refinement:
     G9_accepted_idempotency_evidence_matches_committed_acceptance:
       status: stable
       blocked_by: []
-      signature: 28d89290fccf29084f3be7fd3481a19feb00590ec9e3a2dd2144b61c770c8f84
+      signature: f79e63cc559c1d75b47e44bf95741805dd2b5c53c264eb8f4e351e445baaa6f1
     L113_request_raw_edit_is_bound_to_authoring_frontier:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 09e9d6f90e577b9e5ed8846a8671dbb68db18ff1cc688b319daf6cb7faae29ed
     L114_hot_path_accepted_evidence_requires_committed_acceptance:
       status: stable
       blocked_by: []
@@ -349,29 +343,67 @@ refinement:
     L117_retry_existing_acceptance_matches_full_idempotency_key:
       status: stable
       blocked_by: []
-      signature: 1fc7487ca328c60312fdd29bb2638e5b668c444fd6ce8500e54a2677b16926a4
-    L118_request_authoring_base_is_captured_from_coherent_client_base:
-      status: pending
-      blocked_by: []
+      signature: 4877731b0fdab821c969dea209f1b1bf13763be6967031e1d0df6ea69cfe0214
     C36_reconnect_starts_from_canonical_client_frontier:
       status: stable
       blocked_by: []
-      signature: 5e5db659407034c53aeaad7a241998ac997ad10644c339fdede4ed1803e5ae01
+      signature: ee6cd5be0e5fbff69920b69c05aee7fa0c20b3277d0a4edea73c80c09decd57d
     L119_completed_resync_candidate_stays_at_response_head_until_publication:
       status: stable
       blocked_by: []
       signature: e1bd7eeaeb99a0b767194f28cfa51b7914849d1c3439e1d77ae82da9b24ba257
-    L120_pending_reconciliation_preserves_resync_canonical_base:
-      status: stable
-      blocked_by: []
-      signature: a556c61eac80f85bc18977f9427263204b42cd0f8bda858f71ab75e7219d9266
     L121_delta_resync_candidate_starts_from_canonical_client_base:
       status: stable
       blocked_by: []
       signature: 12b931e4986554c05709c52f6be9e5ebeab2cd9efc1193f505c6108668fabddc
     L122_catchup_response_head_is_bound_to_authoritative_frontier:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 94f4ed2143c8227053511f8deae73bce00f1037ef6fbdc2a8621324be148af7d
+    L123_acceptance_payload_and_identity_share_submitted_request:
+      status: stable
+      blocked_by: []
+      signature: 3afc3cd8eaf280ac1b1093f1dc4571e95b5557d92772db77dafc182bbb712deb
+    C37_pending_identity_resolution_is_bound_to_response_head:
+      status: stable
+      blocked_by: []
+      signature: 1ccfe85156f9ee3fc94ef1fda04086553c069d61378e780bda955e2f05d8e7c6
+    L124_pending_identity_classifier_uses_same_identity_and_response_head:
+      status: stable
+      blocked_by: []
+      signature: c0d299f89c93dab97297498b24e17206b86fa812de4374b4efa820babc71e01a
+    L125_pending_identity_revision_evidence_survives_lifecycle:
+      status: stable
+      blocked_by: []
+      signature: a1ca6fdb388fc32a4aa1df96ca673740df45d2dcc71d7de5ee9924bf9d20b8d9
+    L126_pending_reconciliation_preserves_resync_canonical_candidate:
+      status: stable
+      blocked_by: []
+      signature: 87697c59a52fb4cd1083de556474641b85e4adf7f3fc9d77fe954bb9eaeca406
+    L127_canonical_accepted_record_provenance_survives_lifecycle:
+      status: stable
+      blocked_by: []
+      signature: 1e8db00f52cc1ca87825db88d150f71141fd2bd732f5961785635ed9812b238f
+    G10_user_visible_client_state_matches_document:
+      status: stable
+      blocked_by: []
+      signature: 266ef48419ee6522510183221ba98dd93d86d7a4b4f811d531de853104d1e6d9
+    L128_client_canonical_frontier_is_established_on_publication:
+      status: stable
+      blocked_by: []
+      signature: fd35804c9a04be203bfc69166e69e33c267324c771c3ee2de6e0e9d678ea48fb
+    L129_client_canonical_frontier_is_preserved_by_visible_transitions:
+      status: stable
+      blocked_by: []
+      signature: a19fbea56f90694705064e07e99e73efe4fb63a01b41a5b9e2fda255b2eca378
+    C38_client_frontier_matches_canonical_base:
+      status: stable
+      blocked_by: []
+      signature: daddb58719fda291546f7ee9156788dcf7c7255e4674b7032bb33d7058592ddb
+    L130_reconnect_start_is_bound_to_visible_client_tuple:
+      status: stable
+      blocked_by: []
+      signature: 7501889390e7e5d266c7c0d1a77de58423f6d061d84e7a5f9a963a4911f75776
 assumptions:
   A1_storage_commit_is_durable:
     statement: A successful authoritative-store commit remains recoverable across the server-process
@@ -408,6 +440,18 @@ assumptions:
     source_refs:
       - authoritative_truth
       - raft_analogy
+  A6_normal_retry_reconnect_identity_is_eligible_for_30_days:
+    statement: For a normally participating client, a logical edit identified by (document_id=D,
+      client_change_id=k) is submitted through normal retry or authoritative reconnect
+      reconciliation only while its pending/retry age is no more than 30 days. Once that age exceeds
+      30 days, the client does not submit the old identity through those normal protocol paths and
+      instead discards the pending operation or enters an explicit expired, conflict, or
+      manual-resolution path; a submission that violates this boundary is outside the normal
+      retry/reconnect correctness guarantees.
+    status: protocol_assumption
+    source_refs:
+      - accepted_change_log
+      - reconnect_revision_boundary
 roots:
   - G0_acked_edit_survives_failover
   - G1_retry_is_logically_exactly_once
@@ -419,6 +463,7 @@ roots:
   - G7_reconnect_does_not_double_render_accepted_optimistic_edit
   - G8_user_visible_state_does_not_double_render_accepted_optimistic_edit
   - G9_accepted_idempotency_evidence_matches_committed_acceptance
+  - G10_user_visible_client_state_matches_document
 claims:
   G0_acked_edit_survives_failover:
     kind: root
@@ -441,8 +486,10 @@ claims:
   G1_retry_is_logically_exactly_once:
     kind: root
     statement: >-
-      ACK loss, reconnect, or retry cannot cause one logical client edit to create more
-      than one accepted canonical change.
+      For a normally participating client, ACK loss, reconnect, or retry of one logical client edit while
+      its (document_id, client_change_id) remains within the 30-day normal retry/reconnect eligibility
+      horizon cannot cause that logical edit to create more than one accepted canonical change. Re-submission
+      of an expired identity outside that protocol horizon is outside this guarantee.
     severity: critical
     assurance_required: strong
     depends_on:
@@ -492,17 +539,18 @@ claims:
   G4_reconnect_converges_without_gap_or_duplicate:
     kind: root
     statement: >-
-      For a normally participating client starting from last_applied_revision L, every catch-up attempt
-      eligible for completion or publication establishes catchup_head_binding for one response-specific
-      head H captured from that document's authoritative document_latest_revision at one authoritative-store
-      read/linearization point, and preserves that same H through response selection, reconciliation,
-      completion, and publication. If the attempt completes and publishes its reconciled result, the user-visible
-      canonical state equals canonical replay through H without omitting or double-applying any accepted
-      revision through H. Reconnect/resync publication is atomic and monotonic across overlapping or retried
-      attempts: no intermediate candidate prefix is user-visible, and a response whose H is below the
-      already visible canonical frontier cannot regress or otherwise mutate that visible canonical/frontier
-      state. Acceptances after H capture are outside that response; this claim does not require catching
-      a continuously advancing live head.
+      For a normal foreground, visible-document-bound reconnect/catch-up attempt for document D starting
+      from last_applied_revision L, every such catch-up attempt eligible for completion or publication
+      establishes catchup_head_binding for one response-specific head H captured from that document's
+      authoritative document_latest_revision at one authoritative-store read/linearization point, and
+      preserves that same H through response selection, reconciliation, completion, and publication. If
+      the attempt completes and publishes its reconciled result, the user-visible canonical state equals
+      canonical replay of document D through H without omitting or double-applying any accepted revision
+      through H. Reconnect/resync publication is atomic and monotonic across overlapping or retried attempts:
+      no intermediate candidate prefix is user-visible, and a response whose H is below the already visible
+      canonical frontier cannot regress or otherwise mutate that visible canonical/frontier state. Acceptances
+      after H capture are outside that response; this claim does not require catching a continuously advancing
+      live head.
     severity: critical
     assurance_required: strong
     depends_on:
@@ -516,9 +564,9 @@ claims:
       - L109_resync_publication_is_atomic_and_monotonic
       - C36_reconnect_starts_from_canonical_client_frontier
       - L119_completed_resync_candidate_stays_at_response_head_until_publication
-      - L120_pending_reconciliation_preserves_resync_canonical_base
       - L121_delta_resync_candidate_starts_from_canonical_client_base
       - L122_catchup_response_head_is_bound_to_authoritative_frontier
+      - L126_pending_reconciliation_preserves_resync_canonical_candidate
     source_refs:
       - reconnect_revision_boundary
       - owner_failover
@@ -555,9 +603,11 @@ claims:
   G5_retry_resolves_idempotently:
     kind: root
     statement: >-
-      If reprocessing the same logical client edit produces a non-timeout acceptance-resolution outcome,
+      For a normally participating client reprocessing the same logical client edit within the 30-day
+      normal retry eligibility horizon, if processing produces a non-timeout acceptance-resolution outcome,
       it either returns the previously accepted canonical result or accepts the edit once; pending, timeout,
-      or cancellation is permitted, and no execution creates a second logical operation.
+      or cancellation is permitted, and no eligible execution creates a second logical operation. Re-submission
+      after expiry is outside this guarantee.
     severity: critical
     assurance_required: strong
     depends_on:
@@ -727,17 +777,19 @@ claims:
   C13_idempotency_key_is_temporally_unique:
     kind: derived
     statement: >-
-      Across overlapping and sequential processing of the same
-      (document_id, client_change_id), including retries after owner recovery or
-      accepted-history lifecycle changes, at most one acceptance event may create a
-      canonical accepted change for that key.
-    formal_intent: "count(acceptance_events where idempotency_key = k) <= 1"
+      Across overlapping and sequential normal processing of the same (document_id, client_change_id)
+      while that logical edit remains within the 30-day normal retry/reconnect eligibility horizon, including
+      retries after owner recovery or accepted-history lifecycle changes, at most one acceptance event
+      may create a canonical accepted change for that key.
+    formal_intent: "Within the 30-day normal retry/reconnect eligibility horizon, count(acceptance_events
+      where idempotency_key = k) <= 1"
     severity: critical
     assurance_required: maximal
     depends_on:
       - L14_accepted_idempotency_identity_survives_lifecycle
       - C14_all_acceptance_paths_honor_idempotency_identity
       - L27_concurrent_first_acceptance_is_atomically_arbitrated
+      - A6_normal_retry_reconnect_identity_is_eligible_for_30_days
     source_refs:
       - accepted_change_log
       - snapshot_frontier
@@ -747,11 +799,12 @@ claims:
   L14_accepted_idempotency_identity_survives_lifecycle:
     kind: leaf
     statement: >-
-      Once an acceptance event has occurred for an idempotency key, authoritative state
-      continues to preserve sufficient non-reusable evidence that the key has already been
-      accepted for every later state in which an execution carrying that key may still reach
-      acceptance, including across owner recovery, snapshotting, compaction, and
-      accepted-history lifecycle cleanup.
+      Once an acceptance event has occurred for an idempotency key, authoritative state preserves sufficient
+      non-reusable evidence that the key has already been accepted in every later state while the logical
+      edit remains within the 30-day normal retry/reconnect eligibility horizon, including across owner
+      recovery, snapshotting, compaction, and accepted-history lifecycle cleanup. The protocol does not
+      require this ordinary retry/reconnect classification evidence to remain available after the identity
+      has expired from that horizon.
     severity: critical
     assurance_required: maximal
     surfaces:
@@ -762,12 +815,14 @@ claims:
     verification:
       verifiers:
         - kind: state_machine
-          intent: After accept(k), exercise recovery, snapshot, compaction, and cleanup transitions;
-            while k may still reappear at acceptance, authoritative state must continue to
-            distinguish k as already accepted.
+          intent: After accept(k), exercise recovery, snapshot, compaction, and cleanup transitions
+            while the logical edit remains within the 30-day normal retry/reconnect eligibility
+            horizon; authoritative state must continue to distinguish k as already accepted
+            throughout that horizon.
         - kind: fault_injection
           intent: Crash and recover around idempotency-evidence publication and lifecycle
-            transitions; no completed acceptance may become semantically reusable.
+            transitions within the 30-day eligibility horizon; no completed eligible acceptance may
+            become semantically reusable during that horizon.
     source_refs:
       - accepted_change_log
       - snapshot_frontier
@@ -1980,11 +2035,10 @@ claims:
       - A2_ot_engine_is_correct
       - L98_ot_receives_exact_request_and_canonical_context
       - L99_ot_result_is_bound_to_acceptance_frontier
-      - L100_acceptance_commits_only_ot_success_output
-      - L108_acceptance_preserves_request_identity
       - L113_request_raw_edit_is_bound_to_authoring_frontier
-      - L102_client_frontier_matches_canonical_base
-      - L118_request_authoring_base_is_captured_from_coherent_client_base
+      - C38_client_frontier_matches_canonical_base
+      - L123_acceptance_payload_and_identity_share_submitted_request
+      - L127_canonical_accepted_record_provenance_survives_lifecycle
     formal_intent: request_authoring_frontier_binding; ot_success_acceptance_binding;
       ot_result_frontier_binding; acceptance_request_identity_binding
     semantic_contracts:
@@ -2063,42 +2117,6 @@ claims:
     formal_intent: ot_result_frontier_binding
     semantic_contracts:
       - ot_result_frontier_binding
-  L100_acceptance_commits_only_ot_success_output:
-    statement: Every path capable of creating a canonical_accepted_change is dominated by a
-      successful OT invocation for one submitted raw_edit corresponding to that acceptance, and the
-      committed transformed payload is exactly the payload returned by that invocation; no path may
-      create canonical accepted history without such OT-success provenance, and no OT reject or
-      rebase-required outcome can create a canonical_accepted_change.
-    severity: critical
-    assurance_required: maximal
-    source_refs:
-      - ot_input_output
-      - accepted_change_log
-      - final_architecture
-    surfaces:
-      - acceptance_path
-      - accepted_history_store
-      - ot_state
-    mechanisms:
-      - server_authoritative_ot
-      - acceptance_transaction
-    verification:
-      verifiers:
-        - kind: control_flow
-          intent: Enumerate every entry point capable of creating a canonical accepted change; prove
-            each insertion is dominated by a successful OT invocation for its corresponding
-            submitted raw edit, reject and rebase-required exits cannot reach insertion, and the
-            inserted payload preserves exact dataflow identity with that invocation result.
-        - kind: differential_test
-          intent: Perturb successful OT outputs and rejection outcomes while holding request and
-            context fixed across every acceptance-capable entry point; accepted payloads must change
-            exactly with the corresponding successful engine output, while any attempt lacking
-            submitted-raw-edit/OT-success provenance and every reject or rebase-required outcome
-            must produce no canonical acceptance.
-    kind: leaf
-    formal_intent: ot_success_acceptance_binding
-    semantic_contracts:
-      - ot_success_acceptance_binding
   L101_client_completes_catchup_through_response_head:
     statement: "A client catch-up attempt for authoritative response head H is considered complete only
       after the client has consumed the response's entire canonical representation through H: delta mode
@@ -2125,65 +2143,24 @@ claims:
             only after the selected checkpoint if any and every canonical response revision through
             H have been consumed, with last_applied_revision exactly H.
     kind: leaf
-  L102_client_frontier_matches_canonical_base:
-    statement: 'At every user-visible client state, client_canonical_frontier_coherence holds: client_local_document
-      equals deterministic application of all and only canonical accepted revisions through last_applied_revision.
-      The invariant is established at client initialization or canonical publication and preserved by
-      every user-visible transition capable of mutating, restoring, or publishing client_local_document
-      or last_applied_revision, including transitions that leave the frontier unchanged. Speculative raw
-      edits are not part of client_local_document, and private client_resync_candidate construction is
-      outside this observer boundary until atomic publication.'
-    severity: critical
-    assurance_required: strong
-    source_refs:
-      - authoritative_truth
-      - snapshot_frontier
-      - reconnect_revision_boundary
-      - final_architecture
-    surfaces:
-      - catchup
-      - client_sync
-      - live_delivery
-    mechanisms:
-      - accepted_history_log
-      - catchup_protocol
-      - client_revision_continuity
-      - snapshot_checkpoint
-    verification:
-      verifiers:
-        - kind: state_machine
-          intent: Model client initialization, contiguous live and catch-up application,
-            duplicate/gap handling, snapshot replacement, interruption, retry/pending bookkeeping,
-            UI/local-state restoration, buffered live delivery, reconnect publication, and every
-            other transition that can mutate, restore, or publish client_local_document or
-            last_applied_revision. Prove inductively that every user-visible reachable state
-            satisfies client_canonical_frontier_coherence, including transitions that leave the
-            frontier unchanged; private resync candidates may violate it only while remaining
-            unobservable.
-        - kind: control_flow
-          intent: Enumerate every implementation path that can assign, restore, swap, or publish
-            client_local_document or last_applied_revision and prove it either preserves their
-            canonical replay relation atomically or operates only on non-user-visible
-            client_resync_candidate state.
-    kind: leaf
-    formal_intent: client_canonical_frontier_coherence
-    semantic_contracts:
-      - client_canonical_frontier_coherence
   G7_reconnect_does_not_double_render_accepted_optimistic_edit:
-    statement: 'During reconnect/resync for document D, the client does not create or apply new speculative
-      local edits for D while the resync attempt is in progress. For every pending logical edit identity
-      (D,k) at resync start, the catch-up request for D includes k for authoritative reconciliation through
-      response head H_D; if canonical acceptance(D,k) is included in H_D, authoritative reconciliation
+    statement: 'During reconnect/resync for document D by a normally participating client, the client
+      does not create or apply new speculative local edits for D while the resync attempt is in progress.
+      For every pending logical edit identity (D,k) at resync start that remains within the 30-day normal
+      reconnect eligibility horizon, the catch-up request for D includes k for authoritative reconciliation
+      through response head H_D; if canonical acceptance(D,k) is included in H_D, authoritative reconciliation
       identifies that same full identity and any user-visible publication through H_D removes or suppresses
       the speculative overlay for (D,k) before or atomically with publication, so no user-visible state
       exposes both representations. An acceptance(D2,k) for D2 != D is irrelevant. No intermediate resync
       candidate may expose a canonical prefix that already contains acceptance(D,k) together with its
       overlay, and a stale response may not restore an overlay removed by a newer published reconciliation.
-      If any pending edit remains unresolved after reconciled publication or conflict entry, unresolved_pending_blocks_normal_editing
-      holds: the client remains non-normal-editable/read-only or in explicit conflict/reconciliation state
-      and creates no new acceptance-eligible speculative edit until those unresolved edits are explicitly
-      reconciled or removed. This claim makes no automatic local-rebase, conflict-resolution, or progress
-      guarantee.'
+      An identity whose pending/retry age exceeds 30 days is not submitted through normal authoritative
+      reconciliation; it is discarded or handled through an explicit expired, conflict, or manual-resolution
+      path outside this guarantee. If any protocol-eligible pending edit remains unresolved after reconciled
+      publication or conflict entry, unresolved_pending_blocks_normal_editing holds: the client remains
+      non-normal-editable/read-only or in explicit conflict/reconciliation state and creates no new acceptance-eligible
+      speculative edit until those unresolved edits are explicitly reconciled or removed. This claim makes
+      no automatic local-rebase, conflict-resolution, or progress guarantee.'
     severity: critical
     assurance_required: strong
     source_refs:
@@ -2191,7 +2168,7 @@ claims:
       - final_architecture
     kind: root
     depends_on:
-      - L104_pending_identity_resolution_is_bound_to_response_head
+      - C37_pending_identity_resolution_is_bound_to_response_head
       - L106_resync_request_covers_start_pending_set
       - L107_client_freezes_speculative_edits_during_resync
       - L108_acceptance_preserves_request_identity
@@ -2200,51 +2177,14 @@ claims:
     formal_intent: unresolved_pending_blocks_normal_editing
     semantic_contracts:
       - unresolved_pending_blocks_normal_editing
-  L104_pending_identity_resolution_is_bound_to_response_head:
-    statement: 'For every pending identity (document_id=D, client_change_id=k) supplied under a catch-up
-      request for document D with authoritative response head H_D, the response classifies only that same
-      full identity against authoritative acceptance through H_D: it reports accepted at revision r only
-      for the unique canonical acceptance(D,k) with r <= H_D, and reports unresolved through H_D only
-      when no canonical acceptance(D,k) exists through H_D. An acceptance(D2,k) for D2 != D cannot satisfy
-      or suppress pending(D,k). Snapshotting, compaction, cleanup, and recovery preserve enough same-identity
-      accepted revision or equivalent frontier evidence to make this classification while (D,k) may still
-      be presented for reconnect reconciliation.'
-    severity: critical
-    assurance_required: strong
-    source_refs:
-      - accepted_change_log
-      - snapshot_frontier
-      - reconnect_revision_boundary
-      - final_architecture
-    surfaces:
-      - catchup
-      - idempotency
-      - accepted_history_store
-      - history_compaction
-    mechanisms:
-      - catchup_protocol
-      - idempotency_gate
-      - accepted_history_log
-      - snapshot_checkpoint
-    verification:
-      verifiers:
-        - kind: state_machine
-          intent: Vary catch-up document D, response head H_D, same client_change_id k reused by
-            another document, acceptance timing, snapshot/compaction/cleanup, and reconnect retries.
-            Require classification to depend only on canonical acceptance(D,k) at r <= H_D, never on
-            acceptance(D2,k) or a later acceptance.
-        - kind: integration_test
-          intent: Create D1 pending k with no acceptance(D1,k), create a committed acceptance(D2,k),
-            and verify D1 reconciliation remains unresolved; then accept (D1,k) before/after
-            captured H_D1 and verify classification uses only the same full identity and the
-            captured head.
-    kind: leaf
   L106_resync_request_covers_start_pending_set:
     statement: For every reconnect/resync attempt for document D, the pending client_change_id set
-      supplied under that catch-up request contains every speculative local edit identity (D,k)
-      pending for D when the attempt begins; each supplied k is interpreted only under the request
-      document D, and no start-pending (D,k) is omitted or rebound to another document during
-      authoritative reconciliation through that request response head.
+      supplied under that catch-up request contains every speculative local edit identity (D,k) that
+      is pending for D when the attempt begins and remains within the 30-day normal reconnect
+      eligibility horizon; each supplied eligible k is interpreted only under the request document
+      D, and no eligible start-pending (D,k) is omitted or rebound to another document during
+      authoritative reconciliation through that request response head. Expired identities are
+      outside the normal authoritative reconciliation request.
     severity: critical
     assurance_required: strong
     source_refs:
@@ -2260,9 +2200,11 @@ claims:
       verifiers:
         - kind: state_machine
           intent: Enumerate reconnect-start transitions and request construction with pending maps
-            for multiple documents, including the same client_change_id reused across documents. For
-            a catch-up request for D, require every pending (D,k) at attempt start to be represented
-            as k under that same D request context, with no omission or cross-document rebinding.
+            for multiple documents, including the same client_change_id reused across documents and
+            identities on either side of the 30-day eligibility boundary. For a normal catch-up
+            request for D, require every eligible pending (D,k) at attempt start to be represented
+            as k under that same D request context, with no omission or cross-document rebinding;
+            expired identities are not required to enter authoritative reconciliation.
     kind: leaf
   L107_client_freezes_speculative_edits_during_resync:
     statement: 'From the moment a client begins reconnect/resync and captures the pending client_change_id
@@ -2437,16 +2379,19 @@ claims:
     semantic_contracts:
       - visible_canonical_speculative_exclusion
   G9_accepted_idempotency_evidence_matches_committed_acceptance:
-    statement: For every (document_id=D, client_change_id=k) while an execution carrying that
-      identity may still reach acceptance or retry-resolution logic, authoritative state contains
-      durable accepted-key evidence whose protocol meaning is already-accepted(D,k) if and only if
-      canonical history contains exactly one committed canonical acceptance identified by the same
-      (D,k). On the normal hot path this correspondence is established either because the committed
-      accepted row / unique identity itself is the success evidence, or because any separate
-      accepted-key success record commits and aborts atomically with the canonical acceptance in the
-      same acceptance transaction. Lifecycle compaction may replace the physical evidence only by
-      deriving equivalent evidence from a previously committed acceptance; reservation, in-progress
+    statement: For every (document_id=D, client_change_id=k) while its logical edit remains within
+      the 30-day normal retry/reconnect eligibility horizon and an eligible execution may still
+      reach acceptance or retry-resolution logic, authoritative state contains durable accepted-key
+      evidence whose protocol meaning is already-accepted(D,k) if and only if canonical history
+      contains exactly one committed canonical acceptance identified by the same (D,k). On the
+      normal hot path this correspondence is established either because the committed accepted row /
+      unique identity itself is the success evidence, or because any separate accepted-key success
+      record commits and aborts atomically with the canonical acceptance in the same acceptance
+      transaction. Lifecycle compaction may replace the physical evidence only by deriving
+      equivalent evidence from a previously committed acceptance; reservation, in-progress
       arbitration, timeout, cancellation, or another non-committed attempt is not accepted evidence.
+      The protocol does not require ordinary retry/reconnect classification of that old identity
+      after the 30-day horizon expires.
     severity: critical
     assurance_required: maximal
     source_refs:
@@ -2465,10 +2410,10 @@ claims:
   L113_request_raw_edit_is_bound_to_authoring_frontier:
     statement: "For every submitted request whose OT result may become a canonical acceptance, request_authoring_frontier_binding
       holds: the submitted tuple (document_id=D, server-visible raw_edit, base_revision=F) is captured
-      from one client request-authoring base tuple whose authoring_document_id is the same D and whose
-      last_applied_revision is F. Request construction, serialization, dispatch, and retry preserve that
-      document/raw_edit/base binding and cannot substitute another document or frontier for the raw_edit.
-      Canonical correctness of the source client document/frontier relation is proved separately."
+      from one user-visible client canonical tuple with client_document_id=D and last_applied_revision=F.
+      Request construction, serialization, dispatch, and retry preserve that document/raw_edit/base binding
+      and cannot substitute another document or frontier for the raw_edit. Canonical correctness of the
+      source visible client tuple is proved separately."
     formal_intent: request_authoring_frontier_binding
     severity: critical
     assurance_required: maximal
@@ -2490,13 +2435,15 @@ claims:
         - kind: control_flow
           intent: Trace every acceptance-eligible client request construction and OT-dispatch path.
             Prove the serialized document_id, raw_edit, and base_revision are captured from one
-            authoring tuple for the same document D, base_revision equals that tuple frontier, and
-            no serialization/retry path can cross-bind the raw edit to another document or frontier.
+            user-visible source tuple whose client_document_id is the same D, base_revision equals
+            that tuple frontier, and no serialization/retry path can cross-bind the raw edit to
+            another document or frontier.
         - kind: integration_test
-          intent: Construct distinguishable authoring states for documents A and B at the same
-            numeric frontier, produce distinguishable raw edits, perturb document/frontier metadata
-            during request construction and retry, and require every acceptance-eligible request to
-            retain the exact document/raw_edit/base tuple captured from its authoring state.
+          intent: Construct distinguishable visible canonical states for documents A and B at the
+            same numeric frontier, produce distinguishable raw edits, perturb document/frontier
+            metadata during request construction and retry, and require every acceptance-eligible
+            request to retain the exact document/raw_edit/base tuple captured from its source
+            visible state.
     kind: leaf
   L114_hot_path_accepted_evidence_requires_committed_acceptance:
     statement: On the normal acceptance path, authoritative durable state may acquire protocol
@@ -2652,12 +2599,12 @@ claims:
             aborted, or never-committed values cannot reach the delivery sink.
     kind: leaf
   L117_retry_existing_acceptance_matches_full_idempotency_key:
-    statement: If a retry carrying idempotency identity (document_id=D, client_change_id=k) refers
-      to a logical edit whose canonical acceptance for that same full identity (D,k) is already
-      committed, then any non-timeout successful acceptance-resolution outcome returns exactly that
-      existing canonical accepted record for (D,k); pending, timeout, or cancellation remains
-      permitted, and an acceptance for another document or another client_change_id cannot satisfy
-      this retry.
+    statement: If a normal retry within the 30-day eligibility horizon carrying idempotency identity
+      (document_id=D, client_change_id=k) refers to a logical edit whose canonical acceptance for
+      that same full identity (D,k) is already committed, then any non-timeout successful
+      acceptance-resolution outcome returns exactly that existing canonical accepted record for
+      (D,k); pending, timeout, or cancellation remains permitted, and an acceptance for another
+      document or another client_change_id cannot satisfy this retry.
     severity: critical
     assurance_required: strong
     source_refs:
@@ -2674,57 +2621,25 @@ claims:
     verification:
       verifiers:
         - kind: control_flow
-          intent: Trace every already-accepted retry-resolution path from the incoming (document_id,
-            client_change_id) through authoritative lookup to the returned canonical record; require
-            the lookup key and returned record identity to be the same full (D,k), with no
-            cross-document or cross-client-change substitution.
+          intent: For normal retries within the 30-day eligibility horizon, trace every
+            already-accepted retry-resolution path from incoming (document_id, client_change_id)
+            through authoritative lookup to the returned canonical record; require the lookup key
+            and returned record identity to be the same full (D,k), with no cross-document or
+            cross-client-change substitution.
         - kind: integration_test
-          intent: Commit acceptances for two documents that deliberately reuse the same
-            client_change_id, then retry each full key under ACK loss/reconnect conditions and
-            require each non-timeout success to return only its own previously committed canonical
-            record.
-    kind: leaf
-  L118_request_authoring_base_is_captured_from_coherent_client_base:
-    statement: For every submitted request whose OT result may become a canonical acceptance, the
-      client request-authoring base used to produce or encode its server-visible raw_edit is one
-      coherent tuple (authoring_document_id=D, client_local_document, last_applied_revision=F) taken
-      from a user-visible client state for document D or an exact private capture of that same
-      tuple. Private request-construction or resync scratch state may not modify, synthesize, or
-      cross-bind the document identity, canonical document, or frontier independently before the
-      request tuple is captured.
-    severity: critical
-    assurance_required: maximal
-    source_refs:
-      - ot_input_output
-      - reconnect_revision_boundary
-      - final_architecture
-    surfaces:
-      - client_sync
-      - acceptance_path
-      - ot_state
-    mechanisms:
-      - client_revision_continuity
-      - server_authoritative_ot
-    verification:
-      verifiers:
-        - kind: control_flow
-          intent: Enumerate every acceptance-eligible request-authoring and encoding path. Prove
-            that (authoring_document_id, client_local_document, last_applied_revision) is read or
-            exactly copied as one tuple from one user-visible client state, and no scratch, resync,
-            restore, or retry path can substitute the document identity, document content, or
-            frontier independently before request capture.
-        - kind: state_machine
-          intent: Explore two distinguishable documents with equal numeric frontiers together with
-            user-visible publication, speculative editing, private request construction, retry,
-            restore, and reconnect interleavings. Every acceptance-eligible request authoring base
-            must retain provenance from one coherent user-visible state for one document.
+          intent: Within the normal retry eligibility horizon, commit acceptances for two documents
+            that deliberately reuse the same client_change_id, then retry each full key under ACK
+            loss/reconnect conditions and require each successful resolution to return only its own
+            committed canonical record.
     kind: leaf
   C36_reconnect_starts_from_canonical_client_frontier:
-    statement: At the start of every reconnect/catch-up attempt covered by the reconnect convergence
-      guarantee, if the normally participating client's user-visible last_applied_revision is L, its
-      user-visible client_local_document equals deterministic canonical replay through L. Private
-      resync-candidate or request-construction scratch state does not replace this user-visible
-      canonical starting base.
+    statement: "A normal reconnect/catch-up attempt for document D is foreground and visible-document-bound:
+      it may start only while the current user-visible canonical tuple represents D. If that tuple's last_applied_revision
+      is L, the attempt captures its reconnect-start base from the same tuple, with client_document_id=D
+      and client_local_document equal to deterministic canonical replay of document D through L. Private
+      resync-candidate or request-construction scratch state does not replace this user-visible canonical
+      starting tuple. Background or non-visible per-document synchronization is outside this reconnect
+      guarantee."
     severity: critical
     assurance_required: strong
     source_refs:
@@ -2732,7 +2647,8 @@ claims:
       - final_architecture
     kind: derived
     depends_on:
-      - L102_client_frontier_matches_canonical_base
+      - C38_client_frontier_matches_canonical_base
+      - L130_reconnect_start_is_bound_to_visible_client_tuple
   L119_completed_resync_candidate_stays_at_response_head_until_publication:
     statement: For a reconnect/resync attempt with captured response head H, once the attempt has
       completed its canonical catch-up and pending reconciliation through H, its private reconciled
@@ -2766,38 +2682,6 @@ claims:
             candidate before publication. Prove that no buffered/live-delivery consumer can apply a
             revision greater than H into that candidate, and that the publication sink exposes
             exactly the candidate at H rather than a later frontier.
-    kind: leaf
-  L120_pending_reconciliation_preserves_resync_canonical_base:
-    statement: 'For a reconnect/resync attempt with captured response head H, after canonical catch-up
-      has constructed the private candidate canonical document and frontier through H, pending-identity
-      reconciliation for that same response preserves that canonical base: reconciliation may update pending-resolution
-      state, speculative overlays, and related control/bookkeeping state, but it cannot insert, remove,
-      rewrite, reapply, or otherwise mutate canonical accepted content or change the candidate canonical
-      frontier. Therefore the candidate canonical document/frontier after reconciliation is the same canonical
-      materialization through H that existed immediately before reconciliation.'
-    severity: critical
-    assurance_required: strong
-    source_refs:
-      - reconnect_revision_boundary
-      - final_architecture
-    surfaces:
-      - catchup
-      - client_sync
-    mechanisms:
-      - catchup_protocol
-      - client_revision_continuity
-    verification:
-      verifiers:
-        - kind: control_flow
-          intent: Enumerate every pending-identity reconciliation path after candidate
-            canonical-base construction through H. Prove that writes are confined to
-            pending-resolution, speculative-overlay, or control/bookkeeping state and that no path
-            mutates the candidate canonical document or canonical frontier.
-        - kind: state_machine
-          intent: Explore accepted and unresolved pending identities, multiple pending keys,
-            reconciliation ordering, retry/overlap, and conflict entry. Require candidate canonical
-            document/frontier to be observationally unchanged across reconciliation while
-            pending/overlay/control state may change.
     kind: leaf
   L121_delta_resync_candidate_starts_from_canonical_client_base:
     statement: For a reconnect/resync attempt starting from user-visible last_applied_revision L
@@ -2866,6 +2750,367 @@ claims:
             canonical history around catch-up construction. A response may use only the H captured
             from its own document authoritative frontier, and later acceptances must not change that
             response H.
+    kind: leaf
+  L123_acceptance_payload_and_identity_share_submitted_request:
+    statement: For every canonical_accepted_change, there is one submitted request R such that the
+      successful OT invocation whose output is committed as that acceptance consumes R's submitted
+      raw_edit and base_revision, and the authoritative document_id and client_change_id persisted
+      for that same acceptance are exactly R's submitted identity. No acceptance path may combine
+      OT-result payload provenance from one submitted request with document or idempotency identity
+      provenance from another request.
+    severity: critical
+    assurance_required: maximal
+    source_refs:
+      - ot_input_output
+      - accepted_change_log
+      - final_architecture
+    surfaces:
+      - acceptance_path
+      - accepted_history_store
+      - ot_state
+      - idempotency
+    mechanisms:
+      - server_authoritative_ot
+      - acceptance_transaction
+      - idempotency_gate
+      - accepted_history_log
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Trace every canonical-acceptance path from one decoded submitted request through
+            OT dispatch and the canonical commit sink; require the committed OT payload and
+            persisted document_id/client_change_id to retain provenance from the same submitted
+            request, rejecting any cross-request field or result substitution.
+        - kind: integration_test
+          intent: Submit distinguishable concurrent requests with different raw edits, base
+            revisions, document IDs, and client_change_ids, force overlap/retry interleavings, and
+            assert that every committed acceptance pairs the OT result and authoritative identity
+            from one and the same submitted request.
+    kind: leaf
+  C37_pending_identity_resolution_is_bound_to_response_head:
+    statement: 'For every protocol-eligible pending identity (document_id=D, client_change_id=k) within
+      the 30-day normal reconnect eligibility horizon supplied under a catch-up request for document D
+      with authoritative response head H_D, the response classifies only that same full identity against
+      authoritative acceptance through H_D: it reports accepted at revision r only for the unique canonical
+      acceptance(D,k) with r <= H_D, and reports unresolved through H_D only when no canonical acceptance(D,k)
+      exists through H_D. An acceptance(D2,k) for D2 != D cannot satisfy or suppress pending(D,k). Snapshotting,
+      compaction, cleanup, and recovery preserve enough same-identity accepted revision or equivalent
+      frontier evidence to make this classification throughout that eligibility horizon. Expired identities
+      are outside ordinary authoritative reconnect classification.'
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - accepted_change_log
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    kind: derived
+    depends_on:
+      - C13_idempotency_key_is_temporally_unique
+      - L124_pending_identity_classifier_uses_same_identity_and_response_head
+      - L125_pending_identity_revision_evidence_survives_lifecycle
+      - A6_normal_retry_reconnect_identity_is_eligible_for_30_days
+  L124_pending_identity_classifier_uses_same_identity_and_response_head:
+    statement: For every protocol-eligible pending identity (document_id=D, client_change_id=k)
+      within the 30-day normal reconnect eligibility horizon supplied under a catch-up request for
+      document D with captured response head H_D, the response classifier uses only authoritative
+      canonical acceptance evidence for that same full identity (D,k) through H_D. Given the
+      canonical acceptance uniqueness obligation for (D,k), it reports accepted at revision r
+      exactly when the matching canonical acceptance exists with r <= H_D, otherwise it reports
+      unresolved through H_D; an acceptance(D2,k) for D2 != D and any acceptance after H_D cannot
+      satisfy or suppress pending(D,k). No classification guarantee is made here for an expired
+      identity submitted outside the normal protocol boundary.
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - accepted_change_log
+      - reconnect_revision_boundary
+      - final_architecture
+    surfaces:
+      - catchup
+      - idempotency
+      - accepted_history_store
+    mechanisms:
+      - catchup_protocol
+      - accepted_history_log
+      - idempotency_gate
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Within the 30-day normal reconnect eligibility horizon, vary catch-up document D,
+            captured response head H_D, same client_change_id reused by another document, and
+            matching acceptance timing before or after H_D; require classifier output to depend only
+            on canonical acceptance(D,k) through the captured head.
+        - kind: integration_test
+          intent: For eligible identities, create distinguishable same-key acceptances across
+            documents and accept the target identity both before and after a captured head; verify
+            cross-document and post-head records cannot affect response classification. Expired
+            identities are outside this ordinary authoritative reconciliation test oracle.
+    kind: leaf
+  L125_pending_identity_revision_evidence_survives_lifecycle:
+    statement: If canonical acceptance(D,k) commits at revision r, every later snapshotting,
+      compaction, cleanup, or recovery transition preserves authoritative same-identity evidence
+      sufficient to recover r or an equivalent frontier-membership fact for (D,k) throughout the
+      logical edit's 30-day normal retry/reconnect eligibility horizon. Lifecycle replacement
+      evidence remains bound to the same document_id D, client_change_id k, and committed acceptance
+      revision/frontier fact; removing the physical accepted row cannot make that eligible accepted
+      identity appear unresolved for a response head H_D with r <= H_D. After the eligibility
+      horizon expires, this proposition does not require ordinary retry/reconnect classification
+      evidence for a re-submitted old identity, and it does not require physical evidence cleanup to
+      occur immediately at expiry.
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - accepted_change_log
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    surfaces:
+      - accepted_history_store
+      - history_compaction
+      - snapshot_store
+      - owner_recovery
+    mechanisms:
+      - accepted_history_log
+      - snapshot_checkpoint
+      - recovery_replay
+      - idempotency_gate
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: After committing acceptance(D,k) at revision r, explore snapshot, compaction,
+            cleanup, and recovery transitions throughout the 30-day normal retry/reconnect
+            eligibility horizon; require authoritative evidence to retain the same identity and
+            enough revision/frontier information to classify any captured H_D relative to r during
+            that horizon.
+        - kind: fault_injection
+          intent: Crash and recover around lifecycle replacement of accepted-history evidence while
+            (D,k) remains within the 30-day eligibility horizon and verify that acceptance(D,k)
+            remains classifiable as included for H_D >= r and excluded for H_D < r. Do not treat
+            post-expiry re-submission as an ordinary reconciliation oracle.
+    kind: leaf
+  L126_pending_reconciliation_preserves_resync_canonical_candidate:
+    statement: For every reconnect/resync attempt with captured response head H, once the private
+      resync candidate canonical document/frontier is initialized and until that candidate is
+      published or discarded, every pending-identity reconciliation transition for that same attempt
+      preserves the candidate canonical document and canonical frontier. Reconciliation may update
+      pending-resolution state, speculative overlays, and related control/bookkeeping state, but it
+      cannot insert, remove, rewrite, reapply, or otherwise mutate canonical accepted content or
+      change the candidate canonical frontier before, during, or after canonical catch-up reaches H.
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    surfaces:
+      - catchup
+      - client_sync
+    mechanisms:
+      - catchup_protocol
+      - client_revision_continuity
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Enumerate every pending-identity reconciliation path that can run after resync
+            candidate initialization and before publication or discard; prove all writes are
+            confined to pending-resolution, speculative-overlay, or control/bookkeeping state and no
+            path mutates candidate canonical document/frontier regardless of whether catch-up has
+            already reached H.
+        - kind: state_machine
+          intent: Explore reconciliation before, during, and after delta/snapshot catch-up,
+            including accepted and unresolved pending identities, overlap, retry, and conflict
+            entry; require candidate canonical document/frontier to remain unchanged across every
+            reconciliation transition.
+    kind: leaf
+  L127_canonical_accepted_record_provenance_survives_lifecycle:
+    statement: For every canonical accepted-change record A that remains present as a
+      canonical_accepted_change in authoritative accepted history across snapshotting, compaction,
+      cleanup, recovery publication, or another non-append history lifecycle transition, the
+      transition preserves A's canonical payload, revision, document_id, client_change_id, and
+      successful-OT provenance exactly. A lifecycle transition may physically remove or replace old
+      accepted records with an authoritative equivalent representation where separately permitted,
+      but it cannot rewrite a surviving canonical accepted-change record into a different edit,
+      payload, revision, or request identity.
+    severity: critical
+    assurance_required: maximal
+    source_refs:
+      - accepted_change_log
+      - authoritative_truth
+      - snapshot_frontier
+      - final_architecture
+    surfaces:
+      - accepted_history_store
+      - history_compaction
+      - owner_recovery
+      - snapshot_store
+    mechanisms:
+      - accepted_history_log
+      - recovery_replay
+      - snapshot_checkpoint
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Generate authoritative accepted histories with distinguishable payloads,
+            revisions, and request identities; exercise every non-append lifecycle transition and
+            require each canonical accepted-change record that survives as such to retain exact
+            record/provenance equality with its pre-transition value.
+        - kind: differential_test
+          intent: Compare surviving canonical accepted-change records before and after snapshot,
+            compaction, cleanup, and recovery-publication transitions; any lifecycle replacement may
+            remove a record from this record-level observation boundary, but no surviving record may
+            change payload, revision, identity, or OT-success provenance.
+    kind: leaf
+  G10_user_visible_client_state_matches_document:
+    statement: "At every user-visible client state representing document D, client_canonical_frontier_coherence
+      holds for the full visible canonical tuple: client_document_id=D and client_local_document equals
+      deterministic canonical replay of document D through last_applied_revision. Initialization, restoration,
+      tab/view switching, live delivery, catch-up publication, and every other transition that can replace
+      or publish any tuple coordinate preserve this same-document binding; no user-visible state may pair
+      one document's canonical content/frontier with another document identity."
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - authoritative_truth
+      - reconnect_revision_boundary
+      - final_architecture
+    depends_on:
+      - C38_client_frontier_matches_canonical_base
+    formal_intent: client_canonical_frontier_coherence
+    semantic_contracts:
+      - client_canonical_frontier_coherence
+    kind: root
+  L128_client_canonical_frontier_is_established_on_publication:
+    statement: 'At every client initialization and every canonical publication that creates or replaces
+      a user-visible client state representing document D, the published full visible tuple is coherent:
+      client_document_id = D and client_local_document equals deterministic application of all and only
+      document D canonical accepted revisions through last_applied_revision. This includes publication
+      from restoration, document/view switching, snapshot replacement, or reconnect/resync state. Private
+      client_resync_candidate state is outside this boundary until publication, and speculative raw edits
+      are not part of client_local_document.'
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    surfaces:
+      - catchup
+      - client_sync
+      - client_view_state
+      - live_delivery
+    mechanisms:
+      - accepted_history_log
+      - catchup_protocol
+      - client_revision_continuity
+      - snapshot_checkpoint
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Model initialization and every visible tuple publication/replacement path,
+            including restoration, document/view switching, snapshot replacement, and reconnect
+            publication. Use distinguishable documents with equal numeric frontiers and require each
+            resulting visible tuple for D to contain client_document_id=D and exactly
+            Replay_D(last_applied_revision); private resync candidates may violate the relation only
+            before publication.
+    kind: leaf
+  L129_client_canonical_frontier_is_preserved_by_visible_transitions:
+    statement: From any user-visible client state for document D whose full visible canonical tuple
+      is coherent, every subsequent user-visible transition capable of mutating, restoring,
+      replacing, switching, or publishing client_document_id, client_local_document, or
+      last_applied_revision preserves that coherence in its resulting visible state, including
+      transitions that leave last_applied_revision unchanged. Contiguous canonical application,
+      duplicate/gap handling, restoration, switching, and canonical publication may not expose a
+      tuple whose document identity, materialized canonical document, and frontier come from
+      different canonical bases. Private client_resync_candidate state remains outside this observer
+      boundary until publication, and speculative raw edits are not part of client_local_document.
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    surfaces:
+      - catchup
+      - client_sync
+      - client_view_state
+      - live_delivery
+    mechanisms:
+      - accepted_history_log
+      - catchup_protocol
+      - client_revision_continuity
+      - snapshot_checkpoint
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Enumerate every implementation path that can assign, restore, swap, switch, or
+            publish any visible tuple coordinate and prove that, assuming the pre-state tuple is
+            coherent, every user-visible post-state remains same-document canonical through its
+            frontier or the path mutates only non-user-visible client_resync_candidate state.
+        - kind: state_machine
+          intent: Explore contiguous live/catch-up application, duplicate/gap handling, restoration,
+            switching, snapshot replacement, buffered live delivery, interruption, retry, and
+            reconnect publication from coherent visible states; require every visible successor
+            state to satisfy the same canonical replay relation, including unchanged-frontier paths.
+    kind: leaf
+  C38_client_frontier_matches_canonical_base:
+    statement: 'At every user-visible client state representing document D, client_canonical_frontier_coherence
+      holds for the full visible canonical tuple: client_document_id = D and client_local_document equals
+      deterministic application of all and only document D canonical accepted revisions through last_applied_revision.
+      The invariant is established at client initialization or canonical publication and preserved by
+      every user-visible transition capable of mutating, restoring, replacing, switching, or publishing
+      client_document_id, client_local_document, or last_applied_revision, including transitions that
+      leave the frontier unchanged. Speculative raw edits are not part of client_local_document, and private
+      client_resync_candidate construction is outside this observer boundary until atomic publication.'
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    kind: derived
+    formal_intent: client_canonical_frontier_coherence
+    semantic_contracts:
+      - client_canonical_frontier_coherence
+    depends_on:
+      - L128_client_canonical_frontier_is_established_on_publication
+      - L129_client_canonical_frontier_is_preserved_by_visible_transitions
+  L130_reconnect_start_is_bound_to_visible_client_tuple:
+    statement: For every normal foreground reconnect/catch-up attempt for document D, attempt
+      initiation is permitted only while the current user-visible canonical tuple represents D, and
+      the reconnect-start document identity, canonical client document, and last_applied_revision L
+      used to construct the attempt are captured from that same visible tuple or one exact private
+      copy of that tuple. Reconnect-start construction may not independently reread, substitute,
+      synthesize, or cross-bind any of those three coordinates across a visible-state transition.
+      Background or non-visible per-document synchronization is outside this obligation.
+    severity: critical
+    assurance_required: strong
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    surfaces:
+      - client_sync
+      - client_view_state
+      - catchup
+    mechanisms:
+      - catchup_protocol
+      - client_revision_continuity
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Enumerate every normal foreground reconnect/catch-up initiation path and trace the
+            document identity plus reconnect-start canonical document/frontier into request and
+            resync setup. Prove initiation for D is gated on the current visible tuple representing
+            D and that all three reconnect-start coordinates come from one tuple observation or
+            exact tuple copy, including races with tab/view switches, restoration, and canonical
+            publication; reject any mixed observation or scratch-state substitution.
+        - kind: integration_test
+          intent: Use distinguishable documents A and B with equal numeric frontiers, race reconnect
+            initiation against visible document switching/restoration/publication, and require every
+            normal foreground reconnect attempt for D to capture exactly the visible (D, canonical
+            document, frontier) tuple from one state without mixed coordinates.
     kind: leaf
 catalog:
   terms:
@@ -2958,9 +3203,6 @@ catalog:
     ot_computation_frontier:
       description: Canonical committed revision frontier N against which one OT success result was
         computed before acceptance arbitration.
-    authoring_document_id:
-      description: Document identifier associated with the client authoring base state from which an
-        acceptance-eligible request is produced or encoded.
   state:
     accepted_change_log:
       class: authoritative
@@ -3012,6 +3254,11 @@ catalog:
       description: Logical durable evidence that an idempotency key has a committed canonical
         acceptance, represented by the accepted row/unique identity itself or lifecycle-derived
         equivalent evidence.
+    client_document_id:
+      class: control
+      description: Document identity represented by the current user-visible client canonical state;
+        it is bound with client_local_document and last_applied_revision as one visible canonical
+        tuple.
   mechanisms:
     server_authoritative_ot:
       description: Server OT owner transforms client edits against canonical accepted history before
@@ -3133,6 +3380,9 @@ catalog:
       description: Logical history compaction and representation-preserving lifecycle changes.
     retry_resolution:
       description: Retry winner/loser arbitration and canonical success resolution paths.
+    client_view_state:
+      description: User-visible client document-context initialization, restoration, tab/view
+        switching, canonical-state replacement, and publication paths.
   verifier_kinds:
     schema_constraint:
       description: Static database/schema constraint inspection.
@@ -3243,12 +3493,15 @@ catalog:
       automation_reusable: true
     client_canonical_frontier_coherence:
       class: state_invariant
-      definition: At every user-visible client state, client_local_document equals deterministic
-        canonical replay through last_applied_revision. The invariant is established at
-        initialization or canonical publication and preserved by every user-visible transition
-        capable of mutating, restoring, or publishing either participating value, including
-        transitions that leave last_applied_revision unchanged.
+      definition: At every user-visible client state representing document D, client_document_id
+        equals D and client_local_document equals deterministic canonical replay of document D
+        through last_applied_revision. The invariant is established at initialization or canonical
+        publication and preserved by every user-visible transition capable of mutating, restoring,
+        replacing, switching, or publishing any member of the (client_document_id,
+        client_local_document, last_applied_revision) tuple, including transitions that leave the
+        frontier unchanged.
       state_symbols:
+        - client_document_id
         - client_local_document
         - last_applied_revision
       observation_scope: user_visible_states
@@ -3293,10 +3546,11 @@ catalog:
       automation_reusable: true
     accepted_evidence_correspondence:
       class: state_invariant
-      definition: While an idempotency identity may still reach acceptance or retry-resolution
-        logic, authoritative accepted_idempotency_evidence means already-accepted(D,k) if and only
-        if accepted_change_log contains exactly one committed canonical acceptance for the same
-        idempotency_key; lifecycle representation changes preserve this logical correspondence.
+      definition: During the 30-day normal retry/reconnect eligibility horizon for an idempotency
+        identity, authoritative accepted_idempotency_evidence means already-accepted(D,k) if and
+        only if accepted_change_log contains exactly one committed canonical acceptance for the same
+        idempotency_key; lifecycle representation changes preserve this logical correspondence
+        throughout that horizon.
       state_symbols:
         - accepted_change_log
         - accepted_idempotency_evidence
@@ -3304,21 +3558,25 @@ catalog:
       observation_scope: authoritative_states
       excludes:
         - Physical evidence representation may change after compaction if the same logical accepted
-          fact remains authoritative.
+          fact remains authoritative throughout the eligibility horizon.
         - Timeout, cancellation, reservation, or in-progress arbitration need not create terminal
           failure evidence.
+        - After pending/retry age exceeds 30 days, this contract does not require ordinary retry or
+          authoritative reconnect classification for a re-submitted old identity.
+        - The 30-day eligibility boundary is not an exact storage TTL; authoritative evidence may be
+          retained longer.
       automation_reusable: true
     request_authoring_frontier_binding:
       class: provenance_binding
       definition: 'For every request eligible for server-side OT and canonical acceptance, one semantic
-        authoring tuple binds (authoring_document_id, client_local_document, last_applied_revision) to
-        the submitted (document_id, raw_edit, base_revision): document_id equals authoring_document_id
-        D, raw_edit is produced or encoded against that same document D canonical client base at frontier
-        F, base_revision equals F, and request construction, serialization, and retry preserve the same
-        document/raw_edit/base binding through OT dispatch. Whether client_local_document at F equals
-        canonical replay through F is a separate state-invariant obligation.'
+        authoring tuple binds the user-visible source state (client_document_id, client_local_document,
+        last_applied_revision) to the submitted (document_id, raw_edit, base_revision): source client_document_id
+        and submitted document_id are the same D, raw_edit is produced or encoded against that same document
+        D canonical client base at frontier F, base_revision equals F, and request construction, serialization,
+        dispatch, and retry preserve the same document/raw_edit/base binding. Whether the source visible
+        tuple satisfies client_canonical_frontier_coherence is a separate state-invariant obligation.'
       source_symbols:
-        - authoring_document_id
+        - client_document_id
         - client_local_document
         - last_applied_revision
       bound_symbols:
@@ -3462,11 +3720,11 @@ catalog:
       automation_reusable: true
 id_allocator:
   next_sequence:
-    A: 6
-    G: 10
-    C: 37
-    L: 123
-    D: 7
+    A: 7
+    G: 11
+    C: 39
+    L: 131
+    D: 9
     T: 2
 assurance:
   specification_coverage:
@@ -3519,6 +3777,12 @@ assurance:
     C35_accepted_key_classification_requires_committed_acceptance:
       status: unaudited
     C36_reconnect_starts_from_canonical_client_frontier:
+      status: unaudited
+    C37_pending_identity_resolution_is_bound_to_response_head:
+      status: unaudited
+    G10_user_visible_client_state_matches_document:
+      status: unaudited
+    C38_client_frontier_matches_canonical_base:
       status: unaudited
   implementation_evidence:
     L16_commit_precedes_ack:
@@ -3607,13 +3871,7 @@ assurance:
       status: planned
     L99_ot_result_is_bound_to_acceptance_frontier:
       status: planned
-    L100_acceptance_commits_only_ot_success_output:
-      status: planned
     L101_client_completes_catchup_through_response_head:
-      status: planned
-    L102_client_frontier_matches_canonical_base:
-      status: planned
-    L104_pending_identity_resolution_is_bound_to_response_head:
       status: planned
     L106_resync_request_covers_start_pending_set:
       status: planned
@@ -3635,13 +3893,25 @@ assurance:
       status: planned
     L117_retry_existing_acceptance_matches_full_idempotency_key:
       status: planned
-    L118_request_authoring_base_is_captured_from_coherent_client_base:
-      status: planned
     L119_completed_resync_candidate_stays_at_response_head_until_publication:
-      status: planned
-    L120_pending_reconciliation_preserves_resync_canonical_base:
       status: planned
     L121_delta_resync_candidate_starts_from_canonical_client_base:
       status: planned
     L122_catchup_response_head_is_bound_to_authoritative_frontier:
+      status: planned
+    L123_acceptance_payload_and_identity_share_submitted_request:
+      status: planned
+    L124_pending_identity_classifier_uses_same_identity_and_response_head:
+      status: planned
+    L125_pending_identity_revision_evidence_survives_lifecycle:
+      status: planned
+    L126_pending_reconciliation_preserves_resync_canonical_candidate:
+      status: planned
+    L127_canonical_accepted_record_provenance_survives_lifecycle:
+      status: planned
+    L128_client_canonical_frontier_is_established_on_publication:
+      status: planned
+    L129_client_canonical_frontier_is_preserved_by_visible_transitions:
+      status: planned
+    L130_reconnect_start_is_bound_to_visible_client_tuple:
       status: planned

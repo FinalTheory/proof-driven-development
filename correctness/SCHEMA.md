@@ -214,7 +214,7 @@ Dynamic key 必须是现有 `claim_id`。
 | `.status` | `pending` / `stable` / `waived` | required | 当前 refinement maturity |
 | `.blocked_by` | unique `decision_id[]`; 可为空 | required | 直接阻塞该 pending claim 的 open human decisions |
 | `.signature` | 64-hex SHA-256 | required when `status=stable` | 当前 recursive proof semantics + relevant global/catalog semantics 的签名 |
-| `.rationale` | non-empty string | required when `status=waived`；其他状态可选 | 对 stable/waived judgment 的 human-readable audit metadata |
+| `.rationale` | non-empty string | required when `status=waived`；`stable` 必须省略；`pending` 可选 | 仅记录当前未决/豁免边界；stable audit history 不进入 canonical YAML |
 
 注意：`stale` **不是可写 enum**。当已记录 signature 与当前 semantics 不匹配时，由 Harness 派生 stale/runnable 状态。
 

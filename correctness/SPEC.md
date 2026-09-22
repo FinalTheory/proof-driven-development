@@ -176,6 +176,8 @@ long-lived orchestrator → semantic judgment
 Harness                 → deterministic validation / scheduling / invalidation / mutation
 ```
 
+这里的 `clean auditor` 必须是实际的新 context，而不是 orchestrator 在同一上下文里切换角色。当前 Writer MCP 的标准执行原语是 `spawn_chatgpt_subagent`；并发 slot 用尽或 child task 失败属于 execution/capacity failure，不能降级成同-context audit 后仍声称获得独立审计。如果所需 fresh context 无法取得，本轮 assurance 应保持未认证。
+
 Automation 可以重新组织已经批准的 proof structure，但不能静默发明新的 architecture semantics，例如新的 protocol mechanism、source-of-truth rule、state variable、guarantee、failure assumption 或 semantic-contract meaning。
 
 ## Source-of-truth boundaries
