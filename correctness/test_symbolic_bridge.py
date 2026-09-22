@@ -7,7 +7,7 @@ from pathlib import Path
 import yaml
 
 from harness.model import Graph, UniqueKeyLoader
-from harness.symbolic import SymbolicBridge, SymbolicBridgeError, check_program
+from harness.symbolic import SymbolicBridge, SymbolicBridgeError, SymbolicVerifier, check_program
 
 
 BRIDGE_PATH = Path(__file__).with_name("symbolic_models") / "google_docs.poc.yaml"
@@ -53,6 +53,7 @@ class SymbolicBridgeTests(unittest.TestCase):
     def setUp(self):
         self.graph = Graph.load()
         self.bridge = SymbolicBridge.load(BRIDGE_PATH)
+        self.verifier = SymbolicVerifier(self.graph, self.bridge)
 
     def test_real_contract_mappings_match_canonical_contract_symbols(self):
         self.bridge.validate_against_graph(self.graph)
@@ -180,6 +181,137 @@ class SymbolicBridgeTests(unittest.TestCase):
             extra_constraints=[candidate_repair],
         )
         self.assertEqual(check_program(repaired).status, "unsat")
+
+    def test_catchup_head_binding_has_stable_exclusion_interface(self):
+        wrong_head = exists(
+            {"r": "CatchupResponse"},
+            and_(
+                call("eligible_catchup_response", var("r")),
+                neq(
+                    call("catchup_response_head_value", var("r")),
+                    call("captured_authoritative_head", var("r")),
+                ),
+            ),
+        )
+        result = self.verifier.exclusion_check(
+            wrong_head,
+            contracts=["catchup_head_binding"],
+        )
+        self.assertEqual(result.baseline.status, "sat")
+        self.assertEqual(result.constrained.status, "unsat")
+        self.assertTrue(result.closes_counterexample)
+
+    def test_catchup_head_binding_preserves_head_only_for_eligible_responses(self):
+        lost_head = exists(
+            {"r": "CatchupResponse"},
+            and_(
+                call("eligible_catchup_response", var("r")),
+                not_(call("catchup_head_preserved", var("r"))),
+            ),
+        )
+        result = self.verifier.exclusion_check(
+            lost_head,
+            contracts=["catchup_head_binding"],
+        )
+        self.assertTrue(result.closes_counterexample)
+
+        out_of_scope = exists(
+            {"r": "CatchupResponse"},
+            and_(
+                not_(call("eligible_catchup_response", var("r"))),
+                not_(call("catchup_head_preserved", var("r"))),
+            ),
+        )
+        self.assertEqual(
+            self.verifier.check(
+                out_of_scope,
+                contracts=["catchup_head_binding"],
+            ).status,
+            "sat",
+        )
+
+    def test_accepted_evidence_correspondence_has_stable_exclusion_interface(self):
+        correspondence_violation = exists(
+            {"s": "AuthoritativeState", "k": "IdempotencyKey"},
+            and_(
+                call("within_retry_reconnect_eligibility", var("s"), var("k")),
+                neq(
+                    call("accepted_evidence_for_key", var("s"), var("k")),
+                    call(
+                        "exactly_one_committed_acceptance_for_key",
+                        var("s"),
+                        var("k"),
+                    ),
+                ),
+            ),
+        )
+        result = self.verifier.exclusion_check(
+            correspondence_violation,
+            contracts=["accepted_evidence_correspondence"],
+        )
+        self.assertEqual(result.baseline.status, "sat")
+        self.assertEqual(result.constrained.status, "unsat")
+        self.assertTrue(result.closes_counterexample)
+
+    def test_accepted_evidence_correspondence_does_not_overreach_after_eligibility(self):
+        out_of_scope_violation = exists(
+            {"s": "AuthoritativeState", "k": "IdempotencyKey"},
+            and_(
+                not_(
+                    call(
+                        "within_retry_reconnect_eligibility",
+                        var("s"),
+                        var("k"),
+                    )
+                ),
+                neq(
+                    call("accepted_evidence_for_key", var("s"), var("k")),
+                    call(
+                        "exactly_one_committed_acceptance_for_key",
+                        var("s"),
+                        var("k"),
+                    ),
+                ),
+            ),
+        )
+        self.assertEqual(
+            self.verifier.check(
+                out_of_scope_violation,
+                contracts=["accepted_evidence_correspondence"],
+            ).status,
+            "sat",
+        )
+
+    def test_accepted_evidence_provenance_has_stable_exclusion_interface(self):
+        matching_committed_source = exists(
+            {"a": "Acceptance"},
+            and_(
+                call("committed_canonical_acceptance", var("a")),
+                eq(
+                    call("evidence_key", var("e")),
+                    call("acceptance_key", var("a")),
+                ),
+                call(
+                    "evidence_derived_from_acceptance",
+                    var("e"),
+                    var("a"),
+                ),
+            ),
+        )
+        unsupported_evidence = exists(
+            {"e": "AcceptedEvidence"},
+            and_(
+                call("authoritative_evidence", var("e")),
+                not_(matching_committed_source),
+            ),
+        )
+        result = self.verifier.exclusion_check(
+            unsupported_evidence,
+            contracts=["accepted_evidence_provenance"],
+        )
+        self.assertEqual(result.baseline.status, "sat")
+        self.assertEqual(result.constrained.status, "unsat")
+        self.assertTrue(result.closes_counterexample)
 
 
 if __name__ == "__main__":

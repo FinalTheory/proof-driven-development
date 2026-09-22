@@ -6,6 +6,11 @@ sorts:
   - Revision
   - Overlay
   - Request
+  - CatchupResponse
+  - AuthoritativeState
+  - Acceptance
+  - AcceptedEvidence
+  - IdempotencyKey
 
 functions:
   visible_document:
@@ -57,6 +62,67 @@ functions:
     args: [Request, ClientState]
     returns: Bool
     catalog_symbols: [raw_edit, client_local_document]
+
+
+  eligible_catchup_response:
+    args: [CatchupResponse]
+    returns: Bool
+    catalog_symbols: []
+
+  captured_authoritative_head:
+    args: [CatchupResponse]
+    returns: Revision
+    catalog_symbols: [document_latest_revision]
+
+  catchup_response_head_value:
+    args: [CatchupResponse]
+    returns: Revision
+    catalog_symbols: [catchup_response_head]
+
+  catchup_head_preserved:
+    args: [CatchupResponse]
+    returns: Bool
+    catalog_symbols: [catchup_response_head]
+
+  within_retry_reconnect_eligibility:
+    args: [AuthoritativeState, IdempotencyKey]
+    returns: Bool
+    catalog_symbols: []
+
+  accepted_evidence_for_key:
+    args: [AuthoritativeState, IdempotencyKey]
+    returns: Bool
+    catalog_symbols: [accepted_idempotency_evidence, idempotency_key]
+
+  exactly_one_committed_acceptance_for_key:
+    args: [AuthoritativeState, IdempotencyKey]
+    returns: Bool
+    catalog_symbols: [accepted_change_log]
+
+  authoritative_evidence:
+    args: [AcceptedEvidence]
+    returns: Bool
+    catalog_symbols: [accepted_idempotency_evidence]
+
+  evidence_key:
+    args: [AcceptedEvidence]
+    returns: IdempotencyKey
+    catalog_symbols: [idempotency_key]
+
+  committed_canonical_acceptance:
+    args: [Acceptance]
+    returns: Bool
+    catalog_symbols: [canonical_accepted_change, accepted_change_log]
+
+  acceptance_key:
+    args: [Acceptance]
+    returns: IdempotencyKey
+    catalog_symbols: [canonical_accepted_change]
+
+  evidence_derived_from_acceptance:
+    args: [AcceptedEvidence, Acceptance]
+    returns: Bool
+    catalog_symbols: [accepted_idempotency_evidence, canonical_accepted_change]
 
 contracts:
   client_canonical_frontier_coherence:
@@ -110,3 +176,59 @@ contracts:
                 - call:
                     fn: request_raw_edit_bound_to_source_content
                     args: [{var: r}, {var: s}]
+
+  catchup_head_binding:
+    class: provenance_binding
+    formula:
+      forall:
+        vars:
+          r: CatchupResponse
+        body:
+          implies:
+            - {call: {fn: eligible_catchup_response, args: [{var: r}]}}
+            - and:
+                - eq:
+                    - {call: {fn: catchup_response_head_value, args: [{var: r}]}}
+                    - {call: {fn: captured_authoritative_head, args: [{var: r}]}}
+                - call:
+                    fn: catchup_head_preserved
+                    args: [{var: r}]
+
+  accepted_evidence_correspondence:
+    class: state_invariant
+    observation_scope: authoritative_states
+    formula:
+      forall:
+        vars:
+          s: AuthoritativeState
+          k: IdempotencyKey
+        body:
+          implies:
+            - {call: {fn: within_retry_reconnect_eligibility, args: [{var: s}, {var: k}]}}
+            - and:
+                - implies:
+                    - {call: {fn: accepted_evidence_for_key, args: [{var: s}, {var: k}]}}
+                    - {call: {fn: exactly_one_committed_acceptance_for_key, args: [{var: s}, {var: k}]}}
+                - implies:
+                    - {call: {fn: exactly_one_committed_acceptance_for_key, args: [{var: s}, {var: k}]}}
+                    - {call: {fn: accepted_evidence_for_key, args: [{var: s}, {var: k}]}}
+
+  accepted_evidence_provenance:
+    class: provenance_binding
+    formula:
+      forall:
+        vars:
+          e: AcceptedEvidence
+        body:
+          implies:
+            - {call: {fn: authoritative_evidence, args: [{var: e}]}}
+            - exists:
+                vars:
+                  a: Acceptance
+                body:
+                  and:
+                    - {call: {fn: committed_canonical_acceptance, args: [{var: a}]}}
+                    - eq:
+                        - {call: {fn: evidence_key, args: [{var: e}]}}
+                        - {call: {fn: acceptance_key, args: [{var: a}]}}
+                    - {call: {fn: evidence_derived_from_acceptance, args: [{var: e}, {var: a}]}}

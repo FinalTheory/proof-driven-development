@@ -19,6 +19,7 @@ from .ir import (
     Sort,
     Var,
 )
+from .verification import ExclusionCheck, SymbolicVerifier
 from .z3_backend import CheckResult, Z3_AVAILABLE, check_program
 
 __all__ = [
@@ -29,6 +30,7 @@ __all__ = [
     "CheckResult",
     "ContractMapping",
     "Eq",
+    "ExclusionCheck",
     "Exists",
     "Expr",
     "ForAll",
@@ -41,6 +43,7 @@ __all__ = [
     "Sort",
     "SymbolicBridge",
     "SymbolicBridgeError",
+    "SymbolicVerifier",
     "Var",
     "Z3_AVAILABLE",
     "check_program",

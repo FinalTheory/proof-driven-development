@@ -2,11 +2,14 @@
 
 These files are **not** canonical correctness authority. They are POC sidecars used to test whether selected natural-language semantic contracts can be given a generic typed relational skeleton and checked with SMT.
 
-`google_docs.poc.yaml` currently maps three real contracts from `correctness.yaml`:
+`google_docs.poc.yaml` currently maps six real contracts from `correctness.yaml`:
 
 - `client_canonical_frontier_coherence`
 - `visible_canonical_speculative_exclusion`
 - `request_authoring_frontier_binding`
+- `catchup_head_binding`
+- `accepted_evidence_correspondence`
+- `accepted_evidence_provenance`
 
 The generic symbolic kernel lives in `../harness/symbolic/` and contains no Google Docs-specific sorts or predicates.
 
