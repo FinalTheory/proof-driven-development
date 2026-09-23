@@ -8,6 +8,7 @@ from .assurance_registry import (
     TranslationAssuranceRegistry,
     assurance_record_payload,
 )
+from .composition import CompositionResult, SymbolicCompositionError, SymbolicCompositionVerifier
 from .dsl import ParsedProgram, parse_program
 from .ir import (
     BOOL,
@@ -59,6 +60,7 @@ __all__ = [
     "ClaimMapping",
     "ClaimTranslationSubject",
     "ContractMapping",
+    "CompositionResult",
     "Eq",
     "ExclusionCheck",
     "Exists",
@@ -81,6 +83,8 @@ __all__ = [
     "ComparisonVerdict",
     "SymbolicBridge",
     "SymbolicBridgeError",
+    "SymbolicCompositionError",
+    "SymbolicCompositionVerifier",
     "SymbolicVerifier",
     "TranslationReviewError",
     "TranslationSubject",

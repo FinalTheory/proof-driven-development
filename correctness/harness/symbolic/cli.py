@@ -13,6 +13,7 @@ from .assurance_registry import (
     TranslationAssuranceRegistry,
 )
 from .bridge import SymbolicBridge, SymbolicBridgeError
+from .composition import SymbolicCompositionError, SymbolicCompositionVerifier
 from .translation_assurance import TranslationReviewError
 from .verification import SymbolicVerifier
 
@@ -85,14 +86,43 @@ def add_symbolic_subparsers(sub: argparse._SubParsersAction) -> None:
     )
 
 
+    compose = sub.add_parser(
+        "symbolic-compose",
+        help="Check whether a root/derived claim follows from its direct symbolic premises.",
+    )
+    compose.add_argument("node", help="Root/derived target claim ID.")
+    compose.add_argument(
+        "--model",
+        default=str(DEFAULT_SYMBOLIC_MODEL),
+        help="Symbolic sidecar YAML path.",
+    )
+    compose.add_argument(
+        "--assurance",
+        default=str(DEFAULT_ASSURANCE_REGISTRY),
+        help="Translation-assurance registry YAML path.",
+    )
+    compose.add_argument(
+        "--allow-untrusted",
+        action="store_true",
+        help="Experimental only: run composition without requiring trusted translations.",
+    )
+    compose.add_argument(
+        "--format",
+        choices=["text", "yaml"],
+        default="text",
+    )
+
+
 def handle_symbolic_command(graph: Graph, args: argparse.Namespace) -> int | None:
     try:
         if args.command == "symbolic-status":
             return _cmd_symbolic_status(graph, args)
         if args.command == "symbolic-check":
             return _cmd_symbolic_check(graph, args)
+        if args.command == "symbolic-compose":
+            return _cmd_symbolic_compose(graph, args)
         return None
-    except (TranslationReviewError, SymbolicBridgeError) as exc:
+    except (TranslationReviewError, SymbolicBridgeError, SymbolicCompositionError) as exc:
         print(f"symbolic error: {exc}", file=sys.stderr)
         return 2
 
@@ -204,6 +234,45 @@ def _cmd_symbolic_check(graph: Graph, args: argparse.Namespace) -> int:
         if result.constrained.status == "sat" and result.constrained.model:
             print("constrained_model:")
             print(result.constrained.model)
+    return 0
+
+
+
+
+def _cmd_symbolic_compose(graph: Graph, args: argparse.Namespace) -> int:
+    bridge = _load_bridge(args.model)
+    registry = _load_registry(args.assurance)
+    verifier = SymbolicCompositionVerifier(graph, bridge, registry)
+    result = verifier.check(
+        args.node,
+        require_trusted=not args.allow_untrusted,
+    )
+    payload = {
+        "node": result.node_id,
+        "premises": list(result.premise_ids),
+        "trusted_required": not args.allow_untrusted,
+        "composition_signature": result.composition_signature,
+        "solver_status": result.solver_result.status,
+        "verdict": result.verdict,
+        "machine_checked": result.machine_checked,
+        "counterexample_model": (
+            result.solver_result.model
+            if result.solver_result.status == "sat"
+            else None
+        ),
+    }
+    if args.format == "yaml":
+        print(yaml.safe_dump(payload, sort_keys=False, allow_unicode=True).rstrip())
+    else:
+        print(
+            f"node={result.node_id} verdict={result.verdict} "
+            f"solver={result.solver_result.status} "
+            f"premises={','.join(result.premise_ids)} "
+            f"trusted_required={str(not args.allow_untrusted).lower()}"
+        )
+        if result.solver_result.status == "sat" and result.solver_result.model:
+            print("counterexample_model:")
+            print(result.solver_result.model)
     return 0
 
 

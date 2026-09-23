@@ -247,7 +247,7 @@ functions:
     returns: Bool
     catalog_symbols: []
     meaning: >-
-      Live delivery d is derived from committed acceptance a and preserves that record's canonical payload and revision provenance.
+      Live delivery d carries the canonical payload and revision provenance of acceptance record a; whether a is committed is expressed separately by committed_history_record(a).
 
   recovery_head_capture_event:
     args: [RecoveryAttempt]
@@ -304,6 +304,23 @@ claims:
                       implies:
                         - {call: {fn: durable_idempotency_evidence_for_acceptance, args: [{var: e}, {var: a}]}}
                         - {call: {fn: durable_evidence_identity_matches_request, args: [{var: e}, {var: r}]}}
+
+  C12_live_delivery_contains_only_accepted_changes:
+    contracts: [live_delivery_acceptance_binding]
+    formula:
+      forall:
+        vars:
+          d: LiveDelivery
+        body:
+          implies:
+            - {call: {fn: live_delivery_record, args: [{var: d}]}}
+            - exists:
+                vars:
+                  a: Acceptance
+                body:
+                  and:
+                    - {call: {fn: committed_history_record, args: [{var: a}]}}
+                    - {call: {fn: live_delivery_derived_from, args: [{var: d}, {var: a}]}}
 
   L116_live_delivery_is_bound_to_committed_acceptance:
     contracts: [live_delivery_acceptance_binding]

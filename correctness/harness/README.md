@@ -58,6 +58,23 @@ The bridge deliberately does **not** infer formulas from English. Each mapping s
 This means the bridge can reject a structurally incomplete or over-scoped translation, but it still cannot prove that an opaque predicate such as `canonical_content_matches` faithfully captures the English definition. That semantic correspondence remains a human/LLM judgment boundary.
 
 
+
+### Symbolic composition pilot
+
+`symbolic/composition.py` machine-checks one root/derived claim against its **direct** DAG premises. For target `T` with direct premises `P1..Pn`, the Harness deterministically asks the solver whether:
+
+```text
+P1 ∧ ... ∧ Pn ∧ ¬T
+```
+
+is satisfiable.
+
+- `UNSAT` => `ENTAILED` within the current symbolic abstraction.
+- `SAT` => `COUNTEREXAMPLE`; the solver model witnesses a composition gap or an abstraction/mapping defect.
+- Trusted composition requires the target and every direct premise to have current `TRUSTED` translation-assurance records. Missing/unverified premises are never silently omitted.
+
+The adversarial mutation-test path is test-only: it may replace one direct-premise formula with an intentionally weaker formula and verify that a previously `UNSAT` composition becomes `SAT`. This checks that the entailment actually depends on the removed semantic condition rather than succeeding vacuously or because target/premise formulas were accidentally coupled.
+
 ### Stable verification facade
 
 `symbolic/verification.py` provides the current high-level interface:
