@@ -376,7 +376,8 @@ class SymbolicBridgeTests(unittest.TestCase):
                         {"a": "Acceptance"},
                         and_(
                             call("committed_history_record", var("a")),
-                            call("live_delivery_derived_from", var("d"), var("a")),
+                            call("live_delivery_originates_from", var("d"), var("a")),
+                            call("live_delivery_preserves_payload_revision", var("d"), var("a")),
                         ),
                     )
                 ),
@@ -470,7 +471,8 @@ class SymbolicBridgeTests(unittest.TestCase):
                         {"a": "Acceptance"},
                         and_(
                             call("committed_history_record", var("a")),
-                            call("live_delivery_derived_from", var("d"), var("a")),
+                            call("live_delivery_originates_from", var("d"), var("a")),
+                            call("live_delivery_preserves_payload_revision", var("d"), var("a")),
                         ),
                     )
                 ),

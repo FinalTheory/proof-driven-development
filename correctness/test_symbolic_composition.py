@@ -8,7 +8,6 @@ from harness.symbolic import (
     SymbolicBridge,
     SymbolicCompositionVerifier,
     TranslationAssuranceRegistry,
-    TranslationReviewError,
 )
 
 
@@ -58,7 +57,7 @@ class SymbolicCompositionTests(unittest.TestCase):
                 call("live_delivery_record", var("d")),
                 exists(
                     {"a": "Acceptance"},
-                    call("live_delivery_derived_from", var("d"), var("a")),
+                    call("live_delivery_originates_from", var("d"), var("a")),
                 ),
             ),
         )
@@ -72,11 +71,13 @@ class SymbolicCompositionTests(unittest.TestCase):
         self.assertFalse(result.machine_checked)
         self.assertIsNotNone(result.solver_result.model)
 
-    def test_trusted_composition_rejects_unreviewed_target_or_premise(self):
+    def test_trusted_composition_succeeds_for_reviewed_target_and_premise(self):
         registry = TranslationAssuranceRegistry.load(ASSURANCE_PATH)
         verifier = SymbolicCompositionVerifier(self.graph, self.bridge, registry)
-        with self.assertRaises(TranslationReviewError):
-            verifier.check(TARGET, require_trusted=True)
+        result = verifier.check(TARGET, require_trusted=True)
+        self.assertEqual(result.solver_result.status, "unsat")
+        self.assertEqual(result.verdict, "ENTAILED")
+        self.assertTrue(result.machine_checked)
 
 
 if __name__ == "__main__":

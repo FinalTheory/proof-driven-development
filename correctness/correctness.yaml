@@ -3751,7 +3751,14 @@ assurance:
     C10_catchup_represents_exact_missing_suffix:
       status: unaudited
     C12_live_delivery_contains_only_accepted_changes:
-      status: unaudited
+      status: machine_checked
+      artifact_refs:
+        - symbolic_artifacts/C12_live_delivery_contains_only_accepted_changes.composition.yaml
+      rationale: Trusted symbolic translations exist for C12 and its direct premise L116. Z3 checked
+        L116 AND NOT(C12) as UNSAT. A mutation that removes the committed-history requirement from
+        L116 becomes SAT with a concrete uncommitted-source counterexample, demonstrating that the
+        entailment depends on the intended premise semantics.
+      signature: 4e8350746f352d7b9c9a76d8e747a6a08fb414d40b56a49f2a5ababb106c9b60
     C13_idempotency_key_is_temporally_unique:
       status: unaudited
     C14_all_acceptance_paths_honor_idempotency_identity:

@@ -233,7 +233,7 @@ functions:
     returns: Bool
     catalog_symbols: [websocket_live_stream]
     meaning: >-
-      Delivery d is a canonical change exposed through the websocket live stream.
+      Delivery d is a change exposed through the websocket live stream; whether that delivery is backed by committed accepted history is established separately by committed_history_record(a) and live_delivery_originates_from(d, a).
 
   committed_history_record:
     args: [Acceptance]
@@ -242,12 +242,19 @@ functions:
     meaning: >-
       Acceptance a is a committed record in authoritative accepted_change_log.
 
-  live_delivery_derived_from:
+  live_delivery_originates_from:
     args: [LiveDelivery, Acceptance]
     returns: Bool
     catalog_symbols: []
     meaning: >-
-      Live delivery d carries the canonical payload and revision provenance of acceptance record a; whether a is committed is expressed separately by committed_history_record(a).
+      Live delivery d originates from acceptance record a as its accepted-history source; this relation alone does not assert that a is committed or that every payload/revision field is preserved exactly.
+
+  live_delivery_preserves_payload_revision:
+    args: [LiveDelivery, Acceptance]
+    returns: Bool
+    catalog_symbols: []
+    meaning: >-
+      Live delivery d preserves acceptance record a's canonical payload and revision provenance exactly; whether a is committed is expressed separately by committed_history_record(a).
 
   recovery_head_capture_event:
     args: [RecoveryAttempt]
@@ -320,7 +327,7 @@ claims:
                 body:
                   and:
                     - {call: {fn: committed_history_record, args: [{var: a}]}}
-                    - {call: {fn: live_delivery_derived_from, args: [{var: d}, {var: a}]}}
+                    - {call: {fn: live_delivery_originates_from, args: [{var: d}, {var: a}]}}
 
   L116_live_delivery_is_bound_to_committed_acceptance:
     contracts: [live_delivery_acceptance_binding]
@@ -337,7 +344,8 @@ claims:
                 body:
                   and:
                     - {call: {fn: committed_history_record, args: [{var: a}]}}
-                    - {call: {fn: live_delivery_derived_from, args: [{var: d}, {var: a}]}}
+                    - {call: {fn: live_delivery_originates_from, args: [{var: d}, {var: a}]}}
+                    - {call: {fn: live_delivery_preserves_payload_revision, args: [{var: d}, {var: a}]}}
 
   L92_captured_recovery_head_equals_authoritative_frontier:
     contracts: [recovery_head_binding]
@@ -503,7 +511,8 @@ contracts:
                 body:
                   and:
                     - {call: {fn: committed_history_record, args: [{var: a}]}}
-                    - {call: {fn: live_delivery_derived_from, args: [{var: d}, {var: a}]}}
+                    - {call: {fn: live_delivery_originates_from, args: [{var: d}, {var: a}]}}
+                    - {call: {fn: live_delivery_preserves_payload_revision, args: [{var: d}, {var: a}]}}
 
   recovery_head_binding:
     class: provenance_binding
