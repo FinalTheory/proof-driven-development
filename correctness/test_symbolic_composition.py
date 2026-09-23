@@ -3,16 +3,21 @@
 import unittest
 from pathlib import Path
 
+import yaml
+
 from harness.model import Graph
 from harness.symbolic import (
     SymbolicBridge,
     SymbolicCompositionVerifier,
     TranslationAssuranceRegistry,
+    build_claim_translation_subject,
+    translation_subject_signature,
 )
 
 
 BRIDGE_PATH = Path(__file__).with_name("symbolic_models") / "google_docs.poc.yaml"
 ASSURANCE_PATH = Path(__file__).with_name("symbolic_models") / "assurance.poc.yaml"
+ARTIFACT_PATH = Path(__file__).with_name("symbolic_artifacts") / "C12_live_delivery_contains_only_accepted_changes.composition.yaml"
 TARGET = "C12_live_delivery_contains_only_accepted_changes"
 PREMISE = "L116_live_delivery_is_bound_to_committed_acceptance"
 
@@ -78,6 +83,37 @@ class SymbolicCompositionTests(unittest.TestCase):
         self.assertEqual(result.solver_result.status, "unsat")
         self.assertEqual(result.verdict, "ENTAILED")
         self.assertTrue(result.machine_checked)
+
+
+    def test_persisted_c12_machine_check_artifact_is_current(self):
+        artifact = yaml.safe_load(ARTIFACT_PATH.read_text())
+        registry = TranslationAssuranceRegistry.load(ASSURANCE_PATH)
+        verifier = SymbolicCompositionVerifier(self.graph, self.bridge, registry)
+        result = verifier.check(TARGET, require_trusted=True)
+
+        target_subject = build_claim_translation_subject(
+            self.graph, self.bridge, TARGET
+        )
+        premise_subject = build_claim_translation_subject(
+            self.graph, self.bridge, PREMISE
+        )
+
+        self.assertEqual(
+            artifact["composition_signature"],
+            result.composition_signature,
+        )
+        self.assertEqual(
+            artifact["translation_assurance"]["target"]["subject_signature"],
+            translation_subject_signature(target_subject),
+        )
+        self.assertEqual(
+            artifact["translation_assurance"]["premises"][PREMISE]["subject_signature"],
+            translation_subject_signature(premise_subject),
+        )
+        self.assertEqual(artifact["result"]["solver_status"], "unsat")
+        self.assertEqual(artifact["result"]["verdict"], "ENTAILED")
+        self.assertEqual(artifact["mutation_test"]["solver_status"], "sat")
+        self.assertEqual(artifact["mutation_test"]["verdict"], "COUNTEREXAMPLE")
 
 
 if __name__ == "__main__":

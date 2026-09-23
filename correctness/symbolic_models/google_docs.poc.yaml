@@ -233,7 +233,7 @@ functions:
     returns: Bool
     catalog_symbols: [websocket_live_stream]
     meaning: >-
-      Delivery d is a change exposed through the websocket live stream; whether that delivery is backed by committed accepted history is established separately by committed_history_record(a) and live_delivery_originates_from(d, a).
+      Delivery d is any change actually exposed through the websocket live stream. This predicate does not pre-classify the delivery as canonical or committed: if a provisional, speculative, rejected, aborted, or never-committed change were exposed, it would still satisfy live_delivery_record(d) and would have to satisfy the formula's separate committed-source obligations.
 
   committed_history_record:
     args: [Acceptance]

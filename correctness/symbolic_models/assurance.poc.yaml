@@ -165,102 +165,107 @@ records:
   claim:L116_live_delivery_is_bound_to_committed_acceptance:
     kind: claim
     subject_id: L116_live_delivery_is_bound_to_committed_acceptance
-    subject_signature: 4d9f1c16ae08885c6217b24843f8360c7a24a4c29ff65419b68ab2fcee8a61ad
+    subject_signature: 6e56ff8c1d1f13bb6283a2852b55a73997db1c0acad8617507b2716a10553571
     roundtrip:
-      subject_signature: 4d9f1c16ae08885c6217b24843f8360c7a24a4c29ff65419b68ab2fcee8a61ad
+      subject_signature: 6e56ff8c1d1f13bb6283a2852b55a73997db1c0acad8617507b2716a10553571
       status: TRANSLATED
-      natural_language: For every live delivery d, if d is a delivery recorded in
-        the websocket live stream, then there exists an acceptance record a such that
-        a is a committed record in the authoritative accepted_change_log, d originates
-        from a as its accepted-history source, and d preserves a's canonical payload
-        and revision provenance exactly.
+      natural_language: For every live delivery d, if d is a delivery actually exposed
+        through the websocket live stream, then there exists an acceptance record
+        a such that a is a committed record in the authoritative accepted_change_log,
+        d originates from a as its accepted-history source, and d preserves a's canonical
+        payload and revision provenance exactly. The proposition does not assert anything
+        about objects that are not live delivery records, and the existence of such
+        an a is required for each live delivery record. The committed status of a,
+        its origin relationship to d, and the exact preservation of payload and revision
+        provenance are all separate required conditions.
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 4d9f1c16ae08885c6217b24843f8360c7a24a4c29ff65419b68ab2fcee8a61ad
+        subject_signature: 6e56ff8c1d1f13bb6283a2852b55a73997db1c0acad8617507b2716a10553571
         verdict: EQUIVALENT
-        reason: The formula preserves the source claim's universal scope over live
-          stream changes and requires each such delivery to have a committed accepted-history
-          witness with preserved canonical payload and revision provenance. The exclusion
-          of never-committed changes is captured by the committed_history_record requirement.
+        reason: The formula requires every exposed live delivery to have a committed
+          accepted-history source and requires preservation of canonical payload and
+          revision provenance. This matches the canonical proposition's binding, provenance,
+          and exclusion requirements without adding guarantees about ordering, duplication,
+          timing, or delivery success.
         differences: []
       strengthening:
-        subject_signature: 4d9f1c16ae08885c6217b24843f8360c7a24a4c29ff65419b68ab2fcee8a61ad
+        subject_signature: 6e56ff8c1d1f13bb6283a2852b55a73997db1c0acad8617507b2716a10553571
         verdict: EQUIVALENT
-        reason: 'The formula matches the canonical proposition: every websocket live
-          delivery is required to originate from a committed accepted-history record
-          and preserve that record''s canonical payload and revision provenance. The
-          exclusion of provisional, speculative, rejected, aborted, or never-committed
-          changes follows from requiring committed_history_record(a) for the sole
-          source acceptance record. No additional delivery guarantees such as ordering,
-          exactly-once, timeliness, or eventual success are introduced.'
+        reason: The formula preserves the original proposition's universal scope over
+          exposed live deliveries and requires each to have a committed accepted-history
+          source with preserved canonical payload and revision provenance. The prohibition
+          on never-committed changes follows directly from the absence of any committed
+          source for such deliveries.
         differences: []
     roundtrip_reviews:
       weakening:
-        subject_signature: 4d9f1c16ae08885c6217b24843f8360c7a24a4c29ff65419b68ab2fcee8a61ad
+        subject_signature: 6e56ff8c1d1f13bb6283a2852b55a73997db1c0acad8617507b2716a10553571
         verdict: EQUIVALENT
-        reason: The round-trip rendering preserves the original contract's quantification
-          over live stream deliveries, requires a committed accepted-history witness,
-          preserves payload and revision provenance, and excludes uncommitted canonical
-          changes through the committed-record requirement.
+        reason: The round-trip rendering preserves the universal applicability to
+          every exposed live delivery, the existential binding to a committed accepted-history
+          record, the provenance direction from committed record to live delivery,
+          and the required payload and revision provenance preservation. The exclusion
+          of never-committed canonical changes follows from the required committed
+          witness for every live delivery.
         differences: []
       strengthening:
-        subject_signature: 4d9f1c16ae08885c6217b24843f8360c7a24a4c29ff65419b68ab2fcee8a61ad
+        subject_signature: 6e56ff8c1d1f13bb6283a2852b55a73997db1c0acad8617507b2716a10553571
         verdict: EQUIVALENT
-        reason: 'The rendering preserves the original universal binding requirement:
-          every live-stream delivery must correspond to a committed accepted-history
-          record and preserve that record''s canonical payload and revision provenance.
-          The existential acceptance source relation does not add scope or delivery
-          guarantees beyond the original contract.'
+        reason: The round-trip rendering preserves the universal applicability to
+          exposed live deliveries, requires a committed authoritative acceptance record
+          as the source, and preserves the original payload and revision provenance
+          binding without adding delivery guarantees beyond the source contract.
         differences: []
   claim:C12_live_delivery_contains_only_accepted_changes:
     kind: claim
     subject_id: C12_live_delivery_contains_only_accepted_changes
-    subject_signature: 65d61da17b066be9b4f9dcd387e511ed49ad5ca0085a9e1b1693b316d50e9e69
+    subject_signature: 36cbbc98f6d7f719764b3f1a18898601583f045a6525fcb3aeaee52993092f00
     roundtrip:
-      subject_signature: 65d61da17b066be9b4f9dcd387e511ed49ad5ca0085a9e1b1693b316d50e9e69
+      subject_signature: 36cbbc98f6d7f719764b3f1a18898601583f045a6525fcb3aeaee52993092f00
       status: TRANSLATED
-      natural_language: For every live delivery d, if d is a change exposed through
-        the websocket live stream, then there exists an acceptance record a such that
-        a is a committed record in the authoritative accepted_change_log and d originates
-        from a as its accepted-history source. The proposition does not assert that
-        every payload or revision field of a is preserved exactly, and the origin
-        relation alone does not establish that a is committed; both committed_history_record(a)
-        and live_delivery_originates_from(d, a) are required for each websocket live
-        stream delivery.
+      natural_language: For every live delivery d, if d is a change actually exposed
+        through the websocket live stream, then there exists an acceptance record
+        a such that a is a committed record in the authoritative accepted_change_log
+        and d originates from a as its accepted-history source. This proposition only
+        asserts that every live delivery has some committed acceptance record as its
+        source; it does not assert that the delivery preserves every payload or revision
+        field exactly, nor does the live_delivery_originates_from relation alone assert
+        that the acceptance record is committed or that all accepted history properties
+        hold.
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 65d61da17b066be9b4f9dcd387e511ed49ad5ca0085a9e1b1693b316d50e9e69
+        subject_signature: 36cbbc98f6d7f719764b3f1a18898601583f045a6525fcb3aeaee52993092f00
         verdict: EQUIVALENT
-        reason: The formula requires every websocket live delivery to have a committed
-          accepted history record as its source, matching the proposition that live
-          delivery is derived from committed accepted history and cannot expose unaccepted
-          changes. The exclusions around duplicate delivery, reordering, exactly-once,
-          ordering, timing, and eventual delivery are not strengthened by the formula.
+        reason: The formula requires every exposed live delivery to have an accepted-history
+          source record that is committed in accepted_change_log, matching the proposition's
+          provenance and non-invention guarantee. The stated allowances for duplicate
+          or reordered delivery are not additional obligations and are not contradicted
+          by the existential source relation.
         differences: []
       strengthening:
-        subject_signature: 65d61da17b066be9b4f9dcd387e511ed49ad5ca0085a9e1b1693b316d50e9e69
+        subject_signature: 36cbbc98f6d7f719764b3f1a18898601583f045a6525fcb3aeaee52993092f00
         verdict: EQUIVALENT
-        reason: The formula states that every websocket live delivery must originate
-          from some committed accepted history record, which matches the canonical
-          proposition's provenance guarantee without adding ordering, uniqueness,
-          timing, or delivery success requirements.
+        reason: The formula states that every exposed live delivery originates from
+          a committed acceptance record, matching the source claim that live delivery
+          is derived from committed accepted history and cannot invent an unaccepted
+          change. It does not add ordering, exactly-once, timeliness, or delivery-success
+          guarantees that are explicitly excluded by the source contract.
         differences: []
     roundtrip_reviews:
       weakening:
-        subject_signature: 65d61da17b066be9b4f9dcd387e511ed49ad5ca0085a9e1b1693b316d50e9e69
+        subject_signature: 36cbbc98f6d7f719764b3f1a18898601583f045a6525fcb3aeaee52993092f00
         verdict: EQUIVALENT
-        reason: 'The rendering preserves the original provenance guarantee: every
-          exposed live delivery must originate from a committed record in accepted_change_log.
-          It keeps the same one-way acceptance binding and does not add ordering,
-          exactly-once, timing, or completeness guarantees.'
+        reason: 'The round-trip rendering preserves the core provenance binding: every
+          exposed live-stream change must originate from a committed accepted history
+          record. It does not add delivery guarantees or omit any required acceptance
+          provenance constraint.'
         differences: []
       strengthening:
-        subject_signature: 65d61da17b066be9b4f9dcd387e511ed49ad5ca0085a9e1b1693b316d50e9e69
+        subject_signature: 36cbbc98f6d7f719764b3f1a18898601583f045a6525fcb3aeaee52993092f00
         verdict: EQUIVALENT
-        reason: 'The rendering preserves the original provenance binding: every websocket
-          live delivery is required to originate from a committed accepted history
-          record, and it does not add guarantees about ordering, duplication, timing,
-          or exact payload preservation beyond the source contract.'
+        reason: 'The rendering preserves the original provenance binding: every exposed
+          live delivery must originate from a committed accepted history record, while
+          not adding delivery completeness, ordering, uniqueness, or timing guarantees.'
         differences: []
