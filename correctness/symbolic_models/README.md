@@ -1,31 +1,18 @@
-# Experimental symbolic models
+# Symbolic assurance sidecars
 
-These files are **not** canonical correctness authority. They are POC sidecars used to test whether selected natural-language semantic contracts can be given a generic typed relational skeleton and checked with SMT.
+These files are a formal assurance layer over the canonical correctness model. They are **not** independent correctness authority: `correctness.yaml` remains the source of system propositions, typed vocabulary, proof structure, and assurance state. The sidecars have a different lifecycle because they record how selected canonical semantics are lowered and checked mechanically.
 
-`google_docs.poc.yaml` currently maps nine real contracts from `correctness.yaml`:
+- `bridge.yaml` — typed symbolic lowering for selected canonical contracts and claims.
+- `assurance.yaml` — persisted translation-assurance judgments that bind a natural-language subject to an exact symbolic lowering.
+- `coverage.yaml` — declarative adversarial bad-state queries and their selected trusted symbolic constraints.
+- `../symbolic_artifacts/*.yaml` — persisted machine-check artifacts produced from trusted translations.
 
-- `client_canonical_frontier_coherence`
-- `visible_canonical_speculative_exclusion`
-- `request_authoring_frontier_binding`
-- `catchup_head_binding`
-- `accepted_evidence_correspondence`
-- `accepted_evidence_provenance`
-- `acceptance_request_identity_binding`
-- `live_delivery_acceptance_binding`
-- `recovery_head_binding`
+The bridge is closed and typed. Every symbolic function must have an explicit meaning and canonical provenance. A function is anchored either through `catalog_symbols` or, for an opaque relation that cannot be represented as a direct catalog projection, through `semantic_anchors` naming the canonical contract/claim whose semantics authorize that relation. An opaque function may only be used by an anchored subject; this prevents hidden glue or background premises from being introduced merely to obtain UNSAT.
 
-It also contains three experimental claim mappings:
+Canonical state may declare `symbolic_dimensions`. Those coordinates resolve through `catalog.symbolic_dimensions`, and a symbolic function directly reading that state must preserve the declared arity/coordinate shape.
 
-- `L92_captured_recovery_head_equals_authoritative_frontier`
-- `L108_acceptance_preserves_request_identity`
-- `L116_live_delivery_is_bound_to_committed_acceptance`
+A symbolic mapping is usable as trusted evidence only when its translation-assurance record is current and evaluates to `TRUSTED`. Provenance metadata such as `semantic_anchors` constrains where a relation may be used but does not itself change the translated proposition, so it is deliberately excluded from semantic translation signatures.
 
-Each claim has its own explicit symbolic formula while reusing the typed predicates/vocabulary established by its referenced `semantic_contracts`. The bridge requires that the referenced contract set exactly match the canonical claim's declared `semantic_contracts`, and that the claim formula cover exactly the same catalog-symbol boundary. Translation assurance then checks whether the claim formula is actually faithful to the claim statement.
+`correctness.py validate` validates this formal layer whenever these sidecars are present. It reloads all three sidecars, validates bridge/canonical correspondence and predicate provenance, reruns trusted coverage and machine-checked compositions, and checks persisted artifacts against the current model. A formal-layer drift therefore makes the repository-level preflight invalid before refinement or coverage campaigns start.
 
-`assurance.poc.yaml` stores only normalized, completed translation-assurance records. Each record is pinned to a semantic signature of both the canonical source context and the exact symbolic mapping. A record becomes stale automatically when either side changes. Presence in `google_docs.poc.yaml` therefore means “formalized enough to experiment with”; only a matching `TRUSTED` assurance record means “eligible for authoritative symbolic checks.”
-
-The generic symbolic kernel lives in `../harness/symbolic/` and contains no Google Docs-specific sorts or predicates.
-
-A mapping is accepted only when its contract class, observation scope where applicable, and catalog-symbol coverage match the canonical contract. The formula itself is still an explicit semantic translation; the Harness does not infer it from prose.
-
-This sidecar exists specifically to avoid invalidating the canonical DAG while the symbolic representation is still experimental. Promotion into the canonical schema should happen only after the representation and correspondence rules have stabilized.
+The generic symbolic kernel lives in `../harness/symbolic/` and contains no Google Docs-specific sorts or predicates. Formalization remains intentionally lazy: a canonical contract/claim may be unmapped, but anything recorded as trusted or machine-checked must pass the full correspondence and artifact checks.

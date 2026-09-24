@@ -75,7 +75,7 @@ class SymbolicBridge:
             if not isinstance(name, str) or not name or not isinstance(decl, dict):
                 raise SymbolicBridgeError("symbolic bridge function declarations must be mappings")
             required_function_fields = {"args", "returns", "catalog_symbols", "meaning"}
-            allowed_function_fields = required_function_fields | {"dimensions"}
+            allowed_function_fields = required_function_fields | {"dimensions", "semantic_anchors"}
             if not required_function_fields.issubset(decl) or set(decl) - allowed_function_fields:
                 raise SymbolicBridgeError(
                     f"function {name} must contain args, returns, catalog_symbols, and meaning; "
@@ -86,6 +86,7 @@ class SymbolicBridge:
             symbols = decl["catalog_symbols"]
             meaning = decl["meaning"]
             dimensions = decl.get("dimensions")
+            semantic_anchors = decl.get("semantic_anchors", [])
             if not isinstance(args, list) or not all(isinstance(x, str) for x in args):
                 raise SymbolicBridgeError(f"function {name}.args must be a list of sort names")
             if not isinstance(result, str):
@@ -97,6 +98,22 @@ class SymbolicBridge:
             if len(symbols) != len(set(symbols)):
                 raise SymbolicBridgeError(
                     f"function {name}.catalog_symbols must not contain duplicates"
+                )
+            if (
+                not isinstance(semantic_anchors, list)
+                or not all(
+                    isinstance(item, str)
+                    and re.fullmatch(r"(?:contract|claim):[A-Za-z0-9_]+", item)
+                    for item in semantic_anchors
+                )
+                or len(semantic_anchors) != len(set(semantic_anchors))
+            ):
+                raise SymbolicBridgeError(
+                    f"function {name}.semantic_anchors must be a unique list of contract:<id> or claim:<id> references"
+                )
+            if not symbols and not semantic_anchors:
+                raise SymbolicBridgeError(
+                    f"function {name} must be anchored by catalog_symbols or semantic_anchors"
                 )
             if not isinstance(meaning, str) or not meaning.strip():
                 raise SymbolicBridgeError(
@@ -130,6 +147,7 @@ class SymbolicBridge:
                 "catalog_symbols": list(symbols),
                 "meaning": meaning.strip(),
                 **({"dimensions": list(dimensions)} if dimensions is not None else {}),
+                **({"semantic_anchors": list(semantic_anchors)} if semantic_anchors else {}),
             }
 
         contracts = raw.get("contracts")
@@ -164,6 +182,11 @@ class SymbolicBridge:
             catalog_symbols: set[str] = set()
             for fn in used_functions:
                 catalog_symbols.update(normalized_functions[fn]["catalog_symbols"])
+                anchors = normalized_functions[fn].get("semantic_anchors", [])
+                if anchors and f"contract:{contract_id}" not in anchors:
+                    raise SymbolicBridgeError(
+                        f"contract mapping {contract_id} uses function {fn} outside its semantic_anchors {anchors}"
+                    )
             normalized_contracts[contract_id] = ContractMapping(
                 contract_id=contract_id,
                 contract_class=contract_class,
@@ -212,8 +235,16 @@ class SymbolicBridge:
                     f"claim mapping {claim_id} uses unknown functions {sorted(unknown_functions)}"
                 )
             catalog_symbols: set[str] = set()
+            allowed_anchors = {f"claim:{claim_id}"} | {
+                f"contract:{contract_id}" for contract_id in contract_ids
+            }
             for fn in used_functions:
                 catalog_symbols.update(normalized_functions[fn]["catalog_symbols"])
+                anchors = normalized_functions[fn].get("semantic_anchors", [])
+                if anchors and not (set(anchors) & allowed_anchors):
+                    raise SymbolicBridgeError(
+                        f"claim mapping {claim_id} uses function {fn} outside its semantic_anchors {anchors}"
+                    )
             normalized_claims[claim_id] = ClaimMapping(
                 claim_id=claim_id,
                 contract_ids=tuple(contract_ids),
@@ -264,6 +295,17 @@ class SymbolicBridge:
                 raise SymbolicBridgeError(
                     f"function {fn_name} maps unknown catalog symbols {sorted(unknown)}"
                 )
+
+            for anchor in decl.get("semantic_anchors", []):
+                kind, subject_id = anchor.split(":", 1)
+                if kind == "contract" and subject_id not in semantic_contracts:
+                    raise SymbolicBridgeError(
+                        f"function {fn_name} references unknown semantic anchor {anchor}"
+                    )
+                if kind == "claim" and subject_id not in graph.claims:
+                    raise SymbolicBridgeError(
+                        f"function {fn_name} references unknown semantic anchor {anchor}"
+                    )
 
             required_shapes = {
                 tuple(state_catalog[symbol]["symbolic_dimensions"])
@@ -349,6 +391,34 @@ class SymbolicBridge:
                 raise SymbolicBridgeError(
                     f"{claim_id} symbolic claim catalog coverage mismatch: "
                     f"missing={missing}, extra={extra}"
+                )
+
+    def validate_formula_anchors(
+        self,
+        formula: dict[str, Any],
+        *,
+        claim_ids: list[str] | tuple[str, ...] = (),
+        contract_ids: list[str] | tuple[str, ...] = (),
+        label: str = "symbolic formula",
+    ) -> None:
+        """Reject opaque predicates whose canonical provenance is outside this formula's subjects."""
+        expanded_contracts = set(contract_ids)
+        for claim_id in claim_ids:
+            mapping = self.claims.get(claim_id)
+            if mapping is not None:
+                expanded_contracts.update(mapping.contract_ids)
+        allowed = {f"claim:{claim_id}" for claim_id in claim_ids} | {
+            f"contract:{contract_id}" for contract_id in expanded_contracts
+        }
+        for fn in sorted(_formula_function_names(formula)):
+            decl = self.functions.get(fn)
+            if decl is None:
+                continue
+            anchors = set(decl.get("semantic_anchors", []))
+            if anchors and not (anchors & allowed):
+                raise SymbolicBridgeError(
+                    f"{label} uses opaque function {fn} outside its semantic_anchors "
+                    f"{sorted(anchors)}; allowed subjects={sorted(allowed)}"
                 )
 
     def compile_program(
@@ -460,7 +530,7 @@ def _expected_contract_symbols(contract_id: str, contract: dict[str, Any]) -> fr
             )
         return frozenset([*source, *bound])
     raise SymbolicBridgeError(
-        f"{contract_id} class {contract_class!r} is not supported by symbolic bridge POC"
+        f"{contract_id} class {contract_class!r} is not supported by the symbolic bridge"
     )
 
 

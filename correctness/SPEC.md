@@ -161,6 +161,20 @@ Coverage 是全局、开放式的 adversarial search；Composition 只看一个 
 
 此外，claim statement / formal intent 中直接出现的 canonical snake_case vocabulary 会自动成为 symbolic mapping 的 coverage requirement。Formalizer 不能把 `document_current_epoch` 这类已命名状态匿名化成 `state_value` 再仅靠 predicate meaning 解释其含义；如果需要跨 claim 共享新的 helper relation，其语义忠实性仍必须由 translation assurance 审查。
 
+Symbolic helper 也不能成为隐藏 premise。任何没有直接 `catalog_symbols` projection 的 opaque predicate 都必须通过 `semantic_anchors` 绑定到明确的 canonical claim / semantic contract，并且只能在被该 subject 授权的 lowering 或 coverage query 中出现。这个 provenance constraint 解决的是“formalizer 为了得到 UNSAT 偷偷加入 relation”的 soundness 风险；predicate 本身是否忠实表达了 canonical prose，仍由 translation assurance 负责。
+
+Persisted formal layer 采用独立的 closed machine-readable schema：
+
+```text
+correctness.py formal-schema bridge
+correctness.py formal-schema assurance
+correctness.py formal-schema coverage
+correctness.py formal-schema composition-artifact
+correctness.py formal-schema coverage-artifact
+```
+
+这些 schema 不把 sidecar 提升为新的 product correctness authority。它们只约束“已经选择 formalize 的内容如何合法持久化”。Repository-level `correctness.py validate` 会同时验证 canonical graph 与 formal layer：先做 closed-shape/schema validation，再做 graph↔bridge correspondence、translation trust、coverage/composition fresh solver check，以及 persisted artifact 与当前 semantic signatures/result 的一致性。任何一层 drift 都会让 preflight fail closed。
+
 一个有效的 coverage machine check 必须同时满足：
 
 ```text
@@ -202,7 +216,8 @@ Automation 可以重新组织已经批准的 proof structure，但不能静默�
 | 问题 | Source of truth |
 | --- | --- |
 | Harness 的人类 mental model | `SPEC.md` |
-| 哪些字段 / shape 在结构上合法 | `graph_schema.py` / schema commands |
+| `correctness.yaml` 哪些字段 / shape 在结构上合法 | `graph_schema.py` / `graph-schema` / `schema-fields` |
+| Formal sidecar / artifact 哪些字段 / shape 在结构上合法 | `harness/symbolic/formal_schema.py` / `formal-schema` |
 | 当前 proposition、catalog 和 campaign state | `correctness.yaml` |
 | validation、signature、prompt、scheduler、mutation 如何执行 | `correctness.py` |
 | 当前建模的系统 architecture | `../design/google-docs.md` |

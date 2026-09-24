@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-SCHEMA_VERSION = "0.13"
+SCHEMA_VERSION = "0.14"
 PROOF_SEMANTICS_VERSION = "1"
 ASSUMPTION_STATUSES = (
     "external_assumption",
@@ -203,7 +203,11 @@ DECISION_BODY_SCHEMA = _closed_object(
             {
                 "if": {"properties": {"status": {"const": "resolved"}}, "required": ["status"]},
                 "then": {"required": ["resolution"]},
-            }
+            },
+            {
+                "if": {"properties": {"status": {"const": "open"}}, "required": ["status"]},
+                "then": {"not": {"required": ["resolution"]}},
+            },
         ]
     },
 )
@@ -237,7 +241,11 @@ TOOLING_BLOCKER_BODY_SCHEMA = _closed_object(
             {
                 "if": {"properties": {"status": {"const": "resolved"}}, "required": ["status"]},
                 "then": {"required": ["resolution"]},
-            }
+            },
+            {
+                "if": {"properties": {"status": {"const": "open"}}, "required": ["status"]},
+                "then": {"not": {"required": ["resolution"]}},
+            },
         ]
     },
 )
@@ -267,11 +275,23 @@ REFINEMENT_ENTRY_SCHEMA = _closed_object(
         "allOf": [
             {
                 "if": {"properties": {"status": {"const": "stable"}}, "required": ["status"]},
-                "then": {"required": ["signature"]},
+                "then": {
+                    "required": ["signature"],
+                    "properties": {"blocked_by": {"maxItems": 0}},
+                    "not": {"required": ["rationale"]},
+                },
             },
             {
                 "if": {"properties": {"status": {"const": "waived"}}, "required": ["status"]},
-                "then": {"required": ["rationale"]},
+                "then": {
+                    "required": ["rationale"],
+                    "properties": {"blocked_by": {"maxItems": 0}},
+                    "not": {"required": ["signature"]},
+                },
+            },
+            {
+                "if": {"properties": {"status": {"const": "pending"}}, "required": ["status"]},
+                "then": {"not": {"required": ["signature"]}},
             },
         ]
     },
@@ -308,7 +328,19 @@ SPECIFICATION_COVERAGE_SCHEMA = _closed_object(
                     "required": ["status"],
                 },
                 "then": {"required": ["signature", "auditor_count", "rationale"]},
-            }
+            },
+            {
+                "if": {"properties": {"status": {"const": "unaudited"}}, "required": ["status"]},
+                "then": {
+                    "not": {
+                        "anyOf": [
+                            {"required": ["signature"]},
+                            {"required": ["auditor_count"]},
+                            {"required": ["rationale"]},
+                        ]
+                    }
+                },
+            },
         ]
     },
 )
@@ -346,6 +378,7 @@ COMPOSITION_ASSURANCE_ENTRY_SCHEMA = _closed_object(
                 "then": {
                     "required": ["signature", "auditor_count", "rationale"],
                     "properties": {"auditor_count": {"const": 1}},
+                    "not": {"required": ["artifact_refs"]},
                 },
             },
             {
@@ -353,11 +386,28 @@ COMPOSITION_ASSURANCE_ENTRY_SCHEMA = _closed_object(
                 "then": {
                     "required": ["signature", "auditor_count", "rationale"],
                     "properties": {"auditor_count": {"type": "integer", "minimum": 2}},
+                    "not": {"required": ["artifact_refs"]},
                 },
             },
             {
                 "if": {"properties": {"status": {"const": "machine_checked"}}, "required": ["status"]},
-                "then": {"required": ["signature", "artifact_refs", "rationale"]},
+                "then": {
+                    "required": ["signature", "artifact_refs", "rationale"],
+                    "not": {"required": ["auditor_count"]},
+                },
+            },
+            {
+                "if": {"properties": {"status": {"const": "unaudited"}}, "required": ["status"]},
+                "then": {
+                    "not": {
+                        "anyOf": [
+                            {"required": ["signature"]},
+                            {"required": ["auditor_count"]},
+                            {"required": ["artifact_refs"]},
+                            {"required": ["rationale"]},
+                        ]
+                    }
+                },
             },
         ]
     },
@@ -400,6 +450,19 @@ IMPLEMENTATION_EVIDENCE_ENTRY_SCHEMA = _closed_object(
             {
                 "if": {"properties": {"status": {"const": "failing"}}, "required": ["status"]},
                 "then": {"required": ["rationale"]},
+            },
+            {
+                "if": {"properties": {"status": {"const": "planned"}}, "required": ["status"]},
+                "then": {
+                    "not": {
+                        "anyOf": [
+                            {"required": ["signature"]},
+                            {"required": ["implementation_revision"]},
+                            {"required": ["artifact_refs"]},
+                            {"required": ["rationale"]},
+                        ]
+                    }
+                },
             },
         ]
     },
@@ -478,6 +541,18 @@ CATALOG_SCHEMA = _closed_object(
                 )
             ),
             "description": "Architecture state registry. Dynamic keys identify authoritative, derived/materialized, speculative, or protocol/control state items.",
+        },
+        "symbolic_dimensions": {
+            **_catalog_map(_closed_object(
+                {
+                    "description": {
+                        **NONEMPTY_STRING,
+                        "description": "Definition of one semantic coordinate used to preserve arity/dimensionality in symbolic lowering.",
+                    }
+                },
+                required=("description",),
+            )),
+            "description": "Stable registry of semantic coordinates that may be referenced by catalog.state.*.symbolic_dimensions.",
         },
         "mechanisms": {
             **_catalog_map(
@@ -632,7 +707,7 @@ CATALOG_SCHEMA = _closed_object(
             "description": "Traceability registry keyed by stable semantic source IDs. Positional IDs such as section_6 are forbidden; article numbering is presentation only.",
         },
     },
-    required=("terms", "state", "mechanisms", "semantic_contracts", "failure_events", "verifier_kinds", "sources"),
+    required=("terms", "state", "symbolic_dimensions", "mechanisms", "semantic_contracts", "failure_events", "verifier_kinds", "sources"),
 )
 
 REFINEMENT_SCHEMA = _closed_object(
@@ -707,7 +782,7 @@ SCOPE_SCHEMA = _closed_object(
 
 CANONICAL_GRAPH_SCHEMA: dict[str, Any] = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "urn:proof-driven-development:correctness-graph:v0.13",
+    "$id": "urn:proof-driven-development:correctness-graph:v0.14",
     "title": "Proof-Driven Development correctness graph",
     "description": (
         "Closed typed representation of one system correctness model. Fixed object fields are schema-defined; "

@@ -302,11 +302,6 @@ def validate(graph: Graph) -> tuple[list[str], list[str]]:
                         errors.append(
                             f"refinement.nodes.{node_id}: stable node requires a 64-hex signature"
                         )
-                    if "rationale" in entry:
-                        warnings.append(
-                            f"refinement.nodes.{node_id}: stable node should not retain rationale; "
-                            "canonical YAML records current state, while audit history belongs outside the model"
-                        )
                 if status == "waived":
                     rationale = entry.get("rationale")
                     if not isinstance(rationale, str) or not rationale.strip():
@@ -441,6 +436,22 @@ def validate(graph: Graph) -> tuple[list[str], list[str]]:
                     errors.append(f"catalog.sources.{key}.heading must be non-empty")
 
     semantic_symbols = set(_catalog_namespace(graph, "terms")) | set(_catalog_namespace(graph, "state"))
+    symbolic_dimensions = _catalog_namespace(graph, "symbolic_dimensions")
+    state_catalog = _catalog_namespace(graph, "state")
+    for state_id, entry in state_catalog.items():
+        if not isinstance(entry, dict):
+            continue
+        dimensions = entry.get("symbolic_dimensions")
+        if dimensions is None:
+            continue
+        if isinstance(dimensions, list):
+            for dimension in dimensions:
+                if isinstance(dimension, str) and dimension not in symbolic_dimensions:
+                    errors.append(
+                        f"catalog.state.{state_id}.symbolic_dimensions references unknown "
+                        f"catalog.symbolic_dimensions entry {dimension!r}"
+                    )
+
     contracts = _catalog_namespace(graph, "semantic_contracts")
     for contract_id, entry in contracts.items():
         if not isinstance(entry, dict):
@@ -459,6 +470,18 @@ def validate(graph: Graph) -> tuple[list[str], list[str]]:
                         errors.append(
                             f"catalog.semantic_contracts.{contract_id}.{field} references unknown semantic symbol {symbol!r}"
                         )
+            source_symbols = {
+                symbol for symbol in entry.get("source_symbols", []) if isinstance(symbol, str)
+            }
+            bound_symbols = {
+                symbol for symbol in entry.get("bound_symbols", []) if isinstance(symbol, str)
+            }
+            overlap = sorted(source_symbols & bound_symbols)
+            if overlap:
+                errors.append(
+                    f"catalog.semantic_contracts.{contract_id} provenance source_symbols and "
+                    f"bound_symbols must be disjoint; overlap={overlap}"
+                )
 
     if graph.repository_root is not None:
         referenced_contracts: set[str] = set()
@@ -732,6 +755,13 @@ def validate(graph: Graph) -> tuple[list[str], list[str]]:
         ]
         if not boundaries:
             errors.append(f"{root}: root closure has no leaf or assumption boundary")
+
+    if graph.repository_root is not None:
+        from .symbolic.formal_validation import validate_formal_layer
+
+        formal_errors, formal_warnings = validate_formal_layer(graph)
+        errors.extend(f"formal: {error}" for error in formal_errors)
+        warnings.extend(f"formal: {warning}" for warning in formal_warnings)
 
     return errors, warnings
 

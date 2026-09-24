@@ -173,7 +173,11 @@ def build_claim_translation_subject(
 
     function_names = _formula_function_names(mapping.formula)
     functions = {
-        name: bridge.functions[name]
+        name: {
+            key: value
+            for key, value in bridge.functions[name].items()
+            if key != "semantic_anchors"
+        }
         for name in sorted(function_names)
     }
     terms = _catalog_namespace(graph, "terms")
@@ -217,7 +221,11 @@ def build_translation_subject(
 
     function_names = _formula_function_names(mapping.formula)
     functions = {
-        name: bridge.functions[name]
+        name: {
+            key: value
+            for key, value in bridge.functions[name].items()
+            if key != "semantic_anchors"
+        }
         for name in sorted(function_names)
     }
 

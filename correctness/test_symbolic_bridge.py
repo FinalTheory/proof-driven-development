@@ -10,7 +10,7 @@ from harness.model import Graph, UniqueKeyLoader
 from harness.symbolic import SymbolicBridge, SymbolicBridgeError, SymbolicVerifier, check_program
 
 
-BRIDGE_PATH = Path(__file__).with_name("symbolic_models") / "google_docs.poc.yaml"
+BRIDGE_PATH = Path(__file__).with_name("symbolic_models") / "bridge.yaml"
 
 
 def var(name: str):
@@ -91,6 +91,31 @@ class SymbolicBridgeTests(unittest.TestCase):
             SymbolicBridge.from_data(broken)
         self.assertIn("meaning", str(ctx.exception))
 
+    def test_bridge_rejects_unanchored_opaque_predicate(self):
+        raw = yaml.load(BRIDGE_PATH.read_text(), Loader=UniqueKeyLoader)
+        broken = copy.deepcopy(raw)
+        broken["functions"]["invented_hidden_glue"] = {
+            "args": [],
+            "returns": "Bool",
+            "catalog_symbols": [],
+            "meaning": "An invented premise with no canonical provenance.",
+        }
+        with self.assertRaises(SymbolicBridgeError) as ctx:
+            SymbolicBridge.from_data(broken)
+        self.assertIn("must be anchored", str(ctx.exception))
+
+    def test_bridge_rejects_opaque_predicate_outside_authorized_subject(self):
+        raw = yaml.load(BRIDGE_PATH.read_text(), Loader=UniqueKeyLoader)
+        broken = copy.deepcopy(raw)
+        fn = "acceptance_capable_transition"
+        broken["functions"][fn]["semantic_anchors"] = [
+            "claim:L20_acceptance_paths_are_authoritatively_mediated"
+        ]
+        with self.assertRaises(SymbolicBridgeError) as ctx:
+            SymbolicBridge.from_data(broken)
+        self.assertIn("C14_all_acceptance_paths_honor_idempotency_identity", str(ctx.exception))
+        self.assertIn("semantic_anchors", str(ctx.exception))
+
     def test_claim_mapping_cannot_anonymize_explicit_canonical_vocabulary(self):
         raw = yaml.load(BRIDGE_PATH.read_text(), Loader=UniqueKeyLoader)
         broken = copy.deepcopy(raw)
@@ -159,6 +184,8 @@ class SymbolicBridgeTests(unittest.TestCase):
         broken["claims"]["L108_acceptance_preserves_request_identity"]["contracts"] = [
             "live_delivery_acceptance_binding"
         ]
+        anchors = broken["functions"]["acceptance_produced_from_request"]["semantic_anchors"]
+        anchors.append("claim:L108_acceptance_preserves_request_identity")
         bridge = SymbolicBridge.from_data(broken)
         with self.assertRaises(SymbolicBridgeError) as ctx:
             bridge.validate_against_graph(self.graph)
@@ -225,6 +252,17 @@ class SymbolicBridgeTests(unittest.TestCase):
         self.assertEqual(check_program(with_contract).status, "unsat")
 
     def test_existing_observer_contracts_admit_cross_document_unresolved_overlay(self):
+        raw = yaml.load(BRIDGE_PATH.read_text(), Loader=UniqueKeyLoader)
+        local = copy.deepcopy(raw)
+        local["functions"]["overlay_document"] = {
+            "args": ["Overlay"],
+            "returns": "Document",
+            "catalog_symbols": ["client_speculative_overlays", "document_id"],
+            "meaning": "Test-only projection of the document identity carried by speculative overlay o.",
+        }
+        bridge = SymbolicBridge.from_data(local)
+        bridge.validate_against_graph(self.graph)
+
         bad_overlay = exists(
             {"s": "ClientState", "o": "Overlay"},
             and_(
@@ -236,7 +274,7 @@ class SymbolicBridgeTests(unittest.TestCase):
                 ),
             ),
         )
-        existing = self.bridge.compile_program(
+        existing = bridge.compile_program(
             self.graph,
             contract_ids=[
                 "client_canonical_frontier_coherence",
@@ -256,7 +294,7 @@ class SymbolicBridgeTests(unittest.TestCase):
                 ),
             ),
         )
-        repaired = self.bridge.compile_program(
+        repaired = bridge.compile_program(
             self.graph,
             contract_ids=[
                 "client_canonical_frontier_coherence",

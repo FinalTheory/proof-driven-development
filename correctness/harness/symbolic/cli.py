@@ -24,15 +24,15 @@ from .translation_assurance import TranslationReviewError
 from .verification import SymbolicVerifier
 
 
-DEFAULT_SYMBOLIC_MODEL = Path(__file__).resolve().parent.parent.parent / "symbolic_models" / "google_docs.poc.yaml"
-DEFAULT_ASSURANCE_REGISTRY = Path(__file__).resolve().parent.parent.parent / "symbolic_models" / "assurance.poc.yaml"
-DEFAULT_COVERAGE_MODEL = Path(__file__).resolve().parent.parent.parent / "symbolic_models" / "coverage.poc.yaml"
+DEFAULT_SYMBOLIC_MODEL = Path(__file__).resolve().parent.parent.parent / "symbolic_models" / "bridge.yaml"
+DEFAULT_ASSURANCE_REGISTRY = Path(__file__).resolve().parent.parent.parent / "symbolic_models" / "assurance.yaml"
+DEFAULT_COVERAGE_MODEL = Path(__file__).resolve().parent.parent.parent / "symbolic_models" / "coverage.yaml"
 
 
 def add_symbolic_subparsers(sub: argparse._SubParsersAction) -> None:
     status = sub.add_parser(
         "symbolic-status",
-        help="Report trust state for experimental symbolic contract/claim mappings.",
+        help="Report trust state for persisted symbolic contract/claim mappings.",
     )
     status.add_argument(
         "--model",

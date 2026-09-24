@@ -110,6 +110,7 @@ from harness.workflow import (
     _refinement_snapshot,
 )
 from harness.symbolic.cli import add_symbolic_subparsers, handle_symbolic_command
+from harness.symbolic.formal_schema import FORMAL_SCHEMAS
 from harness.validation import (
     _canonical_field_inventory,
     _condition_summary,
@@ -910,6 +911,15 @@ def _cmd_graph_schema(_graph: Graph | None, args: argparse.Namespace) -> int:
         print(json.dumps(CANONICAL_GRAPH_SCHEMA, indent=2, ensure_ascii=False, sort_keys=False))
     else:
         print(yaml.safe_dump(_plain_data(CANONICAL_GRAPH_SCHEMA), sort_keys=False, allow_unicode=True).rstrip())
+    return 0
+
+
+def _cmd_formal_schema(_graph: Graph | None, args: argparse.Namespace) -> int:
+    schema = FORMAL_SCHEMAS[args.kind]
+    if args.format == "json":
+        print(json.dumps(schema, indent=2, ensure_ascii=False, sort_keys=False))
+    else:
+        print(yaml.safe_dump(_plain_data(schema), sort_keys=False, allow_unicode=True).rstrip())
     return 0
 
 
@@ -1848,6 +1858,22 @@ def build_parser() -> argparse.ArgumentParser:
         help="Render the canonical graph schema as YAML or JSON.",
     )
 
+    formal_schema_parser = sub.add_parser(
+        "formal-schema",
+        help="Print a machine-readable JSON Schema for one persisted symbolic sidecar/artifact kind.",
+    )
+    formal_schema_parser.add_argument(
+        "kind",
+        choices=sorted(FORMAL_SCHEMAS),
+        help="Formal YAML kind to describe.",
+    )
+    formal_schema_parser.add_argument(
+        "--format",
+        choices=["yaml", "json"],
+        default="yaml",
+        help="Render the formal schema as YAML or JSON.",
+    )
+
     schema_fields_parser = sub.add_parser(
         "schema-fields",
         help="List every canonical YAML field path, its structural constraint, and its semantic description.",
@@ -1867,7 +1893,10 @@ def build_parser() -> argparse.ArgumentParser:
         default="yaml",
         help="Render the canonical schema as YAML or JSON.",
     )
-    sub.add_parser("validate", help="Validate schema, DAG, refinement-control, and assurance-state invariants.")
+    sub.add_parser(
+        "validate",
+        help="Validate canonical graph invariants plus any persisted formal symbolic assurance layer.",
+    )
 
     slice_parser = sub.add_parser(
         "slice", help="Extract the recursive dependency closure for one proof obligation."
@@ -2001,6 +2030,8 @@ def main() -> int:
         return _cmd_graph_schema(None, args)
     if args.command == "mutation-schema":
         return _cmd_mutation_schema(None, args)
+    if args.command == "formal-schema":
+        return _cmd_formal_schema(None, args)
     if args.command == "schema-fields":
         return _cmd_schema_fields(None, args)
 

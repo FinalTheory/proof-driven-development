@@ -20,8 +20,8 @@ from harness.symbolic import (
 from harness.symbolic.cli import _cmd_symbolic_report
 
 
-BRIDGE_PATH = Path(__file__).with_name("symbolic_models") / "google_docs.poc.yaml"
-ASSURANCE_PATH = Path(__file__).with_name("symbolic_models") / "assurance.poc.yaml"
+BRIDGE_PATH = Path(__file__).with_name("symbolic_models") / "bridge.yaml"
+ASSURANCE_PATH = Path(__file__).with_name("symbolic_models") / "assurance.yaml"
 
 C12_TARGET = "C12_live_delivery_contains_only_accepted_changes"
 C12_PREMISE = "L116_live_delivery_is_bound_to_committed_acceptance"

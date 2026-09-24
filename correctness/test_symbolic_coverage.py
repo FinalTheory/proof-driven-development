@@ -21,9 +21,9 @@ from harness.symbolic import (
 from harness.symbolic.cli import _cmd_symbolic_cover
 
 
-BRIDGE_PATH = Path(__file__).with_name("symbolic_models") / "google_docs.poc.yaml"
-ASSURANCE_PATH = Path(__file__).with_name("symbolic_models") / "assurance.poc.yaml"
-COVERAGE_PATH = Path(__file__).with_name("symbolic_models") / "coverage.poc.yaml"
+BRIDGE_PATH = Path(__file__).with_name("symbolic_models") / "bridge.yaml"
+ASSURANCE_PATH = Path(__file__).with_name("symbolic_models") / "assurance.yaml"
+COVERAGE_PATH = Path(__file__).with_name("symbolic_models") / "coverage.yaml"
 TARGET = "L108_acceptance_preserves_request_identity"
 ARTIFACT_PATH = (
     Path(__file__).with_name("symbolic_artifacts")

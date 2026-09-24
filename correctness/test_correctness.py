@@ -29,7 +29,7 @@ def _leaf(statement: str):
 def make_fixture():
     """Immutable synthetic DAG used only for correctness.py tool regression tests."""
     return {
-        "schema_version": "0.13",
+        "schema_version": "0.14",
         "system": {
             "id": "synthetic_correctness_tool_fixture",
             "summary": "Synthetic system used only to test correctness.py algorithms.",
@@ -47,6 +47,10 @@ def make_fixture():
             },
             "state": {
                 "synthetic_state": {"class": "authoritative", "description": "Synthetic authoritative state."}
+            },
+            "symbolic_dimensions": {
+                "entity": {"description": "Synthetic entity coordinate."},
+                "observation": {"description": "Synthetic observation coordinate."},
             },
             "mechanisms": {
                 "synthetic_mechanism": {
@@ -579,11 +583,19 @@ class CorrectnessToolTests(unittest.TestCase):
             correctness._cmd_workflow_help(None, argparse.Namespace())
         self.assertIn("mutation-schema", output.getvalue())
         self.assertIn("graph-schema", output.getvalue())
+        self.assertIn("formal-schema", output.getvalue())
         output = io.StringIO()
         with contextlib.redirect_stdout(output):
             correctness._cmd_graph_schema(None, argparse.Namespace(format="yaml"))
         self.assertIn("Proof-Driven Development correctness graph", output.getvalue())
         output = io.StringIO()
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            correctness._cmd_formal_schema(
+                None,
+                argparse.Namespace(kind="bridge", format="yaml"),
+            )
+        self.assertIn("symbolic-bridge:v1", output.getvalue())
         with contextlib.redirect_stdout(output):
             correctness._cmd_schema_fields(None, argparse.Namespace(format="text"))
         inventory = output.getvalue()
@@ -669,6 +681,48 @@ class CorrectnessToolTests(unittest.TestCase):
         errors, _ = correctness.validate(correctness.Graph(doc))
         self.assertTrue(any("verification" in e and "status" in e and "Additional properties" in e for e in errors))
         self.assertTrue(any("verification.verifiers[0]" in e and "unexpected" in e for e in errors))
+
+    def test_canonical_schema_rejects_stale_state_metadata(self):
+        doc = copy.deepcopy(self.base)
+        doc["refinement"]["nodes"]["L1_left_boundary"]["signature"] = "0" * 64
+        doc["assurance"]["specification_coverage"].update(
+            signature="0" * 64,
+            auditor_count=2,
+            rationale="stale",
+        )
+        doc["assurance"]["composition"]["G1_primary_goal"].update(
+            signature="0" * 64,
+            rationale="stale",
+        )
+        doc["assurance"]["implementation_evidence"]["L1_left_boundary"].update(
+            signature="0" * 64,
+            implementation_revision="old",
+            artifact_refs=["ci://old"],
+        )
+        errors, _ = correctness.validate(correctness.Graph(doc))
+        self.assertTrue(any("refinement.nodes.L1_left_boundary" in e and "signature" in e for e in errors))
+        self.assertTrue(any("assurance.specification_coverage" in e for e in errors))
+        self.assertTrue(any("assurance.composition.G1_primary_goal" in e for e in errors))
+        self.assertTrue(any("assurance.implementation_evidence.L1_left_boundary" in e for e in errors))
+
+    def test_symbolic_dimensions_must_resolve_to_catalog(self):
+        doc = copy.deepcopy(self.base)
+        doc["catalog"]["state"]["synthetic_state"]["symbolic_dimensions"] = ["missing_dimension"]
+        errors, _ = correctness.validate(correctness.Graph(doc))
+        self.assertTrue(any("unknown catalog.symbolic_dimensions entry 'missing_dimension'" in e for e in errors))
+
+    def test_provenance_binding_source_and_bound_symbols_must_be_disjoint(self):
+        doc = copy.deepcopy(self.base)
+        doc["catalog"]["semantic_contracts"]["synthetic_provenance"] = {
+            "class": "provenance_binding",
+            "definition": "Synthetic provenance relation.",
+            "excludes": [],
+            "automation_reusable": True,
+            "source_symbols": ["synthetic_key"],
+            "bound_symbols": ["synthetic_key"],
+        }
+        errors, _ = correctness.validate(correctness.Graph(doc))
+        self.assertTrue(any("source_symbols and bound_symbols must be disjoint" in e for e in errors))
 
     def test_every_canonical_field_has_description(self):
         missing: list[str] = []
@@ -830,7 +884,7 @@ class CorrectnessToolTests(unittest.TestCase):
     def test_state_catalog_symbolic_dimensions_are_typed(self):
         doc = copy.deepcopy(self.base)
         doc["catalog"]["state"]["synthetic_state"]["symbolic_dimensions"] = [
-            "document",
+            "entity",
             "observation",
         ]
         errors, _ = correctness.validate(correctness.Graph(doc))
@@ -1265,10 +1319,8 @@ class CorrectnessToolTests(unittest.TestCase):
         entry["signature"] = "0" * 64
         entry["rationale"] = "Historical audit narrative that must not remain canonical."
         errors, warnings = correctness.validate(correctness.Graph(doc))
-        self.assertEqual(errors, [])
-        self.assertTrue(
-            any("stable node should not retain rationale" in warning for warning in warnings)
-        )
+        self.assertTrue(any("refinement.nodes.L1_left_boundary" in error for error in errors))
+        self.assertEqual(warnings, [])
 
         plan = {
             "mutation_version": 1,

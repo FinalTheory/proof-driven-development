@@ -32,8 +32,8 @@ from harness.symbolic import (
 )
 
 
-BRIDGE_PATH = Path(__file__).with_name("symbolic_models") / "google_docs.poc.yaml"
-ASSURANCE_PATH = Path(__file__).with_name("symbolic_models") / "assurance.poc.yaml"
+BRIDGE_PATH = Path(__file__).with_name("symbolic_models") / "bridge.yaml"
+ASSURANCE_PATH = Path(__file__).with_name("symbolic_models") / "assurance.yaml"
 
 class TranslationAssuranceTests(unittest.TestCase):
     def setUp(self):

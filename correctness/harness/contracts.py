@@ -30,7 +30,14 @@ SCHEMA_INDEX_LINE_RE = re.compile(r"^- \`([^\`]+)\` => (.+)$")
 NODE_ID_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
 CLAIM_KINDS = {"root", "derived", "leaf"}
 CATALOG_NAMESPACES = (
-    "terms", "state", "mechanisms", "semantic_contracts", "failure_events", "verifier_kinds", "sources"
+    "terms",
+    "state",
+    "symbolic_dimensions",
+    "mechanisms",
+    "semantic_contracts",
+    "failure_events",
+    "verifier_kinds",
+    "sources",
 )
 SEMANTIC_CATALOG_NAMESPACES = ("terms", "state", "mechanisms", "semantic_contracts")
 SNAKE_CASE_TERM_RE = re.compile(r"\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b")
@@ -588,6 +595,14 @@ JSON Schema rejects unknown fields and constrains enums/types before graph-seman
 
     .venv/bin/python3 correctness.py graph-schema --format yaml
     .venv/bin/python3 correctness.py graph-schema --format json
+
+Persisted symbolic sidecars/artifacts have a separate closed schema surface:
+
+    .venv/bin/python3 correctness.py formal-schema bridge --format yaml
+    .venv/bin/python3 correctness.py formal-schema assurance --format yaml
+    .venv/bin/python3 correctness.py formal-schema coverage --format yaml
+    .venv/bin/python3 correctness.py formal-schema composition-artifact --format yaml
+    .venv/bin/python3 correctness.py formal-schema coverage-artifact --format yaml
 
 For a deduplicated human-readable inventory of every canonical YAML field path, including presence rules, structural constraints, and semantic descriptions:
 

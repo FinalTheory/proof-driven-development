@@ -1,4 +1,4 @@
-schema_version: "0.13"
+schema_version: "0.14"
 system:
   id: google_docs_mini
   summary: This model describes the write, retry, ownership-failover, recovery, and reconnect paths
@@ -2799,6 +2799,13 @@ catalog:
       description: Document identity represented by the current user-visible client canonical state;
         it is bound with client_local_document and last_applied_revision as one visible canonical
         tuple.
+  symbolic_dimensions:
+    document:
+      description: Document identity coordinate preserved explicitly by symbolic functions whose
+        value varies per document.
+    observation:
+      description: Logical observation or protocol-state coordinate preserved explicitly when a
+        state value may vary across observations.
   mechanisms:
     server_authoritative_ot:
       description: Server OT owner transforms client edits against canonical accepted history before

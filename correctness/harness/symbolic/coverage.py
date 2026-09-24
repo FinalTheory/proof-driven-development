@@ -10,7 +10,7 @@ import yaml
 
 from ..model import Graph, UniqueKeyLoader
 from .assurance_registry import SubjectTrustStatus, TranslationAssuranceRegistry
-from .bridge import SymbolicBridge, _formula_function_names
+from .bridge import SymbolicBridge, SymbolicBridgeError, _formula_function_names
 from .dsl import ParsedProgram, SymbolicSchemaError, parse_program
 from .translation_assurance import (
     TranslationReviewError,
@@ -342,6 +342,15 @@ class SymbolicCoverageVerifier:
                 f"claims={missing_claims} contracts={missing_contracts}"
             )
         try:
+            self.bridge.validate_formula_anchors(
+                case.formula,
+                claim_ids=case.trusted_claim_ids,
+                contract_ids=case.trusted_contract_ids,
+                label=f"coverage case {case.case_id}",
+            )
+        except SymbolicBridgeError as exc:
+            raise SymbolicCoverageError(str(exc)) from exc
+        try:
             self._compile(case.formula, constraints=[])
         except SymbolicCoverageError:
             raise
@@ -386,7 +395,14 @@ def coverage_candidate_signature(case: CoverageCase, bridge: SymbolicBridge) -> 
         "description": case.description,
         "candidate_statement": case.candidate_statement,
         "formula": case.formula,
-        "vocabulary": {name: bridge.functions[name] for name in function_names},
+        "vocabulary": {
+            name: {
+                key: value
+                for key, value in bridge.functions[name].items()
+                if key != "semantic_anchors"
+            }
+            for name in function_names
+        },
     }
     encoded = json.dumps(
         payload,

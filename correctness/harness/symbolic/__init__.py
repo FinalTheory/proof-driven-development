@@ -1,4 +1,4 @@
-"""Generic typed symbolic IR and SMT backend for PDD experiments."""
+"""Generic typed symbolic IR, translation assurance, and SMT backend for PDD."""
 
 from .bridge import ClaimMapping, ContractMapping, SymbolicBridge, SymbolicBridgeError
 from .assurance_registry import (

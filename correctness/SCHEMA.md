@@ -27,7 +27,7 @@ Harness 会校验文件末尾的 machine-checkable schema index。该索引来�
 
 | 字段 | 类型 / 可选值 | 必需性 | 含义 |
 | --- | --- | --- | --- |
-| `schema_version` | const `0.13` | required | canonical document schema 版本 |
+| `schema_version` | const `0.14` | required | canonical document schema 版本 |
 | `system` | closed object | required | 所有局部 proof audit 共享的全局系统语义 |
 | `source` | closed object | required | architecture narrative 的 traceability pointer |
 | `scope` | closed object | required | 明确哪些 product/protocol concern 被建模或排除 |
@@ -103,7 +103,13 @@ Harness 会校验文件末尾的 machine-checkable schema index。该索引来�
 | --- | --- | --- | --- |
 | `state.<id>.class` | `authoritative` / `derived` / `speculative` / `control` | required | state 的 semantic role |
 | `state.<id>.description` | non-empty string | required | state 的定义及其 correctness role |
-| `state.<id>.symbolic_dimensions` | unique `lower_snake[]`, min 1 | optional | symbolic mapping 读取该 state 时必须显式保留的有序语义坐标；用于禁止把随 observation / entity 变化的 state 降维成无对应坐标的函数 |
+| `state.<id>.symbolic_dimensions` | unique `lower_snake[]`, min 1 | optional | symbolic mapping 读取该 state 时必须显式保留的有序语义坐标；每项必须解析到 `catalog.symbolic_dimensions` |
+
+### `catalog.symbolic_dimensions`
+
+| 字段 | 类型 / 可选值 | 必需性 | 含义 |
+| --- | --- | --- | --- |
+| `symbolic_dimensions.<id>.description` | non-empty string | required | symbolic lowering 使用的稳定语义坐标定义；用于给 `state.*.symbolic_dimensions` 提供 closed vocabulary |
 
 ### `catalog.mechanisms`
 
@@ -284,8 +290,8 @@ Dynamic key 必须是现有 `claim_id`。
 - `assumptions.<key:^A[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.status` => required; enum=external_assumption|protocol_assumption|environment_assumption
 - `assurance` => required; closed object
 - `assurance.composition` => required; closed object; dynamic keys match ^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
-- `assurance.composition.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.artifact_refs` => required when status=machine_checked; array, minItems=1, uniqueItems=true, items=string
-- `assurance.composition.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.auditor_count` => required when status=single_agent_audited or status=multi_agent_audited; integer, minimum=1
+- `assurance.composition.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.artifact_refs` => required when status=machine_checked; forbidden when status=single_agent_audited or status=multi_agent_audited; array, minItems=1, uniqueItems=true, items=string
+- `assurance.composition.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.auditor_count` => required when status=single_agent_audited or status=multi_agent_audited; forbidden when status=machine_checked; integer, minimum=1
 - `assurance.composition.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.rationale` => required when status=single_agent_audited or status=multi_agent_audited or status=machine_checked; string, minLength=1
 - `assurance.composition.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.signature` => required when status=single_agent_audited or status=multi_agent_audited or status=machine_checked; string, pattern=^[0-9a-f]{64}$
 - `assurance.composition.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.status` => required; enum=unaudited|single_agent_audited|multi_agent_audited|machine_checked
@@ -322,6 +328,8 @@ Dynamic key 必须是现有 `claim_id`。
 - `catalog.state.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.class` => required; enum=authoritative|derived|speculative|control
 - `catalog.state.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.description` => required; string, minLength=1
 - `catalog.state.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.symbolic_dimensions` => optional; array, minItems=1, uniqueItems=true, items=string, itemPattern=^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
+- `catalog.symbolic_dimensions` => required; closed object; dynamic keys match ^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
+- `catalog.symbolic_dimensions.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.description` => required; string, minLength=1
 - `catalog.terms` => required; closed object; dynamic keys match ^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.terms.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.description` => required; string, minLength=1
 - `catalog.verifier_kinds` => required; closed object; dynamic keys match ^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
@@ -351,21 +359,21 @@ Dynamic key 必须是现有 `claim_id`。
 - `refinement.decisions.<key:^D[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.options` => required; array, minItems=1, uniqueItems=true, items=string
 - `refinement.decisions.<key:^D[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.question` => required; string, minLength=1
 - `refinement.decisions.<key:^D[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.reason` => required; string, minLength=1
-- `refinement.decisions.<key:^D[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.resolution` => required when status=resolved; string, minLength=1
+- `refinement.decisions.<key:^D[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.resolution` => required when status=resolved; forbidden when status=open; string, minLength=1
 - `refinement.decisions.<key:^D[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.status` => required; enum=open|resolved
 - `refinement.nodes` => required; closed object; dynamic keys match ^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `refinement.nodes.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.blocked_by` => required; array, uniqueItems=true, items=string, itemPattern=^D[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
-- `refinement.nodes.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.rationale` => required when status=waived; string, minLength=1
-- `refinement.nodes.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.signature` => required when status=stable; string, pattern=^[0-9a-f]{64}$
+- `refinement.nodes.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.rationale` => required when status=waived; forbidden when status=stable; string, minLength=1
+- `refinement.nodes.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.signature` => required when status=stable; forbidden when status=waived or status=pending; string, pattern=^[0-9a-f]{64}$
 - `refinement.nodes.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.status` => required; enum=pending|stable|waived
 - `refinement.tooling_blockers` => required; closed object; dynamic keys match ^T[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `refinement.tooling_blockers.<key:^T[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.issue` => required; string, minLength=1
 - `refinement.tooling_blockers.<key:^T[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.reason` => required; string, minLength=1
-- `refinement.tooling_blockers.<key:^T[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.resolution` => required when status=resolved; string, minLength=1
+- `refinement.tooling_blockers.<key:^T[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.resolution` => required when status=resolved; forbidden when status=open; string, minLength=1
 - `refinement.tooling_blockers.<key:^T[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.status` => required; enum=open|resolved
 - `refinement.tooling_blockers.<key:^T[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.suggested_change` => optional; string, minLength=1
 - `roots` => required; array, minItems=1, uniqueItems=true, items=string, itemPattern=^G[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
-- `schema_version` => required; const='0.13'
+- `schema_version` => required; const='0.14'
 - `scope` => required; closed object
 - `scope.excludes` => required; array, minItems=1, uniqueItems=true, items=string
 - `scope.includes` => required; array, minItems=1, uniqueItems=true, items=string

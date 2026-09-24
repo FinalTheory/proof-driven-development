@@ -9,7 +9,7 @@ Current module boundaries:
 - `signatures.py` — proposition, composition, and model semantic signatures.
 - `workflow.py` — refinement and assurance snapshots / scheduling state.
 - `validation.py` — canonical graph validation and SCHEMA.md structural-reference validation.
-- `symbolic/` — experimental generic typed symbolic IR and SMT backend.
+- `symbolic/` — generic typed symbolic IR, translation assurance, SMT backend, and persisted formal-layer validation.
 
 The dependency direction is intentionally one-way:
 
@@ -27,9 +27,9 @@ validation / higher-level CLI orchestration
 
 Higher-level mutation, prompt generation, and CLI code still lives in `correctness.py` for now. Future extraction should preserve this direction rather than introduce circular imports.
 
-## Symbolic POC boundary
+## Symbolic assurance boundary
 
-The symbolic package is not yet canonical correctness authority. It experiments with a narrow idea:
+The symbolic package is a formal assurance layer over, but not a replacement for, canonical correctness authority:
 
 > formalize identity, scope, binding, quantification, and relational safety structure while leaving domain meaning in natural-language/domain vocabulary.
 
@@ -41,12 +41,12 @@ Interpretation:
 - `UNSAT` — the symbolic specification excludes that bad state within the modeled abstraction.
 - Neither result proves that the symbolic abstraction faithfully captures the product design; that remains a semantic-authority question.
 
-The POC deliberately does not model full transition systems, implementation correspondence, liveness, or arbitrary first-order logic.
+The symbolic layer deliberately does not model full transition systems, implementation correspondence, liveness, or arbitrary first-order logic.
 
 
 ### Semantic-contract bridge
 
-`symbolic/bridge.py` connects selected canonical semantic vocabulary and `semantic_contracts` to this IR. Domain-specific mappings live outside the generic kernel, currently in `../symbolic_models/google_docs.poc.yaml`. Canonical state may additionally declare `symbolic_dimensions` when a symbolic lowering must preserve coordinates such as document and observation explicitly.
+`symbolic/bridge.py` connects selected canonical semantic vocabulary and `semantic_contracts` to this IR. Domain-specific mappings live outside the generic kernel, currently in `../symbolic_models/bridge.yaml`. Canonical state may additionally declare `symbolic_dimensions` when a symbolic lowering must preserve coordinates such as document and observation explicitly.
 
 The bridge deliberately does **not** infer formulas from English. Each mapping supplies an explicit structured formula, while deterministic checks prevent silent drift:
 
@@ -56,6 +56,7 @@ The bridge deliberately does **not** infer formulas from English. Each mapping s
 - the union of used catalog symbols must exactly cover the contract's `state_symbols` or `source_symbols + bound_symbols`;
 - canonical snake_case vocabulary named directly in a claim statement/formal intent must also remain explicitly anchored in the claim mapping rather than disappearing into anonymous helper predicates;
 - if a mapped state symbol declares `symbolic_dimensions`, the symbolic function must expose exactly those ordered dimensions as separate arguments.
+- an opaque predicate with no direct `catalog_symbols` must declare canonical `semantic_anchors` and may only be used by those claim/contract subjects; hidden glue cannot be introduced as an unanchored helper merely to obtain UNSAT.
 
 This means the bridge can reject a structurally incomplete or over-scoped translation, but it still cannot prove that an opaque predicate such as `canonical_content_matches` faithfully captures the English definition. That semantic correspondence remains a human/LLM judgment boundary.
 
@@ -102,7 +103,7 @@ The default aggregation rule requires at least two direct and two round-trip `EQ
 
 Predicate declarations include explicit natural-language `meaning`; identifiers alone are not semantic authority. Review context also includes generic Harness semantics such as: a `state_invariant` holds at every state in its `observation_scope`, while a `provenance_binding` does not imply liveness or ordering unless explicitly encoded.
 
-Experimental claim mappings reuse the typed predicates/vocabulary of already-formalized semantic contracts but carry their own explicit claim formula. Deterministic validation requires a claim mapping to reference exactly the canonical claim's declared `semantic_contracts` and to cover the same catalog-symbol boundary; the same translation-assurance reviewers then determine whether the claim formula is actually equivalent to the claim statement. This allows a narrow leaf claim to project only the part of a broader semantic contract that it actually states.
+Claim mappings reuse the typed predicates/vocabulary of already-formalized semantic contracts but carry their own explicit claim formula. Deterministic validation requires a claim mapping to reference exactly the canonical claim's declared `semantic_contracts` and to cover the same catalog-symbol boundary; the same translation-assurance reviewers then determine whether the claim formula is actually equivalent to the claim statement. This allows a narrow leaf claim to project only the part of a broader semantic contract that it actually states.
 
 
 ### Persisted trust and invalidation
@@ -116,16 +117,30 @@ A review record therefore has four meaningful states:
 - `STALE` — a previously reviewed source or symbolic mapping changed;
 - `UNVERIFIED` — no review record exists.
 
-Only `TRUSTED` mappings are eligible for authoritative symbolic proof use. Ordinary `check()` / `exclusion_check()` remain available as experimental diagnostics; `trusted_check()`, `trusted_exclusion_check()`, and their claim equivalents enforce the registry gate.
+Only `TRUSTED` mappings are eligible for authoritative symbolic proof use. Ordinary `check()` / `exclusion_check()` remain available as untrusted diagnostics; `trusted_check()`, `trusted_exclusion_check()`, and their claim equivalents enforce the registry gate.
+
+### Formal schema and repository preflight
+
+The persisted symbolic layer has closed JSON Schemas separate from the canonical graph schema. They are exposed through:
+
+```text
+correctness.py formal-schema bridge
+correctness.py formal-schema assurance
+correctness.py formal-schema coverage
+correctness.py formal-schema composition-artifact
+correctness.py formal-schema coverage-artifact
+```
+
+`correctness.py validate` treats the formal layer as part of repository health whenever the formal sidecars are present: schema validation runs before semantic bridge checks; trusted coverage and machine-checked composition are rerun; persisted artifacts must match the fresh proof result and current semantic signatures.
 
 ### Coverage-facing CLI
 
-The public Harness entry point exposes the experimental symbolic layer without requiring agents to write Python:
+The public Harness entry point exposes the symbolic assurance layer without requiring agents to write Python:
 
 - `correctness.py symbolic-status` reports the trust frontier for every mapped contract and claim;
 - `correctness.py symbolic-check --kind contract|claim --subject ... --query bad-state.yaml` compares the candidate bad state with and without the selected mapping and, by default, refuses any mapping that is not currently `TRUSTED`;
 - `correctness.py symbolic-compose <node>` checks trusted direct-premise entailment for one root/derived claim;
 - `correctness.py symbolic-report [node ...]` renders human-readable proof reports for canonical `machine_checked` compositions, including the target statement, direct-premise statements, translation trust, the SMT counterexample query, `SAT`/`UNSAT` meaning, mutation sensitivity, and persisted proof artifacts. With no node arguments it reports every currently machine-checked composition;
-- `--allow-untrusted` exists only for POC/debug work and must not be treated as authoritative coverage evidence.
+- `--allow-untrusted` exists only for debug/research work and must not be treated as authoritative coverage evidence.
 
 This makes the intended coverage integration explicit: LLM agents still propose semantically meaningful bad states, while deterministic SMT checks answer whether trusted symbolic specifications already exclude them.
