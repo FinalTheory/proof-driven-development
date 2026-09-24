@@ -15,6 +15,7 @@ sorts:
   - LiveDelivery
   - RecoveryAttempt
   - DurableIdempotencyEvidence
+  - ProtocolTransition
 
 functions:
   visible_document:
@@ -284,7 +285,78 @@ functions:
     meaning: >-
       The same captured recovery_head governs checkpoint selection, exact tail replay, recovered metadata reconstruction, and acceptance resumption for recovery attempt r.
 
+  acceptance_capable_transition:
+    args: [ProtocolTransition]
+    returns: Bool
+    catalog_symbols: []
+    meaning: >-
+      Transition t is any normal submission, retry, delayed execution, owner-recovery, resumed-owner, or other protocol transition capable of creating a canonical accepted change.
+
+  transition_is_authoritatively_gate_mediated:
+    args: [ProtocolTransition]
+    returns: Bool
+    catalog_symbols: []
+    meaning: >-
+      Transition t routes its acceptance decision through the authoritative accepted-key identity gate before any acceptance sink and cannot bypass that gate.
+
+  gate_observes_key_already_accepted:
+    args: [ProtocolTransition]
+    returns: Bool
+    catalog_symbols: []
+    meaning: >-
+      At transition t's authoritative accepted-key gate decision, authoritative state records t's idempotency key as already accepted.
+
+  transition_creates_acceptance:
+    args: [ProtocolTransition]
+    returns: Bool
+    catalog_symbols: []
+    meaning: >-
+      Transition t creates a new acceptance event for its idempotency key.
+
 claims:
+  L20_acceptance_paths_are_authoritatively_mediated:
+    contracts: []
+    formula:
+      forall:
+        vars:
+          t: ProtocolTransition
+        body:
+          implies:
+            - {call: {fn: acceptance_capable_transition, args: [{var: t}]}}
+            - {call: {fn: transition_is_authoritatively_gate_mediated, args: [{var: t}]}}
+
+  L21_accepted_key_gate_rejects_new_acceptance:
+    contracts: []
+    formula:
+      forall:
+        vars:
+          t: ProtocolTransition
+        body:
+          implies:
+            - and:
+                - {call: {fn: transition_is_authoritatively_gate_mediated, args: [{var: t}]}}
+                - {call: {fn: gate_observes_key_already_accepted, args: [{var: t}]}}
+            - not:
+                call:
+                  fn: transition_creates_acceptance
+                  args: [{var: t}]
+
+  C14_all_acceptance_paths_honor_idempotency_identity:
+    contracts: []
+    formula:
+      forall:
+        vars:
+          t: ProtocolTransition
+        body:
+          implies:
+            - and:
+                - {call: {fn: acceptance_capable_transition, args: [{var: t}]}}
+                - {call: {fn: gate_observes_key_already_accepted, args: [{var: t}]}}
+            - not:
+                call:
+                  fn: transition_creates_acceptance
+                  args: [{var: t}]
+
   L108_acceptance_preserves_request_identity:
     contracts: [acceptance_request_identity_binding]
     formula:

@@ -269,3 +269,154 @@ records:
           live delivery must originate from a committed accepted history record, while
           not adding delivery completeness, ordering, uniqueness, or timing guarantees.'
         differences: []
+  claim:L20_acceptance_paths_are_authoritatively_mediated:
+    kind: claim
+    subject_id: L20_acceptance_paths_are_authoritatively_mediated
+    subject_signature: 0e9d01680298f60fa3c59dd7065ba08c52c76ee292a84bf8a2c49d7454be4bf4
+    roundtrip:
+      subject_signature: 0e9d01680298f60fa3c59dd7065ba08c52c76ee292a84bf8a2c49d7454be4bf4
+      status: TRANSLATED
+      natural_language: For every protocol transition t, if t is any normal submission,
+        retry, delayed execution, owner-recovery, resumed-owner, or other protocol
+        transition capable of creating a canonical accepted change, then t routes
+        its acceptance decision through the authoritative accepted-key identity gate
+        before any acceptance sink and cannot bypass that gate.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 0e9d01680298f60fa3c59dd7065ba08c52c76ee292a84bf8a2c49d7454be4bf4
+        verdict: EQUIVALENT
+        reason: The formula preserves the universal applicability condition and the
+          required mediated acceptance relation. The predicate meaning includes all
+          transition classes named by the canonical claim and the gate predicate includes
+          both routing through the authoritative accepted-key identity gate and prohibition
+          of bypass before acceptance.
+        differences: []
+      strengthening:
+        subject_signature: 0e9d01680298f60fa3c59dd7065ba08c52c76ee292a84bf8a2c49d7454be4bf4
+        verdict: EQUIVALENT
+        reason: 'The formula exactly captures the source requirement: all transitions
+          capable of creating a canonical accepted change are constrained to route
+          acceptance through the authoritative gate, with no additional scope, identity,
+          cardinality, or observation requirements introduced.'
+        differences: []
+    roundtrip_reviews:
+      weakening:
+        subject_signature: 0e9d01680298f60fa3c59dd7065ba08c52c76ee292a84bf8a2c49d7454be4bf4
+        verdict: EQUIVALENT
+        reason: The round-trip rendering preserves the original quantification, applicability
+          boundary, gate mediation requirement, and explicit bypass exclusions. The
+          added acceptance-sink ordering is implied by routing the acceptance decision
+          through the authoritative gate and does not introduce a separate guarantee.
+        differences: []
+      strengthening:
+        subject_signature: 0e9d01680298f60fa3c59dd7065ba08c52c76ee292a84bf8a2c49d7454be4bf4
+        verdict: EQUIVALENT
+        reason: The rendering preserves the original quantifier, applicability boundary,
+          transition scope, and gate mediation requirement. The added wording about
+          routing before any acceptance sink is an explicit expression of the acceptance
+          decision ordering already implied by the original claim and does not add
+          a stronger guarantee.
+        differences: []
+  claim:L21_accepted_key_gate_rejects_new_acceptance:
+    kind: claim
+    subject_id: L21_accepted_key_gate_rejects_new_acceptance
+    subject_signature: 658c7d8f87ecfc57bdac00c6a92a9458222940ddf3695182af79768e6eee5622
+    roundtrip:
+      subject_signature: 658c7d8f87ecfc57bdac00c6a92a9458222940ddf3695182af79768e6eee5622
+      status: TRANSLATED
+      natural_language: For every protocol transition t, if t is authoritatively gate
+        mediated, meaning t routes its acceptance decision through the authoritative
+        accepted-key identity gate before any acceptance sink and cannot bypass that
+        gate, and the gate's authoritative decision for t observes that t's idempotency
+        key is already accepted, then t does not create a new acceptance event for
+        its idempotency key.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 658c7d8f87ecfc57bdac00c6a92a9458222940ddf3695182af79768e6eee5622
+        verdict: EQUIVALENT
+        reason: 'The formula preserves the source proposition''s applicability conditions
+          and prohibition: for an authoritative gate-mediated transition where the
+          gate observes the key as already accepted, the transition cannot create
+          an acceptance event. The added predicate meaning only makes explicit the
+          source phrase "mediated by the authoritative accepted-key identity gate".'
+        differences: []
+      strengthening:
+        subject_signature: 658c7d8f87ecfc57bdac00c6a92a9458222940ddf3695182af79768e6eee5622
+        verdict: EQUIVALENT
+        reason: 'The formula preserves the original applicability boundary and guarantee:
+          for transitions mediated by the authoritative accepted-key identity gate,
+          observing an already accepted key at the acceptance decision prevents creation
+          of another acceptance event for that key.'
+        differences: []
+    roundtrip_reviews:
+      weakening:
+        subject_signature: 658c7d8f87ecfc57bdac00c6a92a9458222940ddf3695182af79768e6eee5622
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original precondition and guarantee:
+          a gate-mediated transition whose authoritative accepted-key state already
+          contains the key cannot create another acceptance event for that key. The
+          added gate mediation wording only makes the existing applicability condition
+          explicit.'
+        differences: []
+      strengthening:
+        subject_signature: 658c7d8f87ecfc57bdac00c6a92a9458222940ddf3695182af79768e6eee5622
+        verdict: EQUIVALENT
+        reason: The round-trip rendering preserves the original precondition that
+          the authoritative accepted-key identity gate observes an already accepted
+          key and preserves the resulting guarantee that no additional acceptance
+          event is created for that key. The added wording clarifies gate mediation
+          boundaries without changing the claim's semantic scope.
+        differences: []
+  claim:C14_all_acceptance_paths_honor_idempotency_identity:
+    kind: claim
+    subject_id: C14_all_acceptance_paths_honor_idempotency_identity
+    subject_signature: 63dfc634214e902c8098d68ab1e15137ac7578efde2a0c20e686a1a7a854ed07
+    roundtrip:
+      subject_signature: 63dfc634214e902c8098d68ab1e15137ac7578efde2a0c20e686a1a7a854ed07
+      status: TRANSLATED
+      natural_language: For every protocol transition t, if t is any transition capable
+        of creating a canonical accepted change, including a normal submission, retry,
+        delayed execution, owner-recovery, resumed-owner, or other such transition,
+        and at t's authoritative accepted-key gate decision the authoritative state
+        records t's idempotency key as already accepted, then t does not create a
+        new acceptance event for its idempotency key.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 63dfc634214e902c8098d68ab1e15137ac7578efde2a0c20e686a1a7a854ed07
+        verdict: EQUIVALENT
+        reason: 'The formula preserves the source proposition''s universal scope over
+          all acceptance-capable transitions and directly encodes the required implication:
+          when the authoritative accepted-key gate observes that the idempotency key
+          is already accepted, the transition cannot create another acceptance event
+          for that key.'
+        differences: []
+      strengthening:
+        subject_signature: 63dfc634214e902c8098d68ab1e15137ac7578efde2a0c20e686a1a7a854ed07
+        verdict: EQUIVALENT
+        reason: The formula quantifies over all acceptance-capable transitions and
+          exactly captures the source condition that an already accepted idempotency
+          key prevents another acceptance event. It preserves the same applicability
+          boundary, identity scope, and prohibition without adding extra requirements.
+        differences: []
+    roundtrip_reviews:
+      weakening:
+        subject_signature: 63dfc634214e902c8098d68ab1e15137ac7578efde2a0c20e686a1a7a854ed07
+        verdict: EQUIVALENT
+        reason: The round-trip rendering preserves the original quantification over
+          transitions capable of creating canonical accepted changes, the authoritative
+          accepted-key identity guard, and the prohibition on producing another acceptance
+          event for an already accepted idempotency key. The added examples and gate-decision
+          phrasing do not alter the contract boundary.
+        differences: []
+      strengthening:
+        subject_signature: 63dfc634214e902c8098d68ab1e15137ac7578efde2a0c20e686a1a7a854ed07
+        verdict: EQUIVALENT
+        reason: The rendering preserves the original quantification over transitions
+          capable of creating a canonical accepted change and preserves the accepted-key
+          identity condition and prohibition on producing another acceptance event.
+          The listed transition examples and gate decision wording make the operational
+          context explicit without adding a separate guarantee.
+        differences: []

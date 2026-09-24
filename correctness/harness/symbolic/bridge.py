@@ -159,11 +159,10 @@ class SymbolicBridge:
             formula = mapping["formula"]
             if (
                 not isinstance(contract_ids, list)
-                or not contract_ids
                 or not all(isinstance(item, str) and item for item in contract_ids)
             ):
                 raise SymbolicBridgeError(
-                    f"claim mapping {claim_id}.contracts must be a non-empty list of strings"
+                    f"claim mapping {claim_id}.contracts must be a list of non-empty strings"
                 )
             if len(contract_ids) != len(set(contract_ids)):
                 raise SymbolicBridgeError(

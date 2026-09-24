@@ -17,9 +17,23 @@ from harness.symbolic import (
 
 BRIDGE_PATH = Path(__file__).with_name("symbolic_models") / "google_docs.poc.yaml"
 ASSURANCE_PATH = Path(__file__).with_name("symbolic_models") / "assurance.poc.yaml"
-ARTIFACT_PATH = Path(__file__).with_name("symbolic_artifacts") / "C12_live_delivery_contains_only_accepted_changes.composition.yaml"
-TARGET = "C12_live_delivery_contains_only_accepted_changes"
-PREMISE = "L116_live_delivery_is_bound_to_committed_acceptance"
+
+C12_TARGET = "C12_live_delivery_contains_only_accepted_changes"
+C12_PREMISE = "L116_live_delivery_is_bound_to_committed_acceptance"
+C12_ARTIFACT_PATH = (
+    Path(__file__).with_name("symbolic_artifacts")
+    / "C12_live_delivery_contains_only_accepted_changes.composition.yaml"
+)
+
+C14_TARGET = "C14_all_acceptance_paths_honor_idempotency_identity"
+C14_PREMISES = (
+    "L20_acceptance_paths_are_authoritatively_mediated",
+    "L21_accepted_key_gate_rejects_new_acceptance",
+)
+C14_ARTIFACT_PATH = (
+    Path(__file__).with_name("symbolic_artifacts")
+    / "C14_all_acceptance_paths_honor_idempotency_identity.composition.yaml"
+)
 
 
 def var(name):
@@ -49,8 +63,8 @@ class SymbolicCompositionTests(unittest.TestCase):
 
     def test_c12_composition_is_entailed_by_l116_symbolically(self):
         verifier = SymbolicCompositionVerifier(self.graph, self.bridge)
-        result = verifier.check(TARGET, require_trusted=False)
-        self.assertEqual(result.premise_ids, (PREMISE,))
+        result = verifier.check(C12_TARGET, require_trusted=False)
+        self.assertEqual(result.premise_ids, (C12_PREMISE,))
         self.assertEqual(result.solver_result.status, "unsat")
         self.assertEqual(result.verdict, "ENTAILED")
         self.assertTrue(result.machine_checked)
@@ -68,34 +82,33 @@ class SymbolicCompositionTests(unittest.TestCase):
         )
         verifier = SymbolicCompositionVerifier(self.graph, self.bridge)
         result = verifier.check_with_premise_overrides(
-            TARGET,
-            premise_formula_overrides={PREMISE: weakened_l116},
+            C12_TARGET,
+            premise_formula_overrides={C12_PREMISE: weakened_l116},
         )
         self.assertEqual(result.solver_result.status, "sat")
         self.assertEqual(result.verdict, "COUNTEREXAMPLE")
         self.assertFalse(result.machine_checked)
         self.assertIsNotNone(result.solver_result.model)
 
-    def test_trusted_composition_succeeds_for_reviewed_target_and_premise(self):
+    def test_trusted_c12_composition_succeeds(self):
         registry = TranslationAssuranceRegistry.load(ASSURANCE_PATH)
         verifier = SymbolicCompositionVerifier(self.graph, self.bridge, registry)
-        result = verifier.check(TARGET, require_trusted=True)
+        result = verifier.check(C12_TARGET, require_trusted=True)
         self.assertEqual(result.solver_result.status, "unsat")
         self.assertEqual(result.verdict, "ENTAILED")
         self.assertTrue(result.machine_checked)
 
-
     def test_persisted_c12_machine_check_artifact_is_current(self):
-        artifact = yaml.safe_load(ARTIFACT_PATH.read_text())
+        artifact = yaml.safe_load(C12_ARTIFACT_PATH.read_text())
         registry = TranslationAssuranceRegistry.load(ASSURANCE_PATH)
         verifier = SymbolicCompositionVerifier(self.graph, self.bridge, registry)
-        result = verifier.check(TARGET, require_trusted=True)
+        result = verifier.check(C12_TARGET, require_trusted=True)
 
         target_subject = build_claim_translation_subject(
-            self.graph, self.bridge, TARGET
+            self.graph, self.bridge, C12_TARGET
         )
         premise_subject = build_claim_translation_subject(
-            self.graph, self.bridge, PREMISE
+            self.graph, self.bridge, C12_PREMISE
         )
 
         self.assertEqual(
@@ -107,13 +120,82 @@ class SymbolicCompositionTests(unittest.TestCase):
             translation_subject_signature(target_subject),
         )
         self.assertEqual(
-            artifact["translation_assurance"]["premises"][PREMISE]["subject_signature"],
+            artifact["translation_assurance"]["premises"][C12_PREMISE]["subject_signature"],
             translation_subject_signature(premise_subject),
         )
         self.assertEqual(artifact["result"]["solver_status"], "unsat")
         self.assertEqual(artifact["result"]["verdict"], "ENTAILED")
         self.assertEqual(artifact["mutation_test"]["solver_status"], "sat")
         self.assertEqual(artifact["mutation_test"]["verdict"], "COUNTEREXAMPLE")
+
+    def test_c14_two_premise_composition_is_entailed_trusted(self):
+        registry = TranslationAssuranceRegistry.load(ASSURANCE_PATH)
+        verifier = SymbolicCompositionVerifier(self.graph, self.bridge, registry)
+        result = verifier.check(C14_TARGET, require_trusted=True)
+        self.assertEqual(result.premise_ids, C14_PREMISES)
+        self.assertEqual(result.solver_result.status, "unsat")
+        self.assertEqual(result.verdict, "ENTAILED")
+        self.assertTrue(result.machine_checked)
+
+    def test_c14_mutations_show_each_direct_premise_is_necessary(self):
+        verifier = SymbolicCompositionVerifier(self.graph, self.bridge)
+        for premise in C14_PREMISES:
+            with self.subTest(premise=premise):
+                result = verifier.check_with_premise_overrides(
+                    C14_TARGET,
+                    premise_formula_overrides={premise: {"bool": True}},
+                )
+                self.assertEqual(result.solver_result.status, "sat")
+                self.assertEqual(result.verdict, "COUNTEREXAMPLE")
+                self.assertIsNotNone(result.solver_result.model)
+
+    def test_persisted_c14_machine_check_artifact_is_current(self):
+        artifact = yaml.safe_load(C14_ARTIFACT_PATH.read_text())
+        registry = TranslationAssuranceRegistry.load(ASSURANCE_PATH)
+        verifier = SymbolicCompositionVerifier(self.graph, self.bridge, registry)
+        result = verifier.check(C14_TARGET, require_trusted=True)
+
+        target_subject = build_claim_translation_subject(
+            self.graph, self.bridge, C14_TARGET
+        )
+        premise_subject_signatures = {
+            premise: translation_subject_signature(
+                build_claim_translation_subject(self.graph, self.bridge, premise)
+            )
+            for premise in C14_PREMISES
+        }
+
+        self.assertEqual(
+            artifact["composition_signature"],
+            result.composition_signature,
+        )
+        self.assertEqual(
+            artifact["translation_assurance"]["target"]["subject_signature"],
+            translation_subject_signature(target_subject),
+        )
+        for premise in C14_PREMISES:
+            self.assertEqual(
+                artifact["translation_assurance"]["premises"][premise]["subject_signature"],
+                premise_subject_signatures[premise],
+            )
+
+        self.assertEqual(artifact["result"]["solver_status"], "unsat")
+        self.assertEqual(artifact["result"]["verdict"], "ENTAILED")
+
+        mutation_by_premise = {
+            item["weakened_premise"]: item
+            for item in artifact["mutation_tests"]
+        }
+        self.assertEqual(set(mutation_by_premise), set(C14_PREMISES))
+        for premise in C14_PREMISES:
+            self.assertEqual(
+                mutation_by_premise[premise]["solver_status"],
+                "sat",
+            )
+            self.assertEqual(
+                mutation_by_premise[premise]["verdict"],
+                "COUNTEREXAMPLE",
+            )
 
 
 if __name__ == "__main__":

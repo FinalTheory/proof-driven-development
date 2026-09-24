@@ -3762,7 +3762,14 @@ assurance:
     C13_idempotency_key_is_temporally_unique:
       status: unaudited
     C14_all_acceptance_paths_honor_idempotency_identity:
-      status: unaudited
+      status: machine_checked
+      artifact_refs:
+        - symbolic_artifacts/C14_all_acceptance_paths_honor_idempotency_identity.composition.yaml
+      rationale: Trusted symbolic translations exist for C14 and both direct premises L20 and L21.
+        Z3 checked L20 AND L21 AND NOT(C14) as UNSAT. Independent mutation tests that replace either
+        L20 or L21 with True each become SAT with a concrete counterexample, demonstrating that both
+        direct premises are necessary to establish the target.
+      signature: a5cfab07b9077903605c2d609eadf4999cf28070d24b5892e0696805ca96a649
     C15_snapshot_catchup_returns_checkpoint_and_exact_tail:
       status: unaudited
     C16_non_append_lifecycle_preserves_logical_revision_prefix:
