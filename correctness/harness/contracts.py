@@ -402,7 +402,7 @@ Every runnable audit MUST be performed by a NEW isolated sub-agent with no prior
 conversation, no earlier audit transcript, and no knowledge of why the node was created.
 Do not reuse an agent across nodes or refinement rounds.
 
-When the Writer MCP exposes `spawn_chatgpt_subagent`, that is the canonical clean-context
+When the Writer MCP exposes `spawn_chatgpt_subagents`, that is the canonical clean-context
 execution primitive and the orchestrator MUST use it rather than simulating multiple roles
 inside its own context. If that function is not present in the initially loaded tool subset,
 perform Writer-tool discovery before concluding that clean-context execution is unavailable.

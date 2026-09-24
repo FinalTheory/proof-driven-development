@@ -1285,7 +1285,7 @@ class CorrectnessToolTests(unittest.TestCase):
     def test_workflow_help_contracts(self):
         text = correctness.WORKFLOW_HELP
         self.assertIn("Mandatory clean-context isolation", text)
-        self.assertIn("spawn_chatgpt_subagent", text)
+        self.assertIn("spawn_chatgpt_subagents", text)
         self.assertIn("tool discovery", text)
         self.assertIn("execution/capacity", text)
         self.assertIn("Orchestrator as skeptical judge/compiler", text)
@@ -1677,7 +1677,7 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("Semantic provenance/binding closure", text)
         self.assertIn("composite identities or semantic tuples", text)
         self.assertIn("tuple closure", text)
-        self.assertIn("spawn_chatgpt_subagent", text)
+        self.assertIn("spawn_chatgpt_subagents", text)
         self.assertIn("tool discovery", text)
         self.assertIn("FINAL VERDICT: EXECUTION INCOMPLETE", text)
         self.assertIn("--omit-specification-coverage", text)

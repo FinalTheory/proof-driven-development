@@ -813,7 +813,7 @@ def _emit_coverage_audit_prompt(graph: Graph) -> None:
     print("## Multi-agent campaign")
     print()
     print("Isolation is an execution requirement, not a role-playing convention. When Writer MCP exposes")
-    print("`spawn_chatgpt_subagent`, the orchestrator MUST use it for every scout, checker, and challenger.")
+    print("`spawn_chatgpt_subagents`, the orchestrator MUST use it for every scout, checker, and challenger (use a one-element list when launching a single fresh agent).")
     print("If it is absent from the initially loaded tool subset, perform Writer-tool discovery before declaring")
     print("clean-context execution unavailable. Do not reuse this orchestrator context as a substitute for a fresh child conversation.")
     print("If all browser slots are occupied or a child task fails, treat that as transient capacity/execution failure:")
