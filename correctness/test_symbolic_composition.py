@@ -1,18 +1,23 @@
 #!/usr/bin/env python3
 
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
+from types import SimpleNamespace
 
 import yaml
 
 from harness.model import Graph
 from harness.symbolic import (
     SymbolicBridge,
+    SymbolicCompositionError,
     SymbolicCompositionVerifier,
     TranslationAssuranceRegistry,
     build_claim_translation_subject,
     translation_subject_signature,
 )
+from harness.symbolic.cli import _cmd_symbolic_report
 
 
 BRIDGE_PATH = Path(__file__).with_name("symbolic_models") / "google_docs.poc.yaml"
@@ -148,6 +153,36 @@ class SymbolicCompositionTests(unittest.TestCase):
                 self.assertEqual(result.solver_result.status, "sat")
                 self.assertEqual(result.verdict, "COUNTEREXAMPLE")
                 self.assertIsNotNone(result.solver_result.model)
+
+    def test_symbolic_report_renders_only_machine_checked_compositions_by_default(self):
+        args = SimpleNamespace(
+            node=[],
+            model=str(BRIDGE_PATH),
+            assurance=str(ASSURANCE_PATH),
+            format="text",
+        )
+        output = StringIO()
+        with redirect_stdout(output):
+            rc = _cmd_symbolic_report(self.graph, args)
+        rendered = output.getvalue()
+
+        self.assertEqual(rc, 0)
+        self.assertIn(f"{C12_TARGET}  [MACHINE-CHECKED]", rendered)
+        self.assertIn(f"{C14_TARGET}  [MACHINE-CHECKED]", rendered)
+        self.assertIn("SMT counterexample query:", rendered)
+        self.assertIn("Solver: UNSAT → ENTAILED", rendered)
+        self.assertIn("Mutation sensitivity:", rendered)
+        self.assertNotIn("C13_idempotency_key_is_temporally_unique", rendered)
+
+    def test_symbolic_report_rejects_non_machine_checked_node(self):
+        args = SimpleNamespace(
+            node=["C13_idempotency_key_is_temporally_unique"],
+            model=str(BRIDGE_PATH),
+            assurance=str(ASSURANCE_PATH),
+            format="text",
+        )
+        with self.assertRaises(SymbolicCompositionError):
+            _cmd_symbolic_report(self.graph, args)
 
     def test_persisted_c14_machine_check_artifact_is_current(self):
         artifact = yaml.safe_load(C14_ARTIFACT_PATH.read_text())

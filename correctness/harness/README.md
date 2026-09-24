@@ -122,6 +122,8 @@ The public Harness entry point exposes the experimental symbolic layer without r
 
 - `correctness.py symbolic-status` reports the trust frontier for every mapped contract and claim;
 - `correctness.py symbolic-check --kind contract|claim --subject ... --query bad-state.yaml` compares the candidate bad state with and without the selected mapping and, by default, refuses any mapping that is not currently `TRUSTED`;
+- `correctness.py symbolic-compose <node>` checks trusted direct-premise entailment for one root/derived claim;
+- `correctness.py symbolic-report [node ...]` renders human-readable proof reports for canonical `machine_checked` compositions, including the target statement, direct-premise statements, translation trust, the SMT counterexample query, `SAT`/`UNSAT` meaning, mutation sensitivity, and persisted proof artifacts. With no node arguments it reports every currently machine-checked composition;
 - `--allow-untrusted` exists only for POC/debug work and must not be treated as authoritative coverage evidence.
 
 This makes the intended coverage integration explicit: LLM agents still propose semantically meaningful bad states, while deterministic SMT checks answer whether trusted symbolic specifications already exclude them.
