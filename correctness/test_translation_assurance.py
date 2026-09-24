@@ -35,35 +35,6 @@ from harness.symbolic import (
 BRIDGE_PATH = Path(__file__).with_name("symbolic_models") / "google_docs.poc.yaml"
 ASSURANCE_PATH = Path(__file__).with_name("symbolic_models") / "assurance.poc.yaml"
 
-
-def _var(name):
-    return {"var": name}
-
-
-def _call(fn, *args):
-    return {"call": {"fn": fn, "args": list(args)}}
-
-
-def _neq(left, right):
-    return {"neq": [left, right]}
-
-
-def _not(value):
-    return {"not": value}
-
-
-def _and(*values):
-    return {"and": list(values)}
-
-
-def _or(*values):
-    return {"or": list(values)}
-
-
-def _exists(vars_, body):
-    return {"exists": {"vars": vars_, "body": body}}
-
-
 class TranslationAssuranceTests(unittest.TestCase):
     def setUp(self):
         self.graph = Graph.load()
@@ -312,75 +283,6 @@ ambiguities: []
                 {"bool": True},
                 contracts=["client_canonical_frontier_coherence"],
             )
-
-
-    def test_persisted_l108_assurance_closes_identity_cross_binding(self):
-        registry = TranslationAssuranceRegistry.load(ASSURANCE_PATH)
-        trust = registry.evaluate(
-            self.graph,
-            self.bridge,
-            kind="claim",
-            subject_id="L108_acceptance_preserves_request_identity",
-        )
-        self.assertEqual(trust.status, SubjectTrustStatus.TRUSTED)
-
-        associated_evidence_with_wrong_identity = _exists(
-            {"e": "DurableIdempotencyEvidence"},
-            _and(
-                _call(
-                    "durable_idempotency_evidence_for_acceptance",
-                    _var("e"),
-                    _var("a"),
-                ),
-                _not(
-                    _call(
-                        "durable_evidence_identity_matches_request",
-                        _var("e"),
-                        _var("r"),
-                    )
-                ),
-            ),
-        )
-        bad_identity = _exists(
-            {"a": "Acceptance", "r": "Request"},
-            _and(
-                _call("acceptance_produced_from_request", _var("a"), _var("r")),
-                _or(
-                    _neq(
-                        _call("acceptance_document", _var("a")),
-                        _call("request_document", _var("r")),
-                    ),
-                    _neq(
-                        _call("acceptance_change_id", _var("a")),
-                        _call("request_change_id", _var("r")),
-                    ),
-                    _not(
-                        _call(
-                            "acceptance_idempotency_identity_matches_request",
-                            _var("a"),
-                            _var("r"),
-                        )
-                    ),
-                    _not(
-                        _call(
-                            "acceptance_identity_preserved_end_to_end",
-                            _var("a"),
-                            _var("r"),
-                        )
-                    ),
-                    associated_evidence_with_wrong_identity,
-                ),
-            ),
-        )
-
-        verifier = SymbolicVerifier(self.graph, self.bridge, registry)
-        result = verifier.trusted_claim_exclusion_check(
-            bad_identity,
-            claims=["L108_acceptance_preserves_request_identity"],
-        )
-        self.assertEqual(result.baseline.status, "sat")
-        self.assertEqual(result.constrained.status, "unsat")
-        self.assertTrue(result.closes_counterexample)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,65 @@
+version: 1
+
+cases:
+  L108_acceptance_preserves_request_identity:
+    description: >-
+      Adversarial identity-cross-binding execution: a canonical acceptance is produced
+      from a submitted request, but at least one authoritative identity relation is
+      changed, lost, substituted, regenerated, cross-bound, or persisted under the wrong
+      durable idempotency identity.
+    candidate_statement: >-
+      There exist a canonical acceptance a and originating request r such that a is
+      produced from r, yet either the accepted document differs from the request
+      document, the accepted client_change_id differs from the request client_change_id,
+      the authoritative idempotency identity does not match the request, the identity is
+      not preserved end-to-end, or some durable idempotency evidence associated with a
+      identifies a different request identity.
+    trusted_claims:
+      - L108_acceptance_preserves_request_identity
+    trusted_contracts: []
+    artifact: symbolic_artifacts/L108_acceptance_preserves_request_identity.coverage.yaml
+    formula:
+      exists:
+        vars:
+          a: Acceptance
+          r: Request
+        body:
+          and:
+            - call:
+                fn: acceptance_produced_from_request
+                args: [{var: a}, {var: r}]
+            - or:
+                - neq:
+                    - call:
+                        fn: acceptance_document
+                        args: [{var: a}]
+                    - call:
+                        fn: request_document
+                        args: [{var: r}]
+                - neq:
+                    - call:
+                        fn: acceptance_change_id
+                        args: [{var: a}]
+                    - call:
+                        fn: request_change_id
+                        args: [{var: r}]
+                - not:
+                    call:
+                      fn: acceptance_idempotency_identity_matches_request
+                      args: [{var: a}, {var: r}]
+                - not:
+                    call:
+                      fn: acceptance_identity_preserved_end_to_end
+                      args: [{var: a}, {var: r}]
+                - exists:
+                    vars:
+                      e: DurableIdempotencyEvidence
+                    body:
+                      and:
+                        - call:
+                            fn: durable_idempotency_evidence_for_acceptance
+                            args: [{var: e}, {var: a}]
+                        - not:
+                            call:
+                              fn: durable_evidence_identity_matches_request
+                              args: [{var: e}, {var: r}]

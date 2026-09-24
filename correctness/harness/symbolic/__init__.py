@@ -9,6 +9,16 @@ from .assurance_registry import (
     assurance_record_payload,
 )
 from .composition import CompositionResult, SymbolicCompositionError, SymbolicCompositionVerifier
+from .coverage import (
+    CoverageCase,
+    CoverageResult,
+    CoverageSpec,
+    SymbolicCoverageError,
+    SymbolicCoverageVerifier,
+    build_coverage_artifact,
+    coverage_candidate_signature,
+    coverage_semantic_signature,
+)
 from .dsl import ParsedProgram, parse_program
 from .ir import (
     BOOL,
@@ -61,6 +71,9 @@ __all__ = [
     "ClaimTranslationSubject",
     "ContractMapping",
     "CompositionResult",
+    "CoverageCase",
+    "CoverageResult",
+    "CoverageSpec",
     "Eq",
     "ExclusionCheck",
     "Exists",
@@ -85,6 +98,8 @@ __all__ = [
     "SymbolicBridgeError",
     "SymbolicCompositionError",
     "SymbolicCompositionVerifier",
+    "SymbolicCoverageError",
+    "SymbolicCoverageVerifier",
     "SymbolicVerifier",
     "TranslationReviewError",
     "TranslationSubject",
@@ -93,6 +108,7 @@ __all__ = [
     "aggregate_translation_assurance",
     "assurance_record_payload",
     "build_claim_translation_subject",
+    "build_coverage_artifact",
     "build_direct_comparison_prompt",
     "build_roundtrip_comparison_prompt",
     "build_roundtrip_translation_prompt",
@@ -104,5 +120,7 @@ __all__ = [
     "translation_subject_signature",
     "Z3_AVAILABLE",
     "check_program",
+    "coverage_candidate_signature",
+    "coverage_semantic_signature",
     "parse_program",
 ]

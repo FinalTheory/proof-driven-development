@@ -14,12 +14,19 @@ from .assurance_registry import (
 )
 from .bridge import SymbolicBridge, SymbolicBridgeError
 from .composition import SymbolicCompositionError, SymbolicCompositionVerifier
+from .coverage import (
+    CoverageSpec,
+    SymbolicCoverageError,
+    SymbolicCoverageVerifier,
+    build_coverage_artifact,
+)
 from .translation_assurance import TranslationReviewError
 from .verification import SymbolicVerifier
 
 
 DEFAULT_SYMBOLIC_MODEL = Path(__file__).resolve().parent.parent.parent / "symbolic_models" / "google_docs.poc.yaml"
 DEFAULT_ASSURANCE_REGISTRY = Path(__file__).resolve().parent.parent.parent / "symbolic_models" / "assurance.poc.yaml"
+DEFAULT_COVERAGE_MODEL = Path(__file__).resolve().parent.parent.parent / "symbolic_models" / "coverage.poc.yaml"
 
 
 def add_symbolic_subparsers(sub: argparse._SubParsersAction) -> None:
@@ -80,6 +87,43 @@ def add_symbolic_subparsers(sub: argparse._SubParsersAction) -> None:
         help="Experimental only: run mapped formulas without requiring trusted translation assurance.",
     )
     check.add_argument(
+        "--format",
+        choices=["text", "yaml"],
+        default="text",
+    )
+
+
+    cover = sub.add_parser(
+        "symbolic-cover",
+        help="Run one declarative symbolic bad-state coverage exclusion check.",
+    )
+    cover.add_argument("case", help="Coverage case ID from the coverage sidecar.")
+    cover.add_argument(
+        "--coverage",
+        default=str(DEFAULT_COVERAGE_MODEL),
+        help="Declarative symbolic coverage YAML path.",
+    )
+    cover.add_argument(
+        "--model",
+        default=str(DEFAULT_SYMBOLIC_MODEL),
+        help="Symbolic sidecar YAML path.",
+    )
+    cover.add_argument(
+        "--assurance",
+        default=str(DEFAULT_ASSURANCE_REGISTRY),
+        help="Translation-assurance registry YAML path.",
+    )
+    cover.add_argument(
+        "--allow-untrusted",
+        action="store_true",
+        help="Experimental only: run coverage without requiring trusted translations.",
+    )
+    cover.add_argument(
+        "--write-artifact",
+        action="store_true",
+        help="Persist the self-contained machine-check artifact declared by the coverage case.",
+    )
+    cover.add_argument(
         "--format",
         choices=["text", "yaml"],
         default="text",
@@ -147,12 +191,19 @@ def handle_symbolic_command(graph: Graph, args: argparse.Namespace) -> int | Non
             return _cmd_symbolic_status(graph, args)
         if args.command == "symbolic-check":
             return _cmd_symbolic_check(graph, args)
+        if args.command == "symbolic-cover":
+            return _cmd_symbolic_cover(graph, args)
         if args.command == "symbolic-compose":
             return _cmd_symbolic_compose(graph, args)
         if args.command == "symbolic-report":
             return _cmd_symbolic_report(graph, args)
         return None
-    except (TranslationReviewError, SymbolicBridgeError, SymbolicCompositionError) as exc:
+    except (
+        TranslationReviewError,
+        SymbolicBridgeError,
+        SymbolicCompositionError,
+        SymbolicCoverageError,
+    ) as exc:
         print(f"symbolic error: {exc}", file=sys.stderr)
         return 2
 
@@ -267,6 +318,58 @@ def _cmd_symbolic_check(graph: Graph, args: argparse.Namespace) -> int:
     return 0
 
 
+
+
+def _cmd_symbolic_cover(graph: Graph, args: argparse.Namespace) -> int:
+    bridge = _load_bridge(args.model)
+    registry = _load_registry(args.assurance)
+    spec = CoverageSpec.load(Path(args.coverage))
+    case = spec.require_case(args.case)
+    verifier = SymbolicCoverageVerifier(graph, bridge, registry)
+    result = verifier.check(
+        case,
+        require_trusted=not args.allow_untrusted,
+    )
+    artifact = build_coverage_artifact(graph, bridge, registry, case, result)
+
+    wrote_artifact = False
+    if args.write_artifact:
+        if args.allow_untrusted:
+            raise SymbolicCoverageError(
+                "refusing to persist a coverage artifact from untrusted translations"
+            )
+        if not result.machine_checked:
+            raise SymbolicCoverageError(
+                f"refusing to persist non-machine-checked coverage result: {result.verdict}"
+            )
+        correctness_root = Path(__file__).resolve().parent.parent.parent
+        artifact_path = correctness_root / case.artifact_ref
+        artifact_path.parent.mkdir(parents=True, exist_ok=True)
+        artifact_path.write_text(
+            yaml.safe_dump(artifact, sort_keys=False, allow_unicode=True),
+            encoding="utf-8",
+        )
+        wrote_artifact = True
+
+    if args.format == "yaml":
+        print(yaml.safe_dump(artifact, sort_keys=False, allow_unicode=True).rstrip())
+        return 0
+
+    print(
+        f"case={case.case_id} verdict={result.verdict} "
+        f"baseline={result.baseline.status} "
+        f"constrained={result.constrained.status} "
+        f"machine_checked={str(result.machine_checked).lower()}"
+    )
+    if result.baseline.status == "sat" and result.baseline.model:
+        print("baseline_witness_model:")
+        print(result.baseline.model)
+    if result.constrained.status == "sat" and result.constrained.model:
+        print("constrained_counterexample_model:")
+        print(result.constrained.model)
+    if wrote_artifact:
+        print(f"artifact={case.artifact_ref}")
+    return 0
 
 
 def _cmd_symbolic_compose(graph: Graph, args: argparse.Namespace) -> int:

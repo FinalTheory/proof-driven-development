@@ -154,6 +154,17 @@ implementation evidence
 
 Coverage 是全局、开放式的 adversarial search；Composition 只看一个 proposition 与它的 direct premises；Implementation evidence 则把 terminal proof obligation 连接到真实实现。
 
+
+对于可以机械化的 symbolic 子问题，Harness 把“语义翻译”和“solver 检查”分开管理。Canonical proposition 的 symbolic mapping 仍需 translation assurance；coverage bad-state 则作为独立 declarative case 保存。一个有效的 coverage machine check 必须同时满足：
+
+```text
+candidate bad state alone           → SAT
+trusted symbolic constraints
+AND candidate bad state             → UNSAT
+```
+
+第一步防止把本身不可能发生的 candidate 当成 coverage 证据；第二步才说明当前 trusted constraints 排除了这个坏状态。Machine-check artifact 应内联 candidate、所依赖的 trusted formula、相关 vocabulary 语义、solver 结果与 semantic signatures，使证明可以脱离临时脚本独立人工审阅。Composition 的对应检查仍是 `direct premises AND NOT(target)` 是否 UNSAT。
+
 ## Harness control plane
 
 `correctness.py` 更适合被理解成围绕 semantic model 的 **control plane**，而不是另一份 product correctness specification。
@@ -189,6 +200,8 @@ Automation 可以重新组织已经批准的 proof structure，但不能静默�
 | 当前 proposition、catalog 和 campaign state | `correctness.yaml` |
 | validation、signature、prompt、scheduler、mutation 如何执行 | `correctness.py` |
 | 当前建模的系统 architecture | `../design/google-docs.md` |
+| Symbolic proposition mapping 与 declarative coverage case | `symbolic_models/*.yaml` |
+| 可独立人工审阅的 symbolic machine-check artifact | `symbolic_artifacts/*.yaml` |
 | Agent 操作 repository 时必须遵守什么规则 | `../AGENTS.md` |
 | 当前 operational workflow | `correctness.py workflow-help` |
 
