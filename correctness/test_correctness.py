@@ -839,6 +839,22 @@ class CorrectnessToolTests(unittest.TestCase):
         errors, _ = correctness.validate(correctness.Graph(doc))
         self.assertTrue(any("catalog.state.bad_state.class" in e for e in errors))
 
+    def test_state_catalog_symbolic_dimensions_are_typed(self):
+        doc = copy.deepcopy(self.base)
+        doc["catalog"]["state"]["synthetic_state"]["symbolic_dimensions"] = [
+            "document",
+            "observation",
+        ]
+        errors, _ = correctness.validate(correctness.Graph(doc))
+        self.assertFalse(any("symbolic_dimensions" in error for error in errors))
+
+        doc["catalog"]["state"]["synthetic_state"]["symbolic_dimensions"] = [
+            "document",
+            "Bad Dimension",
+        ]
+        errors, _ = correctness.validate(correctness.Graph(doc))
+        self.assertTrue(any("symbolic_dimensions" in error for error in errors))
+
     def test_state_invariant_contract_requires_typed_scope_and_known_symbols(self):
         doc = copy.deepcopy(self.base)
         doc["catalog"]["semantic_contracts"]["synthetic_state_invariant"] = {

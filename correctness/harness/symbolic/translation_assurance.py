@@ -282,8 +282,9 @@ SYMBOLIC MATERIAL
 TASK
 Translate the formula into precise natural-language semantics.
 Preserve every quantifier, implication guard, equality/inequality, existence requirement, scope condition encoded by predicates, and conjunction/disjunction.
+Preserve semantic coordinates carried by typed function arguments; do not collapse distinct entity, state, or observation dimensions into one timeless or unscoped value.
 Do not strengthen the formula. Do not add likely product requirements. Do not omit awkward conditions.
-Predicate/function meanings above are authoritative for this task.
+Predicate/function meanings and declared dimensions above are authoritative for this task.
 
 Return exactly one YAML object:
 subject_signature: {subject_signature}
@@ -320,6 +321,7 @@ BLIND ROUND-TRIP RENDERING
 
 Your only question is whether the round-trip rendering preserves the original contract's semantics.
 Check quantifiers, applicability/precondition boundaries, identity coordinates, provenance direction, cardinality, observation scope, exclusions, and whether either side makes a stronger guarantee.
+Also check semantic-dimensionality preservation: distinct entity/state/observation coordinates must not be collapsed, and helper predicate/function meanings must not silently supply a cross-claim temporal, identity, or provenance bridge absent from the canonical source.
 {focus_instruction}
 
 Do not redesign the system and do not propose missing product requirements.
@@ -365,6 +367,7 @@ SYMBOLIC TRANSLATION
 
 Compare the original contract directly against the formula using the supplied typed predicate meanings and catalog definitions.
 Check quantifiers, applicability/precondition boundaries, identity coordinates, provenance direction, cardinality, observation scope, exclusions, and any silent strengthening or weakening.
+Also check semantic-dimensionality preservation: distinct entity/state/observation coordinates must not be collapsed, and helper predicate/function meanings must not silently supply a cross-claim temporal, identity, or provenance bridge absent from the canonical source.
 {focus_instruction}
 
 Do not judge whether the original proposition is a good requirement. Judge only translation fidelity.

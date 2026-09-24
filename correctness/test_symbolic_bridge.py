@@ -91,6 +91,68 @@ class SymbolicBridgeTests(unittest.TestCase):
             SymbolicBridge.from_data(broken)
         self.assertIn("meaning", str(ctx.exception))
 
+    def test_claim_mapping_cannot_anonymize_explicit_canonical_vocabulary(self):
+        raw = yaml.load(BRIDGE_PATH.read_text(), Loader=UniqueKeyLoader)
+        broken = copy.deepcopy(raw)
+        broken["claims"]["L5_append_requires_current_epoch"] = {
+            "contracts": [],
+            "formula": {"bool": True},
+        }
+        bridge = SymbolicBridge.from_data(broken)
+        with self.assertRaises(SymbolicBridgeError) as ctx:
+            bridge.validate_against_graph(self.graph)
+        message = str(ctx.exception)
+        self.assertIn("symbolic claim catalog coverage mismatch", message)
+        self.assertIn("document_current_epoch", message)
+        self.assertIn("owner_epoch", message)
+
+    def test_bridge_rejects_dimension_collapse_for_canonical_state(self):
+        raw = yaml.load(BRIDGE_PATH.read_text(), Loader=UniqueKeyLoader)
+        broken = copy.deepcopy(raw)
+        broken["sorts"].append("Epoch")
+        broken["functions"]["collapsed_current_epoch"] = {
+            "args": ["Document"],
+            "returns": "Epoch",
+            "catalog_symbols": ["document_current_epoch"],
+            "meaning": "Reads the authoritative current epoch for a document.",
+        }
+        bridge = SymbolicBridge.from_data(broken)
+        with self.assertRaises(SymbolicBridgeError) as ctx:
+            bridge.validate_against_graph(self.graph)
+        self.assertIn(
+            "expected=['document', 'observation'], actual=None",
+            str(ctx.exception),
+        )
+
+    def test_bridge_rejects_dimension_labels_that_do_not_match_function_arity(self):
+        raw = yaml.load(BRIDGE_PATH.read_text(), Loader=UniqueKeyLoader)
+        broken = copy.deepcopy(raw)
+        broken["sorts"].append("Epoch")
+        broken["functions"]["collapsed_current_epoch"] = {
+            "args": ["Document"],
+            "returns": "Epoch",
+            "catalog_symbols": ["document_current_epoch"],
+            "meaning": "Reads the authoritative current epoch for a document.",
+            "dimensions": ["document", "observation"],
+        }
+        with self.assertRaises(SymbolicBridgeError) as ctx:
+            SymbolicBridge.from_data(broken)
+        self.assertIn("dimensions must align 1:1 with args", str(ctx.exception))
+
+    def test_bridge_accepts_explicit_document_observation_dimensions(self):
+        raw = yaml.load(BRIDGE_PATH.read_text(), Loader=UniqueKeyLoader)
+        extended = copy.deepcopy(raw)
+        extended["sorts"].append("Epoch")
+        extended["functions"]["observed_current_epoch"] = {
+            "args": ["Document", "AuthoritativeState"],
+            "returns": "Epoch",
+            "catalog_symbols": ["document_current_epoch"],
+            "meaning": "Reads document_current_epoch at one explicit authoritative observation.",
+            "dimensions": ["document", "observation"],
+        }
+        bridge = SymbolicBridge.from_data(extended)
+        bridge.validate_against_graph(self.graph)
+
     def test_bridge_rejects_claim_contract_coverage_drift(self):
         raw = yaml.load(BRIDGE_PATH.read_text(), Loader=UniqueKeyLoader)
         broken = copy.deepcopy(raw)

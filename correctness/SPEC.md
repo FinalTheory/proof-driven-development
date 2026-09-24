@@ -155,7 +155,13 @@ implementation evidence
 Coverage 是全局、开放式的 adversarial search；Composition 只看一个 proposition 与它的 direct premises；Implementation evidence 则把 terminal proof obligation 连接到真实实现。
 
 
-对于可以机械化的 symbolic 子问题，Harness 把“语义翻译”和“solver 检查”分开管理。Canonical proposition 的 symbolic mapping 仍需 translation assurance；coverage bad-state 则作为独立 declarative case 保存。一个有效的 coverage machine check 必须同时满足：
+对于可以机械化的 symbolic 子问题，Harness 把“语义翻译”和“solver 检查”分开管理。Canonical proposition 的 symbolic mapping 仍需 translation assurance；coverage bad-state 则作为独立 declarative case 保存。
+
+对于 canonical state，如果某个值的语义依赖必须保留的坐标（例如 document 与 observation），这些坐标可以通过 `catalog.state.*.symbolic_dimensions` 进入 canonical model。任何直接映射该 state symbol 的 symbolic function 都必须显式暴露完全相同的有序 dimensions；Harness 拒绝把 `[document, observation]` 降维成只依赖 `document` 的 timeless function。这个约束只解决结构性语义丢失；“这些 dimensions 是否是业务上正确的定义”仍属于 translation/refinement 的 semantic judgment。
+
+此外，claim statement / formal intent 中直接出现的 canonical snake_case vocabulary 会自动成为 symbolic mapping 的 coverage requirement。Formalizer 不能把 `document_current_epoch` 这类已命名状态匿名化成 `state_value` 再仅靠 predicate meaning 解释其含义；如果需要跨 claim 共享新的 helper relation，其语义忠实性仍必须由 translation assurance 审查。
+
+一个有效的 coverage machine check 必须同时满足：
 
 ```text
 candidate bad state alone           → SAT

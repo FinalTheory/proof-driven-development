@@ -106,6 +106,7 @@ Harness 会校验文件末尾的 machine-checkable schema index。该索引来�
 | --- | --- | --- | --- |
 | `state.<id>.class` | `authoritative` / `derived` / `speculative` / `control` | required | state 的 semantic role |
 | `state.<id>.description` | non-empty string | required | state 的定义及其 correctness role |
+| `state.<id>.symbolic_dimensions` | unique `lower_snake[]`, min 1 | optional | symbolic mapping 读取该 state 时必须显式保留的有序语义坐标；用于禁止把随 observation / entity 变化的 state 降维成无对应坐标的函数 |
 
 ### `catalog.mechanisms`
 
@@ -329,6 +330,7 @@ Dynamic key 必须是现有 `claim_id`。
 - `catalog.state` => required; closed object; dynamic keys match ^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.state.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.class` => required; enum=authoritative|derived|speculative|control
 - `catalog.state.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.description` => required; string, minLength=1
+- `catalog.state.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.symbolic_dimensions` => optional; array, minItems=1, uniqueItems=true, items=string, itemPattern=^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.surfaces` => required; closed object; dynamic keys match ^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.surfaces.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.description` => required; string, minLength=1
 - `catalog.terms` => required; closed object; dynamic keys match ^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$

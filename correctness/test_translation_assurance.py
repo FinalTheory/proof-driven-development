@@ -114,13 +114,15 @@ ambiguities: []
         self.assertNotIn(definition, prompt)
         self.assertIn("accepted_evidence_for_key", prompt)
         self.assertIn("within_retry_reconnect_eligibility", prompt)
-        self.assertIn("Predicate/function meanings above are authoritative", prompt)
+        self.assertIn("declared dimensions above are authoritative", prompt)
+        self.assertIn("do not collapse distinct entity, state, or observation dimensions", prompt)
 
     def test_direct_prompt_contains_source_and_symbolic_formula(self):
         prompt = build_direct_comparison_prompt(self.subject, focus="weakening")
         self.assertIn("During the 30-day normal retry/reconnect eligibility horizon", prompt)
         self.assertIn("accepted_evidence_for_key", prompt)
         self.assertIn("omitted requirements", prompt)
+        self.assertIn("helper predicate/function meanings must not silently supply", prompt)
 
     def test_roundtrip_comparison_prompt_uses_source_and_blind_rendering(self):
         prompt = build_roundtrip_comparison_prompt(
@@ -131,6 +133,7 @@ ambiguities: []
         self.assertIn("During the 30-day normal retry/reconnect eligibility horizon", prompt)
         self.assertIn("For eligible identities", prompt)
         self.assertIn("stronger universal scope", prompt)
+        self.assertIn("semantic-dimensionality preservation", prompt)
 
     def test_roundtrip_parser_enforces_contract(self):
         parsed = parse_roundtrip_translation(

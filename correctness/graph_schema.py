@@ -473,6 +473,21 @@ CATALOG_SCHEMA = _closed_object(
                             **NONEMPTY_STRING,
                             "description": "Definition and correctness role of this state item.",
                         },
+                        "symbolic_dimensions": {
+                            "type": "array",
+                            "minItems": 1,
+                            "uniqueItems": True,
+                            "items": {
+                                "type": "string",
+                                "pattern": LOWER_SNAKE,
+                            },
+                            "description": (
+                                "Ordered semantic coordinates that a symbolic function directly "
+                                "reading this state item must expose as distinct arguments. "
+                                "For example [document, observation] prevents a time-varying "
+                                "per-document state value from being collapsed into Document -> Value."
+                            ),
+                        },
                     },
                     required=("class", "description"),
                 )

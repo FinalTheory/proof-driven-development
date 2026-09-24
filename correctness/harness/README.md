@@ -46,14 +46,16 @@ The POC deliberately does not model full transition systems, implementation corr
 
 ### Semantic-contract bridge
 
-`symbolic/bridge.py` connects selected canonical `semantic_contracts` to this IR without changing the canonical graph schema yet. Domain-specific mappings live outside the generic kernel, currently in `../symbolic_models/google_docs.poc.yaml`.
+`symbolic/bridge.py` connects selected canonical semantic vocabulary and `semantic_contracts` to this IR. Domain-specific mappings live outside the generic kernel, currently in `../symbolic_models/google_docs.poc.yaml`. Canonical state may additionally declare `symbolic_dimensions` when a symbolic lowering must preserve coordinates such as document and observation explicitly.
 
 The bridge deliberately does **not** infer formulas from English. Each mapping supplies an explicit structured formula, while deterministic checks prevent silent drift:
 
 - mapped contract class must equal the canonical contract class;
 - a `state_invariant` mapping must preserve the canonical `observation_scope`;
 - functions used by the formula declare which canonical catalog symbols they represent;
-- the union of used catalog symbols must exactly cover the contract's `state_symbols` or `source_symbols + bound_symbols`.
+- the union of used catalog symbols must exactly cover the contract's `state_symbols` or `source_symbols + bound_symbols`;
+- canonical snake_case vocabulary named directly in a claim statement/formal intent must also remain explicitly anchored in the claim mapping rather than disappearing into anonymous helper predicates;
+- if a mapped state symbol declares `symbolic_dimensions`, the symbolic function must expose exactly those ordered dimensions as separate arguments.
 
 This means the bridge can reject a structurally incomplete or over-scoped translation, but it still cannot prove that an opaque predicate such as `canonical_content_matches` faithfully captures the English definition. That semantic correspondence remains a human/LLM judgment boundary.
 

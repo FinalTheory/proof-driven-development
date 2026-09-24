@@ -3213,6 +3213,9 @@ catalog:
     document_current_epoch:
       class: authoritative
       description: Authoritative persisted fencing epoch for the current document owner.
+      symbolic_dimensions:
+        - document
+        - observation
     snapshot_content_with_snapshot_revision:
       class: authoritative
       description: Atomically published checkpoint content paired with the exact canonical revision

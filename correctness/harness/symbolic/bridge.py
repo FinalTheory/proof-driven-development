@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import re
 from typing import Any
 
 import yaml
@@ -73,14 +74,18 @@ class SymbolicBridge:
         for name, decl in functions.items():
             if not isinstance(name, str) or not name or not isinstance(decl, dict):
                 raise SymbolicBridgeError("symbolic bridge function declarations must be mappings")
-            if set(decl) != {"args", "returns", "catalog_symbols", "meaning"}:
+            required_function_fields = {"args", "returns", "catalog_symbols", "meaning"}
+            allowed_function_fields = required_function_fields | {"dimensions"}
+            if not required_function_fields.issubset(decl) or set(decl) - allowed_function_fields:
                 raise SymbolicBridgeError(
-                    f"function {name} must contain exactly args, returns, catalog_symbols, and meaning"
+                    f"function {name} must contain args, returns, catalog_symbols, and meaning; "
+                    "dimensions is the only optional field"
                 )
             args = decl["args"]
             result = decl["returns"]
             symbols = decl["catalog_symbols"]
             meaning = decl["meaning"]
+            dimensions = decl.get("dimensions")
             if not isinstance(args, list) or not all(isinstance(x, str) for x in args):
                 raise SymbolicBridgeError(f"function {name}.args must be a list of sort names")
             if not isinstance(result, str):
@@ -97,11 +102,34 @@ class SymbolicBridge:
                 raise SymbolicBridgeError(
                     f"function {name}.meaning must be a non-empty string"
                 )
+            if dimensions is not None:
+                if (
+                    not isinstance(dimensions, list)
+                    or not dimensions
+                    or not all(
+                        isinstance(item, str)
+                        and re.fullmatch(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)*", item)
+                        for item in dimensions
+                    )
+                ):
+                    raise SymbolicBridgeError(
+                        f"function {name}.dimensions must be a non-empty list of lower_snake semantic coordinates"
+                    )
+                if len(dimensions) != len(set(dimensions)):
+                    raise SymbolicBridgeError(
+                        f"function {name}.dimensions must not contain duplicates"
+                    )
+                if len(dimensions) != len(args):
+                    raise SymbolicBridgeError(
+                        f"function {name}.dimensions must align 1:1 with args; "
+                        f"got {len(dimensions)} dimensions for {len(args)} args"
+                    )
             normalized_functions[name] = {
                 "args": list(args),
                 "returns": result,
                 "catalog_symbols": list(symbols),
                 "meaning": meaning.strip(),
+                **({"dimensions": list(dimensions)} if dimensions is not None else {}),
             }
 
         contracts = raw.get("contracts")
@@ -229,11 +257,39 @@ class SymbolicBridge:
             _catalog_namespace(graph, "state")
         )
 
+        state_catalog = _catalog_namespace(graph, "state")
         for fn_name, decl in self.functions.items():
             unknown = set(decl["catalog_symbols"]) - known_catalog_symbols
             if unknown:
                 raise SymbolicBridgeError(
                     f"function {fn_name} maps unknown catalog symbols {sorted(unknown)}"
+                )
+
+            required_shapes = {
+                tuple(state_catalog[symbol]["symbolic_dimensions"])
+                for symbol in decl["catalog_symbols"]
+                if symbol in state_catalog
+                and isinstance(state_catalog[symbol], dict)
+                and state_catalog[symbol].get("symbolic_dimensions") is not None
+            }
+            declared_dimensions = decl.get("dimensions")
+            if len(required_shapes) > 1:
+                raise SymbolicBridgeError(
+                    f"function {fn_name} maps state symbols with incompatible symbolic_dimensions: "
+                    f"{sorted(required_shapes)}"
+                )
+            if required_shapes:
+                expected_dimensions = list(next(iter(required_shapes)))
+                if declared_dimensions != expected_dimensions:
+                    raise SymbolicBridgeError(
+                        f"function {fn_name} dimension mismatch for canonical state mapping: "
+                        f"expected={expected_dimensions}, actual={declared_dimensions}"
+                    )
+            elif declared_dimensions is not None:
+                raise SymbolicBridgeError(
+                    f"function {fn_name} declares dimensions {declared_dimensions} but maps no "
+                    "canonical state symbol with symbolic_dimensions; semantic dimensions must "
+                    "originate in the canonical catalog"
                 )
 
         for contract_id, mapping in self.contracts.items():
@@ -284,7 +340,7 @@ class SymbolicBridge:
                     f"{claim_id} symbolic claim-contract coverage mismatch: "
                     f"missing={missing}, extra={extra}"
                 )
-            expected_symbols: set[str] = set()
+            expected_symbols: set[str] = set(_direct_claim_catalog_symbols(claim, known_catalog_symbols))
             for contract_id in mapping.contract_ids:
                 expected_symbols.update(self.contracts[contract_id].catalog_symbols)
             if mapping.catalog_symbols != frozenset(expected_symbols):
@@ -359,6 +415,26 @@ class SymbolicBridge:
             raise SymbolicBridgeError(
                 f"symbolic claim program failed type/schema checking: {exc}"
             ) from exc
+
+
+def _direct_claim_catalog_symbols(
+    claim: dict[str, Any], known_catalog_symbols: set[str]
+) -> frozenset[str]:
+    """Return canonical snake_case vocabulary explicitly named by the claim text.
+
+    This is intentionally lexical and conservative: it does not try to understand prose.
+    Its purpose is to prevent an explicitly named canonical symbol such as
+    document_current_epoch from being anonymized into an unanchored helper predicate during
+    symbolic lowering.
+    """
+
+    text_parts = [claim.get("statement"), claim.get("formal_intent")]
+    tokens: set[str] = set()
+    for value in text_parts:
+        if isinstance(value, str):
+            tokens.update(re.findall(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)+", value))
+    return frozenset(tokens & known_catalog_symbols)
+
 
 
 def _expected_contract_symbols(contract_id: str, contract: dict[str, Any]) -> frozenset[str]:
