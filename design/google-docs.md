@@ -93,15 +93,15 @@ unacked = retryable
 ```text
 1. client submits raw edit with client_change_id and base_revision
 2. active OT owner transforms it against committed document state
-3. server produces candidate accepted_change
-4. server assigns revision N+1
-5. server atomically appends accepted_change@N+1 only if:
+3. server produces candidate_canonical_change
+4. server assigns revision N+1 to the candidate
+5. acceptance transaction atomically appends candidate_canonical_change@N+1 to accepted_change_log only if:
      - document.current_epoch == owner_epoch
      - document.latest_revision == N
      - client_change_id not already accepted
    then advances document frontier
-6. commit succeeds
-7. server ACKs client and broadcasts accepted_change@N+1
+6. transaction commits; candidate_canonical_change@N+1 becomes canonical_accepted_change@N+1
+7. server ACKs client and broadcasts canonical_accepted_change@N+1
 ```
 
 `client_change_id` 不是细枝末节，而是协议的一部分。客户端为每个 logical edit 生成一个新的 UUID；同一个 edit 的所有 retry 复用这个 UUID，不同 logical edit 使用不同 UUID。服务端可能在写入 accepted-change-set log 成功之后、返回 ACK 之前崩溃。客户端没有收到 ACK，会重试同一个 edit。如果系统没有稳定的 idempotency identity，它可能把同一个用户操作应用两次。

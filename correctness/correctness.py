@@ -567,13 +567,12 @@ COMPOSITION_AUDIT_FOCUS: dict[str, str] = {
 
 
 def _recommended_composition_auditors(claim: dict[str, Any]) -> int:
-    """Return advisory independent-auditor count for semantic composition certification."""
+    """Return the fixed independent-auditor count for semantic composition certification."""
     kind = claim.get("kind")
-    rigor = claim.get("assurance_required")
     if kind == "root":
-        return 4 if rigor == "maximal" else 3
+        return 3
     if kind == "derived":
-        return 3 if rigor == "maximal" else 2
+        return 2
     raise SystemExit("Composition assurance applies only to root/derived claims")
 
 
@@ -598,8 +597,6 @@ def _composition_campaign_snapshot(graph: Graph) -> dict[str, Any]:
             {
                 "node": node_id,
                 "kind": claim.get("kind"),
-                "severity": claim.get("severity"),
-                "assurance_required": claim.get("assurance_required"),
                 "effective": effective,
                 "composition_signature": _composition_semantic_signature(graph, node_id),
                 "recommended_auditors": _recommended_composition_auditors(claim),
@@ -652,7 +649,7 @@ def _cmd_composition_status(graph: Graph, args: argparse.Namespace) -> int:
         print("\nComposition certification frontier:")
         for item in snapshot["runnable"]:
             print(
-                f"- {item['node']} kind={item['kind']} assurance={item['assurance_required']} "
+                f"- {item['node']} kind={item['kind']} "
                 f"effective={item['effective']} recommended_auditors={item['recommended_auditors']} "
                 f"focuses={','.join(item['suggested_focuses'])} signature={item['composition_signature']}"
             )

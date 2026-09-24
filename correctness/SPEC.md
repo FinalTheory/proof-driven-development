@@ -74,7 +74,7 @@ Canonical model 仍然应该被视为**一个逻辑 graph**。cycle detection、
 
 ## Semantic type system
 
-Catalog 的作用，是给 claim 中使用的重要名字一个稳定、可复用的语义。主要包括 state、mechanism、failure event、surface、verifier kind、source section 和 semantic contract。
+Catalog 的作用，是给 claim 中使用的重要名字一个稳定、可复用的语义。主要包括 state、mechanism、failure event、verifier kind、source section 和 semantic contract。
 
 ### State classes
 

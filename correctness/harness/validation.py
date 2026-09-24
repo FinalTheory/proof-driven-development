@@ -563,18 +563,6 @@ def validate(graph: Graph) -> tuple[list[str], list[str]]:
                 if ref not in known_sources:
                     errors.append(f"{node_id}: unknown source ref {ref}")
 
-        surfaces = node.data.get("surfaces", [])
-        if node.node_type == "claim" and node.data.get("kind") == "leaf" and not surfaces:
-            errors.append(f"{node_id}: leaf claim must declare at least one surface")
-        if surfaces is not None:
-            if not _as_string_list(surfaces):
-                errors.append(f"{node_id}: surfaces must be a list of catalog surface IDs")
-            else:
-                known_surfaces = _catalog_namespace(graph, "surfaces")
-                for surface in surfaces:
-                    if surface not in known_surfaces:
-                        errors.append(f"{node_id}: unknown surface {surface}")
-
         mechanisms = node.data.get("mechanisms", [])
         if node.node_type == "claim" and node.data.get("kind") == "leaf" and not mechanisms:
             errors.append(f"{node_id}: leaf claim must declare at least one mechanism")

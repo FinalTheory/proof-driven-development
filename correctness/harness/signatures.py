@@ -29,7 +29,7 @@ def _node_semantic_signature(
             continue
         deps.append({"id": dep, "signature": _node_semantic_signature(graph, dep, memo)})
     semantic_data = dict(node.data)
-    for field in ("source_refs", "severity", "assurance_required", "surfaces"):
+    for field in ("source_refs",):
         semantic_data.pop(field, None)
     catalog_refs = _semantic_catalog_refs_for_node(graph, node)
     semantic_catalog: dict[str, Any] = {}
@@ -76,7 +76,7 @@ def _node_proposition_signature(graph: Graph, node_id: str) -> str:
     """Hash one proposition and its interpretation context, excluding proof dependencies."""
     node = graph.require_node(node_id)
     semantic_data = dict(node.data)
-    for field in ("source_refs", "severity", "assurance_required", "surfaces", "depends_on"):
+    for field in ("source_refs", "depends_on"):
         semantic_data.pop(field, None)
     catalog_refs = _semantic_catalog_refs_for_node(graph, node)
     semantic_catalog: dict[str, Any] = {}

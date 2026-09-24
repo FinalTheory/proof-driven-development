@@ -104,170 +104,176 @@ records:
   claim:L108_acceptance_preserves_request_identity:
     kind: claim
     subject_id: L108_acceptance_preserves_request_identity
-    subject_signature: 8a3cb1db1c096fb4251f1fd10395b7f915df3f4eb24b4371847e1878a5d92d75
+    subject_signature: 1971e5b39c849f13dbbf57e833af1968d7809dd5453c6a74976b4a20aad02e48
     roundtrip:
-      subject_signature: 8a3cb1db1c096fb4251f1fd10395b7f915df3f4eb24b4371847e1878a5d92d75
+      subject_signature: 1971e5b39c849f13dbbf57e833af1968d7809dd5453c6a74976b4a20aad02e48
       status: TRANSLATED
-      natural_language: 'For every acceptance a and request r, if acceptance a was
-        produced from submitted request r, then all of the following hold: the document
-        identity preserved in acceptance a is equal to the document identity carried
-        by request r; the client change identity preserved in acceptance a is equal
-        to the client change identity carried by request r; the authoritative idempotency
+      natural_language: 'For every canonical acceptance a and every request r, if
+        canonical acceptance a was produced from submitted request r, then all of
+        the following hold: the document identity preserved on canonical acceptance
+        a is equal to the document identity carried by request r; the client change
+        identity preserved on canonical acceptance a is equal to the client-supplied
+        logical edit identity carried by request r; the authoritative idempotency
         identity associated with acceptance a exactly matches the request''s (document_id,
-        client_change_id) identity; the identity of acceptance a is preserved end
-        to end from request admission through OT dispatch, idempotency arbitration,
-        retry handling, and canonical commit, such that neither document_id nor client_change_id
-        is dropped, regenerated, substituted, or cross-bound and every identity handoff
-        for acceptance a remains the originating request r identity. Additionally,
-        for every durable idempotency evidence record e, if e is associated with canonical
-        acceptance a, then e identifies exactly the same (document_id, client_change_id)
-        identity as originating request r.'
+        client_change_id) identity; and from request admission through OT dispatch,
+        idempotency arbitration, retry handling, and canonical commit, neither document_id
+        nor client_change_id is dropped, regenerated, substituted, or cross-bound,
+        such that every identity handoff for acceptance a remains the originating
+        request r identity. In addition, for every durable idempotency evidence e,
+        if durable idempotency evidence e is associated with canonical acceptance
+        a, then e identifies exactly the same (document_id, client_change_id) carried
+        by originating request r.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 8a3cb1db1c096fb4251f1fd10395b7f915df3f4eb24b4371847e1878a5d92d75
+        subject_signature: 1971e5b39c849f13dbbf57e833af1968d7809dd5453c6a74976b4a20aad02e48
         verdict: EQUIVALENT
-        reason: The formula preserves the source claim's universal scope over canonical
-          acceptances produced from requests, requires both identity coordinates to
-          remain equal, requires end-to-end preservation, and constrains durable idempotency
-          evidence exactly when it is associated with the acceptance.
+        reason: The formula preserves the source proposition's applicability boundary,
+          requiring the guarantees only for canonical acceptances produced from submitted
+          requests. It retains both identity coordinates (document_id and client_change_id),
+          the end-to-end preservation requirement, and the durable idempotency evidence
+          association requirement. No additional cardinality, uniqueness, temporal,
+          or provenance obligation is introduced beyond the canonical claim.
         differences: []
       strengthening:
-        subject_signature: 8a3cb1db1c096fb4251f1fd10395b7f915df3f4eb24b4371847e1878a5d92d75
+        subject_signature: 1971e5b39c849f13dbbf57e833af1968d7809dd5453c6a74976b4a20aad02e48
         verdict: EQUIVALENT
-        reason: The formula preserves the source claim's applicability boundary, requiring
-          the identity conditions only for canonical acceptances produced from submitted
-          requests. It captures both identity coordinates, end-to-end preservation,
-          and the conditional durable idempotency evidence binding without adding
-          extra cardinality, uniqueness, or out-of-scope guarantees.
+        reason: The formula preserves the source applicability boundary by conditioning
+          on an acceptance produced from a request, and it encodes the same document_id/client_change_id
+          identity preservation, end-to-end provenance binding, and durable idempotency
+          evidence identity requirements stated in the canonical claim. No additional
+          cardinality, uniqueness, or out-of-scope guarantee is introduced.
         differences: []
     roundtrip_reviews:
       weakening:
-        subject_signature: 8a3cb1db1c096fb4251f1fd10395b7f915df3f4eb24b4371847e1878a5d92d75
+        subject_signature: 1971e5b39c849f13dbbf57e833af1968d7809dd5453c6a74976b4a20aad02e48
         verdict: EQUIVALENT
-        reason: 'The round-trip rendering preserves the original contract: it keeps
-          the same applicability condition, preserves both identity coordinates (document_id
-          and client_change_id), maintains provenance from the originating request
-          through acceptance, and requires matching durable idempotency evidence.
-          The added path details and identity handoff wording elaborate the acceptance
-          path without introducing a stronger or different guarantee.'
+        reason: The round-trip rendering preserves the original contract's quantification,
+          provenance direction, identity components, and observation scope. It states
+          that accepted changes retain the originating request's document_id and client_change_id
+          and that associated idempotency evidence uses the same identity. The additional
+          wording about specific pipeline stages is an expansion of the acceptance
+          path covered by the original claim, not a new semantic requirement.
         differences: []
       strengthening:
-        subject_signature: 8a3cb1db1c096fb4251f1fd10395b7f915df3f4eb24b4371847e1878a5d92d75
+        subject_signature: 1971e5b39c849f13dbbf57e833af1968d7809dd5453c6a74976b4a20aad02e48
         verdict: EQUIVALENT
-        reason: The rendering preserves the original acceptance identity binding contract.
-          It keeps the same applicability boundary (accepted canonical acceptance
-          produced from a submitted request), preserves both identity coordinates
-          (document_id and client_change_id), preserves provenance from request admission
-          through canonical commit, and retains the same durable idempotency evidence
-          requirement without adding a new independent uniqueness or cardinality guarantee.
+        reason: The rendering preserves the original contract's applicability boundary,
+          identity coordinates, provenance direction, and observation scope. It restates
+          preservation of document_id and client_change_id through the acceptance
+          path and durable idempotency evidence without introducing uniqueness, cardinality,
+          or guarantees beyond the canonical acceptance identity-binding requirement.
         differences: []
   claim:L116_live_delivery_is_bound_to_committed_acceptance:
     kind: claim
     subject_id: L116_live_delivery_is_bound_to_committed_acceptance
-    subject_signature: 6e56ff8c1d1f13bb6283a2852b55a73997db1c0acad8617507b2716a10553571
+    subject_signature: 304dce79d40b4efee56ca83ff8810a13e3608856d587f246769e569a9da185bf
     roundtrip:
-      subject_signature: 6e56ff8c1d1f13bb6283a2852b55a73997db1c0acad8617507b2716a10553571
+      subject_signature: 304dce79d40b4efee56ca83ff8810a13e3608856d587f246769e569a9da185bf
       status: TRANSLATED
-      natural_language: For every live delivery d, if d is a delivery actually exposed
-        through the websocket live stream, then there exists an acceptance record
-        a such that a is a committed record in the authoritative accepted_change_log,
+      natural_language: For every live delivery d such that d is a delivery actually
+        exposed through the websocket live stream, there exists a CanonicalAcceptance
+        record a such that a is a committed record in the authoritative accepted_change_log,
         d originates from a as its accepted-history source, and d preserves a's canonical
-        payload and revision provenance exactly. The proposition does not assert anything
-        about objects that are not live delivery records, and the existence of such
-        an a is required for each live delivery record. The committed status of a,
-        its origin relationship to d, and the exact preservation of payload and revision
-        provenance are all separate required conditions.
+        payload and revision provenance exactly. The existence of such a committed
+        acceptance record and the two stated relations must hold separately for each
+        live delivery; the formula does not assert that the delivery is canonical
+        merely from being a live delivery, and it does not treat origin alone as implying
+        commitment or exact payload/revision preservation.
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 6e56ff8c1d1f13bb6283a2852b55a73997db1c0acad8617507b2716a10553571
+        subject_signature: 304dce79d40b4efee56ca83ff8810a13e3608856d587f246769e569a9da185bf
         verdict: EQUIVALENT
         reason: The formula requires every exposed live delivery to have a committed
-          accepted-history source and requires preservation of canonical payload and
-          revision provenance. This matches the canonical proposition's binding, provenance,
-          and exclusion requirements without adding guarantees about ordering, duplication,
-          timing, or delivery success.
+          accepted-history witness, an origin relation to that witness, and preservation
+          of canonical payload and revision provenance. These correspond directly
+          to the source requirements that live changes are bound to committed canonical
+          records and preserve their payload and provenance, while the formula adds
+          no guarantees about ordering, duplication, timing, or delivery success.
         differences: []
       strengthening:
-        subject_signature: 6e56ff8c1d1f13bb6283a2852b55a73997db1c0acad8617507b2716a10553571
+        subject_signature: 304dce79d40b4efee56ca83ff8810a13e3608856d587f246769e569a9da185bf
         verdict: EQUIVALENT
-        reason: The formula preserves the original proposition's universal scope over
-          exposed live deliveries and requires each to have a committed accepted-history
-          source with preserved canonical payload and revision provenance. The prohibition
-          on never-committed changes follows directly from the absence of any committed
-          source for such deliveries.
+        reason: The formula preserves the original proposition's observation scope
+          over every live stream delivery and requires a committed accepted-history
+          source plus preservation of canonical payload and revision provenance. The
+          exclusion of provisional, rejected, aborted, or never-committed changes
+          follows from the universal source obligation without adding guarantees such
+          as ordering or exactly-once delivery.
         differences: []
     roundtrip_reviews:
       weakening:
-        subject_signature: 6e56ff8c1d1f13bb6283a2852b55a73997db1c0acad8617507b2716a10553571
+        subject_signature: 304dce79d40b4efee56ca83ff8810a13e3608856d587f246769e569a9da185bf
         verdict: EQUIVALENT
-        reason: The round-trip rendering preserves the universal applicability to
-          every exposed live delivery, the existential binding to a committed accepted-history
-          record, the provenance direction from committed record to live delivery,
-          and the required payload and revision provenance preservation. The exclusion
-          of never-committed canonical changes follows from the required committed
-          witness for every live delivery.
+        reason: The rendering preserves the original quantification boundary, provenance
+          direction, commitment requirement, payload and revision provenance preservation,
+          and exclusion of non-committed changes. It does not add delivery guarantees
+          or collapse identity dimensions beyond the canonical contract.
         differences: []
       strengthening:
-        subject_signature: 6e56ff8c1d1f13bb6283a2852b55a73997db1c0acad8617507b2716a10553571
+        subject_signature: 304dce79d40b4efee56ca83ff8810a13e3608856d587f246769e569a9da185bf
         verdict: EQUIVALENT
-        reason: The round-trip rendering preserves the universal applicability to
-          exposed live deliveries, requires a committed authoritative acceptance record
-          as the source, and preserves the original payload and revision provenance
-          binding without adding delivery guarantees beyond the source contract.
+        reason: The rendering preserves the universal scope over exposed websocket
+          live deliveries, the existential binding to a committed accepted-history
+          record, the provenance direction, canonical payload and revision provenance
+          preservation, and does not add guarantees beyond the canonical contract.
         differences: []
   claim:C12_live_delivery_contains_only_accepted_changes:
     kind: claim
     subject_id: C12_live_delivery_contains_only_accepted_changes
-    subject_signature: 36cbbc98f6d7f719764b3f1a18898601583f045a6525fcb3aeaee52993092f00
+    subject_signature: 45bf7508462ebbe46adb3f9a45040fa3a5ab0cb3a71876ac549fdd6b4f511df3
     roundtrip:
-      subject_signature: 36cbbc98f6d7f719764b3f1a18898601583f045a6525fcb3aeaee52993092f00
+      subject_signature: 45bf7508462ebbe46adb3f9a45040fa3a5ab0cb3a71876ac549fdd6b4f511df3
       status: TRANSLATED
       natural_language: For every live delivery d, if d is a change actually exposed
-        through the websocket live stream, then there exists an acceptance record
-        a such that a is a committed record in the authoritative accepted_change_log
-        and d originates from a as its accepted-history source. This proposition only
-        asserts that every live delivery has some committed acceptance record as its
-        source; it does not assert that the delivery preserves every payload or revision
-        field exactly, nor does the live_delivery_originates_from relation alone assert
-        that the acceptance record is committed or that all accepted history properties
-        hold.
+        through the websocket live stream, then there exists a CanonicalAcceptance
+        record a such that a is a committed record in the authoritative accepted_change_log
+        and d originates from that acceptance record a as its accepted-history source.
+        The proposition only requires that each exposed live delivery has some committed
+        canonical acceptance record as its origin; the origin relation itself does
+        not assert that every payload or revision field is preserved exactly, and
+        the proposition does not additionally assert that all committed acceptance
+        records are delivered.
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 36cbbc98f6d7f719764b3f1a18898601583f045a6525fcb3aeaee52993092f00
+        subject_signature: 45bf7508462ebbe46adb3f9a45040fa3a5ab0cb3a71876ac549fdd6b4f511df3
         verdict: EQUIVALENT
-        reason: The formula requires every exposed live delivery to have an accepted-history
-          source record that is committed in accepted_change_log, matching the proposition's
-          provenance and non-invention guarantee. The stated allowances for duplicate
-          or reordered delivery are not additional obligations and are not contradicted
-          by the existential source relation.
+        reason: The formula requires every observed live delivery to have a committed
+          accepted-history witness and an origin relation from that witness, which
+          matches the source claim that live delivery is derived from committed accepted
+          history and never exposes an unaccepted change. The source's duplicate and
+          reorder allowances are exclusions of stronger delivery guarantees rather
+          than additional obligations, so their absence from the formula does not
+          weaken the translation.
         differences: []
       strengthening:
-        subject_signature: 36cbbc98f6d7f719764b3f1a18898601583f045a6525fcb3aeaee52993092f00
+        subject_signature: 45bf7508462ebbe46adb3f9a45040fa3a5ab0cb3a71876ac549fdd6b4f511df3
         verdict: EQUIVALENT
-        reason: The formula states that every exposed live delivery originates from
-          a committed acceptance record, matching the source claim that live delivery
-          is derived from committed accepted history and cannot invent an unaccepted
-          change. It does not add ordering, exactly-once, timeliness, or delivery-success
-          guarantees that are explicitly excluded by the source contract.
+        reason: 'The formula preserves the canonical provenance requirement: every
+          observed live delivery must originate from some committed accepted history
+          record. It does not add exactly-once, ordering, timing, or completeness
+          guarantees, and the origin relation matches the source''s accepted-history
+          derivation boundary.'
         differences: []
     roundtrip_reviews:
       weakening:
-        subject_signature: 36cbbc98f6d7f719764b3f1a18898601583f045a6525fcb3aeaee52993092f00
+        subject_signature: 45bf7508462ebbe46adb3f9a45040fa3a5ab0cb3a71876ac549fdd6b4f511df3
         verdict: EQUIVALENT
-        reason: 'The round-trip rendering preserves the core provenance binding: every
-          exposed live-stream change must originate from a committed accepted history
-          record. It does not add delivery guarantees or omit any required acceptance
-          provenance constraint.'
+        reason: 'The rendering preserves the core provenance binding: every exposed
+          live delivery must originate from a committed accepted-change record. It
+          retains the existential acceptance witness, the direction from canonical
+          acceptance to live delivery, and does not add delivery guarantees such as
+          completeness, ordering, or exactly-once.'
         differences: []
       strengthening:
-        subject_signature: 36cbbc98f6d7f719764b3f1a18898601583f045a6525fcb3aeaee52993092f00
+        subject_signature: 45bf7508462ebbe46adb3f9a45040fa3a5ab0cb3a71876ac549fdd6b4f511df3
         verdict: EQUIVALENT
-        reason: 'The rendering preserves the original provenance binding: every exposed
-          live delivery must originate from a committed accepted history record, while
-          not adding delivery completeness, ordering, uniqueness, or timing guarantees.'
+        reason: 'The rendering preserves the original provenance guarantee: every
+          exposed live delivery must originate from a committed accepted history record,
+          while it does not add delivery completeness, ordering, exactly-once, timing,
+          or other guarantees. It also preserves the one-way non-invention boundary.'
         differences: []
   claim:L20_acceptance_paths_are_authoritatively_mediated:
     kind: claim

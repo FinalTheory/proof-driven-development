@@ -2,10 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-SCHEMA_VERSION = "0.12"
+SCHEMA_VERSION = "0.13"
 PROOF_SEMANTICS_VERSION = "1"
-SEVERITY_LEVELS = ("critical", "high")
-ASSURANCE_LEVELS = ("maximal", "strong")
 ASSUMPTION_STATUSES = (
     "external_assumption",
     "protocol_assumption",
@@ -67,7 +65,6 @@ def _closed_object(
 
 NONEMPTY_STRING = {"type": "string", "minLength": 1}
 SOURCE_REFS = _string_list(min_items=1, pattern=SOURCE_ID)
-SURFACE_REFS = _string_list(min_items=1, pattern=LOWER_SNAKE)
 MECHANISM_REFS = _string_list(min_items=1, pattern=LOWER_SNAKE)
 SEMANTIC_CONTRACT_REFS = _string_list(min_items=1, pattern=LOWER_SNAKE)
 SEMANTIC_SYMBOL_REFS = _string_list(min_items=1, pattern=LOWER_SNAKE)
@@ -105,21 +102,9 @@ CLAIM_BODY_PROPERTIES: dict[str, Any] = {
         **NONEMPTY_STRING,
         "description": "Authoritative natural-language proposition represented by this node.",
     },
-    "severity": {
-        "enum": list(SEVERITY_LEVELS),
-        "description": "Impact classification used for assurance prioritization; excluded from proof semantics/signatures.",
-    },
-    "assurance_required": {
-        "enum": list(ASSURANCE_LEVELS),
-        "description": "Required assurance rigor for the claim; metadata for evidence planning, not part of the proposition.",
-    },
     "source_refs": {
         **SOURCE_REFS,
         "description": "Traceability references into catalog.sources; excluded from proposition semantics.",
-    },
-    "surfaces": {
-        **SURFACE_REFS,
-        "description": "Implementation/change-impact surfaces whose modification may require revalidation.",
     },
     "mechanisms": {
         **MECHANISM_REFS,
@@ -148,7 +133,7 @@ CLAIM_MUTABLE_FIELDS = tuple(CLAIM_BODY_PROPERTIES)
 
 CLAIM_SCHEMA = _closed_object(
     {"kind": {"enum": ["root", "derived", "leaf"], "description": "Proof-graph role of the claim."}, **CLAIM_BODY_PROPERTIES},
-    required=("kind", "statement", "severity", "assurance_required", "source_refs"),
+    required=("kind", "statement", "source_refs"),
     extra={
         "allOf": [
             {
@@ -158,7 +143,7 @@ CLAIM_SCHEMA = _closed_object(
             {
                 "if": {"properties": {"kind": {"const": "leaf"}}, "required": ["kind"]},
                 "then": {
-                    "required": ["surfaces", "mechanisms", "verification"],
+                    "required": ["mechanisms", "verification"],
                     "not": {"required": ["depends_on"]},
                 },
             },
@@ -622,13 +607,6 @@ CATALOG_SCHEMA = _closed_object(
             ),
             "description": "Global failure model. Entries apply to every proof audit and participate in semantic signatures.",
         },
-        "surfaces": {
-            **_catalog_map(_closed_object(
-                {"description": {**NONEMPTY_STRING, "description": "Definition of an implementation/change-impact surface used for revalidation mapping."}},
-                required=("description",),
-            )),
-            "description": "Stable implementation/change-impact taxonomy used to map code changes to proof obligations.",
-        },
         "verifier_kinds": {
             **_catalog_map(_closed_object(
                 {"description": {**NONEMPTY_STRING, "description": "Definition of a reusable verifier strategy category."}},
@@ -654,7 +632,7 @@ CATALOG_SCHEMA = _closed_object(
             "description": "Traceability registry keyed by stable semantic source IDs. Positional IDs such as section_6 are forbidden; article numbering is presentation only.",
         },
     },
-    required=("terms", "state", "mechanisms", "semantic_contracts", "failure_events", "surfaces", "verifier_kinds", "sources"),
+    required=("terms", "state", "mechanisms", "semantic_contracts", "failure_events", "verifier_kinds", "sources"),
 )
 
 REFINEMENT_SCHEMA = _closed_object(
@@ -729,7 +707,7 @@ SCOPE_SCHEMA = _closed_object(
 
 CANONICAL_GRAPH_SCHEMA: dict[str, Any] = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "urn:proof-driven-development:correctness-graph:v0.11",
+    "$id": "urn:proof-driven-development:correctness-graph:v0.13",
     "title": "Proof-Driven Development correctness graph",
     "description": (
         "Closed typed representation of one system correctness model. Fixed object fields are schema-defined; "
@@ -778,7 +756,7 @@ CANONICAL_GRAPH_SCHEMA: dict[str, Any] = {
         },
         "catalog": {
             **CATALOG_SCHEMA,
-            "description": "Typed vocabulary, state, mechanisms, reusable semantic contracts, failure events, implementation surfaces, verifier taxonomy, and source-section registry.",
+            "description": "Typed vocabulary, state, mechanisms, reusable semantic contracts, failure events, verifier taxonomy, and source-section registry.",
         },
         "id_allocator": {
             **ID_ALLOCATOR_SCHEMA,

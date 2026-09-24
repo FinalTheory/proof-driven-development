@@ -27,7 +27,7 @@ Harness 会校验文件末尾的 machine-checkable schema index。该索引来�
 
 | 字段 | 类型 / 可选值 | 必需性 | 含义 |
 | --- | --- | --- | --- |
-| `schema_version` | const `0.12` | required | canonical document schema 版本 |
+| `schema_version` | const `0.13` | required | canonical document schema 版本 |
 | `system` | closed object | required | 所有局部 proof audit 共享的全局系统语义 |
 | `source` | closed object | required | architecture narrative 的 traceability pointer |
 | `scope` | closed object | required | 明确哪些 product/protocol concern 被建模或排除 |
@@ -69,13 +69,10 @@ Harness 会校验文件末尾的 machine-checkable schema index。该索引来�
 | --- | --- | --- | --- |
 | `.kind` | `root` / `derived` / `leaf` | required | proposition 在 proof graph 中的角色 |
 | `.statement` | non-empty string | required | 该 node 的 authoritative natural-language proposition |
-| `.severity` | `critical` / `high` | required | assurance prioritization 的 impact metadata；不进入 proposition semantics/signature |
-| `.assurance_required` | `maximal` / `strong` | required | 计划采用的 assurance rigor；不属于 proposition 本身 |
 | `.source_refs` | unique `source_id[]`, min 1 | required | traceability 到 `catalog.sources`；不属于 proposition semantics |
 | `.formal_intent` | non-empty string | optional | proposition 的紧凑/形式化重述；进入 semantic signature |
 | `.semantic_contracts` | unique `lower_snake[]`, min 1 | optional | 必须解析到 `catalog.semantic_contracts`；定义 interpretation boundary，不增加 proof premise |
 | `.depends_on` | unique dependency ID array, min 1；元素可为 `A/G/C/L...` | `root` / `derived` required；`leaf` forbidden | logical proof dependencies；不是 runtime ordering |
-| `.surfaces` | unique `lower_snake[]`, min 1 | `leaf` required | 必须解析到 `catalog.surfaces`；表示 change-impact / revalidation surface |
 | `.mechanisms` | unique `lower_snake[]`, min 1 | `leaf` required | 必须解析到 `catalog.mechanisms`；表示 leaf 所依赖的已批准 architecture mechanism |
 | `.verification` | closed object | `leaf` required | 计划如何获得 mechanical/executable evidence；不记录执行状态 |
 | `.verification.verifiers` | object array, min 1 | required when `.verification` exists | 一个或多个 verifier strategy |
@@ -88,7 +85,7 @@ Harness 会校验文件末尾的 machine-checkable schema index。该索引来�
 | --- | --- | --- |
 | `root` | `depends_on` | — |
 | `derived` | `depends_on` | — |
-| `leaf` | `surfaces`, `mechanisms`, `verification` | `depends_on` |
+| `leaf` | `mechanisms`, `verification` | `depends_on` |
 
 ## `catalog`
 
@@ -143,12 +140,6 @@ Contract class 的排他约束：
 | --- | --- | --- | --- |
 | `failure_events.<id>.class` | `allowed` / `excluded` | required | 该 event 必须被 proof 容忍，还是明确在 failure envelope 之外 |
 | `failure_events.<id>.description` | non-empty string | required | failure/concurrency event 的具体定义 |
-
-### `catalog.surfaces`
-
-| 字段 | 类型 / 可选值 | 必需性 | 含义 |
-| --- | --- | --- | --- |
-| `surfaces.<id>.description` | non-empty string | required | 稳定 implementation/change-impact surface，用于映射代码变化到 proof obligation |
 
 ### `catalog.verifier_kinds`
 
@@ -331,23 +322,18 @@ Dynamic key 必须是现有 `claim_id`。
 - `catalog.state.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.class` => required; enum=authoritative|derived|speculative|control
 - `catalog.state.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.description` => required; string, minLength=1
 - `catalog.state.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.symbolic_dimensions` => optional; array, minItems=1, uniqueItems=true, items=string, itemPattern=^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
-- `catalog.surfaces` => required; closed object; dynamic keys match ^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
-- `catalog.surfaces.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.description` => required; string, minLength=1
 - `catalog.terms` => required; closed object; dynamic keys match ^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.terms.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.description` => required; string, minLength=1
 - `catalog.verifier_kinds` => required; closed object; dynamic keys match ^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.verifier_kinds.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.description` => required; string, minLength=1
 - `claims` => required; closed object; dynamic keys match ^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
-- `claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.assurance_required` => required; enum=maximal|strong
 - `claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.depends_on` => required when kind in root|derived; forbidden when kind=leaf; array, minItems=1, uniqueItems=true, items=string, itemPattern=^[AGCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.formal_intent` => optional; string, minLength=1
 - `claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.kind` => required; enum=root|derived|leaf
 - `claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.mechanisms` => required when kind=leaf; array, minItems=1, uniqueItems=true, items=string, itemPattern=^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.semantic_contracts` => optional; array, minItems=1, uniqueItems=true, items=string, itemPattern=^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
-- `claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.severity` => required; enum=critical|high
 - `claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.source_refs` => required; array, minItems=1, uniqueItems=true, items=string, itemPattern=^(?!section_[0-9]+$)[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.statement` => required; string, minLength=1
-- `claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.surfaces` => required when kind=leaf; array, minItems=1, uniqueItems=true, items=string, itemPattern=^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.verification` => required when kind=leaf; closed object
 - `claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.verification.verifiers` => required; array, minItems=1, items=object
 - `claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.verification.verifiers.[].intent` => required; string, minLength=1
@@ -379,7 +365,7 @@ Dynamic key 必须是现有 `claim_id`。
 - `refinement.tooling_blockers.<key:^T[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.status` => required; enum=open|resolved
 - `refinement.tooling_blockers.<key:^T[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.suggested_change` => optional; string, minLength=1
 - `roots` => required; array, minItems=1, uniqueItems=true, items=string, itemPattern=^G[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
-- `schema_version` => required; const='0.12'
+- `schema_version` => required; const='0.13'
 - `scope` => required; closed object
 - `scope.excludes` => required; array, minItems=1, uniqueItems=true, items=string
 - `scope.includes` => required; array, minItems=1, uniqueItems=true, items=string

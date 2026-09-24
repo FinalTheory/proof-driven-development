@@ -369,7 +369,7 @@ class SymbolicBridgeTests(unittest.TestCase):
 
     def test_accepted_evidence_provenance_has_stable_exclusion_interface(self):
         matching_committed_source = exists(
-            {"a": "Acceptance"},
+            {"a": "CanonicalAcceptance"},
             and_(
                 call("committed_canonical_acceptance", var("a")),
                 eq(
@@ -400,7 +400,7 @@ class SymbolicBridgeTests(unittest.TestCase):
 
     def test_acceptance_request_identity_binding_closes_cross_binding(self):
         bad_identity = exists(
-            {"a": "Acceptance", "r": "Request"},
+            {"a": "CanonicalAcceptance", "r": "Request"},
             and_(
                 call("acceptance_produced_from_request", var("a"), var("r")),
                 or_(
@@ -435,7 +435,7 @@ class SymbolicBridgeTests(unittest.TestCase):
                 call("live_delivery_record", var("d")),
                 not_(
                     exists(
-                        {"a": "Acceptance"},
+                        {"a": "CanonicalAcceptance"},
                         and_(
                             call("committed_history_record", var("a")),
                             call("live_delivery_originates_from", var("d"), var("a")),
@@ -505,7 +505,7 @@ class SymbolicBridgeTests(unittest.TestCase):
 
     def test_claim_L108_excludes_intermediate_identity_breakage(self):
         broken_path = exists(
-            {"a": "Acceptance", "r": "Request"},
+            {"a": "CanonicalAcceptance", "r": "Request"},
             and_(
                 call("acceptance_produced_from_request", var("a"), var("r")),
                 not_(
@@ -530,7 +530,7 @@ class SymbolicBridgeTests(unittest.TestCase):
                 call("live_delivery_record", var("d")),
                 not_(
                     exists(
-                        {"a": "Acceptance"},
+                        {"a": "CanonicalAcceptance"},
                         and_(
                             call("committed_history_record", var("a")),
                             call("live_delivery_originates_from", var("d"), var("a")),

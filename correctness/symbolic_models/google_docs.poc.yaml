@@ -8,7 +8,7 @@ sorts:
   - Request
   - CatchupResponse
   - AuthoritativeState
-  - Acceptance
+  - CanonicalAcceptance
   - AcceptedEvidence
   - IdempotencyKey
   - ClientChangeId
@@ -153,21 +153,21 @@ functions:
       The authoritative idempotency identity carried by evidence e.
 
   committed_canonical_acceptance:
-    args: [Acceptance]
+    args: [CanonicalAcceptance]
     returns: Bool
     catalog_symbols: [canonical_accepted_change, accepted_change_log]
     meaning: >-
-      Acceptance a is a committed canonical accepted-change record in authoritative accepted history.
+      Canonical acceptance a is a committed canonical accepted-change record in authoritative accepted history.
 
   acceptance_key:
-    args: [Acceptance]
+    args: [CanonicalAcceptance]
     returns: IdempotencyKey
     catalog_symbols: [canonical_accepted_change]
     meaning: >-
       The authoritative idempotency identity carried by canonical acceptance a.
 
   evidence_derived_from_acceptance:
-    args: [AcceptedEvidence, Acceptance]
+    args: [AcceptedEvidence, CanonicalAcceptance]
     returns: Bool
     catalog_symbols: [accepted_idempotency_evidence, canonical_accepted_change]
     meaning: >-
@@ -181,42 +181,42 @@ functions:
       The client-supplied logical edit identity carried by request r.
 
   acceptance_produced_from_request:
-    args: [Acceptance, Request]
+    args: [CanonicalAcceptance, Request]
     returns: Bool
     catalog_symbols: []
     meaning: >-
       Canonical acceptance a was produced from submitted request r.
 
   acceptance_document:
-    args: [Acceptance]
+    args: [CanonicalAcceptance]
     returns: Document
     catalog_symbols: [canonical_accepted_change]
     meaning: >-
       The document identity preserved on canonical acceptance a.
 
   acceptance_change_id:
-    args: [Acceptance]
+    args: [CanonicalAcceptance]
     returns: ClientChangeId
     catalog_symbols: [canonical_accepted_change]
     meaning: >-
       The client_change_id preserved on canonical acceptance a.
 
   acceptance_idempotency_identity_matches_request:
-    args: [Acceptance, Request]
+    args: [CanonicalAcceptance, Request]
     returns: Bool
     catalog_symbols: [idempotency_key]
     meaning: >-
       The authoritative idempotency identity associated with acceptance a is exactly the request's (document_id, client_change_id).
 
   acceptance_identity_preserved_end_to_end:
-    args: [Acceptance, Request]
+    args: [CanonicalAcceptance, Request]
     returns: Bool
     catalog_symbols: [canonical_accepted_change, document_id, client_change_id]
     meaning: >-
       From request admission through OT dispatch, idempotency arbitration, retry handling, and canonical commit, neither document_id nor client_change_id is dropped, regenerated, substituted, or cross-bound; every identity handoff for acceptance a remains the originating request r identity.
 
   durable_idempotency_evidence_for_acceptance:
-    args: [DurableIdempotencyEvidence, Acceptance]
+    args: [DurableIdempotencyEvidence, CanonicalAcceptance]
     returns: Bool
     catalog_symbols: [idempotency_key]
     meaning: >-
@@ -237,21 +237,21 @@ functions:
       Delivery d is any change actually exposed through the websocket live stream. This predicate does not pre-classify the delivery as canonical or committed: if a provisional, speculative, rejected, aborted, or never-committed change were exposed, it would still satisfy live_delivery_record(d) and would have to satisfy the formula's separate committed-source obligations.
 
   committed_history_record:
-    args: [Acceptance]
+    args: [CanonicalAcceptance]
     returns: Bool
     catalog_symbols: [accepted_change_log]
     meaning: >-
-      Acceptance a is a committed record in authoritative accepted_change_log.
+      Canonical acceptance a is a committed record in authoritative accepted_change_log.
 
   live_delivery_originates_from:
-    args: [LiveDelivery, Acceptance]
+    args: [LiveDelivery, CanonicalAcceptance]
     returns: Bool
     catalog_symbols: []
     meaning: >-
       Live delivery d originates from acceptance record a as its accepted-history source; this relation alone does not assert that a is committed or that every payload/revision field is preserved exactly.
 
   live_delivery_preserves_payload_revision:
-    args: [LiveDelivery, Acceptance]
+    args: [LiveDelivery, CanonicalAcceptance]
     returns: Bool
     catalog_symbols: []
     meaning: >-
@@ -362,7 +362,7 @@ claims:
     formula:
       forall:
         vars:
-          a: Acceptance
+          a: CanonicalAcceptance
           r: Request
         body:
           implies:
@@ -395,7 +395,7 @@ claims:
             - {call: {fn: live_delivery_record, args: [{var: d}]}}
             - exists:
                 vars:
-                  a: Acceptance
+                  a: CanonicalAcceptance
                 body:
                   and:
                     - {call: {fn: committed_history_record, args: [{var: a}]}}
@@ -412,7 +412,7 @@ claims:
             - {call: {fn: live_delivery_record, args: [{var: d}]}}
             - exists:
                 vars:
-                  a: Acceptance
+                  a: CanonicalAcceptance
                 body:
                   and:
                     - {call: {fn: committed_history_record, args: [{var: a}]}}
@@ -532,7 +532,7 @@ contracts:
             - {call: {fn: authoritative_evidence, args: [{var: e}]}}
             - exists:
                 vars:
-                  a: Acceptance
+                  a: CanonicalAcceptance
                 body:
                   and:
                     - {call: {fn: committed_canonical_acceptance, args: [{var: a}]}}
@@ -546,7 +546,7 @@ contracts:
     formula:
       forall:
         vars:
-          a: Acceptance
+          a: CanonicalAcceptance
           r: Request
         body:
           implies:
@@ -579,7 +579,7 @@ contracts:
             - {call: {fn: live_delivery_record, args: [{var: d}]}}
             - exists:
                 vars:
-                  a: Acceptance
+                  a: CanonicalAcceptance
                 body:
                   and:
                     - {call: {fn: committed_history_record, args: [{var: a}]}}

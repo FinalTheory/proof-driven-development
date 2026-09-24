@@ -30,7 +30,7 @@ SCHEMA_INDEX_LINE_RE = re.compile(r"^- \`([^\`]+)\` => (.+)$")
 NODE_ID_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
 CLAIM_KINDS = {"root", "derived", "leaf"}
 CATALOG_NAMESPACES = (
-    "terms", "state", "mechanisms", "semantic_contracts", "failure_events", "surfaces", "verifier_kinds", "sources"
+    "terms", "state", "mechanisms", "semantic_contracts", "failure_events", "verifier_kinds", "sources"
 )
 SEMANTIC_CATALOG_NAMESPACES = ("terms", "state", "mechanisms", "semantic_contracts")
 SNAKE_CASE_TERM_RE = re.compile(r"\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b")
@@ -549,7 +549,7 @@ would alter the system specification, including:
 ## 5.1 Typed architecture catalog and synthesis boundary
 
 System vocabulary is centrally defined under `catalog`. Claims may reference catalog mechanisms,
-semantic contracts, implementation surfaces, source sections, and verifier kinds, while underscore-style
+semantic contracts, source sections, and verifier kinds, while underscore-style
 protocol terms must resolve to a catalog term/state/mechanism/semantic-contract definition. Semantic
 contracts define reusable proposition meaning rather than proof premises. In addition to generic
 `safety_contract` and `equivalence_relation` boundaries, the type system has two relation-specific forms:
@@ -661,10 +661,7 @@ A mutation plan has this general form:
         body:
           statement: >-
             ...
-          severity: critical
-          assurance_required: strong
           source_refs: [accepted_change_log]
-          surfaces: [acceptance_path]
           mechanisms: [acceptance_transaction]
           verification:
             verifiers:
@@ -832,8 +829,8 @@ assurance YAML directly.
 `composition-status` is a certification scheduler, not the refinement scheduler. It runs only over a
 frozen (`COMPLETE`) refinement graph and targets at least `multi_agent_audited` (or `machine_checked`) for
 each root/derived node. `single_agent_audited` remains eligible for further certification. The status output
-recommends independent auditor counts and adversarial focus roles based on node kind and
-`assurance_required`.
+recommends independent auditor counts and adversarial focus roles from the node role: roots receive
+three independent auditors and derived claims receive two.
 
 `composition-audit-prompt NODE` exposes exactly the target proposition and its direct dependency
 propositions as opaque premises. It never recursively opens grandchildren and never asks whether those
@@ -884,8 +881,7 @@ __LEAF_STOPPING_SIGNALS__
 Do not recursively decompose merely because a sentence can be grammatically split or because its
 verifier would evaluate multiple assertions. Independent falsifiability is necessary but not sufficient
 for decomposition. Split only when doing so creates materially useful proof reuse—for example distinct
-implementation ownership, verifier mechanisms, change-invalidation surfaces, or separately reusable
-correctness contracts.
+implementation ownership, verifier mechanisms, or separately reusable correctness contracts.
 
 As a reverse check, ask: if the proposed children are normally invalidated by the same code change,
 checked by the same localized verifier, and maintained by the same owner, what durable value does

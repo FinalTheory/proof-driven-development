@@ -80,7 +80,7 @@ class SymbolicCompositionTests(unittest.TestCase):
             implies(
                 call("live_delivery_record", var("d")),
                 exists(
-                    {"a": "Acceptance"},
+                    {"a": "CanonicalAcceptance"},
                     call("live_delivery_originates_from", var("d"), var("a")),
                 ),
             ),

@@ -21,7 +21,7 @@ cases:
     formula:
       exists:
         vars:
-          a: Acceptance
+          a: CanonicalAcceptance
           r: Request
         body:
           and:

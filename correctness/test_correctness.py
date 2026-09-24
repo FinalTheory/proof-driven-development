@@ -18,10 +18,7 @@ def _leaf(statement: str):
     return {
         "kind": "leaf",
         "statement": statement,
-        "severity": "critical",
-        "assurance_required": "strong",
         "source_refs": ["synthetic_source"],
-        "surfaces": ["synthetic_surface"],
         "mechanisms": ["synthetic_mechanism"],
         "verification": {
             "verifiers": [{"kind": "integration_test", "intent": "synthetic fixture verifier"}],
@@ -32,7 +29,7 @@ def _leaf(statement: str):
 def make_fixture():
     """Immutable synthetic DAG used only for correctness.py tool regression tests."""
     return {
-        "schema_version": "0.12",
+        "schema_version": "0.13",
         "system": {
             "id": "synthetic_correctness_tool_fixture",
             "summary": "Synthetic system used only to test correctness.py algorithms.",
@@ -76,9 +73,6 @@ def make_fixture():
             "failure_events": {
                 "synthetic_retry": {"class": "allowed", "description": "Synthetic retry may occur."},
                 "byzantine_behavior": {"class": "excluded", "description": "Byzantine behavior is excluded."},
-            },
-            "surfaces": {
-                "synthetic_surface": {"description": "Synthetic implementation surface."}
             },
             "verifier_kinds": {
                 "integration_test": {"description": "Synthetic integration verifier."},
@@ -128,24 +122,18 @@ def make_fixture():
             "G1_primary_goal": {
                 "kind": "root",
                 "statement": "The primary synthetic guarantee holds.",
-                "severity": "critical",
-                "assurance_required": "strong",
                 "source_refs": ["synthetic_source"],
                 "depends_on": ["C1_composite_claim", "L3_independent_boundary", "A1_fixture_environment"],
             },
             "G2_secondary_goal": {
                 "kind": "root",
                 "statement": "The secondary synthetic guarantee holds.",
-                "severity": "critical",
-                "assurance_required": "strong",
                 "source_refs": ["synthetic_source"],
                 "depends_on": ["L3_independent_boundary"],
             },
             "C1_composite_claim": {
                 "kind": "derived",
                 "statement": "Both synthetic component boundaries hold.",
-                "severity": "critical",
-                "assurance_required": "strong",
                 "source_refs": ["synthetic_source"],
                 "depends_on": ["L1_left_boundary", "L2_right_boundary"],
             },
@@ -463,7 +451,7 @@ class CorrectnessToolTests(unittest.TestCase):
                     "mutation_version": 1,
                     "authority": "automation",
                     "preconditions": {"semantic_signatures": {"L1_left_boundary": "0" * 64}},
-                    "operations": [{"op": "update_claim", "node": "L1_left_boundary", "set": {"severity": "high"}}],
+                    "operations": [{"op": "update_claim", "node": "L1_left_boundary", "set": {"formal_intent": "Synthetic formal intent."}}],
                 }
                 plan_path = Path(tmp) / "stale.yaml"
                 plan_path.write_text(correctness.yaml.safe_dump(plan, sort_keys=False), encoding="utf-8")
@@ -508,7 +496,7 @@ class CorrectnessToolTests(unittest.TestCase):
                     "mutation_version": 1,
                     "authority": "automation",
                     "preconditions": {"semantic_signatures": {"L1_left_boundary": correctness._node_semantic_signature(graph, "L1_left_boundary")}},
-                    "operations": [{"op": "update_claim", "node": "L1_left_boundary", "set": {"severity": "high"}}],
+                    "operations": [{"op": "update_claim", "node": "L1_left_boundary", "set": {"formal_intent": "Synthetic formal intent."}}],
                 }
                 plan_path = Path(tmp) / "blocked.yaml"
                 plan_path.write_text(correctness.yaml.safe_dump(plan, sort_keys=False), encoding="utf-8")
@@ -566,7 +554,7 @@ class CorrectnessToolTests(unittest.TestCase):
             "mutation_version": 1,
             "authority": "automation",
             "preconditions": {"semantic_signatures": {"L1_left_boundary": correctness._node_semantic_signature(graph, "L1_left_boundary")}},
-            "operations": [{"op": "update_claim", "node": "L1_left_boundary", "set": {"severity": "high"}}],
+            "operations": [{"op": "update_claim", "node": "L1_left_boundary", "set": {"formal_intent": "Synthetic formal intent."}}],
         }
         correctness._validate_mutation_plan_schema(valid)
         invalid = copy.deepcopy(valid)
@@ -645,12 +633,10 @@ class CorrectnessToolTests(unittest.TestCase):
         errors, _ = correctness.validate(correctness.Graph(doc))
         self.assertTrue(any("undefined snake_case term 'unknown_protocol_token'" in e for e in errors))
 
-    def test_unknown_surface_and_verifier_kind_are_rejected(self):
+    def test_unknown_verifier_kind_is_rejected(self):
         doc = copy.deepcopy(self.base)
-        doc["claims"]["L1_left_boundary"]["surfaces"] = ["invented_surface"]
         doc["claims"]["L1_left_boundary"]["verification"]["verifiers"][0]["kind"] = "invented_verifier"
         errors, _ = correctness.validate(correctness.Graph(doc))
-        self.assertTrue(any("unknown surface invented_surface" in e for e in errors))
         self.assertTrue(any("unknown kind invented_verifier" in e for e in errors))
 
     def test_canonical_schema_rejects_unknown_claim_field(self):
@@ -659,13 +645,15 @@ class CorrectnessToolTests(unittest.TestCase):
         errors, _ = correctness.validate(correctness.Graph(doc))
         self.assertTrue(any("Additional properties are not allowed" in e and "sevverity" in e for e in errors))
 
-    def test_canonical_schema_rejects_invalid_severity_and_assurance(self):
+    def test_canonical_schema_rejects_removed_claim_metadata(self):
         doc = copy.deepcopy(self.base)
-        doc["claims"]["L1_left_boundary"]["severity"] = "banana"
-        doc["claims"]["L2_right_boundary"]["assurance_required"] = 123
+        doc["claims"]["L1_left_boundary"]["severity"] = "critical"
+        doc["claims"]["L1_left_boundary"]["assurance_required"] = "strong"
+        doc["claims"]["L1_left_boundary"]["surfaces"] = ["synthetic_surface"]
         errors, _ = correctness.validate(correctness.Graph(doc))
-        self.assertTrue(any("severity" in e and "banana" in e for e in errors))
-        self.assertTrue(any("assurance_required" in e and "123" in e for e in errors))
+        self.assertTrue(any("Additional properties are not allowed" in e and "severity" in e for e in errors))
+        self.assertTrue(any("Additional properties are not allowed" in e and "assurance_required" in e for e in errors))
+        self.assertTrue(any("Additional properties are not allowed" in e and "surfaces" in e for e in errors))
 
     def test_canonical_schema_rejects_unknown_catalog_entry_field(self):
         doc = copy.deepcopy(self.base)
@@ -1589,6 +1577,8 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertEqual(set(nodes), {"G1_primary_goal", "G2_secondary_goal", "C1_composite_claim"})
         self.assertEqual(nodes["C1_composite_claim"]["recommended_auditors"], 2)
         self.assertEqual(nodes["C1_composite_claim"]["suggested_focuses"], ["execution", "quantifier"])
+        self.assertNotIn("severity", nodes["C1_composite_claim"])
+        self.assertNotIn("assurance_required", nodes["C1_composite_claim"])
         self.assertEqual(nodes["G1_primary_goal"]["recommended_auditors"], 3)
         self.assertEqual(nodes["G1_primary_goal"]["suggested_focuses"], ["execution", "quantifier", "premise"])
         self.assertEqual(snapshot["target_assurance"], "multi_agent_audited_or_machine_checked")
