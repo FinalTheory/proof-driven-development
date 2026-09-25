@@ -22,6 +22,15 @@ def _plain_data(value: Any) -> Any:
         return {str(k): _plain_data(v) for k, v in value.items()}
     if isinstance(value, list):
         return [_plain_data(v) for v in value]
+    if isinstance(value, str):
+        # ruamel.yaml round-trip loading preserves presentation style with
+        # ScalarString subclasses (SingleQuotedScalarString,
+        # FoldedScalarString, etc.). PyYAML's SafeDumper does not know how to
+        # represent those subclasses, while downstream symbolic validation
+        # deliberately serializes graph fragments with yaml.safe_dump().
+        # Normalize them at the round-trip/plain-data boundary so mutation-time
+        # validation sees the same scalar types as Graph.load().
+        return str(value)
     return value
 
 

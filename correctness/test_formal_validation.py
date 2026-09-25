@@ -95,6 +95,15 @@ class FormalSchemaTests(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertEqual(warnings, [])
 
+    def test_formal_preflight_is_reentrant_with_nonunique_sat_witness(self) -> None:
+        graph = Graph.load()
+        first_errors, first_warnings = validate_formal_layer(graph)
+        second_errors, second_warnings = validate_formal_layer(graph)
+        self.assertEqual(first_errors, [])
+        self.assertEqual(first_warnings, [])
+        self.assertEqual(second_errors, [])
+        self.assertEqual(second_warnings, [])
+
     def test_repository_preflight_reports_formal_schema_drift(self) -> None:
         graph = Graph.load()
         bridge_path = ROOT / "symbolic_models" / "bridge.yaml"

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from pathlib import Path
 from typing import Any
 
@@ -44,6 +45,25 @@ def _load_yaml_mapping(path: Path, *, schema_name: str | None = None) -> dict[st
                 f"{path}: invalid {schema_name} schema: " + "; ".join(rendered)
             )
     return raw
+
+
+def _coverage_artifact_matches_fresh_check(
+    artifact: dict[str, Any],
+    expected: dict[str, Any],
+) -> bool:
+    """Compare coverage evidence while treating a SAT witness as diagnostic.
+
+    Z3 may return different satisfying models for the same baseline formula on
+    successive checks in one process. Fresh validation therefore verifies the
+    baseline SAT status and every semantic/signature field, but does not require
+    the persisted witness text to match the particular model returned this run.
+    The closed artifact schema still requires a non-empty persisted witness.
+    """
+    persisted = copy.deepcopy(artifact)
+    fresh = copy.deepcopy(expected)
+    for payload in (persisted, fresh):
+        payload["proof"]["baseline"].pop("witness_model", None)
+    return persisted == fresh
 
 
 def _composition_artifact_errors(
@@ -223,7 +243,7 @@ def validate_formal_layer(graph: Graph) -> tuple[list[str], list[str]]:
                 correctness_root / case.artifact_ref,
                 schema_name="coverage-artifact",
             )
-            if artifact != expected:
+            if not _coverage_artifact_matches_fresh_check(artifact, expected):
                 errors.append(
                     f"{case.artifact_ref}: persisted coverage artifact does not match a fresh trusted check"
                 )

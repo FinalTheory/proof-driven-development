@@ -39,7 +39,7 @@ refinement:
     G0_acked_edit_survives_failover:
       status: stable
       blocked_by: []
-      signature: 0eb44ce96bb1d8179ed47538d20fc2c7eb2fc8c5bf4798c7566f450613241b33
+      signature: ca4f6eb81fab53793267ddcf041d0ec5d7e51c02f3d20123a798579aab856c69
     G1_retry_is_logically_exactly_once:
       status: stable
       blocked_by: []
@@ -47,11 +47,11 @@ refinement:
     G2_canonical_history_is_linear_and_fenced:
       status: stable
       blocked_by: []
-      signature: 6d3e31fe9e6948bb130c9c73c1c9ee55479c0c02afa7087905f16e4721a1809c
+      signature: d3c40c113fcbe581f26b51e81fcb641a09487f8f66e0e51d77da5fee1eeb4858
     G3_snapshot_and_recovery_preserve_state:
       status: stable
       blocked_by: []
-      signature: 663757fd51c7cb9756c67c28d48369eb2b9f1c655118a1135efbc8a22cce6f55
+      signature: 56a0ecfe7d74371d8351a7b2142ca590f8868f7ea14ccc209cb5c70161ca105e
     G4_reconnect_converges_without_gap_or_duplicate:
       status: stable
       blocked_by: []
@@ -71,11 +71,11 @@ refinement:
     C8_stale_owner_is_fenced:
       status: stable
       blocked_by: []
-      signature: 367656f54fb6eb9a6aefcb9992cc3c21959b8dc32fb0465636fa88494af020b7
+      signature: 58b99c2b3b3d361fdd196ccd301e9d718a5236de0de65c948c23c01e691073e4
     C9_recovery_reconstructs_committed_state:
       status: stable
       blocked_by: []
-      signature: d8a332bde6d92da845bb34b4174f9faa31bc39aa92f70af7c12018ef680a0b45
+      signature: 9dbbdb81215d58bb48f2c63829b4537c68408f3f735bbefdb4dd7a32f297942d
     C10_catchup_represents_exact_missing_suffix:
       status: stable
       blocked_by: []
@@ -163,11 +163,11 @@ refinement:
     L28_authoritative_epoch_never_regresses_or_reuses:
       status: stable
       blocked_by: []
-      signature: 829cc0cd32c1e9d40f8d4f6e3306f95c7cde74872785693cfeb4ba3a8f5f7634
+      signature: 5e8a9f97f42805cc2d26b91c88f6927eba163659b32e215901009e46145398e1
     C16_non_append_lifecycle_preserves_logical_revision_prefix:
       status: stable
       blocked_by: []
-      signature: cb28fef6cd427ef747ce1e2b4a11cacdc567446d3006d922973fa013c28df504
+      signature: 58980599f4ad9df07eabdff5fb28c6242384a0d125bea9f4e1dc6afe8cd560f9
     L29_non_append_lifecycle_preserves_revision_domain:
       status: stable
       blocked_by: []
@@ -175,7 +175,7 @@ refinement:
     L30_non_append_lifecycle_preserves_prefix_semantics:
       status: stable
       blocked_by: []
-      signature: 46b46b342ef5870954ec2e5ec92a6fa1303f95272388ef898dd59fbed2434b7f
+      signature: 6d49082b1f49f70b60539fb39fe15753669fd5afbbf6adf34f4bd5c7521eec0c
     L31_committed_append_sets_frontier_to_revision:
       status: stable
       blocked_by: []
@@ -211,7 +211,7 @@ refinement:
     L39_recovered_owner_resumes_at_head_plus_one:
       status: stable
       blocked_by: []
-      signature: 57449ba27e1b2dacfa2a28b9a330b84c741704e1a9d9d8e15ef0b9dc83e9e4cd
+      signature: dab35bd7a1f9ab6fcdf881f346ca8799488b866b9d3dace4ce42eb1cab67b364
     L41_recovery_checkpoint_does_not_exceed_recovery_head:
       status: stable
       blocked_by: []
@@ -259,7 +259,7 @@ refinement:
     L94_recovery_starts_after_epoch_handoff:
       status: stable
       blocked_by: []
-      signature: a5a6e89cdb70f797af479204ad5173bd3c175abd98ff185698d1339cbd2f5b19
+      signature: fc1ab4943e675410b6e20433a0d72d95afef7988a30c756fe987f1ab865d7566
     L95_lifecycle_procedures_share_and_hold_document_lock:
       status: stable
       blocked_by: []
@@ -267,7 +267,7 @@ refinement:
     L96_recovery_orders_head_selection_replay_and_metadata:
       status: stable
       blocked_by: []
-      signature: e36aefcc80573df091da9ad27851909062bfd7ec617280de8124b302a6b253f1
+      signature: e45a1e5ca182abb91ebba803c6acae8f448038a07f92fa8cff9fddb8e4083d53
     L97_client_adopts_snapshot_before_tail:
       status: stable
       blocked_by: []
@@ -404,6 +404,10 @@ refinement:
       status: stable
       blocked_by: []
       signature: 7501889390e7e5d266c7c0d1a77de58423f6d061d84e7a5f9a963a4911f75776
+    L131_post_recovery_acceptance_state_is_exhaustive:
+      status: stable
+      blocked_by: []
+      signature: 56052954c694a412d0e2c3de0d3baca213150f9c4138f03e63559b96e3aeed26
 assumptions:
   A1_storage_commit_is_durable:
     statement: A successful authoritative-store commit remains recoverable across the server-process
@@ -521,6 +525,8 @@ claims:
       - A5_apply_accepted_change_is_deterministic
       - C16_non_append_lifecycle_preserves_logical_revision_prefix
       - L8_snapshot_is_exact_committed_prefix
+      - C25_recovery_derives_complete_ot_metadata_from_truth
+      - L131_post_recovery_acceptance_state_is_exhaustive
     source_refs:
       - authoritative_truth
       - snapshot_frontier
@@ -643,12 +649,13 @@ claims:
   C9_recovery_reconstructs_committed_state:
     kind: derived
     statement: >-
-      If a new-owner recovery attempt completes and resumes acceptance, then while holding the per-document
-      lifecycle lock it first advances authoritative ownership to its new fenced epoch, captures authoritative
-      head H, selects and installs one valid authoritative checkpoint with frontier S <= H, replays exactly
-      the canonical tail S+1..H, rebuilds required OT metadata solely from authoritative truth, and initializes
-      local head H with next candidate revision H+1. Only after those steps complete may the new owner
-      accept edits. An attempt may crash or abort before completion without a progress obligation.
+      If a new-owner recovery attempt completes, then while holding the per-document lifecycle lock it
+      first advances authoritative ownership to its new fenced epoch, captures authoritative head H, selects
+      and installs one valid authoritative checkpoint with frontier S <= H, replays exactly the canonical
+      tail S+1..H, rebuilds required OT metadata solely from authoritative truth, and initializes local
+      head H with next candidate revision H+1. If the recovered representation is used to resume acceptance,
+      only after those steps may the new owner accept edits. An attempt may crash or abort before completion
+      without a progress obligation.
     depends_on:
       - L8_snapshot_is_exact_committed_prefix
       - L10_replay_covers_exact_tail_in_order_once
@@ -1137,9 +1144,11 @@ claims:
       - recovery_replay
   C16_non_append_lifecycle_preserves_logical_revision_prefix:
     statement: Any authoritative snapshotting, compaction, cleanup, or recovery-publication
-      transition that changes representation without accepting a new edit preserves the same logical
-      gap-free accepted-revision prefix and latest_revision; any physically removed revisions in
-      that prefix remain represented by an authoritative equivalent.
+      transition that changes representation without accepting a new edit preserves exactly the same
+      logical gap-free accepted-revision prefix ending at H and latest_revision = H. If the
+      transition physically removes or replaces accepted revision records, the post-state
+      authoritative representation denotes the same accepted-prefix document state as both the
+      pre-state representation and canonical replay through H.
     kind: derived
     depends_on:
       - L29_non_append_lifecycle_preserves_revision_domain
@@ -1176,15 +1185,17 @@ claims:
       - revision_frontier_guard
       - snapshot_checkpoint
   L30_non_append_lifecycle_preserves_prefix_semantics:
-    statement: If a non-append authoritative lifecycle transition physically removes or replaces
-      accepted revision records, the post-state authoritative representation denotes the same
-      accepted-prefix document state as the pre-state representation or canonical replay.
+    statement: If a non-append authoritative lifecycle transition at logical accepted prefix ending
+      at H physically removes or replaces accepted revision records, the post-state authoritative
+      representation denotes exactly the same accepted-prefix document state through H as the
+      pre-state representation and as canonical replay of accepted revisions through H.
     verification:
       verifiers:
         - kind: differential_test
-          intent: Across generated histories and representation-changing transitions, compare the
-            post-transition authoritative projection with canonical replay and the valid
-            pre-transition projection.
+          intent: Across generated valid histories ending at H and representation-changing
+            transitions that accept no new edit, compare the post-transition authoritative
+            document-state projection against both the pre-transition projection and canonical
+            replay of accepted revisions through exactly H.
     kind: leaf
     source_refs:
       - authoritative_truth
@@ -1357,9 +1368,10 @@ claims:
       - catchup_protocol
       - snapshot_checkpoint
   L39_recovered_owner_resumes_at_head_plus_one:
-    statement: After recovery reconstructs authoritative state through H = latest_revision, before
-      resuming acceptance the new owner initializes its recovered local head to H and its next
-      candidate revision exactly to H + 1.
+    statement: Every new-owner recovery that completes reconstruction through authoritative head H
+      initializes its recovered local head to H and its next candidate revision exactly to H + 1
+      before that recovery is considered complete. If the owner later resumes acceptance, it does so
+      only after this initialization.
     verification:
       verifiers:
         - kind: integration_test
@@ -1670,10 +1682,12 @@ claims:
           intent: Abort each lifecycle procedure at every boundary and independently observe that
             the document lifecycle lock remains held until procedure unwinding has ended.
   L96_recovery_orders_head_selection_replay_and_metadata:
-    statement: In every new-owner recovery that completes and resumes acceptance, recovery captures
-      authoritative head H before selecting a checkpoint, completes application of the exact
-      canonical tail through H before rebuilding the required OT metadata, and completes that
-      metadata rebuild before initializing its local acceptance head and next-revision candidate.
+    statement: In every new-owner recovery that completes, recovery captures authoritative head H
+      before selecting a checkpoint, completes application of the exact canonical tail through H
+      before rebuilding the required OT metadata, completes that metadata rebuild before
+      initializing its local acceptance head and next-revision candidate, and completes those
+      initialization steps before the recovery is considered complete. An attempt that crashes or
+      aborts earlier has no progress obligation.
     source_refs:
       - authoritative_truth
       - snapshot_frontier
@@ -2645,6 +2659,31 @@ claims:
             normal foreground reconnect attempt for D to capture exactly the visible (D, canonical
             document, frontier) tuple from one state without mixed coordinates.
     kind: leaf
+  L131_post_recovery_acceptance_state_is_exhaustive:
+    statement: When a completed new-owner recovery at authoritative head H is used to resume owner
+      service, every document-history-dependent runtime state value present on that owner that can
+      influence server-side OT transformation or canonical acceptance is contained in the recovered
+      logical document state through H, the recovered local head and next-candidate revision, or the
+      recovered OT metadata set. No stale, retained, cached, or otherwise pre-existing or newly
+      produced per-document runtime state outside those components can influence post-recovery
+      canonical semantics.
+    source_refs:
+      - authoritative_truth
+      - owner_failover
+      - final_architecture
+    mechanisms:
+      - recovery_replay
+      - server_authoritative_ot
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Trace every document-history-dependent state/control input read by post-recovery
+            OT transformation and canonical-acceptance paths, including values retained from earlier
+            ownership intervals, caches, process-local state, and values produced by the current
+            recovery. Require every influencing input to belong to the recovered document state,
+            recovered head/next-revision state, or recovered OT metadata set; reject any additional
+            influencing state.
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -3229,7 +3268,7 @@ id_allocator:
     A: 7
     G: 11
     C: 39
-    L: 131
+    L: 132
     D: 9
     T: 2
 assurance:
@@ -3434,4 +3473,6 @@ assurance:
     L129_client_canonical_frontier_is_preserved_by_visible_transitions:
       status: planned
     L130_reconnect_start_is_bound_to_visible_client_tuple:
+      status: planned
+    L131_post_recovery_acceptance_state_is_exhaustive:
       status: planned

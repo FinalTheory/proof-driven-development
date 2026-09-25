@@ -405,6 +405,20 @@ class CorrectnessToolTests(unittest.TestCase):
             finally:
                 correctness.GRAPH_PATH = old_path
 
+    def test_plain_data_normalizes_roundtrip_scalar_strings(self):
+        rt = correctness._rt_yaml()
+        doc = rt.load(
+            "single: 'quoted value'\n"
+            "folded: >-\n"
+            "  folded value\n"
+        )
+        plain = correctness._plain_data(doc)
+        self.assertIs(type(plain["single"]), str)
+        self.assertIs(type(plain["folded"]), str)
+        # Formal validation uses PyYAML to serialize canonical graph fragments.
+        # A plain-data conversion must therefore be safe-dump compatible.
+        correctness.yaml.safe_dump(plain, sort_keys=False, allow_unicode=True)
+
     def test_mutation_allocates_id_and_commits_atomically(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = self._write_fixture(tmp)
