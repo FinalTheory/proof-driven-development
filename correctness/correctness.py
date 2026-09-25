@@ -447,6 +447,28 @@ def _emit_audit_prompt(graph: Graph, node_id: str) -> None:
     print("Do not embed audit/edit history such as 'previously', 'after the repair', or explanations of superseded wording.")
     print()
 
+    contract_ids = node.data.get("semantic_contracts", []) or []
+    if contract_ids:
+        print("## Mandatory semantic-contract realization")
+        print()
+        print("For every semantic contract referenced by the target, explicitly decide whether the authoritative")
+        print("target proposition fully realizes that contract. `REALIZES` means the target proposition entails")
+        print("the contract's complete guarantee across its declared class, observation scope, identity/provenance")
+        print("coordinates, and exclusions. The target may impose additional requirements; exact natural-language")
+        print("equivalence is not required. `WEAKER` means there exists an execution allowed by the target but")
+        print("forbidden by the contract. Use `MISMATCH` for another semantic incompatibility and `INCOMPLETE` only")
+        print("when this generated slice is insufficient to decide.")
+        print()
+        print("For `state_invariant`, a path-local statement such as 'during reconnect' does NOT realize an")
+        print("`all_reachable_states` contract unless all other reachable states are explicitly excluded. For")
+        print("`provenance_binding`, locally correct processing does not realize the contract unless the required")
+        print("source/capture/binding relation itself is guaranteed.")
+        print()
+        print("Any referenced contract whose judgment is not `REALIZES` is a refinement boundary defect: the")
+        print("current node MUST NOT be certified stable as written. Report `CONTRACT_MISMATCH` unless the repair")
+        print("requires a genuinely new product/architecture choice, in which case use `HUMAN_SEMANTIC_DECISION`.")
+        print()
+
     if task == "leaf_boundary_audit":
         print("## Question")
         print()
@@ -461,15 +483,15 @@ def _emit_audit_prompt(graph: Graph, node_id: str) -> None:
         print("Try to make distinct parts fail independently, but independent falsifiability alone is insufficient.")
         print("Split only when separate nodes create materially distinct verifier/invalidation/ownership or reusable")
         print("proof boundaries; do not create one leaf per assertion or test scenario.")
-        print("Verdicts: `GOOD_LEAF`, `SHOULD_DECOMPOSE`, `HUMAN_SEMANTIC_DECISION`, `TOOLING_BLOCKED`,")
-        print("or `INCOMPLETE_CONTEXT`. For decomposition, explain the smallest useful children in prose.")
+        print("Verdicts: `GOOD_LEAF`, `SHOULD_DECOMPOSE`, `CONTRACT_MISMATCH`, `HUMAN_SEMANTIC_DECISION`,")
+        print("`TOOLING_BLOCKED`, or `INCOMPLETE_CONTEXT`. For decomposition, explain the smallest useful children in prose.")
     else:
         print("## Question")
         print()
         print("Try to refute the target, then decide whether its direct dependency propositions are sufficient")
         print("and no stronger than necessary. Classify each direct dependency as `necessary`,")
         print("`useful_but_stronger`, `redundant`, or `unrelated`.")
-        print("Verdicts: `SUPPORTED`, `REFUTED`, `INCOMPLETE`, `HUMAN_SEMANTIC_DECISION`, or `TOOLING_BLOCKED`.")
+        print("Verdicts: `SUPPORTED`, `REFUTED`, `INCOMPLETE`, `CONTRACT_MISMATCH`, `HUMAN_SEMANTIC_DECISION`, or `TOOLING_BLOCKED`.")
 
     print()
     print("Before requesting a human decision, distinguish a genuinely unspecified architecture/product choice from")
@@ -496,6 +518,10 @@ def _emit_audit_prompt(graph: Graph, node_id: str) -> None:
     print("dependency_findings:")
     print("  - dependency: <node-id>")
     print("    judgment: <necessary|useful_but_stronger|redundant|unrelated>")
+    print("contract_realizations:")
+    print("  - contract: <semantic-contract-id>")
+    print("    judgment: <REALIZES|WEAKER|MISMATCH|INCOMPLETE>")
+    print("    reason: <concise entailment/counterexample rationale>")
     print("defects: []  # or relevant defect classes")
     print("human_decision:")
     print("  required: <true|false>")
@@ -508,7 +534,9 @@ def _emit_audit_prompt(graph: Graph, node_id: str) -> None:
     print("  suggested_change: <concise repair or null>")
     print("```")
     print()
-    print("Use empty lists when applicable and set both `required` flags explicitly.")
+    print("Use empty lists when applicable, including `contract_realizations: []` when the target references no")
+    print("semantic contracts, and set both `required` flags explicitly. The orchestrator may compile a stable")
+    print("mutation only when every currently referenced semantic contract is listed with judgment `REALIZES`.")
     _emit_non_normative_harness_feedback_contract()
 
 
@@ -1472,11 +1500,25 @@ def _apply_mutation_plan(
             node_id = _resolve_ref(raw_op.get("node"), aliases)
             if node_id not in claims or node_id not in refinement_nodes:
                 raise SystemExit(f"operation[{index}]: unknown refinement claim {node_id}")
-            if raw_op.get("status") == "stable" and "rationale" in raw_op:
-                raise SystemExit(
-                    "stable refinement state may not persist rationale; canonical YAML records current state, "
-                    "while audit history belongs outside the model"
-                )
+            if raw_op.get("status") == "stable":
+                if "rationale" in raw_op:
+                    raise SystemExit(
+                        "stable refinement state may not persist rationale; canonical YAML records current state, "
+                        "while audit history belongs outside the model"
+                    )
+                expected_contracts = claims[node_id].get("semantic_contracts", []) or []
+                provided_contracts = raw_op.get("contract_realizations")
+                if (
+                    not isinstance(expected_contracts, list)
+                    or not isinstance(provided_contracts, list)
+                    or len(provided_contracts) != len(set(provided_contracts))
+                    or set(provided_contracts) != set(expected_contracts)
+                ):
+                    raise SystemExit(
+                        f"CONTRACT_REALIZATION_REQUIRED: stable refinement for {node_id} must explicitly "
+                        f"certify exactly its referenced semantic contracts; expected={sorted(expected_contracts)!r} "
+                        f"provided={sorted(provided_contracts) if isinstance(provided_contracts, list) else provided_contracts!r}"
+                    )
             entry = refinement_nodes[node_id]
             for field in ("status", "blocked_by", "rationale"):
                 if field in raw_op:

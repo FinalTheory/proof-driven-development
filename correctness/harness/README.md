@@ -27,6 +27,12 @@ validation / higher-level CLI orchestration
 
 Higher-level mutation, prompt generation, and CLI code still lives in `correctness.py` for now. Future extraction should preserve this direction rather than introduce circular imports.
 
+## Semantic-contract realization boundary
+
+A claim's `semantic_contracts` are not descriptive tags. During refinement, each reference creates a mandatory realization obligation: the authoritative claim must entail the reusable contract's complete guarantee across its declared semantic scope. This entailment remains a natural-language semantic judgment, but the Harness makes the judgment explicit and fail-closed: `audit-prompt` requires a per-contract `REALIZES / WEAKER / MISMATCH / INCOMPLETE` result, and `set_refinement(status=stable)` must declare exactly the current contract IDs judged `REALIZES`. A dedicated realization-semantics signature version invalidates affected proof branches when this audit contract changes.
+
+This gate is intentionally weaker than natural-language equivalence: a claim may contain additional guarantees or realize several contracts simultaneously. The prohibited case is a claim that references a contract while permitting an execution the contract forbids, such as a path-local proposition claiming to realize an `all_reachable_states` invariant.
+
 ## Symbolic assurance boundary
 
 The symbolic package is a formal assurance layer over, but not a replacement for, canonical correctness authority:

@@ -256,7 +256,32 @@ MUTATION_PLAN_SCHEMA: dict[str, Any] = {
                 "status": {"enum": ["pending", "stable", "waived"]},
                 "blocked_by": {"type": "array", "items": {"$ref": "#/$defs/ref"}, "uniqueItems": True},
                 "rationale": {"$ref": "#/$defs/nonempty_string"},
+                "contract_realizations": {
+                    "type": "array",
+                    "items": {"$ref": "#/$defs/ref"},
+                    "uniqueItems": True,
+                },
             },
+            "allOf": [
+                {
+                    "if": {"properties": {"status": {"const": "stable"}}, "required": ["status"]},
+                    "then": {"required": ["contract_realizations"]},
+                },
+                {
+                    "if": {
+                        "properties": {"status": {"enum": ["pending", "waived"]}},
+                        "required": ["status"],
+                    },
+                    "then": {"not": {"required": ["contract_realizations"]}},
+                },
+                {
+                    "if": {"required": ["contract_realizations"]},
+                    "then": {
+                        "required": ["status"],
+                        "properties": {"status": {"const": "stable"}},
+                    },
+                },
+            ],
         },
         "set_specification_coverage": {
             "type": "object", "additionalProperties": False,
@@ -520,6 +545,9 @@ Typical outcomes:
 - `SHOULD_DECOMPOSE`: split it into the smallest independent propositions only when decomposition
   creates materially different verification or invalidation boundaries rather than merely exposing
   assertions that one localized verifier could check together.
+- `CONTRACT_MISMATCH`: the target references a semantic contract but does not fully realize that
+  contract's guarantee across its declared class/scope/binding semantics. The claim may be stronger
+  than the reusable contract, but it may not be weaker. Repair the proposition boundary before stable.
 - `HUMAN_SEMANTIC_DECISION`: proof progress requires a new protocol/product/failure-model
   choice not already entailed by the current specification.
 - `TOOLING_BLOCKED`: the agent believes a script/tooling constraint or missing capability
@@ -580,8 +608,20 @@ approved reusable semantic contract when creating a new proof-structure claim. C
 semantic-contract association of an existing claim requires human authority, because that changes the
 proposition's interpretation boundary. A semantic-contract association is never hidden metadata: every
 referenced contract ID must appear exactly in the claim's `statement` or `formal_intent` and in at least one
-of that claim's `source_refs` article sections. `catalog.sources` stable semantic IDs resolve through exact
-H2 `heading` text; numeric Markdown section prefixes are presentation-only and ignored. Automation may not
+of that claim's `source_refs` article sections.
+
+Every referenced semantic contract also creates a mandatory **contract-realization obligation** during
+refinement. The clean auditor must explicitly judge whether the target proposition entails the contract's
+complete guarantee across its full class, observation scope, provenance/identity coordinates, and exclusions.
+A target may be stronger than the reusable contract, but any `WEAKER`, `MISMATCH`, or `INCOMPLETE` result
+prevents stable certification. When compiling `set_refinement(status=stable)`, the orchestrator MUST pass
+`contract_realizations` containing exactly the currently referenced contract IDs that the audit judged
+`REALIZES`; use an explicit empty list for a claim with no semantic contracts. The mutation tool rejects a
+stable transition if this declaration is missing or does not exactly match the claim's current contract set.
+Contract-bearing claims participate in a dedicated realization-semantics signature version, so changing this
+obligation reopens only affected proof branches rather than unrelated claims.
+
+`catalog.sources` stable semantic IDs resolve through exact H2 `heading` text; numeric Markdown section prefixes are presentation-only and ignored. Automation may not
 create catalog entries or introduce an unapproved mechanism/contract merely to close a proof hole; report a
 human semantic decision instead.
 

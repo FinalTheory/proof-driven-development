@@ -53,6 +53,13 @@ def _node_semantic_signature(
         "liveness_boundary": system.get("liveness_boundary") if isinstance(system, dict) else None,
         "scope": _plain_data(scope) if isinstance(scope, dict) else scope,
     }
+    if node.data.get("semantic_contracts"):
+        # Contract-bearing claims need a fresh refinement audit whenever the realization
+        # obligation itself changes. Non-contract claims keep byte-for-byte compatible
+        # signatures so a tooling-only change does not reopen unrelated branches.
+        global_semantics["contract_realization_semantics_version"] = (
+            CONTRACT_REALIZATION_SEMANTICS_VERSION
+        )
     payload = {
         "node_id": node_id,
         "node_type": node.node_type,
@@ -70,6 +77,7 @@ def _node_semantic_signature(
 
 ASSURANCE_SEMANTICS_VERSION = "1"
 COVERAGE_AUDIT_SEMANTICS_VERSION = "3"
+CONTRACT_REALIZATION_SEMANTICS_VERSION = "1"
 
 
 def _node_proposition_signature(graph: Graph, node_id: str) -> str:

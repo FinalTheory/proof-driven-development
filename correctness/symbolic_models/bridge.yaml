@@ -47,7 +47,7 @@ functions:
     - Overlay
     returns: Bool
     catalog_symbols:
-    - client_speculative_overlays
+    - client_visible_speculative_overlays
     meaning: Overlay o is currently exposed as a speculative user-visible overlay
       in client state s.
   canonical_contains_same_edit:

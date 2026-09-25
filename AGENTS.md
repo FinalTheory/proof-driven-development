@@ -23,6 +23,7 @@ For correctness-refinement work, use these sources in order:
 - The long-lived orchestrator may read the current repository and judge clean-auditor results, but its own accumulated context is not independent verification evidence.
 - Follow the scheduler for the active campaign: `refinement-status` for refinement and `composition-status` for proof-composition certification. Global specification coverage is driven by `coverage-audit-prompt`. Do not infer stop/continue behavior from old prompts or historical files.
 - Treat `refinement.nodes.*.status: stable` strictly as refinement maturity for the recorded semantic signature. It is not proof-composition certification and not implementation evidence. Read orthogonal confidence state through `correctness.py assurance-status`; never use assurance metadata itself as a proof premise.
+- A claim that references `semantic_contracts` must explicitly pass the generated contract-realization obligation before it can become stable. `REALIZES` means the claim entails the contract's complete guarantee across its declared scope; a path-local or otherwise weaker claim cannot inherit a broader reusable contract merely by naming it. Compile stable refinement only through the live mutation schema and provide its required `contract_realizations` declaration.
 
 ## Local history directory
 

@@ -408,6 +408,15 @@ refinement:
       status: stable
       blocked_by: []
       signature: 56052954c694a412d0e2c3de0d3baca213150f9c4138f03e63559b96e3aeed26
+    L132_visible_overlay_document_binding_established_on_publication:
+      status: pending
+      blocked_by: []
+    L133_visible_overlay_document_binding_preserved_by_local_transitions:
+      status: pending
+      blocked_by: []
+    G11_visible_speculative_overlays_match_document:
+      status: pending
+      blocked_by: []
 assumptions:
   A1_storage_commit_is_durable:
     statement: A successful authoritative-store commit remains recoverable across the server-process
@@ -468,6 +477,7 @@ roots:
   - G8_user_visible_state_does_not_double_render_accepted_optimistic_edit
   - G9_accepted_idempotency_evidence_matches_committed_acceptance
   - G10_user_visible_client_state_matches_document
+  - G11_visible_speculative_overlays_match_document
 claims:
   G0_acked_edit_survives_failover:
     kind: root
@@ -2684,6 +2694,63 @@ claims:
             recovered head/next-revision state, or recovered OT metadata set; reject any additional
             influencing state.
     kind: leaf
+  L132_visible_overlay_document_binding_established_on_publication:
+    statement: Every transition that initializes, restores, switches, or publishes a user-visible
+      client state representing document D constructs client_visible_speculative_overlays only from
+      retained speculative overlays whose document_id is D. A retained overlay belonging to another
+      document is never exposed by that visible-state construction or replacement.
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - client_document_scoped_speculative_state
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Enumerate initialization, restoration, tab/view switching, canonical publication,
+            snapshot or reconnect publication, and every visible-state replacement path. Use
+            retained overlays for at least two documents and require the resulting visible overlay
+            set for D to contain only overlays whose document_id is D.
+    kind: leaf
+  L133_visible_overlay_document_binding_preserved_by_local_transitions:
+    statement: From any user-visible client state representing document D in which every exposed
+      speculative overlay belongs to D, every subsequent user-visible transition that creates,
+      removes, suppresses, reactivates, or otherwise mutates the exposed speculative-overlay set
+      without replacing the visible document identity preserves that same-document property. Any
+      transition that replaces the visible document identity must establish the property through the
+      visible-state publication boundary instead.
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - client_document_scoped_speculative_state
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Enumerate local optimistic-edit creation, ACK/retry/pending bookkeeping, overlay
+            suppression or reactivation, and other user-visible overlay-set mutations while document
+            D remains visible. Require every newly exposed or retained-as-visible overlay to keep
+            document_id D; document-switch transitions are checked by the publication-establishment
+            boundary.
+    kind: leaf
+  G11_visible_speculative_overlays_match_document:
+    statement: 'At every user-visible client state representing document D, visible_speculative_overlay_document_binding
+      holds: every currently exposed speculative overlay is identified by (document_id=D, client_change_id=k)
+      for some k. Initialization, restoration, tab/view switching, overlay activation or reactivation,
+      canonical publication, resync publication, and every other transition capable of changing client_document_id
+      or client_visible_speculative_overlays preserve this same-document binding. Speculative overlays
+      retained for another document may remain retained but must not be exposed while D is the visible
+      document.'
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    formal_intent: visible_speculative_overlay_document_binding
+    semantic_contracts:
+      - visible_speculative_overlay_document_binding
+    kind: root
+    depends_on:
+      - L132_visible_overlay_document_binding_established_on_publication
+      - L133_visible_overlay_document_binding_preserved_by_local_transitions
 catalog:
   terms:
     logical_client_edit:
@@ -2813,8 +2880,9 @@ catalog:
       description: Non-authoritative cached data that may be discarded and rebuilt.
     client_speculative_overlays:
       class: speculative
-      description: User-visible or locally retained optimistic representations of logical edits that
-        have not yet been reconciled into the visible canonical client base.
+      description: Locally retained optimistic representations of unresolved logical edits,
+        partitioned by document identity; retained overlays need not all be exposed in the current
+        user-visible document.
     client_pending_edits:
       class: speculative
       description: Unresolved logical client edits retained by client_change_id while their
@@ -2838,6 +2906,10 @@ catalog:
       description: Document identity represented by the current user-visible client canonical state;
         it is bound with client_local_document and last_applied_revision as one visible canonical
         tuple.
+    client_visible_speculative_overlays:
+      class: speculative
+      description: The subset of retained speculative overlays currently exposed in the user-visible
+        client state; each exposed overlay retains its document identity.
   symbolic_dimensions:
     document:
       description: Document identity coordinate preserved explicitly by symbolic functions whose
@@ -2898,6 +2970,11 @@ catalog:
         new-owner recovery, checkpoint publication, and checkpoint cleanup/compaction for one
         document. The lock spans the low-frequency lifecycle procedure, while normal accepted-edit
         transactions do not acquire it.
+      automation_reusable: true
+    client_document_scoped_speculative_state:
+      description: Retained speculative overlays are partitioned by document identity, and the
+        user-visible overlay set is projected only from the currently visible document's retained
+        partition.
       automation_reusable: true
   failure_events:
     request_delivery_uncertainty:
@@ -3060,13 +3137,13 @@ catalog:
       class: state_invariant
       definition: At every user-visible client state, if the visible canonical prefix represented by
         client_local_document through last_applied_revision contains canonical acceptance identified
-        by (document_id, client_change_id), client_speculative_overlays contains no matching
+        by (document_id, client_change_id), client_visible_speculative_overlays contains no matching
         speculative representation for that same logical edit. Every later user-visible transition
         preserves the exclusion while that acceptance remains visible.
       state_symbols:
         - client_local_document
         - last_applied_revision
-        - client_speculative_overlays
+        - client_visible_speculative_overlays
       observation_scope: user_visible_states
       excludes:
         - A distinct new logical edit with a distinct client_change_id may create a new speculative
@@ -3263,12 +3340,30 @@ catalog:
       excludes:
         - Does not guarantee exactly-once, ordered, timely, or eventually successful delivery.
       automation_reusable: true
+    visible_speculative_overlay_document_binding:
+      class: state_invariant
+      definition: At every user-visible client state representing document D, every speculative
+        overlay in client_visible_speculative_overlays is identified by document_id=D.
+        Initialization, restoration, tab/view switching, overlay activation or reactivation,
+        canonical publication, resync publication, and every other in-scope transition capable of
+        changing client_document_id or client_visible_speculative_overlays preserve this
+        same-document binding.
+      state_symbols:
+        - client_document_id
+        - client_visible_speculative_overlays
+      observation_scope: user_visible_states
+      excludes:
+        - Locally retained speculative overlays for other documents may remain stored while they are
+          not exposed in the current user-visible state.
+        - This contract does not require automatic rebase, eventual reconciliation, or eventual
+          visibility of a retained overlay.
+      automation_reusable: true
 id_allocator:
   next_sequence:
     A: 7
-    G: 11
+    G: 12
     C: 39
-    L: 132
+    L: 134
     D: 9
     T: 2
 assurance:
@@ -3342,6 +3437,8 @@ assurance:
     G10_user_visible_client_state_matches_document:
       status: unaudited
     C38_client_frontier_matches_canonical_base:
+      status: unaudited
+    G11_visible_speculative_overlays_match_document:
       status: unaudited
   implementation_evidence:
     L16_commit_precedes_ack:
@@ -3475,4 +3572,8 @@ assurance:
     L130_reconnect_start_is_bound_to_visible_client_tuple:
       status: planned
     L131_post_recovery_acceptance_state_is_exhaustive:
+      status: planned
+    L132_visible_overlay_document_binding_established_on_publication:
+      status: planned
+    L133_visible_overlay_document_binding_preserved_by_local_transitions:
       status: planned

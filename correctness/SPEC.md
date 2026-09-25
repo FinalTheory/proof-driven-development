@@ -116,6 +116,8 @@ Refinement 回答的是：
 
 `stable` 只表示：**在当前 semantic signature 下，这个 proposition 的 decomposition 已经通过 refinement audit。**
 
+如果 claim 引用了 `semantic_contracts`，refinement 还包含一个显式的 **contract realization obligation**：authoritative proposition 必须完整推出所引用 contract 的 guarantee，包括 contract class、observation scope、provenance/identity coordinates 与 exclusions。Claim 可以比复用 contract 更强，但不能只覆盖它的 path-local 子集。这个判断本身仍然是自然语言 semantic judgment，Harness 不假装用 schema 自动证明它；Harness 强制 clean auditor 对每个 contract 输出 `REALIZES / WEAKER / MISMATCH / INCOMPLETE`，并且 `set_refinement(status=stable)` 只有在 orchestrator 显式声明所有当前 contract 都已 `REALIZES` 时才接受。Contract-realization audit semantics 有独立版本，因此规则变化只使 contract-bearing proof branches 及其 dependents stale，而不会无差别 reopen 全图。
+
 一旦相关语义发生变化，之前的 reasoning 就应该失效：
 
 ```text

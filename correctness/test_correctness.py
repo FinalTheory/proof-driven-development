@@ -1188,6 +1188,86 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("### Semantic contracts", text)
         self.assertIn("synthetic_safety_contract", text)
         self.assertIn("stronger synthetic guarantees", text)
+        self.assertIn("Mandatory semantic-contract realization", text)
+        self.assertIn("REALIZES", text)
+        self.assertIn("WEAKER", text)
+        self.assertIn("contract_realizations:", text)
+
+    def test_contract_realization_semantics_only_reopens_contract_bearing_proofs(self):
+        plain = copy.deepcopy(self.base)
+        plain_graph = correctness.Graph(plain)
+        plain_before = correctness._node_semantic_signature(plain_graph, "L1_left_boundary")
+
+        bound = copy.deepcopy(self.base)
+        bound_claim = bound["claims"]["L1_left_boundary"]
+        bound_claim["semantic_contracts"] = ["synthetic_safety_contract"]
+        bound_claim["formal_intent"] = "synthetic_safety_contract"
+        bound_graph = correctness.Graph(bound)
+        bound_before = correctness._node_semantic_signature(bound_graph, "L1_left_boundary")
+
+        original = harness_signatures.CONTRACT_REALIZATION_SEMANTICS_VERSION
+        try:
+            harness_signatures.CONTRACT_REALIZATION_SEMANTICS_VERSION = original + "-changed"
+            self.assertEqual(
+                plain_before,
+                correctness._node_semantic_signature(correctness.Graph(plain), "L1_left_boundary"),
+            )
+            self.assertNotEqual(
+                bound_before,
+                correctness._node_semantic_signature(correctness.Graph(bound), "L1_left_boundary"),
+            )
+        finally:
+            harness_signatures.CONTRACT_REALIZATION_SEMANTICS_VERSION = original
+
+    def test_stable_mutation_requires_explicit_contract_realization_set(self):
+        doc = copy.deepcopy(self.base)
+        claim = doc["claims"]["L1_left_boundary"]
+        claim["semantic_contracts"] = ["synthetic_safety_contract"]
+        claim["formal_intent"] = "synthetic_safety_contract"
+
+        missing = {
+            "mutation_version": 1,
+            "authority": "human",
+            "operations": [{
+                "op": "set_refinement",
+                "node": "L1_left_boundary",
+                "status": "stable",
+            }],
+        }
+        with self.assertRaises(SystemExit) as ctx:
+            correctness._validate_mutation_plan_schema(missing)
+        self.assertIn("MUTATION_SCHEMA_REJECTED", str(ctx.exception))
+
+        incomplete = copy.deepcopy(missing)
+        incomplete["operations"][0]["contract_realizations"] = []
+        with self.assertRaises(SystemExit) as ctx:
+            correctness._apply_mutation_plan(copy.deepcopy(doc), incomplete)
+        self.assertIn("CONTRACT_REALIZATION_REQUIRED", str(ctx.exception))
+
+        complete = copy.deepcopy(missing)
+        complete["operations"][0]["contract_realizations"] = ["synthetic_safety_contract"]
+        candidate = copy.deepcopy(doc)
+        correctness._apply_mutation_plan(candidate, complete)
+        snapshot = correctness._refinement_snapshot(correctness.Graph(candidate))
+        self.assertIn("L1_left_boundary", snapshot["stable"])
+
+    def test_stable_mutation_requires_explicit_empty_realization_set_without_contracts(self):
+        missing = {
+            "mutation_version": 1,
+            "authority": "human",
+            "operations": [{
+                "op": "set_refinement",
+                "node": "L1_left_boundary",
+                "status": "stable",
+            }],
+        }
+        with self.assertRaises(SystemExit):
+            correctness._validate_mutation_plan_schema(missing)
+        complete = copy.deepcopy(missing)
+        complete["operations"][0]["contract_realizations"] = []
+        candidate = copy.deepcopy(self.base)
+        correctness._apply_mutation_plan(candidate, complete)
+        self.assertIn("L1_left_boundary", correctness._refinement_snapshot(correctness.Graph(candidate))["stable"])
 
     def test_automation_cannot_change_existing_claim_semantic_contract(self):
         doc = copy.deepcopy(self.base)
@@ -1368,6 +1448,8 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("NON-NORMATIVE HARNESS FEEDBACK", text)
         self.assertIn("HARNESS FEEDBACK: none", text)
         self.assertIn("`stable` is a refinement-maturity state only", text)
+        self.assertIn("contract-realization obligation", text)
+        self.assertIn("contract_realizations", text)
         self.assertIn("load these schemas once per tooling revision/session", text)
         self.assertIn("`--dry-run` is an optional", text)
         self.assertIn("ordinary DAG/workflow-state mutation", text)
