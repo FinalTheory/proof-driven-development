@@ -8,6 +8,12 @@ Repository root:
 /opt/workspace/proof-driven-development
 ```
 
+Before doing any repository work, obtain the current ChatGPT conversation URL from the user.
+
+If the user has not provided it yet, ask only for the current conversation URL and wait for the reply. Do not begin this campaign before receiving it.
+
+Once the URL is provided, call `start_timer` with that URL and pass the same `conversation_url` on subsequent Writer MCP calls. Thereafter follow the authoritative long-session status and wakeup protocol provided by the MCP server.
+
 Use only Writer MCP for repository access. Start from a fresh context and do not use prior chats, audit transcripts, or history as proof evidence.
 
 Read `AGENTS.md`, then run:
