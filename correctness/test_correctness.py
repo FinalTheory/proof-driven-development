@@ -1020,6 +1020,36 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("Bound symbols: synthetic_key", text)
         self.assertIn("Correct downstream processing", text)
 
+    def test_provenance_contract_closes_typed_vocabulary_into_audit_slice(self):
+        doc = copy.deepcopy(self.base)
+        doc["catalog"]["semantic_contracts"]["synthetic_binding"] = {
+            "class": "provenance_binding",
+            "definition": "synthetic_key is derived from synthetic_state through synthetic_mechanism.",
+            "source_symbols": ["synthetic_state"],
+            "bound_symbols": ["synthetic_key"],
+            "excludes": [],
+            "automation_reusable": True,
+        }
+        claim = doc["claims"]["L1_left_boundary"]
+        claim["semantic_contracts"] = ["synthetic_binding"]
+        claim["formal_intent"] = "synthetic_binding"
+        # The claim deliberately does not name the contract's source/bound symbols or mechanism.
+        claim["statement"] = "The synthetic_binding semantic contract holds for this boundary."
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            correctness._emit_slice_markdown(
+                correctness.Graph(doc),
+                "L1_left_boundary",
+                set(),
+                prompt=True,
+                include_verification_task=False,
+            )
+        text = out.getvalue()
+        self.assertIn("**synthetic_state** [authoritative]", text)
+        self.assertIn("**synthetic_key**", text)
+        self.assertIn("**synthetic_mechanism**", text)
+        self.assertNotIn("**new_term**", text)
+
     def test_unknown_semantic_contract_reference_is_rejected(self):
         doc = copy.deepcopy(self.base)
         doc["claims"]["L1_left_boundary"]["semantic_contracts"] = ["does_not_exist"]

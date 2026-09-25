@@ -33,8 +33,44 @@ scope:
     - conflict-resolution UI semantics, seamless editability during reconnect reconciliation, and
       progress guarantees for unresolved speculative edits
 refinement:
-  decisions: {}
-  tooling_blockers: {}
+  decisions:
+    D9_live_delivery_source_identity:
+      question: Does live_delivery_acceptance_binding's source symbol accepted_change_log denote the
+        same authoritative accepted-history source as the catalogued accepted_history_log?
+      reason: The contract requires provenance to accepted_change_log, but that identifier is not
+        defined in the typed catalog while accepted_history_log is defined as the canonical durable
+        edit-history source. Automation may not infer an alias or alter the source-of-truth binding.
+      options:
+        - Treat accepted_change_log as a naming error and change the existing contract to use
+          accepted_history_log as its source symbol.
+        - Keep accepted_change_log distinct and explicitly define its intended typed source and
+          relationship to accepted_history_log.
+      status: resolved
+      resolution: accepted_change_log is already a typed authoritative state symbol denoting the
+        canonical ordered accepted-change history. accepted_history_log is the approved architecture
+        mechanism that implements the durable source of truth; no alias or new source semantics are
+        required.
+  tooling_blockers:
+    T2_audit_prompt_omits_contract_state_symbols:
+      issue: Generated audit contracts can reference typed semantic-contract source/bound state
+        symbols without including those symbols in the generated State vocabulary. For C12,
+        live_delivery_acceptance_binding references authoritative state accepted_change_log, but
+        audit-prompt C12 includes only websocket_live_stream in State vocabulary.
+      reason: Clean verifiers are required to treat audit-prompt output as their complete
+        specification and must treat unresolved snake_case identifiers as undefined. The omission
+        therefore causes a faithful verifier to misclassify a valid typed state symbol as undefined
+        and can produce false CONTRACT_MISMATCH results. The orchestrator cannot safely compensate
+        by injecting full-graph knowledge into the clean audit.
+      suggested_change: Update proof-slice/audit-prompt generation so every typed catalog term,
+        state symbol, mechanism, and semantic-contract source/bound symbol referenced by the target,
+        direct dependencies, or included contracts is closed over into the corresponding generated
+        vocabulary sections. Add a regression test using C12-like provenance_binding contracts.
+      status: resolved
+      resolution: Repaired proof-slice catalog closure. Generated slices now include typed
+        term/state/mechanism vocabulary referenced by selected semantic contracts, including
+        structured state_symbols, source_symbols, and bound_symbols. Added a provenance-binding
+        regression test and verified that the C12 slice includes accepted_change_log as
+        authoritative state together with its bound live stream.
   nodes:
     G0_acked_edit_survives_failover:
       status: stable
@@ -79,15 +115,14 @@ refinement:
     C10_catchup_represents_exact_missing_suffix:
       status: stable
       blocked_by: []
-      signature: 86a67bf768da75e3331a8ef60c3733c32387cccfa0fa7e3068d6caad2be6c236
+      signature: 2e8df7cceabaa649ef5d4310c224074c5e176cf9ef8831dbcaa69a61b8c82a90
     L19_client_applies_only_contiguous_revisions:
       status: stable
       blocked_by: []
       signature: 301cf4291aba1f9bebc5238007d83eabadcdfdc793b6ce9a2ed5affd4a87e89e
     C12_live_delivery_contains_only_accepted_changes:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 05cc836c4e7a89f4819eac1ccc1630936bd174e9ab75158231c153c8da9be468
     C13_idempotency_key_is_temporally_unique:
       status: stable
       blocked_by: []
@@ -115,7 +150,7 @@ refinement:
     L8_snapshot_is_exact_committed_prefix:
       status: stable
       blocked_by: []
-      signature: 20f65ad683750486c3ac9615d7ea680e0b58e96040983ead4b589621bd3de0cb
+      signature: 2cf5664a585def070b3fc6351fbadcb1d998c93c78f44a141890a84c60a12a59
     L9_snapshot_content_and_frontier_publish_atomically:
       status: stable
       blocked_by: []
@@ -251,7 +286,7 @@ refinement:
     L92_captured_recovery_head_equals_authoritative_frontier:
       status: stable
       blocked_by: []
-      signature: f21a90c70a4397d326d20b236a6363d846883787c625aaa1938a4f3e4a53d9bd
+      signature: f5441e02d95e0dff58a834add131992236ce931ad39dc2c614583bc636424869
     L93_recovery_loads_selected_checkpoint_before_replay:
       status: stable
       blocked_by: []
@@ -283,7 +318,7 @@ refinement:
     L99_ot_result_is_bound_to_acceptance_frontier:
       status: stable
       blocked_by: []
-      signature: c5c683474a22ac40954b6ffaeab0f1b9dfd39dd6c6857301d016c718c4997c6e
+      signature: b234a6279976891faea93756e8dc54b9d0856eb350bfff22fab008a4de06e902
     L101_client_completes_catchup_through_response_head:
       status: stable
       blocked_by: []
@@ -299,11 +334,11 @@ refinement:
     L107_client_freezes_speculative_edits_during_resync:
       status: stable
       blocked_by: []
-      signature: 1b71f8e37164608b1277c9a23ac3cdaf7e9f1118199d104671465d3d2dcd08de
+      signature: e50c8b24ecfb8e2b45090fd374fd24c41c72dac98e23008cb058908d3d078775
     L108_acceptance_preserves_request_identity:
       status: stable
       blocked_by: []
-      signature: d824e7aac2152c7e828d55a9114876249a59119bbc990713a5af51ed5486a13e
+      signature: e353cc61e9e05ec0cb549693d4b41b66eb7752a86a1408005d06c93da7c972fe
     L109_resync_publication_is_atomic_and_monotonic:
       status: stable
       blocked_by: []
@@ -311,7 +346,7 @@ refinement:
     L110_client_retires_matching_speculative_overlay_before_canonical_publication:
       status: stable
       blocked_by: []
-      signature: c610cdf08d1156b81d7e06a42fde0922d418d2b765a9e6d46ac1f8c4f2f5e18d
+      signature: b1a6227139bb3138375383e08f627357afe60d49684fc0ba8646bd3691a2a2a9
     G8_user_visible_state_does_not_double_render_accepted_optimistic_edit:
       status: stable
       blocked_by: []
@@ -323,7 +358,7 @@ refinement:
     L113_request_raw_edit_is_bound_to_authoring_frontier:
       status: stable
       blocked_by: []
-      signature: 09e9d6f90e577b9e5ed8846a8671dbb68db18ff1cc688b319daf6cb7faae29ed
+      signature: 92c15b936b58f856da57f7546f9136571e101f2e19910e5a3953036d73ee5031
     L114_hot_path_accepted_evidence_requires_committed_acceptance:
       status: stable
       blocked_by: []
@@ -339,7 +374,7 @@ refinement:
     L116_live_delivery_is_bound_to_committed_acceptance:
       status: stable
       blocked_by: []
-      signature: 9cc8172526684308d01089ceacfc882718c8ea9f7188116266ad8747c8025644
+      signature: 42c385b9e497169a3ec59253db62873e0e4790828885d826d4d03a438f074f06
     L117_retry_existing_acceptance_matches_full_idempotency_key:
       status: stable
       blocked_by: []
@@ -359,7 +394,7 @@ refinement:
     L122_catchup_response_head_is_bound_to_authoritative_frontier:
       status: stable
       blocked_by: []
-      signature: 94f4ed2143c8227053511f8deae73bce00f1037ef6fbdc2a8621324be148af7d
+      signature: 5db30c921aae5b2b1f2a841e8570b721f8b134fe551da3d4af33066139dcef5d
     L123_acceptance_payload_and_identity_share_submitted_request:
       status: stable
       blocked_by: []
@@ -409,11 +444,13 @@ refinement:
       blocked_by: []
       signature: 56052954c694a412d0e2c3de0d3baca213150f9c4138f03e63559b96e3aeed26
     L132_visible_overlay_document_binding_established_on_publication:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: bd54e96784d80eb421aa707bdc859512faa707ab86317b6f6df318254f6bfe86
     L133_visible_overlay_document_binding_preserved_by_local_transitions:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 759450be38dcbc3bb50585093a434169b6c7472628d65f016fb1cd6e1528cee6
     G11_visible_speculative_overlays_match_document:
       status: pending
       blocked_by: []
@@ -693,9 +730,9 @@ claims:
   C10_catchup_represents_exact_missing_suffix:
     kind: derived
     statement: >-
-      Given last_applied_revision=L and the response head H already captured for this catch-up response,
-      catch-up represents canonical state exactly through H. If the complete canonical revision range
-      L+1..H is retained and readable, delta mode returns exactly those revisions. Otherwise snapshot
+      Given last_applied_revision=L and the authoritative response head H already captured for this catch-up
+      response, catch-up represents canonical state exactly through H. If the complete canonical revision
+      range L+1..H is retained and readable, delta mode returns exactly those revisions. Otherwise snapshot
       mode returns an authoritative checkpoint at revision S with S <= H plus exactly the canonical tail
       S+1..H, so applying that checkpoint and tail yields canonical state through H. Canonical acceptances
       after H are outside this already captured response.
@@ -1594,9 +1631,11 @@ claims:
       - recovery_replay
       - server_authoritative_ot
   L92_captured_recovery_head_equals_authoritative_frontier:
-    statement: When new-owner recovery captures recovery head H after its epoch handoff, H equals
-      the authoritative document_latest_revision value read from the authoritative store at that
-      capture event.
+    statement: For each new-owner recovery attempt after epoch handoff, recovery_head H is captured
+      from the authoritative document_latest_revision value read from authoritative state at that
+      capture event, and that same captured H governs checkpoint selection, exact tail replay,
+      recovered metadata reconstruction, and acceptance resumption for the attempt; no downstream
+      recovery stage may substitute or recapture a different frontier as the recovery head.
     source_refs:
       - authoritative_truth
       - owner_failover
@@ -1904,14 +1943,15 @@ claims:
             expired identities are not required to enter authoritative reconciliation.
     kind: leaf
   L107_client_freezes_speculative_edits_during_resync:
-    statement: 'From the moment a client begins reconnect/resync and captures the pending client_change_id
-      set for its catch-up request until that attempt either publishes a reconciled canonical state or
-      enters explicit conflict/reconciliation state, the client creates or applies no new speculative
-      local edit to the document being resynchronized. After publication or conflict entry, if client_pending_edits
-      still contains any unresolved edit, unresolved_pending_blocks_normal_editing continues to hold:
-      normal editable mode remains disabled and no new acceptance-eligible speculative edit is created
-      or applied until explicit reconciliation clears those unresolved edits. No eventual resolution or
-      automatic local-rebase guarantee is implied.'
+    statement: 'In every reachable client protocol state, unresolved_pending_blocks_normal_editing holds:
+      if client_pending_edits contains any unresolved logical edit that has not been safely reconciled
+      or explicitly removed, client_editing_mode is not normal-editable and no normal editing transition
+      may create or apply a new acceptance-eligible speculative edit for that document. In particular,
+      from the moment a client begins reconnect/resync and captures the pending client_change_id set for
+      its catch-up request until that attempt either publishes a reconciled canonical state or enters
+      explicit conflict/reconciliation state, the client creates or applies no new speculative local edit
+      to the document being resynchronized. No eventual resolution, automatic local-rebase, or eventual-editability
+      guarantee is implied.'
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
@@ -3364,8 +3404,8 @@ id_allocator:
     G: 12
     C: 39
     L: 134
-    D: 9
-    T: 2
+    D: 10
+    T: 3
 assurance:
   specification_coverage:
     status: unaudited

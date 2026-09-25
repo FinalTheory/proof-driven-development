@@ -222,6 +222,14 @@ def _semantic_catalog_refs_for_node(graph: Graph, node: Node) -> dict[str, list[
 
 
 def _slice_catalog_context(graph: Graph, node_ids: Iterable[str]) -> dict[str, Any]:
+    """Return a closed typed semantic vocabulary for the selected proof slice.
+
+    Nodes contribute their directly referenced terms/state/mechanisms/contracts. Referenced
+    semantic contracts then contribute every typed symbol they name, including structured
+    state/source/bound symbols and typed vocabulary mentioned in their natural-language
+    definition/exclusions. Clean auditors therefore never receive a contract whose own typed
+    vocabulary has been omitted from the generated slice.
+    """
     refs: dict[str, set[str]] = {ns: set() for ns in SEMANTIC_CATALOG_NAMESPACES}
     for node_id in node_ids:
         if node_id not in graph.nodes:
@@ -229,6 +237,47 @@ def _slice_catalog_context(graph: Graph, node_ids: Iterable[str]) -> dict[str, A
         local = _semantic_catalog_refs_for_node(graph, graph.nodes[node_id])
         for namespace, keys in local.items():
             refs[namespace].update(keys)
+
+    contracts = _catalog_namespace(graph, "semantic_contracts")
+    typed_namespaces = ("terms", "state", "mechanisms")
+    typed_entries = {namespace: _catalog_namespace(graph, namespace) for namespace in typed_namespaces}
+
+    # Contract IDs are selected explicitly by claims. Close each selected contract over the
+    # typed vocabulary it depends on; do not require those identifiers to be repeated in the
+    # claim statement merely to make the generated audit context self-contained.
+    for contract_id in sorted(refs["semantic_contracts"]):
+        contract = contracts.get(contract_id)
+        if not isinstance(contract, dict):
+            continue
+
+        for field in ("state_symbols", "source_symbols", "bound_symbols"):
+            symbols = contract.get(field, [])
+            if not isinstance(symbols, list):
+                continue
+            for symbol in symbols:
+                if not isinstance(symbol, str):
+                    continue
+                for namespace in ("terms", "state"):
+                    if symbol in typed_entries[namespace]:
+                        refs[namespace].add(symbol)
+
+        contract_text_parts: list[str] = []
+        definition = contract.get("definition")
+        if isinstance(definition, str):
+            contract_text_parts.append(definition)
+        excludes = contract.get("excludes", [])
+        if isinstance(excludes, list):
+            contract_text_parts.extend(item for item in excludes if isinstance(item, str))
+        contract_text = "\\n".join(contract_text_parts)
+        for namespace in typed_namespaces:
+            for key in typed_entries[namespace]:
+                if re.search(
+                    rf"(?<![A-Za-z0-9_]){re.escape(key)}(?![A-Za-z0-9_])",
+                    contract_text,
+                    re.IGNORECASE,
+                ):
+                    refs[namespace].add(key)
+
     result: dict[str, Any] = {}
     for namespace in SEMANTIC_CATALOG_NAMESPACES:
         entries = _catalog_namespace(graph, namespace)

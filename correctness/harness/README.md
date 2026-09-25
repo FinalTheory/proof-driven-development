@@ -31,6 +31,8 @@ Higher-level mutation, prompt generation, and CLI code still lives in `correctne
 
 A claim's `semantic_contracts` are not descriptive tags. During refinement, each reference creates a mandatory realization obligation: the authoritative claim must entail the reusable contract's complete guarantee across its declared semantic scope. This entailment remains a natural-language semantic judgment, but the Harness makes the judgment explicit and fail-closed: `audit-prompt` requires a per-contract `REALIZES / WEAKER / MISMATCH / INCOMPLETE` result, and `set_refinement(status=stable)` must declare exactly the current contract IDs judged `REALIZES`. A dedicated realization-semantics signature version invalidates affected proof branches when this audit contract changes.
 
+Generated proof slices close every referenced semantic contract over its typed vocabulary. Structured `state_symbols`, `source_symbols`, and `bound_symbols` are injected from `catalog.terms` / `catalog.state`, while typed term/state/mechanism identifiers named in contract definitions or exclusions are also included. This keeps the clean verifier contract self-contained without requiring a claim to repeat the contract's internal vocabulary in its own statement.
+
 This gate is intentionally weaker than natural-language equivalence: a claim may contain additional guarantees or realize several contracts simultaneously. The prohibited case is a claim that references a contract while permitting an execution the contract forbids, such as a path-local proposition claiming to realize an `all_reachable_states` invariant.
 
 ## Symbolic assurance boundary
