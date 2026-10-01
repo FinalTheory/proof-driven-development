@@ -56,7 +56,7 @@ Graph node 表示的是一个 **proposition**，不是 service、class、文件�
 | **Assumption** | 当前 proof boundary 之外，被显式接受的外部 proposition |
 | **System context** | 所有局部 reasoning 共享的 scope、failure model、liveness boundary |
 | **Catalog** | proposition 使用的 typed vocabulary |
-| **Semantic contract** | proposition 使用的可复用 interpretation boundary；它定义“是什么意思”，但本身不证明“是真的” |
+| **Semantic contract** | 可复用的 correctness property specification / refinement type；它定义 property 的 truth condition、typed relation 与 minimum semantic scope，但本身不是 theorem，也不声明系统已经满足该 property |
 
 整体逻辑形状可以压成：
 
@@ -88,6 +88,8 @@ Catalog 的作用，是给 claim 中使用的重要名字一个稳定、可复�
 这个分类的重要性在于：真实 invariant 往往同时跨越 canonical、speculative 和 control state。如果其中一类只藏在 prose 里，就很容易漏掉 lifecycle failure。
 
 ### Semantic contracts
+
+Semantic contract 与 claim 的逻辑地位必须分开：**contract 定义 property，claim 才断言 property 在系统中成立。** Catalog 中存在一个 contract 不构成任何 proof premise，也不意味着任何 execution 已满足它。`claim.semantic_contracts: [C]` 的含义是该 claim 自己声明完整 realization：它必须推出 C 的 truth condition，并覆盖至少 C 定义的 minimum semantic scope。若 parent 只是通过 `depends_on` 使用一个已经 realization C 的 child，则不应把 C 沿 DAG 向上复制；只有 parent 自己也独立断言完整 C 时，重复 carrier 才是有意的。
 
 | Contract | 含义 | 它主要用来暴露什么问题 |
 | --- | --- | --- |

@@ -210,7 +210,8 @@ def _emit_system_context(graph: Graph, node_ids: Iterable[str]) -> None:
     if isinstance(semantic_contracts, dict) and semantic_contracts:
         print("### Semantic contracts")
         print()
-        print("These entries define the meaning/observation boundary of referencing propositions; they are not proof premises.")
+        print("These entries are reusable property specifications: they define truth conditions and interpretation boundaries,")
+        print("but do not assert that the system satisfies the property and are never proof premises by themselves.")
         print()
         for key, entry in semantic_contracts.items():
             if not isinstance(entry, dict):
@@ -429,7 +430,7 @@ def _emit_audit_prompt(graph: Graph, node_id: str) -> None:
     print()
 
     # For a runnable proof audit, every direct claim dependency has already reached a scheduler
-    # proof boundary (stable/waived). Treat those direct propositions as opaque contracts instead
+    # proof boundary (stable/waived). Treat those direct propositions as opaque premises instead
     # of recursively re-opening their proof closures. This keeps parent composition audits local
     # and avoids repeatedly paying for already-audited descendant reasoning.
     stop_at: set[str] = set()
@@ -451,13 +452,18 @@ def _emit_audit_prompt(graph: Graph, node_id: str) -> None:
     if contract_ids:
         print("## Mandatory semantic-contract realization")
         print()
+        print("A semantic contract is a reusable property specification, not a theorem or proof premise. Referencing")
+        print("one in `semantic_contracts` means this target itself asserts a full realization of that property")
+        print("across at least the contract's declared semantic scope; merely depending on another claim that")
+        print("realizes the property is not sufficient.")
+        print()
         print("For every semantic contract referenced by the target, explicitly decide whether the authoritative")
-        print("target proposition fully realizes that contract. `REALIZES` means the target proposition entails")
-        print("the contract's complete guarantee across its declared class, observation scope, identity/provenance")
-        print("coordinates, and exclusions. The target may impose additional requirements; exact natural-language")
-        print("equivalence is not required. `WEAKER` means there exists an execution allowed by the target but")
-        print("forbidden by the contract. Use `MISMATCH` for another semantic incompatibility and `INCOMPLETE` only")
-        print("when this generated slice is insufficient to decide.")
+        print("target proposition fully realizes that property specification. `REALIZES` means the target proposition")
+        print("entails the contract's complete truth condition across its declared class, minimum observation scope,")
+        print("identity/provenance coordinates, and exclusions. The target may impose additional requirements; exact")
+        print("natural-language equivalence is not required. `WEAKER` means there exists an execution allowed by the")
+        print("target but forbidden by the contract. Use `MISMATCH` for another semantic incompatibility and")
+        print("`INCOMPLETE` only when this generated slice is insufficient to decide.")
         print()
         print("For `state_invariant`, a path-local statement such as 'during reconnect' does NOT realize an")
         print("`all_reachable_states` contract unless all other reachable states are explicitly excluded. For")
@@ -468,6 +474,30 @@ def _emit_audit_prompt(graph: Graph, node_id: str) -> None:
         print("current node MUST NOT be certified stable as written. Report `CONTRACT_MISMATCH` unless the repair")
         print("requires a genuinely new product/architecture choice, in which case use `HUMAN_SEMANTIC_DECISION`.")
         print()
+
+        repeated_carriers = []
+        target_contracts = set(contract_ids)
+        for dependency_id in node.dependencies:
+            dependency = graph.claims.get(dependency_id)
+            if not isinstance(dependency, dict):
+                continue
+            overlap = sorted(target_contracts & set(dependency.get("semantic_contracts", []) or []))
+            for contract_id in overlap:
+                repeated_carriers.append((contract_id, dependency_id))
+        if repeated_carriers:
+            print("## Repeated semantic-contract carrier diagnostic")
+            print()
+            print("The target and one or more direct dependency claims both declare realization of the same")
+            print("semantic property. This is not automatically wrong: a root may intentionally restate the same")
+            print("system property at a higher abstraction boundary. But semantic contracts must not be propagated")
+            print("upward merely because the target consumes a premise that realizes them.")
+            for contract_id, dependency_id in repeated_carriers:
+                print(f"- `{contract_id}` is also realized by direct dependency `{dependency_id}`")
+            print("For each repeated carrier, decide whether the target independently asserts the contract's full")
+            print("truth condition/minimum scope, or merely uses the dependency's established property. In the latter")
+            print("case, recommend removing the target's redundant semantic-contract association rather than")
+            print("strengthening the target solely to preserve duplicated metadata.")
+            print()
 
     if task == "leaf_boundary_audit":
         print("## Question")

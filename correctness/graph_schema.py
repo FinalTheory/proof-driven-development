@@ -112,7 +112,7 @@ CLAIM_BODY_PROPERTIES: dict[str, Any] = {
     },
     "semantic_contracts": {
         **SEMANTIC_CONTRACT_REFS,
-        "description": "Reusable typed semantic contracts that define a safety or equivalence boundary used by this proposition, including any observer exclusions. Contracts define meaning; they are not proof premises.",
+        "description": "Reusable typed property specifications / refinement types fully realized by this claim. A contract defines truth conditions, interpretation boundaries, exclusions, and any minimum semantic scope; it is not itself a theorem or proof premise.",
     },
     "formal_intent": {
         **NONEMPTY_STRING,

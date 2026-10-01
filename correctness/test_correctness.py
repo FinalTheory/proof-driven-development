@@ -1219,9 +1219,28 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("synthetic_safety_contract", text)
         self.assertIn("stronger synthetic guarantees", text)
         self.assertIn("Mandatory semantic-contract realization", text)
+        self.assertIn("reusable property specification, not a theorem or proof premise", text)
+        self.assertIn("target itself asserts a full realization", text)
         self.assertIn("REALIZES", text)
         self.assertIn("WEAKER", text)
         self.assertIn("contract_realizations:", text)
+
+    def test_audit_prompt_flags_repeated_direct_contract_carrier(self):
+        doc = copy.deepcopy(self.base)
+        parent = doc["claims"]["G2_secondary_goal"]
+        child = doc["claims"]["L3_independent_boundary"]
+        parent["semantic_contracts"] = ["synthetic_safety_contract"]
+        parent["formal_intent"] = "synthetic_safety_contract"
+        child["semantic_contracts"] = ["synthetic_safety_contract"]
+        child["formal_intent"] = "synthetic_safety_contract"
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            correctness._emit_audit_prompt(correctness.Graph(doc), "G2_secondary_goal")
+        text = output.getvalue()
+        self.assertIn("Repeated semantic-contract carrier diagnostic", text)
+        self.assertIn("synthetic_safety_contract", text)
+        self.assertIn("L3_independent_boundary", text)
+        self.assertIn("must not be propagated", text)
 
     def test_contract_realization_semantics_only_reopens_contract_bearing_proofs(self):
         plain = copy.deepcopy(self.base)

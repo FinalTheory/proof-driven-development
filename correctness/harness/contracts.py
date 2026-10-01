@@ -585,8 +585,10 @@ would alter the system specification, including:
 
 System vocabulary is centrally defined under `catalog`. Claims may reference catalog mechanisms,
 semantic contracts, source sections, and verifier kinds, while underscore-style
-protocol terms must resolve to a catalog term/state/mechanism/semantic-contract definition. Semantic
-contracts define reusable proposition meaning rather than proof premises. In addition to generic
+protocol terms must resolve to a catalog term/state/mechanism/semantic-contract definition. A semantic
+contract is a reusable property specification / refinement type: it defines the property's truth condition,
+typed relation, exclusions, and where applicable its minimum semantic scope. It is not a theorem, does not
+assert that the system satisfies the property, and is never a proof premise by itself. In addition to generic
 `safety_contract` and `equivalence_relation` boundaries, the type system has two relation-specific forms:
 
 - `state_invariant`: an inductive predicate over typed `state_symbols` and an explicit `observation_scope`.
@@ -611,9 +613,11 @@ referenced contract ID must appear exactly in the claim's `statement` or `formal
 of that claim's `source_refs` article sections.
 
 Every referenced semantic contract also creates a mandatory **contract-realization obligation** during
-refinement. The clean auditor must explicitly judge whether the target proposition entails the contract's
-complete guarantee across its full class, observation scope, provenance/identity coordinates, and exclusions.
-A target may be stronger than the reusable contract, but any `WEAKER`, `MISMATCH`, or `INCOMPLETE` result
+refinement. Association means that this claim itself asserts a full realization of that property specification;
+a claim must not inherit or copy a semantic contract merely because one of its proof dependencies already
+realizes it. The clean auditor must explicitly judge whether the target proposition entails the contract's
+complete truth condition across its full class, minimum observation scope, provenance/identity coordinates,
+and exclusions. A target may be stronger than the reusable contract, but any `WEAKER`, `MISMATCH`, or `INCOMPLETE` result
 prevents stable certification. When compiling `set_refinement(status=stable)`, the orchestrator MUST pass
 `contract_realizations` containing exactly the currently referenced contract IDs that the audit judged
 `REALIZES`; use an explicit empty list for a claim with no semantic contracts. The mutation tool rejects a
