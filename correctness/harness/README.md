@@ -55,7 +55,8 @@ The generated `coverage-audit-prompt` surrounds that semantic search with determ
 - mandatory closure passes cover inductive state-invariant establishment/preservation, semantic provenance/authority/scope binding, and terminal-decision coherence;
 - serious relations receive semantic-neighborhood substitution attacks, including cross-scope extensional collisions;
 - every candidate must explicitly report `violated_current_claims`; a candidate that requires an existing current claim/assumption to be false is not a specification-coverage gap and belongs to composition or implementation evidence instead;
-- fresh checker/challenger stages must kill candidates that rely on excluded failures, stronger optional guarantees, or already-modeled propositions.
+- fresh challengers separate claim consistency from full gap acceptance: they report `current_claims_consistent`, scope/failure validity, whether the canonical design actually requires the property, materiality, and one typed `coverage_gate_result`;
+- only `coverage_gate_result: SURVIVES_GATE` survives the full structural-gap gate; stronger optional guarantees or candidates outside the current specification/failure-model scope are explicitly classified as `DISQUALIFIED_STRONGER_OR_OUT_OF_SCOPE` rather than ambiguously “surviving” merely because no current claim contradicts them.
 
 This boundary is fundamental: deterministic tooling can check whether an expressed predicate is internally consistent, typed, current, and—in selected symbolic cases—entailed. It cannot prove that the architecture author remembered to introduce every correctness-sensitive predicate in the first place. Coverage remains the semantic discovery layer; the Harness's job is to make that discovery increasingly structured and to turn each discovered relation into typed, invalidatable, mechanically enforceable structure where possible.
 

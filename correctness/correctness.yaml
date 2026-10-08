@@ -192,15 +192,15 @@ refinement:
     G3_snapshot_and_recovery_preserve_state:
       status: stable
       blocked_by: []
-      signature: 79fb5c360a3be066af29aea95f53db159b95f3b445cac097d485beacf0d470ca
+      signature: 22bb87eda5b8a61fd3ea11787af319e0af4971b6c94f56ab17228cb06e903f6d
     G4_reconnect_converges_without_gap_or_duplicate:
       status: stable
       blocked_by: []
-      signature: c8ba86d9496a4f97cde26ca6ac968d21b5d88c44a432ad9b5cc2bf9691d3cc7c
+      signature: aa131dbbc92d304ed346fe6bf6ecdab98ddf47484acce131df42baa767984aea
     G5_retry_resolves_idempotently:
       status: stable
       blocked_by: []
-      signature: c4386d1c1425ba27da756338cc73f79c1051739cab81313a04d0b3111eb5d617
+      signature: 47fec634b1332de71a8c0fb5d4df80c52b4f49850bab12a753403d99c52e3179
     C7_revision_frontier_is_linear:
       status: stable
       blocked_by: []
@@ -216,7 +216,7 @@ refinement:
     C10_catchup_represents_exact_missing_suffix:
       status: stable
       blocked_by: []
-      signature: 2e8df7cceabaa649ef5d4310c224074c5e176cf9ef8831dbcaa69a61b8c82a90
+      signature: b2f68cdc80e16fc176064a594fab849aadd5ca8acf972a5150075d56e56879c5
     L19_client_applies_only_contiguous_revisions:
       status: stable
       blocked_by: []
@@ -296,7 +296,7 @@ refinement:
     C16_non_append_lifecycle_preserves_logical_revision_prefix:
       status: stable
       blocked_by: []
-      signature: 0aafcf8f0e1fa183894b44148b352890841f2d461f6b0a2ecdada40aaa1a230b
+      signature: 224f4116a26cbaf6b809078b4e10d8692bf68732966fe515f7d41ba1d21faf1d
     L29_non_append_lifecycle_preserves_revision_domain:
       status: stable
       blocked_by: []
@@ -388,7 +388,7 @@ refinement:
     G6_accepted_change_preserves_ot_semantics:
       status: stable
       blocked_by: []
-      signature: c40d4cf37c69b0b1487fbc5fe729bcf27e2bc9d596745289ea445bf5741049ac
+      signature: c1511d294c4fbaf834a2e61673310e904f431ce6104ce66b62b993f7771ed4ed
     L98_ot_receives_exact_request_and_canonical_context:
       status: stable
       blocked_by: []
@@ -488,19 +488,19 @@ refinement:
     G10_user_visible_client_state_matches_document:
       status: stable
       blocked_by: []
-      signature: 724e9bb2bf4ac59ca4fbbb84700edb795263a4318d509c706fb84d7fe68bc5a8
+      signature: 34fefc618dfcd54b1fc68538a4b528c51a1acb2751749193acea74dd4a181e1b
     L128_client_canonical_frontier_is_established_on_publication:
       status: stable
       blocked_by: []
-      signature: fd35804c9a04be203bfc69166e69e33c267324c771c3ee2de6e0e9d678ea48fb
+      signature: 46dbe17dfcb2d3bd510cb009f2648855c848e8584e5231a70d8a59adf7704bd6
     L129_client_canonical_frontier_is_preserved_by_visible_transitions:
       status: stable
       blocked_by: []
-      signature: a19fbea56f90694705064e07e99e73efe4fb63a01b41a5b9e2fda255b2eca378
+      signature: 9e073a8251b8bc9c36ac46307e498bcaddcb79a67566ce6c9fc68f77048bdb88
     C38_client_frontier_matches_canonical_base:
       status: stable
       blocked_by: []
-      signature: 46559e135141fd3c844050cf3f24abb17dbbb5b44059a803881100ddbc4c2460
+      signature: 4120c94bbbe8edd3755e6fc28c3853961d59d624be5f8be40aa894f67337e15a
     L130_reconnect_start_is_bound_to_visible_client_tuple:
       status: stable
       blocked_by: []
@@ -512,15 +512,15 @@ refinement:
     L132_visible_overlay_document_binding_established_on_publication:
       status: stable
       blocked_by: []
-      signature: 460d370c55b8dd4e5be7b85b964925d4863e35ef0c41ad89caa8a1869edb5f6d
+      signature: 16081cd4a26207e1a939ee55530be34b0d4db229260cb51d53aa00c94e3f943a
     L133_visible_overlay_document_binding_preserved_by_local_transitions:
       status: stable
       blocked_by: []
-      signature: 4fa7356af9a438687e381b8683928dd65a60e1a86556cf97630af28a912b5e3a
+      signature: 58c629fa003e029026eabe408a279a75ab05fa4b790f744745a8058c6dbc2ac9
     G11_visible_speculative_overlays_match_document:
       status: stable
       blocked_by: []
-      signature: e80a52b99db943505a4250456236c1e0b4a99dd4fb9ad613edb70412673fe51c
+      signature: 3aec1fb02908ec9d30e9ff27f7e03b8d5d7f9a85783d4f96acedb87558c3d305
     L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance:
       status: stable
       blocked_by: []
@@ -565,26 +565,10 @@ refinement:
       status: stable
       blocked_by: []
       signature: 66fc3b56f12b4d173de0bdc35f45f62b6c169e4f5f6c327b3c2461334edfdeb0
-    L148_snapshot_compaction_preserves_logical_state_at_frontier:
-      status: stable
-      blocked_by: []
-      signature: 9dcde0ee53a30e0418a68d7f60b61ae90c74d614484e1fee01d4afa23bef03ad
-    L149_snapshot_compaction_preserves_authoritative_frontier:
-      status: stable
-      blocked_by: []
-      signature: e99840a252bf3d89b9632870c5e9d707fdbe4b32f7a310ec4e7de3a84e64d8de
     L151_selectable_checkpoint_publication_binds_content_and_frontier_atomically:
       status: stable
       blocked_by: []
       signature: 575917b171ecd7f7d7bb0619315e7d9883d0f44c87b755e9a382d38396656e4c
-    L152_visible_speculative_overlay_identity_is_defined_and_preserved:
-      status: stable
-      blocked_by: []
-      signature: fd6eb4a699061a8e7003989a61957e9a87a4e2e9abc112e2ddfa6f571b17ac20
-    L153_speculative_overlay_document_provenance_is_preserved:
-      status: stable
-      blocked_by: []
-      signature: 5bdc10e70d92a661ee266888e0c530ccca7325a6e32a9b9335c10d0380fd50c1
     L154_pending_edit_identity_provenance_is_preserved:
       status: stable
       blocked_by: []
@@ -592,11 +576,11 @@ refinement:
     L155_unresolved_speculative_edit_has_pending_entry:
       status: stable
       blocked_by: []
-      signature: f5aefb498d86a87fdf0dfd181b564e2d40285452325af6534617db02251f6eaf
+      signature: d27e3d17bb80ad1dac8ca0a04b80781e9dba4eb8795f88f72f993aacd1dd7cbb
     G12_client_pending_state_tracks_unresolved_edits:
       status: stable
       blocked_by: []
-      signature: 0d7a83cbbc3ddb3fd4e4136d47fa8a957ae10505323aa8aef23737108703c61a
+      signature: 3e3c15c087d9304ebf8bdf28e0a73140e45f2cf123e7f71f547033bf4ee5ab5d
     L156_owner_handoff_installs_fresh_epoch:
       status: stable
       blocked_by: []
@@ -616,15 +600,15 @@ refinement:
     L161_definitive_retry_response_comes_from_terminal_outcome:
       status: stable
       blocked_by: []
-      signature: 181c1cb4b8e6c3d523095bc6762eba449ce4bae31fa7820c38959ffda34ebbde
+      signature: 3375bdbbb0260ef54340fc713756fb09bb9309a15cbffbb810089026aa6c328b
     L162_terminal_state_transition_preserves_single_outcome:
       status: stable
       blocked_by: []
-      signature: 216fafb7fc65870a7888282426ce45fa0cc1e4a93df1c7f6681db441a435062d
+      signature: 7717bf770173bf217e3fd82cc84a91189d9d061e9ad44a3a3e0fe38ba28f1990
     L163_accepted_terminal_outcome_commits_with_canonical_acceptance:
       status: stable
       blocked_by: []
-      signature: aced6dc6f944a813d879ef4b00fd43a72f720a58f423e564f67bde805c1d529b
+      signature: 13458c34466c74945863468ba95aa31c32facb50330ca4ebff92caf8083f80ac
     L164_terminal_paths_share_per_key_arbitration:
       status: stable
       blocked_by: []
@@ -632,7 +616,7 @@ refinement:
     C40_terminal_outcome_is_single_valued_per_idempotency_key:
       status: stable
       blocked_by: []
-      signature: a6bae4219e7d0730ba57c5e467add1464ce7f59c22d6d02ab7514ee8f89457ae
+      signature: 4f74097c5163dfde615f2a0ae6dc939f0e9b90cf3b9179dfb62474bd03084f60
     L165_pending_identity_revision_evidence_survives_retention:
       status: stable
       blocked_by: []
@@ -652,19 +636,19 @@ refinement:
     C42_nonterminal_lifecycle_preserves_terminal_outcomes:
       status: stable
       blocked_by: []
-      signature: 508a38881c0a095fbeb2e5f01a5deeaf6adb521b9e0377e55dbfb1102ecb60a0
+      signature: f1fe66426e02fdf4c12b96b345546488aee66823000be1ad2d61aa7d6d73d7bd
     L169_persistence_lifecycle_preserves_terminal_outcomes:
       status: stable
       blocked_by: []
-      signature: 2dc52240d5be7652ba2c46fedbd8dd76f8a98bf760aa80a9dd09019ac3f4f134
+      signature: a407fc99871dfac40abe7599fe3a322ec7778ccce342d7efb201dead3f0630bc
     L170_recovery_preserves_terminal_outcomes:
       status: stable
       blocked_by: []
-      signature: e1ea3d23b05b0cd5639b8eac577fab8abc095fcb9391dc128adf56542fb8f202
+      signature: a5f38dc2b3d2e38117ecf9de6dbc5111de67481a8936ef63ffe464519cdd8976
     L171_terminal_outcome_representation_migration_preserves_mapping:
       status: stable
       blocked_by: []
-      signature: 249b78693d99c94d2235ecb5bfcad2295f53340238a0d59513dbbdc0eb0c930c
+      signature: a7f3e23dd2881bedda051c32f1a3f8682b1b279b4c0a8d6a738a2ebde665aed0
     L172_snapshot_compaction_preserves_concurrent_append_suffix:
       status: stable
       blocked_by: []
@@ -677,10 +661,78 @@ refinement:
       status: stable
       blocked_by: []
       signature: 78bacf2f7ce83cab2d8bbee49bdb78f5bc6ce0d4c662d4017b34f96f8d21731d
-    L175_terminal_outcome_entry_state_is_coherent:
+    L176_visible_speculative_overlay_is_backed_by_retained_state:
       status: stable
       blocked_by: []
-      signature: 0e6ce1246be6bd5d0e06554d10c98eb6b177e5dbf223cbca6e4db75c55518fca
+      signature: 2aa288f58b1d322400b6c836849a7fadc8488a46f47be37ee614225f6cd536cd
+    L177_catchup_canonical_sources_preserve_document_provenance:
+      status: stable
+      blocked_by: []
+      signature: 52fcf56ab9ee641112fa5bd7920ab2f92da2b07da9c33b6edbaa6928a6800231
+    L178_non_append_lifecycle_preserves_authoritative_document_provenance:
+      status: stable
+      blocked_by: []
+      signature: 6128622216b25c956068d6370877b9761b864e12cc67d5a1c30ff7eaac65ee20
+    L179_speculative_overlay_identity_provenance_is_preserved:
+      status: stable
+      blocked_by: []
+      signature: 7788728b8e1213169c821ab4f69327e7fe17edd9d9d31e2e0eb06fce33b6e1c0
+    L180_non_append_lifecycle_preserves_logical_state_at_frontier:
+      status: stable
+      blocked_by: []
+      signature: 42cf41d2b0388eaa9812511f5b2cc7eeaecb4414428b1a47e60668bc7b21ce2c
+    L181_non_append_lifecycle_preserves_authoritative_frontier:
+      status: stable
+      blocked_by: []
+      signature: 09c92da91ecb9fe179673886f7c39f26aef4636611a0e4f4b2f637a0359277f5
+    L182_logical_edit_request_payload_binding_is_preserved:
+      status: stable
+      blocked_by: []
+      signature: f1862095bd35c06f0a93d0de395f0bc2eea23db30e237fef73daeeadeb4debf7
+    L183_definitive_rejection_preserves_request_provenance:
+      status: stable
+      blocked_by: []
+      signature: 36e3ffa692133bf57c0942cbb46885c7c8cdc9b24f4d4cf2576d7c009019a14f
+    L184_terminal_outcome_entry_has_single_authoritative_value:
+      status: stable
+      blocked_by: []
+      signature: cf5fcdf17873511be176e7d0159696fe1273058dc9e62decb7d8e641bff61cd1
+    C43_terminal_outcome_entry_state_is_coherent:
+      status: stable
+      blocked_by: []
+      signature: 080dee1c1dcbf57d1468295faca07ee3049611a49d3fceedccf23e91ea8c0eea
+    C44_terminal_outcome_entry_matches_canonical_acceptance:
+      status: stable
+      blocked_by: []
+      signature: 5b82342e0199d21c8893662a6bca3a30d88d840baece99a9f759f24f0587ab1d
+    L186_terminal_outcome_initialization_matches_canonical_acceptance:
+      status: stable
+      blocked_by: []
+      signature: 2e902e6a2232599abff6bc707ec4af20fd0af01e769ba1823582c777735b7268
+    L187_terminal_outcome_restoration_matches_canonical_acceptance:
+      status: stable
+      blocked_by: []
+      signature: 518e4a00aa4aef9c8f709fd8ac18b6c93c2d7901d423cd1dcb2c1ff5d2b666a2
+    L188_terminal_outcome_import_matches_canonical_acceptance:
+      status: stable
+      blocked_by: []
+      signature: 94c4333db3e03bd6465ede395e73a1539cdefbb6c89ce3c56fdbce3a7c5b98e3
+    C45_terminal_outcome_publication_matches_canonical_acceptance:
+      status: stable
+      blocked_by: []
+      signature: 89c16cdc5aa2c986d8d3772b2284850c3c92c8463b878c641d13944ed74906eb
+    L190_authoritative_terminal_publication_surfaces_are_exhaustive:
+      status: stable
+      blocked_by: []
+      signature: 25706ebb0f38f1c048b62184ef34380abdc07a80661db2fa04e42d26680ab007
+    L192_terminal_publication_preserves_store_identity_provenance:
+      status: stable
+      blocked_by: []
+      signature: 6bb7398d5f2b201465c8142e0119bb50cec81ca724e5af43f5a5e27eaa550231
+    L195_rejected_terminal_publication_excludes_canonical_acceptance:
+      status: stable
+      blocked_by: []
+      signature: 115eafbe4a28b320dc000989cc3220582b9a4f65a814bc53f2c9c88736f5c400
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -842,16 +894,22 @@ claims:
   G5_retry_resolves_idempotently:
     kind: root
     statement: >-
-      For every idempotency_key within the normal retry eligibility horizon, idempotency_terminal_outcome_coherence
-      holds in every reachable authoritative state and terminal_response_outcome_binding holds for every
-      externally_terminal_result. The first authoritative terminal_result to linearize for full identity
-      (document_id=D, client_change_id=k) is immutable and is either ACCEPTED(canonical result) or REJECTED(definitive
-      reason); the two are mutually exclusive, all acceptance and definitive-rejection attempts arbitrate
-      through the same per-key terminal state, and every externally terminal result for that key exactly
-      reproduces the already-linearized terminal result. Pending, timeout, cancellation, transport loss,
-      and crash-before-terminal-commit remain non-terminal uncertainty. Consequently, a normally participating
-      client reprocessing the same logical edit within the 30-day normal retry horizon observes that same
-      authoritative terminal result rather than creating or receiving an incompatible second terminal
+      For every logical edit whose idempotency_key remains within the normal retry eligibility horizon,
+      logical_edit_request_payload_binding holds for each normal submitted_request representing that edit,
+      so the request identity, raw_edit, and authoring frontier cannot be cross-bound to a different logical
+      operation. idempotency_terminal_outcome_coherence holds in every reachable authoritative state and
+      terminal_response_outcome_binding holds for every externally_terminal_result. If an authoritative
+      REJECTED(definitive rejection reason) linearizes, definitive_rejection_request_binding also holds:
+      that rejected terminal result derives from a definitive rejection decision produced for the exact
+      same submitted request identity and rejection-relevant request context, not from another request.
+      The first authoritative terminal_result to linearize for full identity (document_id=D, client_change_id=k)
+      is immutable and is either ACCEPTED(canonical result) or REJECTED(definitive reason); the two are
+      mutually exclusive, all acceptance and definitive-rejection attempts arbitrate through the same
+      per-key terminal state, and every externally terminal result for that key exactly reproduces the
+      already-linearized terminal result. Pending, timeout, cancellation, transport loss, and crash-before-terminal-commit
+      remain non-terminal uncertainty. Consequently, a normally participating client reprocessing the
+      same logical edit within the 30-day normal retry horizon observes the same authoritative terminal
+      result for that logical operation rather than creating or receiving an incompatible second terminal
       outcome. Re-submission after expiry is outside this guarantee.
     depends_on:
       - A3_client_change_id_identifies_logical_edit
@@ -863,14 +921,20 @@ claims:
       - L117_retry_existing_acceptance_matches_full_idempotency_key
       - C40_terminal_outcome_is_single_valued_per_idempotency_key
       - L161_definitive_retry_response_comes_from_terminal_outcome
+      - L182_logical_edit_request_payload_binding_is_preserved
+      - L183_definitive_rejection_preserves_request_provenance
     source_refs:
+      - ot_input_output
       - accepted_change_log
       - owner_failover
       - storage_selection
       - final_architecture
-    formal_intent: idempotency_terminal_outcome_coherence; terminal_response_outcome_binding
+    formal_intent: logical_edit_request_payload_binding; idempotency_terminal_outcome_coherence;
+      definitive_rejection_request_binding; terminal_response_outcome_binding
     semantic_contracts:
+      - logical_edit_request_payload_binding
       - idempotency_terminal_outcome_coherence
+      - definitive_rejection_request_binding
       - terminal_response_outcome_binding
   C7_revision_frontier_is_linear:
     kind: derived
@@ -965,21 +1029,29 @@ claims:
     kind: derived
     statement: >-
       Given last_applied_revision=L and the authoritative response head H already captured for this catch-up
-      response, catch-up represents canonical state exactly through H. If the complete canonical revision
-      range L+1..H is retained and readable, delta mode returns exactly those revisions. Otherwise snapshot
-      mode returns an authoritative checkpoint at revision S with S <= H plus exactly the canonical tail
-      S+1..H, so applying that checkpoint and tail yields canonical state through H. Canonical acceptances
-      after H are outside this already captured response.
+      response targeting document D, catch-up represents canonical state exactly through H and catchup_canonical_source_provenance
+      holds for every canonical payload source used to construct that response. If the complete canonical
+      revision range L+1..H is retained and readable, delta mode returns exactly those revisions from
+      accepted_change_log for D. Otherwise snapshot mode returns an authoritative checkpoint for D at
+      revision S with S <= H plus exactly the canonical tail S+1..H from accepted_change_log for D, so
+      applying that checkpoint and tail yields canonical state through H. The resulting private client_resync_candidate
+      remains bound to D through construction/publication; extensionally equal authoritative objects from
+      another document cannot substitute for D. Canonical acceptances after H are outside this already
+      captured response.
     depends_on:
       - L8_snapshot_is_exact_committed_prefix
       - L12_delta_catchup_reads_canonical_revision_range
       - C15_snapshot_catchup_returns_checkpoint_and_exact_tail
       - L32_catchup_selects_complete_mode_for_response_head
       - C17_snapshot_mode_selects_checkpoint_not_after_head
+      - L177_catchup_canonical_sources_preserve_document_provenance
     source_refs:
       - snapshot_frontier
       - reconnect_revision_boundary
       - final_architecture
+    formal_intent: catchup_canonical_source_provenance
+    semantic_contracts:
+      - catchup_canonical_source_provenance
   L19_client_applies_only_contiguous_revisions:
     kind: leaf
     statement: >-
@@ -1401,15 +1473,20 @@ claims:
       - owner_epoch_fencing
       - recovery_replay
   C16_non_append_lifecycle_preserves_logical_revision_prefix:
-    statement: For any authoritative snapshotting or compaction transition that completes without
-      accepting a new edit at authoritative frontier H, the resulting authoritative representation
-      preserves document_latest_revision = H and denotes exactly the same logical document state as
-      deterministic canonical replay of accepted revisions through H. Physical accepted-row
-      retention, checkpoint identity, and storage layout may change.
+    statement: "For any authoritative snapshotting, checkpoint-replacement, cleanup, or compaction transition
+      targeting document D that completes without accepting a new edit at authoritative frontier H, the
+      resulting authoritative representation preserves document_latest_revision = H and denotes exactly
+      the same logical document state as deterministic canonical replay of accepted revisions through
+      H. authoritative_history_lifecycle_provenance also holds: the authoritative history/checkpoint inputs
+      semantically supplying the transition and the resulting authoritative_history_lifecycle_output remain
+      bound to D, so an extensionally equal authoritative object from another document cannot substitute
+      as D's source. Physical accepted-row retention, checkpoint identity, shared immutable bytes, and
+      storage layout may change."
     kind: derived
     depends_on:
-      - L148_snapshot_compaction_preserves_logical_state_at_frontier
-      - L149_snapshot_compaction_preserves_authoritative_frontier
+      - L178_non_append_lifecycle_preserves_authoritative_document_provenance
+      - L180_non_append_lifecycle_preserves_logical_state_at_frontier
+      - L181_non_append_lifecycle_preserves_authoritative_frontier
     source_refs:
       - authoritative_truth
       - snapshot_frontier
@@ -1420,6 +1497,9 @@ claims:
       - accepted_history_log
       - recovery_replay
       - snapshot_checkpoint
+    formal_intent: authoritative_history_lifecycle_provenance
+    semantic_contracts:
+      - authoritative_history_lifecycle_provenance
   L29_non_append_lifecycle_preserves_revision_domain:
     statement: A representation-changing authoritative lifecycle transition that accepts no new edit
       preserves exactly the same logical gap-free accepted-revision prefix ending at H and preserves
@@ -1904,16 +1984,16 @@ claims:
             with no observable mismatched content/frontier state after interruption.
     kind: leaf
   G6_accepted_change_preserves_ot_semantics:
-    statement: Every canonical_accepted_change in authoritative history is exactly the successful
-      OT-engine transformed result for one submitted request for document D whose document_id,
-      server-visible raw_edit, and base_revision are bound to one canonical client authoring state
-      for the same document D at frontier F, with base_revision = F; the OT result is computed
-      against document D canonical committed prefix immediately preceding the accepted revision,
-      preserves exactly the submitted (document_id=D, client_change_id) as the authoritative
-      identity of that acceptance, and satisfies the OT engine algorithmic convergence contract for
-      that input and prefix. No canonical acceptance may be created from an edit authored for
-      another document, without a submitted raw edit and successful OT result, or from an OT
-      reject/rebase-required outcome.
+    statement: 'Every canonical_accepted_change in authoritative history originates from one submitted_request
+      for one logical_client_edit for document D whose submitted document_id=D, client_change_id, server-visible
+      raw_edit, and base_revision=F all remain bound to that same logical operation and its canonical
+      authoring state D@F. The accepted payload is exactly the successful OT-engine transformed result
+      for that submitted raw_edit; the OT result is computed against document D canonical committed prefix
+      immediately preceding the accepted revision, preserves exactly the submitted (document_id=D, client_change_id)
+      as the authoritative identity of that acceptance, and satisfies the OT engine algorithmic convergence
+      contract for that input and prefix. No canonical acceptance may be created from an edit authored
+      for another document, from a different logical edit cross-bound under the submitted identity, without
+      a submitted raw edit and successful OT result, or from an OT reject/rebase-required outcome.'
     source_refs:
       - ot_input_output
       - raft_analogy
@@ -1926,6 +2006,7 @@ claims:
       - L113_request_raw_edit_is_bound_to_authoring_frontier
       - C38_client_frontier_matches_canonical_base
       - L123_acceptance_payload_and_identity_share_submitted_request
+      - L182_logical_edit_request_payload_binding_is_preserved
     formal_intent: ot_success_acceptance_binding
     semantic_contracts:
       - ot_success_acceptance_binding
@@ -2808,30 +2889,33 @@ claims:
             document D visible; require every resulting exposed overlay to have document_id D.
     kind: leaf
   G11_visible_speculative_overlays_match_document:
-    statement: 'speculative_overlay_document_provenance holds for every logical client edit represented
-      speculatively: if the logical edit is created for document D, every retained representation in client_speculative_overlays
-      and every exposed representation in client_visible_speculative_overlays remains bound to D for the
-      lifetime of that logical edit across creation, retention, restoration, tab/view switching, suppression/reactivation,
-      canonical publication, resync publication, and every other transition that preserves the same logical
-      edit. The same logical edit/client_change_id may not be relabeled or rebound from D to another document
-      while retained or exposed. At every user-visible client state representing D, visible_speculative_overlay_document_binding
-      also holds: every currently exposed speculative overlay is identified by (document_id=D, client_change_id=k)
-      for some k and originates from a logical edit created for D. Speculative overlays retained for another
+    statement: 'speculative_overlay_identity_provenance holds for every logical client edit represented
+      speculatively: if the logical edit is created with identity (document_id=D, client_change_id=k),
+      every retained representation in client_speculative_overlays and every exposed representation in
+      client_visible_speculative_overlays preserves exactly that same (D,k) for the lifetime of the edit
+      across creation, retention, restoration, tab/view switching, suppression/reactivation, ACK/retry
+      bookkeeping, canonical publication, resync publication, and every other transition that preserves
+      the same logical edit. visible_speculative_retention_coherence also holds at every user-visible
+      client state: every exposed speculative representation has a matching retained representation of
+      the same logical edit and full identity, and terminal removal/disposition of retained state cannot
+      leave an orphaned visible overlay. At every user-visible client state representing document D, visible_speculative_overlay_document_binding
+      also holds: every currently exposed speculative overlay belongs to D. Retained overlays for another
       document may remain retained but must not be exposed while D is the visible document.'
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
     formal_intent: visible_speculative_overlay_document_binding AND
-      speculative_overlay_document_provenance
+      speculative_overlay_identity_provenance AND visible_speculative_retention_coherence
     semantic_contracts:
       - visible_speculative_overlay_document_binding
-      - speculative_overlay_document_provenance
+      - speculative_overlay_identity_provenance
+      - visible_speculative_retention_coherence
     kind: root
     depends_on:
       - L132_visible_overlay_document_binding_established_on_publication
       - L133_visible_overlay_document_binding_preserved_by_local_transitions
-      - L152_visible_speculative_overlay_identity_is_defined_and_preserved
-      - L153_speculative_overlay_document_provenance_is_preserved
+      - L176_visible_speculative_overlay_is_backed_by_retained_state
+      - L179_speculative_overlay_identity_provenance_is_preserved
   L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance:
     statement: Whenever a durable accepted-history lifecycle transformation outside the normal
       acceptance transaction—including compaction, cleanup, or snapshot replacement—creates,
@@ -3087,45 +3171,6 @@ claims:
             regress, or substitute that acknowledged acceptance in recoverable authoritative
             history.
     kind: leaf
-  L148_snapshot_compaction_preserves_logical_state_at_frontier:
-    statement: For every authoritative snapshotting or compaction transition that completes at
-      frontier H without accepting a new edit, the post-transition authoritative representation
-      denotes exactly the same logical document state as canonical replay of accepted revisions
-      through H.
-    source_refs:
-      - authoritative_truth
-      - snapshot_frontier
-      - storage_selection
-      - final_architecture
-    mechanisms:
-      - accepted_history_log
-      - snapshot_checkpoint
-    verification:
-      verifiers:
-        - kind: differential_test
-          intent: Across generated authoritative histories and snapshot/compaction boundaries,
-            compare the completed post-transition logical document projection with an independent
-            canonical replay through the same frontier H and require exact equivalence.
-    kind: leaf
-  L149_snapshot_compaction_preserves_authoritative_frontier:
-    statement: For every authoritative snapshotting or compaction transition that accepts no new
-      edit, if the authoritative pre-state frontier is document_latest_revision = H, then the
-      completed post-state also has document_latest_revision = H.
-    source_refs:
-      - authoritative_truth
-      - snapshot_frontier
-      - storage_selection
-      - final_architecture
-    mechanisms:
-      - revision_frontier_guard
-      - snapshot_checkpoint
-    verification:
-      verifiers:
-        - kind: state_machine
-          intent: Exercise all authoritative snapshotting and compaction transitions from states
-            with frontier H and require every completed no-edit post-state to preserve exactly the
-            same document_latest_revision H.
-    kind: leaf
   L151_selectable_checkpoint_publication_binds_content_and_frontier_atomically:
     statement: 'For every checkpoint identity P=(content,S) actually selected by a new-owner recovery
       attempt, the authoritative publication record from which P is selected bound that content and frontier
@@ -3148,50 +3193,6 @@ claims:
           intent: Race recovery selection with checkpoint publication changes and crash/pause
             publication at every boundary; every checkpoint actually selected by recovery must
             correspond to one complete atomic publication record, never a mixed pair.
-    kind: leaf
-  L152_visible_speculative_overlay_identity_is_defined_and_preserved:
-    statement: At every user-visible client state representing document D, every overlay in
-      client_visible_speculative_overlays has a defined client_change_id k, so every exposed overlay
-      is identified by some pair (document_id=D, client_change_id=k) once same-document binding is
-      established separately.
-    source_refs:
-      - reconnect_revision_boundary
-      - final_architecture
-    mechanisms:
-      - client_document_scoped_speculative_state
-    verification:
-      verifiers:
-        - kind: state_machine
-          intent: Enumerate every transition that can produce a user-visible overlay set, including
-            publication, restoration, switching, optimistic overlay creation,
-            suppression/reactivation, and ACK/retry bookkeeping; require every exposed overlay in
-            every resulting visible state to carry a defined client_change_id.
-    kind: leaf
-  L153_speculative_overlay_document_provenance_is_preserved:
-    statement: 'speculative_overlay_document_provenance holds for every logical client edit created for
-      document D and represented speculatively: its retained representation in client_speculative_overlays
-      and every exposed representation in client_visible_speculative_overlays remain bound to D across
-      creation, retention, restoration, tab/view switching, suppression/reactivation, canonical publication,
-      resync publication, and every other client transition that preserves the same logical edit. A transition
-      may suppress, retain, restore, or expose that edit, but it may not preserve the same logical edit/client_change_id
-      while rewriting its document binding from D to a different document.'
-    source_refs:
-      - reconnect_revision_boundary
-      - final_architecture
-    mechanisms:
-      - client_document_scoped_speculative_state
-    semantic_contracts:
-      - speculative_overlay_document_provenance
-    formal_intent: speculative_overlay_document_provenance
-    verification:
-      verifiers:
-        - kind: state_machine
-          intent: Enumerate every client transition that creates, retains, restores, switches,
-            suppresses/reactivates, or publishes speculative overlays. Tag each generated logical
-            edit with its creation document D and client_change_id k, then require every retained or
-            exposed representation of that same logical edit to remain in document D's partition and
-            retain document binding D; explicitly reject executions that relabel an A-origin overlay
-            as B while preserving the same logical edit or k.
     kind: leaf
   L154_pending_edit_identity_provenance_is_preserved:
     statement: 'pending_edit_identity_provenance holds for every logical client edit created for document
@@ -3506,7 +3507,7 @@ claims:
       - L163_accepted_terminal_outcome_commits_with_canonical_acceptance
       - L164_terminal_paths_share_per_key_arbitration
       - C42_nonterminal_lifecycle_preserves_terminal_outcomes
-      - L175_terminal_outcome_entry_state_is_coherent
+      - C43_terminal_outcome_entry_state_is_coherent
   L165_pending_identity_revision_evidence_survives_retention:
     statement: If canonical acceptance(D,k) commits at revision r and (D,k) is a
       normal_retry_eligible_identity, every snapshotting, compaction, cleanup, or other durable
@@ -3661,10 +3662,12 @@ claims:
     kind: leaf
   L170_recovery_preserves_terminal_outcomes:
     statement: For every normal_retry_eligible_identity with an authoritative terminal_result before
-      crash/restart or owner recovery, every completed recovery/restart reconstructs exactly the
-      same per-key ACCEPTED or REJECTED value; recovery cannot omit a prior rejection, synthesize a
-      different result, or reconstruct only accepted history while losing terminal idempotency
-      state.
+      crash/restart or owner recovery, that terminal_result remains in
+      durable_terminal_outcome_store independently of volatile owner state, and every completed
+      recovery/restart resumes idempotency arbitration against exactly that same authoritative
+      per-key ACCEPTED or REJECTED value. Recovery cannot omit a prior rejection, synthesize a
+      different result, or rely on reconstructing terminal outcomes solely from snapshot plus
+      accepted history.
     source_refs:
       - accepted_change_log
       - owner_failover
@@ -3672,16 +3675,18 @@ claims:
       - final_architecture
     mechanisms:
       - idempotency_gate
-      - recovery_replay
+      - durable_terminal_outcome_store
     verification:
       verifiers:
         - kind: fault_injection
-          intent: Crash/restart with distinguishable ACCEPTED and REJECTED terminal keys inside the
-            normal retry horizon and require completed recovery to reconstruct the exact same
-            mapping and values.
+          intent: Commit distinguishable ACCEPTED and REJECTED terminal outcomes, crash/restart or
+            replace the owner, and require the recovered service to observe the exact same durable
+            per-key outcomes before retry/acceptance arbitration resumes, including REJECTED keys
+            with no accepted row.
         - kind: control_flow
-          intent: Trace every recovery/rebuild source and sink for idempotency terminal state and
-            prove exact key/value reconstruction from authoritative persisted state.
+          intent: Trace every restart/takeover path into idempotency arbitration and prove it reads
+            the durable authoritative terminal-outcome store rather than rebuilding terminal results
+            from volatile owner memory or accepted-history replay.
     kind: leaf
   L171_terminal_outcome_representation_migration_preserves_mapping:
     statement: Any non-terminal representation replacement, schema/index migration, or equivalent
@@ -3796,14 +3801,229 @@ claims:
             a time; every cross-document substitution must be rejected or remain unable to
             complete/install recovery.
     kind: leaf
-  L175_terminal_outcome_entry_state_is_coherent:
-    statement: "At every authoritative initialization, restoration, import, or publication boundary that
-      makes a normal_retry_eligible_identity observable to the idempotency protocol, that key's entry
-      state already satisfies terminal-outcome coherence: idempotency_terminal_outcomes contains no terminal_result
-      for a fresh identity, or exactly one previously authoritative terminal_result. An entry state cannot
-      expose multiple or conflicting ACCEPTED/REJECTED results; if the single result is ACCEPTED, the
-      matching canonical accepted change is co-present, and if it is REJECTED, no canonical acceptance
-      for that key is present."
+  L176_visible_speculative_overlay_is_backed_by_retained_state:
+    statement: 'visible_speculative_retention_coherence holds at every user-visible client state: each
+      exposed speculative representation has a matching retained representation for the same logical edit
+      and full identity, and any transition that removes or terminally disposes retained speculative state
+      removes or suppresses the matching exposed representation before or atomically with the resulting
+      visible state.'
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - client_document_scoped_speculative_state
+    semantic_contracts:
+      - visible_speculative_retention_coherence
+    formal_intent: visible_speculative_retention_coherence
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Enumerate speculative creation, restore, switch, suppression/reactivation, ACK
+            bookkeeping, abandonment, expiry, conflict/manual resolution, authoritative
+            reconciliation, canonical publication, and resync publication; every visible overlay
+            after each transition must have the matching retained logical edit, and retained
+            terminal removal must leave no orphan visible overlay.
+    kind: leaf
+  L177_catchup_canonical_sources_preserve_document_provenance:
+    statement: "catchup_canonical_source_provenance holds for every catch-up targeting D: delta rows come
+      from accepted_change_log(D); snapshot mode selects D's authoritative checkpoint and reads the tail
+      from accepted_change_log(D); the constructed client_resync_candidate stays bound to D. An extensionally
+      equal source object from D2 != D cannot satisfy the obligation."
+    source_refs:
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - accepted_history_log
+      - snapshot_checkpoint
+      - catchup_protocol
+    semantic_contracts:
+      - catchup_canonical_source_provenance
+    formal_intent: catchup_canonical_source_provenance
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Trace document_id from the catch-up target through delta queries, checkpoint
+            selection, tail queries, candidate construction, and publication; inject D2 objects with
+            identical payloads and frontiers and require them to be rejected unless the semantic
+            authoritative reference remains D.
+    kind: leaf
+  L178_non_append_lifecycle_preserves_authoritative_document_provenance:
+    statement: 'authoritative_history_lifecycle_provenance holds for every non-append snapshotting, checkpoint-replacement,
+      cleanup, or compaction lifecycle transition targeting D: its authoritative history/checkpoint inputs
+      and authoritative_history_lifecycle_output remain bound to D even when a different document has
+      extensionally equal canonical history.'
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - accepted_history_log
+      - snapshot_checkpoint
+      - document_lifecycle_lock
+    semantic_contracts:
+      - authoritative_history_lifecycle_provenance
+    formal_intent: authoritative_history_lifecycle_provenance
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Trace the target document through snapshot/compaction source selection and
+            authoritative replacement publication; substitute an extensionally identical D2
+            history/checkpoint and require document-scoped authority to reject cross-document
+            rebinding while allowing byte-level deduplication.
+    kind: leaf
+  L179_speculative_overlay_identity_provenance_is_preserved:
+    statement: 'speculative_overlay_identity_provenance holds for every logical_client_edit created with
+      full identity (document_id=D, client_change_id=k): every retained representation in client_speculative_overlays
+      and every exposed representation in client_visible_speculative_overlays preserves exactly that same
+      (D,k) across creation, retention, restoration, tab/view switching, suppression/reactivation, ACK/retry
+      bookkeeping, canonical publication, resync publication, and every other client transition that preserves
+      the same logical edit. A transition may suppress, retain, restore, expose, or terminally dispose
+      the edit, but while it preserves that logical edit it may not regenerate, substitute, drop, or cross-bind
+      either identity coordinate.'
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - client_document_scoped_speculative_state
+    semantic_contracts:
+      - speculative_overlay_identity_provenance
+    formal_intent: speculative_overlay_identity_provenance
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Tag each created logical edit with immutable creation identity (D,k), enumerate
+            every client transition that retains or exposes that same logical edit, and reject any
+            path that regenerates, substitutes, drops, or cross-binds either document_id or
+            client_change_id in retained or visible state.
+    kind: leaf
+  L180_non_append_lifecycle_preserves_logical_state_at_frontier:
+    statement: For every authoritative non-append snapshotting, checkpoint-replacement, cleanup, or
+      compaction lifecycle transition that completes at frontier H without accepting a new edit, the
+      post-transition authoritative representation denotes exactly the same logical document state
+      as canonical replay of accepted revisions through H.
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - accepted_history_log
+      - snapshot_checkpoint
+      - document_lifecycle_lock
+    verification:
+      verifiers:
+        - kind: differential_test
+          intent: Across generated authoritative histories and each non-append snapshotting,
+            checkpoint-replacement, cleanup, and compaction lifecycle path, compare the completed
+            post-transition logical document projection with an independent canonical replay through
+            the same frontier H and require exact equivalence.
+    kind: leaf
+  L181_non_append_lifecycle_preserves_authoritative_frontier:
+    statement: For every authoritative non-append snapshotting, checkpoint-replacement, cleanup, or
+      compaction lifecycle transition that accepts no new edit, if the authoritative pre-state
+      frontier is document_latest_revision = H, then the completed post-state also has
+      document_latest_revision = H.
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - revision_frontier_guard
+      - snapshot_checkpoint
+      - document_lifecycle_lock
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Exercise every authoritative non-append snapshotting, checkpoint-replacement,
+            cleanup, and compaction lifecycle transition from states with frontier H and require
+            every completed no-edit post-state to preserve exactly the same document_latest_revision
+            H.
+    kind: leaf
+  L182_logical_edit_request_payload_binding_is_preserved:
+    statement: "logical_edit_request_payload_binding holds for every submitted_request eligible for server-side
+      OT or an authoritative terminal decision: the request's document_id, client_change_id, raw_edit,
+      and base_revision all derive from one logical_client_edit and its canonical authoring state, and
+      request construction, serialization, dispatch, or retry cannot preserve (D,k,F) while substituting
+      a semantically different logical operation into raw_edit."
+    source_refs:
+      - ot_input_output
+      - final_architecture
+    mechanisms:
+      - server_authoritative_ot
+    semantic_contracts:
+      - logical_edit_request_payload_binding
+    formal_intent: logical_edit_request_payload_binding
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Trace one logical edit from creation and client_change_id assignment through
+            request construction, serialization, dispatch, and retry. Prove that document_id,
+            client_change_id, base_revision, and the semantic operation encoded by raw_edit remain
+            bound to that same edit; reject any path that can retain identity/frontier while
+            sourcing raw_edit from a different edit.
+        - kind: integration_test
+          intent: Create distinguishable logical edits X and Y that are both valid against the same
+            D@F, force request construction/retry interleavings, and assert that no request carrying
+            X's (D,k,F) can serialize Y's operation while still being accepted as a valid request
+            for X.
+    kind: leaf
+  L183_definitive_rejection_preserves_request_provenance:
+    statement: 'definitive_rejection_request_binding holds for every authoritative REJECTED terminal_result:
+      the definitive_rejection_decision that becomes REJECTED for (document_id=D, client_change_id=k)
+      was produced for the exact submitted_request carrying that same identity and rejection-relevant
+      raw_edit/base_revision context, and the binding is preserved through routing, arbitration, and commit.'
+    source_refs:
+      - accepted_change_log
+      - ot_input_output
+      - final_architecture
+    mechanisms:
+      - server_authoritative_ot
+      - idempotency_gate
+    semantic_contracts:
+      - definitive_rejection_request_binding
+    formal_intent: definitive_rejection_request_binding
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Trace every definitive validation/OT/rebase rejection from the submitted request
+            that produced it through asynchronous handoff, idempotency arbitration, and the REJECTED
+            commit sink. Prove the sink cannot pair request A's terminal identity with request B's
+            rejection decision or rejection-relevant payload/base context.
+        - kind: integration_test
+          intent: Run distinguishable concurrent requests A and B, make only B definitively reject,
+            perturb routing/retry timing, and require that no terminal row for A can contain B's
+            rejection reason or decision provenance while all retries continue to resolve from the
+            authoritative terminal state.
+    kind: leaf
+  L184_terminal_outcome_entry_has_single_authoritative_value:
+    statement: At every authoritative initialization, restoration, import, or publication boundary
+      that makes a normal_retry_eligible_identity observable to the idempotency protocol,
+      idempotency_terminal_outcomes contains no terminal_result for a fresh identity or exactly one
+      previously authoritative terminal_result; no entry transition may expose duplicate or
+      conflicting ACCEPTED/REJECTED values for the same full key.
+    source_refs:
+      - accepted_change_log
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - idempotency_gate
+      - durable_terminal_outcome_store
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Enumerate every authoritative entry/publication boundary and require the per-key
+            terminal mapping to be absent or single-valued for each full idempotency identity;
+            reject duplicate/conflicting entry state.
+    kind: leaf
+  C43_terminal_outcome_entry_state_is_coherent:
+    statement: At every authoritative initialization, restoration, import, or publication boundary
+      that makes a normal_retry_eligible_identity observable, entry state contains at most one
+      authoritative terminal_result, and any such ACCEPTED/REJECTED result is coherent with
+      canonical accepted history for the same full identity.
     source_refs:
       - accepted_change_log
       - storage_selection
@@ -3811,22 +4031,168 @@ claims:
     mechanisms:
       - idempotency_gate
       - acceptance_transaction
+      - durable_terminal_outcome_store
+    kind: derived
+    depends_on:
+      - L184_terminal_outcome_entry_has_single_authoritative_value
+      - C44_terminal_outcome_entry_matches_canonical_acceptance
+  C44_terminal_outcome_entry_matches_canonical_acceptance:
+    statement: At every authoritative initialization, restoration, import, or publication boundary
+      that makes a normal_retry_eligible_identity observable to the idempotency protocol, if the
+      single terminal_result is ACCEPTED then the matching canonical accepted change is co-present,
+      and if the single terminal_result is REJECTED then no canonical acceptance for that same full
+      identity is present.
+    source_refs:
+      - accepted_change_log
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - durable_terminal_outcome_store
+    kind: derived
+    depends_on:
+      - L186_terminal_outcome_initialization_matches_canonical_acceptance
+      - L187_terminal_outcome_restoration_matches_canonical_acceptance
+      - L188_terminal_outcome_import_matches_canonical_acceptance
+      - C45_terminal_outcome_publication_matches_canonical_acceptance
+  L186_terminal_outcome_initialization_matches_canonical_acceptance:
+    statement: At every authoritative initialization boundary for a normal_retry_eligible_identity,
+      if the initialized terminal_result is ACCEPTED then the matching canonical accepted change is
+      co-present, and if it is REJECTED then no canonical acceptance for that same full identity is
+      present.
+    source_refs:
+      - accepted_change_log
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - durable_terminal_outcome_store
     verification:
       verifiers:
         - kind: state_machine
-          intent: Enumerate every authoritative entry/publication transition by which a
-            normal-retry-eligible identity can first become observable after initialization,
-            restoration, import, or representation loading. Require the per-key terminal state to be
-            absent or exactly one coherent terminal result, and require ACCEPTED entry state to
-            co-exist with the matching canonical acceptance while REJECTED entry state has no
-            canonical acceptance. Reject any entry transition that can publish duplicate or
-            conflicting terminal results.
+          intent: Enumerate authoritative initialization transitions and cross-check each terminal
+            result against canonical accepted history for the same full identity.
+    kind: leaf
+  L187_terminal_outcome_restoration_matches_canonical_acceptance:
+    statement: At every authoritative restoration boundary for a normal_retry_eligible_identity,
+      ACCEPTED is restored only with the matching canonical accepted change and REJECTED is restored
+      only when no canonical acceptance for that same full identity is present.
+    source_refs:
+      - accepted_change_log
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - durable_terminal_outcome_store
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Enumerate restoration/load transitions and require restored terminal outcome and
+            accepted history to agree for the exact full identity.
+    kind: leaf
+  L188_terminal_outcome_import_matches_canonical_acceptance:
+    statement: At every authoritative import boundary for a normal_retry_eligible_identity, ACCEPTED
+      import state includes the matching canonical accepted change and REJECTED import state
+      contains no canonical acceptance for that same full identity.
+    source_refs:
+      - accepted_change_log
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - durable_terminal_outcome_store
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Enumerate import/migration ingestion transitions and reject any imported ACCEPTED
+            without matching acceptance or REJECTED alongside one.
+    kind: leaf
+  C45_terminal_outcome_publication_matches_canonical_acceptance:
+    statement: At every authoritative publication boundary that makes a
+      normal_retry_eligible_identity observable, an ACCEPTED terminal_result is published only with
+      the matching canonical accepted change and a REJECTED terminal_result is published only when
+      no canonical acceptance for the same full identity is present.
+    source_refs:
+      - accepted_change_log
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - durable_terminal_outcome_store
+    kind: derived
+    depends_on:
+      - L190_authoritative_terminal_publication_surfaces_are_exhaustive
+      - L192_terminal_publication_preserves_store_identity_provenance
+      - L195_rejected_terminal_publication_excludes_canonical_acceptance
+      - L163_accepted_terminal_outcome_commits_with_canonical_acceptance
+  L190_authoritative_terminal_publication_surfaces_are_exhaustive:
+    statement: Every authoritative path that can expose an ACCEPTED or REJECTED terminal result for
+      a normal_retry_eligible_identity to a protocol consumer flows through
+      terminal_outcome_publication_gate; ordinary request, retry, reconnect, restoration-facing, and
+      any other terminal-result handler cannot read durable_terminal_outcome_store and publish a
+      terminal outcome through a bypass path.
+    source_refs:
+      - accepted_change_log
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - durable_terminal_outcome_store
+      - terminal_outcome_publication_gate
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Enumerate every protocol-visible terminal-result sink and prove each is dominated
+            by or converges on terminal_outcome_publication_gate after reading the exact full
+            identity from durable_terminal_outcome_store; reject any direct store-to-output or
+            attempt-local bypass.
+    kind: leaf
+  L192_terminal_publication_preserves_store_identity_provenance:
+    statement: Every ACCEPTED or REJECTED terminal result exposed through
+      terminal_outcome_publication_gate exactly reproduces the authoritative terminal_result read
+      from durable_terminal_outcome_store for the same full (document_id, client_change_id)
+      identity; publication cannot substitute another key, another stored value, or an attempt-local
+      result.
+    source_refs:
+      - accepted_change_log
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - durable_terminal_outcome_store
+      - terminal_outcome_publication_gate
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Trace full identity and terminal-result value from durable store read through
+            publication gate to every protocol-visible sink and reject any key/value substitution or
+            attempt-local publication.
+    kind: leaf
+  L195_rejected_terminal_publication_excludes_canonical_acceptance:
+    statement: At every terminal_outcome_publication_gate observation for a
+      normal_retry_eligible_identity, if the authoritative terminal_result is REJECTED then
+      canonical accepted history contains no canonical acceptance for that exact full (document_id,
+      client_change_id) identity.
+    source_refs:
+      - accepted_change_log
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - idempotency_gate
+      - durable_terminal_outcome_store
+      - terminal_outcome_publication_gate
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Race acceptance and definitive-rejection attempts for the same full identity in
+            both orders and require that any state published as REJECTED has no matching canonical
+            acceptance, including overlapping commits.
     kind: leaf
 catalog:
   terms:
     logical_client_edit:
       description: One user operation from the client's protocol perspective. Retransmissions of the
         same logical operation are retries of that edit, not new logical edits.
+      scope_dimensions:
+        - document
     raw_edit:
       description: The client-submitted edit before server-side transformation/rebase against
         accepted document history.
@@ -3935,6 +4301,8 @@ catalog:
     terminal_result:
       description: Authoritative terminal outcome for one idempotency_key within the normal retry
         horizon, either an accepted canonical result or a definitive rejected result.
+      scope_dimensions:
+        - document
     externally_terminal_result:
       description: Definitive result exposed to the client for one logical operation after the
         corresponding authoritative terminal_result has linearized.
@@ -3942,6 +4310,20 @@ catalog:
       description: A logical edit identity (document_id, client_change_id) whose pending/retry age
         is no more than 30 days and therefore remains inside the normal retry/reconnect protocol
         boundary defined by A6.
+    submitted_request:
+      description: One client-to-server protocol request instance carrying document_id,
+        client_change_id, raw_edit, and base_revision for one logical client edit. Retries may
+        create multiple request instances, but each instance remains semantically bound to the
+        logical edit and document it represents.
+      scope_dimensions:
+        - document
+    definitive_rejection_decision:
+      description: A server-side definitive negative decision, such as invalid or rebase-required,
+        computed for one submitted_request and eligible to become an authoritative REJECTED terminal
+        result. Timeout, cancellation, transport loss, and crash-before-decision are not definitive
+        rejection decisions.
+      scope_dimensions:
+        - document
   state:
     accepted_change_log:
       class: authoritative
@@ -3994,6 +4376,8 @@ catalog:
       description: Locally retained optimistic representations of unresolved logical edits,
         partitioned by document identity; retained overlays need not all be exposed in the current
         user-visible document.
+      scope_dimensions:
+        - document
     client_pending_edits:
       class: speculative
       description: Unresolved logical client edits retained by client_change_id while their
@@ -4007,6 +4391,8 @@ catalog:
       class: control
       description: Non-user-visible candidate canonical/pending/overlay state built during reconnect
         reconciliation before atomic publication or discard.
+      scope_dimensions:
+        - document
     accepted_idempotency_evidence:
       class: authoritative
       description: Logical durable evidence that an idempotency key has a committed canonical
@@ -4021,6 +4407,8 @@ catalog:
       class: speculative
       description: The subset of retained speculative overlays currently exposed in the user-visible
         client state; each exposed overlay retains its document identity.
+      scope_dimensions:
+        - document
     document_owner_id:
       class: authoritative
       description: Authoritative identity of the owner currently designated for the document. A
@@ -4049,6 +4437,14 @@ catalog:
       description: Completed recovery materialization for one document, including recovered logical
         document state, recovered service frontier, and acceptance-relevant runtime state installed
         before service resumption.
+      scope_dimensions:
+        - document
+    authoritative_history_lifecycle_output:
+      class: authoritative
+      description: The durable authoritative representation installed or published for a target
+        document by a non-append snapshotting, checkpoint-replacement, cleanup, or compaction
+        lifecycle procedure. Physical bytes/storage may be shared, but the semantic authoritative
+        binding remains document-scoped.
       scope_dimensions:
         - document
   symbolic_dimensions:
@@ -4119,6 +4515,21 @@ catalog:
       description: Retained speculative overlays are partitioned by document identity, and the
         user-visible overlay set is projected only from the currently visible document's retained
         partition.
+      automation_reusable: true
+    durable_terminal_outcome_store:
+      description: Authoritative per-(document_id, client_change_id) terminal outcomes are persisted
+        in durable document-scoped storage independent of volatile OT-owner memory. Owner
+        restart/takeover reuses this same authoritative state directly; definitive REJECTED outcomes
+        are not reconstructed from accepted-change history and therefore cannot disappear merely
+        because no accepted row exists.
+      automation_reusable: true
+    terminal_outcome_publication_gate:
+      description: The complete protocol-visible authoritative read boundary for per-key terminal
+        outcomes. Every ordinary request, retry, reconnect, or other handler that exposes an
+        ACCEPTED or REJECTED terminal result must read the exact full identity from
+        durable_terminal_outcome_store and flow through this publication abstraction; direct
+        store-to-protocol-output bypasses are forbidden. Multiple concrete handlers may exist, but
+        static control flow must converge on this one semantic gate.
       automation_reusable: true
   failure_events:
     request_delivery_uncertainty:
@@ -4521,29 +4932,6 @@ catalog:
         - This contract does not require automatic rebase, eventual reconciliation, or eventual
           visibility of a retained overlay.
       automation_reusable: true
-    speculative_overlay_document_provenance:
-      class: provenance_binding
-      definition: Every speculative representation of a logical_client_edit created for document_id
-        D remains bound to that same document identity D for the lifetime of that logical edit.
-        Creation, retention, restoration, tab/view switching, suppression/reactivation, canonical or
-        resync publication, and any other transition that preserves the same logical edit may move
-        the representation between retained and exposed state but may not relabel or rebind it to a
-        different document while preserving its client_change_id identity.
-      source_symbols:
-        - logical_client_edit
-        - document_id
-        - client_change_id
-      bound_symbols:
-        - client_speculative_overlays
-        - client_visible_speculative_overlays
-      excludes:
-        - Does not require a retained speculative overlay to remain visible, to be automatically
-          rebased, or to eventually reconcile.
-        - Does not require deleting another document's retained speculative overlay when the visible
-          document changes.
-        - Does not require client_change_id to be globally unique across documents; the document
-          binding is a separate provenance coordinate.
-      automation_reusable: true
     pending_edit_identity_provenance:
       class: provenance_binding
       definition: Every pending representation of a logical_client_edit created for document_id D
@@ -4700,6 +5088,167 @@ catalog:
           binding itself.
         - Does not require recovery to eventually complete.
       automation_reusable: true
+    speculative_overlay_identity_provenance:
+      class: provenance_binding
+      definition: Every retained or exposed speculative representation of one logical_client_edit
+        preserves that edit's complete creation identity (document_id=D, client_change_id=k) for the
+        lifetime of the logical edit. Creation, retention, restoration, tab/view switching,
+        suppression/reactivation, ACK/retry bookkeeping, canonical publication, resync publication,
+        and every other transition that preserves the same logical edit may not regenerate,
+        substitute, drop, or cross-bind either identity coordinate.
+      source_symbols:
+        - logical_client_edit
+        - document_id
+        - client_change_id
+      bound_symbols:
+        - client_speculative_overlays
+        - client_visible_speculative_overlays
+      scope_bindings:
+        - dimension: document
+          source_symbols:
+            - logical_client_edit
+          bound_symbols:
+            - client_speculative_overlays
+            - client_visible_speculative_overlays
+      excludes:
+        - Does not require every retained speculative representation to be currently visible.
+        - Does not require automatic rebase, eventual reconciliation, or global uniqueness of
+          client_change_id across documents.
+      automation_reusable: true
+    visible_speculative_retention_coherence:
+      class: state_invariant
+      definition: At every user-visible client state, every representation in
+        client_visible_speculative_overlays corresponds to a retained representation in
+        client_speculative_overlays for the same logical edit and the same full identity
+        (document_id, client_change_id). Any transition that removes or terminally disposes the
+        retained representation must remove or suppress the exposed representation before or
+        atomically with the resulting user-visible state.
+      state_symbols:
+        - client_speculative_overlays
+        - client_visible_speculative_overlays
+      observation_scope: user_visible_states
+      excludes:
+        - A retained speculative edit need not be visible while another document or view is active.
+        - Does not require automatic rebase, eventual reconciliation, or progress for unresolved
+          edits.
+      automation_reusable: true
+    catchup_canonical_source_provenance:
+      class: provenance_binding
+      definition: For a catch-up targeting document D at its already-captured response head H, every
+        canonical payload source remains document-scoped to D through candidate construction and
+        publication. Delta mode reads accepted changes from accepted_change_log for D; snapshot mode
+        selects D's authoritative snapshot_content_with_snapshot_revision and reads its canonical
+        tail from accepted_change_log for D; the resulting client_resync_candidate remains bound to
+        D. An extensionally equal authoritative object from another document cannot substitute for D
+        solely because revision, payload, frontier, or replay result values collide.
+      source_symbols:
+        - accepted_change_log
+        - snapshot_content_with_snapshot_revision
+      bound_symbols:
+        - client_resync_candidate
+      scope_bindings:
+        - dimension: document
+          source_symbols:
+            - accepted_change_log
+            - snapshot_content_with_snapshot_revision
+          bound_symbols:
+            - client_resync_candidate
+      excludes:
+        - Does not forbid content-addressed or deduplicated immutable bytes when the semantic
+          authoritative reference remains bound to D.
+        - Canonical acceptances after the captured response head H are outside that catch-up
+          response.
+      automation_reusable: true
+    authoritative_history_lifecycle_provenance:
+      class: provenance_binding
+      definition: For every non-append authoritative snapshotting, checkpoint-replacement, cleanup,
+        or compaction lifecycle procedure targeting document D, the authoritative history/checkpoint
+        inputs that semantically supply the transformation and the
+        authoritative_history_lifecycle_output installed or published by that procedure remain bound
+        to D. An extensionally equal authoritative history object from another document cannot be
+        rebound as D's authoritative source merely because revision, payload, frontier, or replay
+        result values collide.
+      source_symbols:
+        - accepted_change_log
+        - snapshot_content_with_snapshot_revision
+      bound_symbols:
+        - authoritative_history_lifecycle_output
+      scope_bindings:
+        - dimension: document
+          source_symbols:
+            - accepted_change_log
+            - snapshot_content_with_snapshot_revision
+          bound_symbols:
+            - authoritative_history_lifecycle_output
+      excludes:
+        - Does not forbid physical content-addressed storage, immutable-page sharing, or byte-level
+          deduplication beneath the document-scoped authoritative reference.
+        - Does not by itself establish logical replay equivalence, frontier preservation, recovery
+          correctness, or lifecycle progress.
+      automation_reusable: true
+    logical_edit_request_payload_binding:
+      class: provenance_binding
+      definition: For every submitted_request eligible for server-side OT or an authoritative
+        terminal decision, one logical_client_edit is the semantic source of the complete submitted
+        tuple. If that logical edit was created with identity (document_id=D, client_change_id=k)
+        against canonical authoring frontier F, the submitted_request carries exactly document_id=D
+        and client_change_id=k, its raw_edit encodes that same logical operation against the
+        captured D@F authoring state, and base_revision=F. Request construction, serialization,
+        dispatch, and normal retry may change physical representation only in semantics-preserving
+        ways; they may not substitute a different logical operation while retaining the original
+        identity or frontier.
+      source_symbols:
+        - logical_client_edit
+      bound_symbols:
+        - submitted_request
+        - document_id
+        - client_change_id
+        - raw_edit
+        - base_revision
+      scope_bindings:
+        - dimension: document
+          source_symbols:
+            - logical_client_edit
+          bound_symbols:
+            - submitted_request
+      excludes:
+        - Does not require byte-identical serialization when two encodings represent the same
+          logical operation.
+        - Does not define a client-side rebase algorithm for an unresolved edit that cannot safely
+          be encoded against the declared canonical base.
+      automation_reusable: true
+    definitive_rejection_request_binding:
+      class: provenance_binding
+      definition: Every authoritative REJECTED(definitive rejection reason) terminal_result for
+        identity (document_id=D, client_change_id=k) derives from a definitive_rejection_decision
+        produced for the exact submitted_request carrying that same request identity and
+        rejection-relevant request tuple. Validation, OT/rebase evaluation, asynchronous routing,
+        per-key arbitration, and terminal commit preserve that producer binding; a decision produced
+        for another request or logical edit cannot be terminalized under (D,k). If the definitive
+        reason depends on raw_edit or base_revision, those values are the values of that same bound
+        submitted_request.
+      source_symbols:
+        - submitted_request
+        - definitive_rejection_decision
+        - document_id
+        - client_change_id
+        - raw_edit
+        - base_revision
+      bound_symbols:
+        - terminal_result
+      scope_bindings:
+        - dimension: document
+          source_symbols:
+            - submitted_request
+            - definitive_rejection_decision
+          bound_symbols:
+            - terminal_result
+      excludes:
+        - Pending, timeout, cancellation, transport loss, and crash-before-terminal-commit are
+          non-terminal uncertainty and do not create REJECTED.
+        - Does not by itself prove single-valued terminal arbitration or faithful replay of an
+          already-linearized terminal result.
+      automation_reusable: true
   scope_dimensions:
     document:
       description: Collaborative document/resource namespace; document-scoped authority, history,
@@ -4709,8 +5258,8 @@ id_allocator:
   next_sequence:
     A: 7
     G: 13
-    C: 43
-    L: 176
+    C: 46
+    L: 196
     D: 15
     T: 3
 assurance:
@@ -4789,6 +5338,12 @@ assurance:
     C41_pending_identity_revision_evidence_survives_lifecycle:
       status: unaudited
     C42_nonterminal_lifecycle_preserves_terminal_outcomes:
+      status: unaudited
+    C43_terminal_outcome_entry_state_is_coherent:
+      status: unaudited
+    C44_terminal_outcome_entry_matches_canonical_acceptance:
+      status: unaudited
+    C45_terminal_outcome_publication_matches_canonical_acceptance:
       status: unaudited
   implementation_evidence:
     L19_client_applies_only_contiguous_revisions:
@@ -4927,15 +5482,7 @@ assurance:
       status: planned
     L146_ack_justifying_acceptance_survives_process_and_owner_failures:
       status: planned
-    L148_snapshot_compaction_preserves_logical_state_at_frontier:
-      status: planned
-    L149_snapshot_compaction_preserves_authoritative_frontier:
-      status: planned
     L151_selectable_checkpoint_publication_binds_content_and_frontier_atomically:
-      status: planned
-    L152_visible_speculative_overlay_identity_is_defined_and_preserved:
-      status: planned
-    L153_speculative_overlay_document_provenance_is_preserved:
       status: planned
     L154_pending_edit_identity_provenance_is_preserved:
       status: planned
@@ -4975,5 +5522,33 @@ assurance:
       status: planned
     L174_recovery_inputs_and_state_are_document_bound:
       status: planned
-    L175_terminal_outcome_entry_state_is_coherent:
+    L176_visible_speculative_overlay_is_backed_by_retained_state:
+      status: planned
+    L177_catchup_canonical_sources_preserve_document_provenance:
+      status: planned
+    L178_non_append_lifecycle_preserves_authoritative_document_provenance:
+      status: planned
+    L179_speculative_overlay_identity_provenance_is_preserved:
+      status: planned
+    L180_non_append_lifecycle_preserves_logical_state_at_frontier:
+      status: planned
+    L181_non_append_lifecycle_preserves_authoritative_frontier:
+      status: planned
+    L182_logical_edit_request_payload_binding_is_preserved:
+      status: planned
+    L183_definitive_rejection_preserves_request_provenance:
+      status: planned
+    L184_terminal_outcome_entry_has_single_authoritative_value:
+      status: planned
+    L186_terminal_outcome_initialization_matches_canonical_acceptance:
+      status: planned
+    L187_terminal_outcome_restoration_matches_canonical_acceptance:
+      status: planned
+    L188_terminal_outcome_import_matches_canonical_acceptance:
+      status: planned
+    L190_authoritative_terminal_publication_surfaces_are_exhaustive:
+      status: planned
+    L192_terminal_publication_preserves_store_identity_provenance:
+      status: planned
+    L195_rejected_terminal_publication_excludes_canonical_acceptance:
       status: planned

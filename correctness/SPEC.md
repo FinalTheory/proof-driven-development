@@ -162,6 +162,8 @@ Provenance closure 进一步把 **semantic scope / namespace** 作为 typed coor
 
 这些 closure 只能把**已经被识别为 correctness-sensitive 的关系**结构化，并通过 typed contract、signature、validator 和 audit protocol 约束后续证明；Harness 不能仅凭程序静态地从自然语言设计中判定“系统还缺哪一个业务关系”。因此 coverage 仍需要 adversarial semantic search。为减少 repair→coverage→repair 的循环，coverage 还要求 semantic-neighborhood substitution attack：在保持表面 scalar predicates 成立的同时，单独替换 provenance coordinate、actor/generation、identity coordinate、terminal disposition source 或竞争终态，检查 repair 是否只是挡住了原始 witness 的具体形式。
 
+Coverage challenger 还必须把“当前 claims 没有直接杀掉 witness”和“witness 真正通过 specification-gap gate”分开。每个 challenger 需要独立判断 current claims 是否仍可全部成立、failure 是否在 scope 内、canonical design 是否真的要求这个 property、bad outcome 是否 material，并给出最终 `coverage_gate_result`。只有 `SURVIVES_GATE` 才表示 structural finding；如果候选只是一个合理但更强的产品/UX guarantee，或落在当前 specification / failure-model scope 之外，应明确分类为 `DISQUALIFIED_STRONGER_OR_OUT_OF_SCOPE`，不能因为 `violated_current_claims: []` 就继续当成 gap。这避免把“model 没声明某性质”误推成“model 必须声明某性质”。
+
 
 对于可以机械化的 symbolic 子问题，Harness 把“语义翻译”和“solver 检查”分开管理。Canonical proposition 的 symbolic mapping 仍需 translation assurance；coverage bad-state 则作为独立 declarative case 保存。
 
