@@ -226,6 +226,34 @@ This is where the methodology tries to improve reliability without paying the fu
 
 ---
 
+## Deterministic checking is not the same as specification completeness
+
+As the Harness evolved, one distinction became central: there are several different ways a correctness model can be wrong, and they require different assurance layers.
+
+```text
+refinement
+    Is this proposition/decomposition well formed?
+
+specification coverage
+    Did we forget an important proposition or relation entirely?
+
+composition
+    Do these direct premises actually imply this target?
+
+implementation evidence
+    Does the real system satisfy the leaf proposition?
+```
+
+The first, third, and fourth questions can become increasingly mechanical once the relevant property has been stated. The second is fundamentally more open-ended. A solver cannot prove that a missing variable, provenance relation, terminal outcome, or namespace coordinate should have existed if nobody represented it in the model.
+
+The practical strategy is therefore to use semantic audits to **discover** missing correctness relations, then convert those discoveries into typed structure that future tooling can enforce. For example, provenance-sensitive state may declare a resource scope such as `document`; once that semantic choice is explicit, the Harness can mechanically reject a provenance contract that binds the value fields but forgets the document namespace. Likewise, an invariant can be forced to expose both its establishment boundary and the transitions that must preserve it.
+
+This is the boundary the project is trying to push:
+
+> **Human/LLM judgment discovers what relation matters. Typed contracts, validators, signatures, and mechanical evidence make it progressively harder to forget or silently break that relation again.**
+
+---
+
 ## Proof obligations eventually have to touch the real implementation
 
 A beautifully decomposed DAG is still only a specification artifact if its leaves are not connected to implementation evidence.
@@ -378,6 +406,7 @@ The repository deliberately separates the target-system design from the Correctn
 - [`correctness/SCHEMA.md`](correctness/SCHEMA.md) — the canonical model field/type reference;
 - [`correctness/correctness.yaml`](correctness/correctness.yaml) — the current machine-readable correctness model;
 - [`correctness/correctness.py`](correctness/correctness.py) — validation, slicing, scheduling, semantic signatures, assurance state, and controlled mutation;
+- [`HANDOVER.md`](HANDOVER.md) — current operational snapshot, campaign state, and recommended continuation;
 - [`AGENTS.md`](AGENTS.md) — repository operating rules for agents.
 
 ---

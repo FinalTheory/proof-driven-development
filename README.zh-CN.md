@@ -226,6 +226,34 @@ Harness 再把不确定的推理步骤包在尽可能确定性的机制里面：
 
 ---
 
+## 确定性检查，不等于规范已经完整
+
+随着 Harness 演进，一个区别变得越来越重要：正确性模型有几种完全不同的失败方式，它们需要不同的 assurance layer。
+
+```text
+refinement
+    这个 proposition / decomposition 本身是否合理？
+
+specification coverage
+    我们是不是压根漏掉了一个重要 proposition 或关系？
+
+composition
+    这些 direct premises 是否真的能推出 target？
+
+implementation evidence
+    真实系统是否满足这个 leaf proposition？
+```
+
+当相关 property 已经被明确写出来之后，第一、第三和第四类问题都可以越来越机械化；第二类问题则天然更加开放。一个 solver 无法证明“本来应该存在一个从未被建模的变量、provenance relation、terminal outcome 或 namespace coordinate”。
+
+所以实际策略是：先用语义审计去**发现**缺失的 correctness relation，再把这些发现沉淀成以后可以由工具强制执行的 typed structure。比如，一个 provenance-sensitive state 可以显式声明自己的 resource scope 是 `document`；一旦这个语义选择被建模，Harness 就可以机械地拒绝“值字段都绑定正确、却漏掉 document namespace”的 provenance contract。类似地，一个 invariant 也可以被强制要求说明它在哪里建立，以及哪些 transition 必须持续保持它。
+
+这个项目真正想不断推进的边界是：
+
+> **人类/LLM 判断负责发现“什么关系重要”；typed contract、validator、signature 和机械证据负责让这个关系以后越来越难被遗忘或悄悄破坏。**
+
+---
+
 ## 证明义务最终必须接回真实实现
 
 一个分解得再漂亮的 DAG，如果叶节点没有接到实现证据，本质上仍然只是规范产物。
@@ -378,6 +406,7 @@ senior / staff 一次推理
 - [`correctness/SCHEMA.md`](correctness/SCHEMA.md) — canonical 模型字段/类型参考；
 - [`correctness/correctness.yaml`](correctness/correctness.yaml) — 当前机器可读正确性模型；
 - [`correctness/correctness.py`](correctness/correctness.py) — 验证、切片、调度、semantic signature、assurance 状态和受控修改；
+- [`HANDOVER.md`](HANDOVER.md) — 当前 operational snapshot、campaign 状态与推荐 continuation；
 - [`AGENTS.md`](AGENTS.md) — agent 操作仓库时必须遵守的规则。
 
 ---

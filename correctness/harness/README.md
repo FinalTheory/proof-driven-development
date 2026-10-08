@@ -35,6 +35,30 @@ Generated proof slices close every referenced semantic contract over its typed v
 
 This gate is intentionally weaker than natural-language equivalence: a claim may contain additional guarantees or realize several contracts simultaneously. The prohibited case is a claim that references a contract while permitting an execution the contract forbids, such as a path-local proposition claiming to realize an `all_reachable_states` invariant.
 
+## Typed scope / namespace closure
+
+Provenance is not only about where a scalar value came from. Many correctness-sensitive objects are meaningful only inside a resource namespace such as a document, tenant, account, shard, session, or ownership generation.
+
+Canonical terms/state can therefore declare semantic `scope_dimensions`. When a `provenance_binding` has source-side and bound-side symbols carrying the same scope dimension, the contract must declare a complete `scope_bindings` entry that enumerates every scoped symbol on both sides. `validation.py` derives the expected closure from the typed catalog and rejects missing or partial bindings.
+
+This converts a recurring semantic failure into deterministic structure once the scope has been identified. In particular, an authoritative object from document B must not satisfy a provenance obligation for document A merely because revision, payload, epoch, generation identifier, or reconstructed state happen to be extensionally equal. The semantic decision that an object *is* document-scoped still belongs to the model author/auditor; after that decision is represented in the catalog, omission of the scope coordinate from the provenance relation is a validator error rather than a best-effort audit convention.
+
+The corresponding adversarial pattern is a cross-scope extensional-collision attack: construct `A != B`, make all non-scope observations equal, substitute B's otherwise-valid authoritative object into A's execution, and check whether the specification can distinguish the substitution.
+
+## Specification-coverage control plane
+
+Specification coverage is deliberately separate from refinement and composition. It asks an open-world question: assuming every current claim, assumption, and dependency implication is true, can a material in-scope bad execution still occur because an important relation was never modeled?
+
+The generated `coverage-audit-prompt` surrounds that semantic search with deterministic controls:
+
+- an immutable bootstrap records Git status plus hashes of `correctness.yaml` and the canonical design; canonical drift forces `EXECUTION INCOMPLETE` rather than a reusable coverage verdict;
+- mandatory closure passes cover inductive state-invariant establishment/preservation, semantic provenance/authority/scope binding, and terminal-decision coherence;
+- serious relations receive semantic-neighborhood substitution attacks, including cross-scope extensional collisions;
+- every candidate must explicitly report `violated_current_claims`; a candidate that requires an existing current claim/assumption to be false is not a specification-coverage gap and belongs to composition or implementation evidence instead;
+- fresh checker/challenger stages must kill candidates that rely on excluded failures, stronger optional guarantees, or already-modeled propositions.
+
+This boundary is fundamental: deterministic tooling can check whether an expressed predicate is internally consistent, typed, current, and—in selected symbolic cases—entailed. It cannot prove that the architecture author remembered to introduce every correctness-sensitive predicate in the first place. Coverage remains the semantic discovery layer; the Harness's job is to make that discovery increasingly structured and to turn each discovered relation into typed, invalidatable, mechanically enforceable structure where possible.
+
 ## Symbolic assurance boundary
 
 The symbolic package is a formal assurance layer over, but not a replacement for, canonical correctness authority:
