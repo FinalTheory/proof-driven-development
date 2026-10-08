@@ -200,7 +200,7 @@ refinement:
     G5_retry_resolves_idempotently:
       status: stable
       blocked_by: []
-      signature: 47fec634b1332de71a8c0fb5d4df80c52b4f49850bab12a753403d99c52e3179
+      signature: e4da2bdcb7b1818536a45549e4905a66837176ed29b852a79ea8495c11f3e155
     C7_revision_frontier_is_linear:
       status: stable
       blocked_by: []
@@ -733,6 +733,30 @@ refinement:
       status: stable
       blocked_by: []
       signature: 115eafbe4a28b320dc000989cc3220582b9a4f65a814bc53f2c9c88736f5c400
+    C46_accepted_terminal_result_preserves_acceptance_provenance:
+      status: stable
+      blocked_by: []
+      signature: db345dbfea4f0a6e324da413cb95e1031f07ba401a2bbb0e4d46040f93a3bfe3
+    L197_accepted_terminal_result_captures_same_acceptance_producer:
+      status: stable
+      blocked_by: []
+      signature: 6bec3c637fcd86f63b9a7ffda0b3c4dc69c5cb6b937bbdbddcf06cae7482e919
+    C47_accepted_terminal_result_provenance_survives_lifecycle:
+      status: stable
+      blocked_by: []
+      signature: c53303436cc886ff2f32ebe83590fdbbde4aa1be7bb3e5dfa490f7d185e16a81
+    L199_accepted_terminal_provenance_survives_persistence_and_restore:
+      status: stable
+      blocked_by: []
+      signature: 194b338df194391d1d23dda3e461be2dfb9004a57c6ba6453a7ebd3629350159
+    L200_accepted_terminal_provenance_survives_compaction_and_retention:
+      status: stable
+      blocked_by: []
+      signature: b868525309aa16693700280a99c699b198a4ad37fa8cad503cf3e3d7f7e6c530
+    L201_accepted_terminal_provenance_survives_representation_migration:
+      status: stable
+      blocked_by: []
+      signature: db1124935eb04da9af19949130da452744efec6114697f1c17bd1e03d54ee785
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -895,22 +919,26 @@ claims:
     kind: root
     statement: >-
       For every logical edit whose idempotency_key remains within the normal retry eligibility horizon,
-      logical_edit_request_payload_binding holds for each normal submitted_request representing that edit,
-      so the request identity, raw_edit, and authoring frontier cannot be cross-bound to a different logical
-      operation. idempotency_terminal_outcome_coherence holds in every reachable authoritative state and
-      terminal_response_outcome_binding holds for every externally_terminal_result. If an authoritative
-      REJECTED(definitive rejection reason) linearizes, definitive_rejection_request_binding also holds:
-      that rejected terminal result derives from a definitive rejection decision produced for the exact
-      same submitted request identity and rejection-relevant request context, not from another request.
-      The first authoritative terminal_result to linearize for full identity (document_id=D, client_change_id=k)
-      is immutable and is either ACCEPTED(canonical result) or REJECTED(definitive reason); the two are
-      mutually exclusive, all acceptance and definitive-rejection attempts arbitrate through the same
-      per-key terminal state, and every externally terminal result for that key exactly reproduces the
-      already-linearized terminal result. Pending, timeout, cancellation, transport loss, and crash-before-terminal-commit
-      remain non-terminal uncertainty. Consequently, a normally participating client reprocessing the
-      same logical edit within the 30-day normal retry horizon observes the same authoritative terminal
-      result for that logical operation rather than creating or receiving an incompatible second terminal
-      outcome. Re-submission after expiry is outside this guarantee.
+      each normal submitted_request representing that edit preserves the same request identity, raw_edit
+      semantics, and canonical authoring frontier, so those values cannot be cross-bound to a different
+      logical operation. idempotency_terminal_outcome_coherence holds in every reachable authoritative
+      state and terminal_response_outcome_binding holds for every externally_terminal_result. If an authoritative
+      ACCEPTED(canonical result) linearizes, accepted_terminal_result_binding also holds: that canonical
+      result is produced by the same acceptance execution that commits the matching canonical_accepted_change
+      for the exact same full identity, and later authoritative lifecycle representation changes do not
+      rebind it to another producer. If an authoritative REJECTED(definitive rejection reason) linearizes,
+      definitive_rejection_request_binding also holds: that rejected terminal result derives from a definitive
+      rejection decision produced for the exact same submitted request identity and rejection-relevant
+      request context, not from another request. The first authoritative terminal_result to linearize
+      for full identity (document_id=D, client_change_id=k) is immutable and is either ACCEPTED(canonical
+      result) or REJECTED(definitive reason); the two are mutually exclusive, all acceptance and definitive-rejection
+      attempts arbitrate through the same per-key terminal state, and every externally terminal result
+      for that key exactly reproduces the already-linearized terminal result. Pending, timeout, cancellation,
+      transport loss, and crash-before-terminal-commit remain non-terminal uncertainty. Consequently,
+      a normally participating client reprocessing the same logical edit within the 30-day normal retry
+      horizon observes the same authoritative terminal result for that logical operation rather than creating
+      or receiving an incompatible second terminal outcome. Re-submission after expiry is outside this
+      guarantee.
     depends_on:
       - A3_client_change_id_identifies_logical_edit
       - C13_idempotency_key_is_temporally_unique
@@ -923,17 +951,18 @@ claims:
       - L161_definitive_retry_response_comes_from_terminal_outcome
       - L182_logical_edit_request_payload_binding_is_preserved
       - L183_definitive_rejection_preserves_request_provenance
+      - C46_accepted_terminal_result_preserves_acceptance_provenance
     source_refs:
       - ot_input_output
       - accepted_change_log
       - owner_failover
       - storage_selection
       - final_architecture
-    formal_intent: logical_edit_request_payload_binding; idempotency_terminal_outcome_coherence;
+    formal_intent: idempotency_terminal_outcome_coherence; accepted_terminal_result_binding;
       definitive_rejection_request_binding; terminal_response_outcome_binding
     semantic_contracts:
-      - logical_edit_request_payload_binding
       - idempotency_terminal_outcome_coherence
+      - accepted_terminal_result_binding
       - definitive_rejection_request_binding
       - terminal_response_outcome_binding
   C7_revision_frontier_is_linear:
@@ -4186,6 +4215,141 @@ claims:
             both orders and require that any state published as REJECTED has no matching canonical
             acceptance, including overlapping commits.
     kind: leaf
+  C46_accepted_terminal_result_preserves_acceptance_provenance:
+    statement: 'accepted_terminal_result_binding holds for every authoritative ACCEPTED terminal_result
+      within the normal retry eligibility horizon: the canonical result stored for (document_id=D, client_change_id=k)
+      is produced by the same acceptance execution that commits the matching canonical_accepted_change
+      for that full identity, and every authoritative lifecycle transformation that preserves the same
+      logical terminal outcome while possibly rewriting its durable representation preserves that producer
+      binding. No result produced for another request, document, or acceptance execution may be substituted
+      merely because it is extensionally equal; after the identity leaves the normal retry horizon, ordinary
+      cleanup may remove the terminal outcome without preserving this provenance.'
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - durable_terminal_outcome_store
+    semantic_contracts:
+      - accepted_terminal_result_binding
+    formal_intent: accepted_terminal_result_binding
+    kind: derived
+    depends_on:
+      - L197_accepted_terminal_result_captures_same_acceptance_producer
+      - C47_accepted_terminal_result_provenance_survives_lifecycle
+      - L163_accepted_terminal_outcome_commits_with_canonical_acceptance
+  L197_accepted_terminal_result_captures_same_acceptance_producer:
+    statement: When an authoritative ACCEPTED terminal_result for (document_id=D,
+      client_change_id=k) is created at acceptance linearization, the canonical result placed into
+      that terminal outcome is sourced from the same acceptance execution that creates the matching
+      canonical_accepted_change for the same full identity. Acceptance-transaction assembly cannot
+      substitute a result from another request, document, or acceptance execution even when the
+      substituted result is extensionally equal.
+    source_refs:
+      - accepted_change_log
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Trace the canonical result producer through acceptance-transaction assembly into
+            both the matching canonical_accepted_change and ACCEPTED terminal-result payload for the
+            same full identity; reject any path that can source the terminal payload from another
+            acceptance execution or equal-valued result object.
+    kind: leaf
+  C47_accepted_terminal_result_provenance_survives_lifecycle:
+    statement: Once an authoritative ACCEPTED terminal_result is bound to the matching canonical
+      acceptance producer for (document_id=D, client_change_id=k), then while that identity remains
+      within the normal retry eligibility horizon every durable persistence, recovery/restoration,
+      compaction, retention, or representation-migration transition that preserves the same logical
+      terminal outcome while possibly rewriting its durable representation preserves the same
+      logical producer binding. Such a transition cannot reconstruct, relabel, or cross-bind the
+      result from another request, document, or acceptance execution merely because the replacement
+      value is extensionally equal. Cleanup after the identity leaves the normal retry horizon may
+      remove the terminal outcome and is outside this proposition.
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - durable_terminal_outcome_store
+    kind: derived
+    depends_on:
+      - L199_accepted_terminal_provenance_survives_persistence_and_restore
+      - L200_accepted_terminal_provenance_survives_compaction_and_retention
+      - L201_accepted_terminal_provenance_survives_representation_migration
+  L199_accepted_terminal_provenance_survives_persistence_and_restore:
+    statement: Once an authoritative ACCEPTED terminal_result is bound to the matching canonical
+      acceptance producer for (document_id=D, client_change_id=k), then while that identity remains
+      within the normal retry eligibility horizon, durable persistence and every completed
+      recovery/restoration that preserves the terminal outcome preserve that same full identity and
+      acceptance-producer binding. Persist/reload cannot reconstruct the terminal result from
+      another request, document, or acceptance execution merely because the replacement value is
+      extensionally equal. Cleanup after the retry horizon that removes the terminal outcome is
+      outside this proposition.
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - durable_terminal_outcome_store
+    verification:
+      verifiers:
+        - kind: fault_injection
+          intent: Persist distinguishable producer provenance for an ACCEPTED outcome, crash/restart
+            or restore authoritative state, and require the recovered terminal record to remain
+            bound to the original acceptance execution and full identity rather than an equal-valued
+            alternate source.
+    kind: leaf
+  L200_accepted_terminal_provenance_survives_compaction_and_retention:
+    statement: Once an authoritative ACCEPTED terminal_result is bound to the matching canonical
+      acceptance producer for (document_id=D, client_change_id=k), then while that identity remains
+      within the normal retry eligibility horizon, every compaction, cleanup, or retention rewrite
+      that preserves the terminal outcome also preserves that same acceptance-producer binding. Such
+      rewrites cannot reconstruct or relabel the result from an extensionally equal different
+      acceptance execution or document. Cleanup after the retry horizon that removes the terminal
+      outcome is outside this proposition.
+    source_refs:
+      - accepted_change_log
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - durable_terminal_outcome_store
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Enumerate compaction, cleanup, and retention transitions for bound ACCEPTED
+            terminal records and require each replacement representation to preserve the original
+            full identity and acceptance-producer provenance, rejecting value-only reconstruction or
+            cross-binding.
+    kind: leaf
+  L201_accepted_terminal_provenance_survives_representation_migration:
+    statement: Once an authoritative ACCEPTED terminal_result is bound to the matching canonical
+      acceptance producer for (document_id=D, client_change_id=k), then while that identity remains
+      within the normal retry eligibility horizon, every authoritative representation migration that
+      preserves the terminal outcome preserves a one-to-one mapping to that same full identity and
+      acceptance producer. Migration cannot substitute an extensionally equal result from another
+      request, document, or acceptance execution. Post-horizon cleanup that removes the terminal
+      outcome is outside this proposition.
+    source_refs:
+      - accepted_change_log
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - durable_terminal_outcome_store
+    verification:
+      verifiers:
+        - kind: differential_test
+          intent: Migrate terminal records whose accepted payloads are intentionally extensionally
+            equal but originate from distinguishable acceptance executions, and require the
+            post-migration mapping to preserve each record's original full identity and producer
+            provenance exactly.
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -5249,6 +5413,39 @@ catalog:
         - Does not by itself prove single-valued terminal arbitration or faithful replay of an
           already-linearized terminal result.
       automation_reusable: true
+    accepted_terminal_result_binding:
+      class: provenance_binding
+      definition: Within the normal retry eligibility horizon, every authoritative
+        ACCEPTED(canonical result) terminal_result for identity (document_id=D, client_change_id=k)
+        is bound to the matching canonical_accepted_change produced by the same acceptance execution
+        for that same full identity. The canonical result stored in the terminal outcome derives
+        from that acceptance producer, not merely from an extensionally equal result.
+        Acceptance-transaction assembly establishes this producer binding, and every authoritative
+        lifecycle transition that preserves the same logical terminal outcome while possibly
+        rewriting its durable representation preserves the same binding; a result from another
+        request, document, or acceptance execution cannot be substituted or cross-bound under (D,k).
+      source_symbols:
+        - accepted_change_log
+        - canonical_accepted_change
+        - idempotency_key
+      bound_symbols:
+        - terminal_result
+      scope_bindings:
+        - dimension: document
+          source_symbols:
+            - accepted_change_log
+          bound_symbols:
+            - terminal_result
+      excludes:
+        - Does not replace idempotency_terminal_outcome_coherence; single-valued arbitration and
+          ACCEPTED/REJECTED mutual exclusion remain separate state properties.
+        - Does not replace terminal_response_outcome_binding; protocol-visible responses must
+          separately reproduce the already-bound authoritative terminal result.
+        - Physical representation may change when provenance-preserving lifecycle transformations
+          retain the same logical terminal outcome and acceptance producer binding.
+        - After the identity leaves the normal retry eligibility horizon, this contract does not
+          require the terminal outcome or its producer provenance to be retained.
+      automation_reusable: true
   scope_dimensions:
     document:
       description: Collaborative document/resource namespace; document-scoped authority, history,
@@ -5258,8 +5455,8 @@ id_allocator:
   next_sequence:
     A: 7
     G: 13
-    C: 46
-    L: 196
+    C: 48
+    L: 202
     D: 15
     T: 3
 assurance:
@@ -5344,6 +5541,10 @@ assurance:
     C44_terminal_outcome_entry_matches_canonical_acceptance:
       status: unaudited
     C45_terminal_outcome_publication_matches_canonical_acceptance:
+      status: unaudited
+    C46_accepted_terminal_result_preserves_acceptance_provenance:
+      status: unaudited
+    C47_accepted_terminal_result_provenance_survives_lifecycle:
       status: unaudited
   implementation_evidence:
     L19_client_applies_only_contiguous_revisions:
@@ -5551,4 +5752,12 @@ assurance:
     L192_terminal_publication_preserves_store_identity_provenance:
       status: planned
     L195_rejected_terminal_publication_excludes_canonical_acceptance:
+      status: planned
+    L197_accepted_terminal_result_captures_same_acceptance_producer:
+      status: planned
+    L199_accepted_terminal_provenance_survives_persistence_and_restore:
+      status: planned
+    L200_accepted_terminal_provenance_survives_compaction_and_retention:
+      status: planned
+    L201_accepted_terminal_provenance_survives_representation_migration:
       status: planned
