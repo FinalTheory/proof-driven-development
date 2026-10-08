@@ -5973,12 +5973,14 @@ assurance:
   specification_coverage:
     status: closed
     auditor_count: 6
-    rationale: Four independent clean-context coverage scouts found no surviving structural gap on
-      the frozen model. One client-visibility candidate was independently rechecked by a fresh local
-      checker and full-gate challenger; the witness was current-claim-consistent and material but
-      the canonical design did not require the stronger ACK-to-canonical-publication
-      visibility-continuity property, so it was disqualified as stronger/out-of-scope.
-    signature: 63f4a2157eaba882442c7945f975485ae779fd29e4f5366b431f8e03294b1355
+    rationale: Four independent clean-context coverage scouts audited the frozen repaired model.
+      Scouts B, C, and D found no serious all-roots-true structural candidate. Scout A found only
+      the accepted-result to canonical-publication visibility-gap candidate; a fresh root-local
+      checker classified it ORTHOGONAL and a fresh full-gate challenger returned
+      DISQUALIFIED_STRONGER_OR_OUT_OF_SCOPE with design_requires_property=false. No SURVIVES_GATE
+      finding remained, and the canonical model/design hashes stayed unchanged throughout the
+      campaign.
+    signature: 143043429133a2964a563eb9fa62d15dc414cb4103cca1912be6ab06925db530
   composition:
     G0_acked_edit_survives_failover:
       status: unaudited
