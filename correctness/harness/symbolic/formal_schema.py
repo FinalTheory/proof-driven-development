@@ -350,6 +350,8 @@ MUTATION_SCHEMA = {
     "type": "object",
     "properties": {
         "weakened_premise": NONEMPTY_STRING,
+        "operation": {"const": "replace_formula"},
+        "premise_formula_override": {"$ref": "#/$defs/formula"},
         "description": NONEMPTY_STRING,
         "expected": NONEMPTY_STRING,
         "solver_status": {"const": "sat"},
@@ -357,6 +359,9 @@ MUTATION_SCHEMA = {
         "counterexample_model": NONEMPTY_STRING,
     },
     "required": [
+        "weakened_premise",
+        "operation",
+        "premise_formula_override",
         "description",
         "expected",
         "solver_status",
@@ -426,6 +431,7 @@ COMPOSITION_ARTIFACT_SCHEMA: dict[str, Any] = {
     "$defs": {
         "trust": TRUST_SCHEMA,
         "solver": SOLVER_SCHEMA,
+        "formula": FORMULA_SCHEMA,
         "mutation": MUTATION_SCHEMA,
     },
 }

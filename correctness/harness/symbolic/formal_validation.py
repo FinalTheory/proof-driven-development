@@ -181,10 +181,25 @@ def _composition_artifact_errors(
     if not isinstance(raw_mutations, list) or not raw_mutations:
         errors.append(f"{artifact_ref}: at least one mutation sensitivity check is required")
     else:
+        replayed_premises: set[str] = set()
         for index, mutation in enumerate(raw_mutations):
             if not isinstance(mutation, dict):
                 errors.append(f"{artifact_ref}: mutation test {index} must be a mapping")
                 continue
+            weakened_premise = mutation.get("weakened_premise")
+            if weakened_premise not in result.premise_ids:
+                errors.append(
+                    f"{artifact_ref}: mutation test {index} weakens non-direct premise "
+                    f"{weakened_premise!r}"
+                )
+                continue
+            if weakened_premise in replayed_premises:
+                errors.append(
+                    f"{artifact_ref}: mutation test {index} duplicates weakened premise "
+                    f"{weakened_premise}"
+                )
+                continue
+            replayed_premises.add(weakened_premise)
             if mutation.get("solver_status") != "sat" or mutation.get("verdict") != "COUNTEREXAMPLE":
                 errors.append(
                     f"{artifact_ref}: mutation test {index} must produce SAT / COUNTEREXAMPLE"
@@ -194,6 +209,35 @@ def _composition_artifact_errors(
             ].strip():
                 errors.append(
                     f"{artifact_ref}: mutation test {index} must persist a counterexample model"
+                )
+            if mutation.get("operation") != "replace_formula":
+                errors.append(
+                    f"{artifact_ref}: mutation test {index} has unsupported operation"
+                )
+                continue
+            override = mutation.get("premise_formula_override")
+            if not isinstance(override, dict):
+                errors.append(
+                    f"{artifact_ref}: mutation test {index} must persist a formula override"
+                )
+                continue
+            try:
+                mutation_result = verifier.check_with_premise_overrides(
+                    node_id,
+                    premise_formula_overrides={weakened_premise: override},
+                )
+            except Exception as exc:
+                errors.append(
+                    f"{artifact_ref}: fresh mutation sensitivity check {index} failed: {exc}"
+                )
+                continue
+            if (
+                mutation_result.solver_result.status != "sat"
+                or mutation_result.verdict != "COUNTEREXAMPLE"
+            ):
+                errors.append(
+                    f"{artifact_ref}: fresh mutation sensitivity check {index} does not "
+                    "reproduce SAT / COUNTEREXAMPLE"
                 )
     return errors
 

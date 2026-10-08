@@ -109,7 +109,7 @@ is satisfiable.
 - `SAT` => `COUNTEREXAMPLE`; the solver model witnesses a composition gap or an abstraction/mapping defect.
 - Trusted composition requires the target and every direct premise to have current `TRUSTED` translation-assurance records. Missing/unverified premises are never silently omitted.
 
-The adversarial mutation-test path is test-only: it may replace one direct-premise formula with an intentionally weaker formula and verify that a previously `UNSAT` composition becomes `SAT`. This checks that the entailment actually depends on the removed semantic condition rather than succeeding vacuously or because target/premise formulas were accidentally coupled.
+The adversarial mutation-test path replaces one direct-premise formula with an intentionally weaker structured formula and verifies that a previously `UNSAT` composition becomes `SAT`. Persisted machine-check artifacts store the exact premise/formula override, and repository preflight replays that mutation against the current bridge rather than trusting the recorded `SAT` label or witness text. This checks that the entailment actually depends on the removed semantic condition rather than succeeding vacuously or because target/premise formulas were accidentally coupled.
 
 ### Stable verification facade
 

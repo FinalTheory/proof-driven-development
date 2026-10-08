@@ -9,8 +9,10 @@ import yaml
 from jsonschema import Draft202012Validator
 
 from harness.model import Graph
+from harness.symbolic import SymbolicBridge, TranslationAssuranceRegistry
 from harness.symbolic.formal_schema import FORMAL_SCHEMAS
 from harness.symbolic.formal_validation import (
+    _composition_artifact_errors,
     _load_yaml_mapping,
     validate_formal_layer,
 )
@@ -67,6 +69,61 @@ class FormalSchemaTests(unittest.TestCase):
             ).iter_errors(broken)
         )
         self.assertTrue(errors)
+
+    def test_composition_artifact_schema_requires_replayable_mutation(self) -> None:
+        path = (
+            ROOT
+            / "symbolic_artifacts"
+            / "C14_all_acceptance_paths_honor_idempotency_identity.composition.yaml"
+        )
+        raw = yaml.safe_load(path.read_text())
+        broken = copy.deepcopy(raw)
+        broken["mutation_tests"][0].pop("premise_formula_override")
+        errors = list(
+            Draft202012Validator(
+                FORMAL_SCHEMAS["composition-artifact"]
+            ).iter_errors(broken)
+        )
+        self.assertTrue(errors)
+
+    def test_formal_preflight_replays_mutation_instead_of_trusting_claimed_sat(self) -> None:
+        graph = Graph.load()
+        bridge = SymbolicBridge.load(ROOT / "symbolic_models" / "bridge.yaml")
+        registry = TranslationAssuranceRegistry.load(
+            ROOT / "symbolic_models" / "assurance.yaml"
+        )
+        node_id = "C14_all_acceptance_paths_honor_idempotency_identity"
+        source = (
+            ROOT
+            / "symbolic_artifacts"
+            / f"{node_id}.composition.yaml"
+        )
+        artifact = yaml.safe_load(source.read_text())
+        mutation = artifact["mutation_tests"][0]
+        premise = mutation["weakened_premise"]
+        mutation["premise_formula_override"] = copy.deepcopy(
+            bridge.claims[premise].formula
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            correctness_root = Path(temp_dir)
+            artifact_ref = "replayed.composition.yaml"
+            (correctness_root / artifact_ref).write_text(
+                yaml.safe_dump(artifact, sort_keys=False, allow_unicode=True),
+                encoding="utf-8",
+            )
+            errors = _composition_artifact_errors(
+                graph,
+                bridge,
+                registry,
+                node_id,
+                artifact_ref,
+                correctness_root=correctness_root,
+            )
+        self.assertTrue(
+            any("fresh mutation sensitivity check" in error for error in errors),
+            errors,
+        )
 
     def test_coverage_artifact_schema_requires_non_vacuous_sat_to_unsat_proof(self) -> None:
         path = (

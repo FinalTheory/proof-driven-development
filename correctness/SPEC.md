@@ -183,7 +183,7 @@ correctness.py formal-schema composition-artifact
 correctness.py formal-schema coverage-artifact
 ```
 
-这些 schema 不把 sidecar 提升为新的 product correctness authority。它们只约束“已经选择 formalize 的内容如何合法持久化”。Repository-level `correctness.py validate` 会同时验证 canonical graph 与 formal layer：先做 closed-shape/schema validation，再做 graph↔bridge correspondence、translation trust、coverage/composition fresh solver check，以及 persisted artifact 与当前 semantic signatures/result 的一致性。任何一层 drift 都会让 preflight fail closed。对于 SAT check，persisted model 只是可供人工审阅的 witness；fresh check 重新确认 SAT 即可，因为同一公式可能存在多个合法模型，Harness 不要求两次 solver run 返回逐字相同的 model 文本。
+这些 schema 不把 sidecar 提升为新的 product correctness authority。它们只约束“已经选择 formalize 的内容如何合法持久化”。Repository-level `correctness.py validate` 会同时验证 canonical graph 与 formal layer：先做 closed-shape/schema validation，再做 graph↔bridge correspondence、translation trust、coverage/composition fresh solver check，以及 persisted artifact 与当前 semantic signatures/result 的一致性。Composition artifact 的 mutation-sensitivity evidence 也必须保存可重放的 premise/formula override，并由 preflight fresh rerun；不能只信任 artifact 声称的 `SAT`。任何一层 drift 都会让 preflight fail closed。对于 SAT check，persisted model 只是可供人工审阅的 witness；fresh check 重新确认 SAT 即可，因为同一公式可能存在多个合法模型，Harness 不要求两次 solver run 返回逐字相同的 model 文本。
 
 一个有效的 coverage machine check 必须同时满足：
 

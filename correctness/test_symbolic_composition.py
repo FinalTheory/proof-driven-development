@@ -200,14 +200,24 @@ class SymbolicCompositionTests(unittest.TestCase):
         }
         self.assertEqual(set(mutation_by_premise), set(C14_PREMISES))
         for premise in C14_PREMISES:
+            mutation = mutation_by_premise[premise]
+            self.assertEqual(mutation["operation"], "replace_formula")
             self.assertEqual(
-                mutation_by_premise[premise]["solver_status"],
+                mutation["solver_status"],
                 "sat",
             )
             self.assertEqual(
-                mutation_by_premise[premise]["verdict"],
+                mutation["verdict"],
                 "COUNTEREXAMPLE",
             )
+            replayed = verifier.check_with_premise_overrides(
+                C14_TARGET,
+                premise_formula_overrides={
+                    premise: mutation["premise_formula_override"]
+                },
+            )
+            self.assertEqual(replayed.solver_result.status, "sat")
+            self.assertEqual(replayed.verdict, "COUNTEREXAMPLE")
 
 
 if __name__ == "__main__":
