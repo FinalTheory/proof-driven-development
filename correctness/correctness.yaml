@@ -5972,19 +5972,31 @@ id_allocator:
 assurance:
   specification_coverage:
     status: closed
-    auditor_count: 12
-    rationale: Two consecutive independent clean-context specification-coverage campaigns closed
+    auditor_count: 28
+    rationale: Five total independent clean-context specification-coverage campaigns have now closed
       against the same unchanged model signature
-      143043429133a2964a563eb9fa62d15dc414cb4103cca1912be6ab06925db530. In the first campaign,
-      Scouts B/C/D found no structural candidate and Scout A's accepted-result to
-      canonical-publication visibility-hole candidate was independently classified ORTHOGONAL and
-      DISQUALIFIED_STRONGER_OR_OUT_OF_SCOPE. In the second campaign, Scouts B/C/D again found no
-      surviving all-roots-true structural candidate; Scout A's false request-intrinsic rejection
-      candidate was independently classified ORTHOGONAL and DISQUALIFIED_STRONGER_OR_OUT_OF_SCOPE
-      because request-intrinsic validator predicate correctness is not part of the current
-      distributed correctness guarantee. No campaign produced coverage_gate_result SURVIVES_GATE,
-      canonical design semantics were unchanged, validation remained clean, and the full 175-test
-      suite passed.
+      143043429133a2964a563eb9fa62d15dc414cb4103cca1912be6ab06925db530, including three additional
+      campaigns requested after the prior fixed-point closure. In extra Run 1, Scouts B and D found
+      no structural candidate; Scouts A/C raised atomic co-deletion of pending and retained
+      speculative state. A fresh root-local checker called this a boundary defect, but the
+      independent full-gate challenger returned DISQUALIFIED_EXISTING_CLAIM because the G12 root
+      proposition itself requires the pending binding to be preserved until authoritative
+      reconciliation or an explicit terminal disposition. Two diagnostic semantic arbiters split on
+      that wording, so it is retained as a composition/decomposition follow-up rather than an
+      accepted specification-coverage gap. In extra Run 2, Scouts A/B/C found no structural
+      candidate; Scout D raised premature same-identity expiry inside the 30-day horizon. A fresh
+      local checker called it a boundary defect, but the independent full-gate challenger returned
+      DISQUALIFIED_STRONGER_OR_OUT_OF_SCOPE with design_requires_property=false because the
+      canonical design defines the normal retry/reconnect horizon but does not promise a minimum
+      retention time or forbid an earlier explicit local expiry/abandonment policy. In extra Run 3,
+      Scouts A/B/C/D found no surviving structural candidate; the all-roots-true scout explicitly
+      re-attacked co-deletion, lifecycle reason validity, eligibility-boundary inversion,
+      root-vs-dependency distinctions, terminal races, observer transitions, cross-scope provenance,
+      and authoritative lifecycle mutation. Across all three extra campaigns no fresh full-gate
+      challenger returned SURVIVES_GATE. Canonical design semantics, refinement state, and model
+      signature remained unchanged throughout. The Writer clean-context subagent interface does not
+      expose or attest an exact model version, so these campaigns do not claim verified GPT-6 model
+      identity.
     signature: 143043429133a2964a563eb9fa62d15dc414cb4103cca1912be6ab06925db530
   composition:
     G0_acked_edit_survives_failover:
