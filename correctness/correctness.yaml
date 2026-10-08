@@ -5838,7 +5838,14 @@ id_allocator:
     T: 3
 assurance:
   specification_coverage:
-    status: unaudited
+    status: closed
+    auditor_count: 6
+    rationale: Four independent clean-context coverage scouts found no surviving structural gap on
+      the frozen model. One client-visibility candidate was independently rechecked by a fresh local
+      checker and full-gate challenger; the witness was current-claim-consistent and material but
+      the canonical design did not require the stronger ACK-to-canonical-publication
+      visibility-continuity property, so it was disqualified as stronger/out-of-scope.
+    signature: 63f4a2157eaba882442c7945f975485ae779fd29e4f5366b431f8e03294b1355
   composition:
     G0_acked_edit_survives_failover:
       status: unaudited
