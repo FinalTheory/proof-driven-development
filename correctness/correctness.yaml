@@ -580,7 +580,7 @@ refinement:
     G12_client_pending_state_tracks_unresolved_edits:
       status: stable
       blocked_by: []
-      signature: 3e3c15c087d9304ebf8bdf28e0a73140e45f2cf123e7f71f547033bf4ee5ab5d
+      signature: 2fd1f5f82714f893f4a786d34dbafc21cd3243376e9346b682951332987ae11a
     L156_owner_handoff_installs_fresh_epoch:
       status: stable
       blocked_by: []
@@ -761,6 +761,10 @@ refinement:
       status: stable
       blocked_by: []
       signature: 7ae7d43bc4b0edda7ee81c9ba4fc5c5175b95e54d933cc87c38a3ea24abbf2c9
+    L203_non_acceptance_terminal_disposition_preserves_edit_provenance:
+      status: stable
+      blocked_by: []
+      signature: da23c9d5fec23fc808c9b6f2c41c8a431f1d63483ff82decfba405a5f1f8a670
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -3295,31 +3299,38 @@ claims:
     kind: leaf
   G12_client_pending_state_tracks_unresolved_edits:
     statement: In every reachable client protocol state, pending_edit_identity_provenance,
-      pending_speculative_lifecycle_coverage, and pending_retirement_acceptance_binding hold for the
-      normal speculative lifecycle. For every logical client edit created for document D with
-      client_change_id k that remains unresolved, acceptance-eligible, within the normal
-      retry/reconnect eligibility horizon, and represented in retained speculative state,
-      client_pending_edits contains a matching pending representation bound to the same creation
-      identity (D,k). That binding is preserved across restore, tab/view switching, ACK/retry
-      bookkeeping, reconnect capture, and reconciliation until authoritative reconciliation or an
-      explicit terminal disposition ends the lifecycle. Mere bookkeeping deletion or relabeling
-      cannot resolve the edit. If the edit is retired with authoritative accepted/reconciled
-      semantics, that retirement must derive from canonical acceptance or equivalent authoritative
-      accepted evidence for the exact same full identity (D,k); an acceptance for another document
-      or another client_change_id cannot retire it merely because one identity coordinate matches.
+      pending_speculative_lifecycle_coverage, pending_retirement_acceptance_binding, and
+      non_acceptance_terminal_disposition_binding hold for the normal speculative lifecycle. For
+      every logical client edit created for document D with client_change_id k that remains
+      unresolved, acceptance-eligible, within the normal retry/reconnect eligibility horizon, and
+      represented in retained speculative state, client_pending_edits contains a matching pending
+      representation bound to the same creation identity (D,k). That binding is preserved across
+      restore, tab/view switching, ACK/retry bookkeeping, reconnect capture, and reconciliation
+      until authoritative reconciliation or an explicit terminal disposition ends the lifecycle.
+      Mere bookkeeping deletion or relabeling cannot resolve the edit. If the edit is retired with
+      authoritative accepted/reconciled semantics, that retirement must derive from canonical
+      acceptance or equivalent authoritative accepted evidence for the exact same full identity
+      (D,k); an acceptance for another document or another client_change_id cannot retire it merely
+      because one identity coordinate matches. If the edit is instead retired by expiry,
+      abandonment, conflict/manual resolution, or another explicit non-acceptance terminal
+      disposition, that disposition must itself have been produced for the same logical edit and
+      preserve the exact full identity (D,k) through the destructive retirement path; a disposition
+      for another edit cannot retire this one.
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
     formal_intent: pending_edit_identity_provenance; pending_speculative_lifecycle_coverage;
-      pending_retirement_acceptance_binding
+      pending_retirement_acceptance_binding; non_acceptance_terminal_disposition_binding
     semantic_contracts:
       - pending_edit_identity_provenance
       - pending_speculative_lifecycle_coverage
       - pending_retirement_acceptance_binding
+      - non_acceptance_terminal_disposition_binding
     depends_on:
       - L154_pending_edit_identity_provenance_is_preserved
       - L155_unresolved_speculative_edit_has_pending_entry
       - L158_pending_retirement_requires_matching_acceptance_identity
+      - L203_non_acceptance_terminal_disposition_preserves_edit_provenance
     kind: root
   L156_owner_handoff_installs_fresh_epoch:
     statement: For every authoritative transition from one document-owner generation to a distinct
@@ -4387,6 +4398,35 @@ claims:
             extensionally equal operations from distinct edits so value equality cannot substitute
             for producer provenance.
     kind: leaf
+  L203_non_acceptance_terminal_disposition_preserves_edit_provenance:
+    statement: "non_acceptance_terminal_disposition_binding holds for every explicit non-acceptance terminal
+      disposition that removes or terminally retires a normal speculative lifecycle: if the disposition
+      terminates logical_client_edit X with full identity (document_id=D, client_change_id=k), that disposition
+      was produced for X and preserves the same full identity through routing/bookkeeping to every pending,
+      retained-overlay, and visible-overlay retirement sink. A disposition produced for another logical
+      edit cannot retire X merely by carrying or being rebound to X's identity."
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - client_document_scoped_speculative_state
+    semantic_contracts:
+      - non_acceptance_terminal_disposition_binding
+    formal_intent: non_acceptance_terminal_disposition_binding
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Enumerate every expiry, abandonment, conflict/manual-resolution, and equivalent
+            explicit non-acceptance path that can remove client_pending_edits or retained/visible
+            speculative state. Trace the disposition producer and full (document_id,
+            client_change_id) identity through routing and bookkeeping to the destructive sink, and
+            reject any path where disposition(Y) can retire X.
+        - kind: state_machine
+          intent: Generate two unresolved edits X and Y in the same document and across distinct
+            documents, apply a non-acceptance terminal disposition only to Y, perturb
+            routing/bookkeeping order, and require that pending/retained/visible state for X cannot
+            be removed or suppressed by Y's disposition.
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -4530,6 +4570,13 @@ catalog:
         acceptance. Retained or exposed optimistic representations may use different physical
         encodings or rendering objects, but while they still represent that logical edit they must
         preserve this same operation semantics rather than substitute another edit's operation.
+      scope_dimensions:
+        - document
+    non_acceptance_terminal_disposition:
+      description: One explicit client lifecycle decision that terminates a logical edit without
+        claiming authoritative acceptance, including expiry, abandonment, conflict resolution,
+        manual resolution, or an equivalent non-acceptance terminal path. The disposition carries
+        the full logical-edit identity it is produced for.
       scope_dimensions:
         - document
   state:
@@ -5527,6 +5574,36 @@ catalog:
         - Does not define client-side OT, automatic rebase, eventual reconciliation, or renderer
           correctness for an already-canonical accepted change.
       automation_reusable: true
+    non_acceptance_terminal_disposition_binding:
+      class: provenance_binding
+      definition: Every non_acceptance_terminal_disposition used to retire the normal speculative
+        lifecycle of a logical_client_edit with full identity (document_id=D, client_change_id=k) is
+        produced for that same logical edit and remains bound to the same full identity through
+        routing, bookkeeping, and the destructive retirement sink. A disposition produced for
+        another logical edit, document, or client_change_id cannot remove, suppress, expire,
+        abandon, conflict-resolve, manually resolve, or otherwise terminally retire pending,
+        retained, or visible speculative state belonging to (D,k), even if the foreign disposition
+        can be relabeled or routed to the same client state container.
+      source_symbols:
+        - logical_client_edit
+        - document_id
+        - client_change_id
+      bound_symbols:
+        - non_acceptance_terminal_disposition
+      scope_bindings:
+        - dimension: document
+          source_symbols:
+            - logical_client_edit
+          bound_symbols:
+            - non_acceptance_terminal_disposition
+      excludes:
+        - Does not require a non-acceptance terminal disposition to eventually occur for every
+          unresolved edit.
+        - Does not judge whether the product/business reason for expiry, abandonment, conflict
+          resolution, or manual resolution is correct.
+        - Authoritative acceptance-based retirement is governed separately by
+          pending_retirement_acceptance_binding.
+      automation_reusable: true
   scope_dimensions:
     document:
       description: Collaborative document/resource namespace; document-scoped authority, history,
@@ -5537,7 +5614,7 @@ id_allocator:
     A: 7
     G: 13
     C: 48
-    L: 203
+    L: 204
     D: 15
     T: 3
 assurance:
@@ -5843,4 +5920,6 @@ assurance:
     L201_accepted_terminal_provenance_survives_representation_migration:
       status: planned
     L202_speculative_overlay_operation_provenance_is_preserved:
+      status: planned
+    L203_non_acceptance_terminal_disposition_preserves_edit_provenance:
       status: planned
