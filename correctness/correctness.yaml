@@ -188,11 +188,11 @@ refinement:
     G2_canonical_history_is_linear_and_fenced:
       status: stable
       blocked_by: []
-      signature: 317b4d77faf45ff2d18c66f670812b83651c29b0d3d74cee162d1954add04203
+      signature: ccd8cb2cb2da2c219526c6dc4b8bf945940de9c09219aa17af3b7cafccd61291
     G3_snapshot_and_recovery_preserve_state:
       status: stable
       blocked_by: []
-      signature: 22bb87eda5b8a61fd3ea11787af319e0af4971b6c94f56ab17228cb06e903f6d
+      signature: 863c4e87e197279a7378179d1ccfa496879dd495cd5cdf3a2372d547ec81bfdb
     G4_reconnect_converges_without_gap_or_duplicate:
       status: stable
       blocked_by: []
@@ -200,7 +200,7 @@ refinement:
     G5_retry_resolves_idempotently:
       status: stable
       blocked_by: []
-      signature: e4da2bdcb7b1818536a45549e4905a66837176ed29b852a79ea8495c11f3e155
+      signature: 58efd14a0464a16adb8ea706830c8029cca2b3cf9e8edf50cc25cb815b206b37
     C7_revision_frontier_is_linear:
       status: stable
       blocked_by: []
@@ -208,11 +208,11 @@ refinement:
     C8_stale_owner_is_fenced:
       status: stable
       blocked_by: []
-      signature: caa3eb28cc44cc30653ce603f53a211bb01ad924c3751caa4c618dafa93f2b36
+      signature: 385efa38e193977bd82677a67e5984b70c8dc4627f4c7b46be97421f92222c6a
     C9_recovery_reconstructs_committed_state:
       status: stable
       blocked_by: []
-      signature: ebe0f33833685ba908cd1511e0db7f6c7e10bc1f3f416c254b835d7a153e3bdb
+      signature: 270935fd75c5283e0bb4220c85b4bc28c16ae638692084117a648b4631e078bd
     C10_catchup_represents_exact_missing_suffix:
       status: stable
       blocked_by: []
@@ -520,7 +520,7 @@ refinement:
     G11_visible_speculative_overlays_match_document:
       status: stable
       blocked_by: []
-      signature: 3aec1fb02908ec9d30e9ff27f7e03b8d5d7f9a85783d4f96acedb87558c3d305
+      signature: 456afeaca6d3e32a387507a7d5723671ca1b8b8cb8a51e2f46b5fc2a72e728f6
     L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance:
       status: stable
       blocked_by: []
@@ -596,7 +596,7 @@ refinement:
     L159_owner_append_authorization_is_generation_bound:
       status: stable
       blocked_by: []
-      signature: fa2c5e0b3b3a470c17ea2c96975da551d58444d10ddb1e39019fb2771265db60
+      signature: 5f5d400b66a6932b7b5084aa02d44d17a51d085d3411c3d4727ef9e16f23f776
     L161_definitive_retry_response_comes_from_terminal_outcome:
       status: stable
       blocked_by: []
@@ -692,7 +692,7 @@ refinement:
     L183_definitive_rejection_preserves_request_provenance:
       status: stable
       blocked_by: []
-      signature: 36e3ffa692133bf57c0942cbb46885c7c8cdc9b24f4d4cf2576d7c009019a14f
+      signature: 4c5ce44903bdc814bf5f5480c9565defa8cf743b192719774f4b549729a3a334
     L184_terminal_outcome_entry_has_single_authoritative_value:
       status: stable
       blocked_by: []
@@ -757,6 +757,10 @@ refinement:
       status: stable
       blocked_by: []
       signature: db1124935eb04da9af19949130da452744efec6114697f1c17bd1e03d54ee785
+    L202_speculative_overlay_operation_provenance_is_preserved:
+      status: stable
+      blocked_by: []
+      signature: 7ae7d43bc4b0edda7ee81c9ba4fc5c5175b95e54d933cc87c38a3ea24abbf2c9
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -864,7 +868,8 @@ claims:
   G3_snapshot_and_recovery_preserve_state:
     kind: root
     statement: >-
-      Snapshotting, compaction, and completed owner recovery satisfy the logical_state_equivalence_at_frontier
+      Every optimized authoritative lifecycle representation at a common frontier H—including snapshotting,
+      checkpoint replacement, cleanup, and compaction—and every completed owner recovery satisfy the logical_state_equivalence_at_frontier
       semantic contract relative to canonical accepted history.
     depends_on:
       - C9_recovery_reconstructs_committed_state
@@ -935,10 +940,10 @@ claims:
       attempts arbitrate through the same per-key terminal state, and every externally terminal result
       for that key exactly reproduces the already-linearized terminal result. Pending, timeout, cancellation,
       transport loss, and crash-before-terminal-commit remain non-terminal uncertainty. Consequently,
-      a normally participating client reprocessing the same logical edit within the 30-day normal retry
-      horizon observes the same authoritative terminal result for that logical operation rather than creating
-      or receiving an incompatible second terminal outcome. Re-submission after expiry is outside this
-      guarantee.
+      if a normally participating client reprocessing the same logical edit within the 30-day normal retry
+      horizon obtains an externally terminal result, that result is the same authoritative terminal result
+      for that logical operation rather than an incompatible second terminal outcome; this guarantee does
+      not require eventual terminal observation. Re-submission after expiry is outside this guarantee.
     depends_on:
       - A3_client_change_id_identifies_logical_edit
       - C13_idempotency_key_is_temporally_unique
@@ -2918,26 +2923,30 @@ claims:
             document D visible; require every resulting exposed overlay to have document_id D.
     kind: leaf
   G11_visible_speculative_overlays_match_document:
-    statement: 'speculative_overlay_identity_provenance holds for every logical client edit represented
-      speculatively: if the logical edit is created with identity (document_id=D, client_change_id=k),
-      every retained representation in client_speculative_overlays and every exposed representation in
-      client_visible_speculative_overlays preserves exactly that same (D,k) for the lifetime of the edit
-      across creation, retention, restoration, tab/view switching, suppression/reactivation, ACK/retry
-      bookkeeping, canonical publication, resync publication, and every other transition that preserves
-      the same logical edit. visible_speculative_retention_coherence also holds at every user-visible
-      client state: every exposed speculative representation has a matching retained representation of
-      the same logical edit and full identity, and terminal removal/disposition of retained state cannot
-      leave an orphaned visible overlay. At every user-visible client state representing document D, visible_speculative_overlay_document_binding
+    statement: 'speculative_overlay_identity_provenance and speculative_overlay_operation_provenance hold
+      for every logical client edit represented speculatively: if the logical edit is created with identity
+      (document_id=D, client_change_id=k) and logical operation X, every retained representation in client_speculative_overlays
+      and every exposed representation in client_visible_speculative_overlays preserves exactly that same
+      (D,k) and continues to encode operation X for the lifetime of the edit across creation, retention,
+      restoration, tab/view switching, suppression/reactivation, ACK/retry bookkeeping, canonical publication,
+      resync publication, and every other transition that preserves the same logical edit. Physical representation
+      may change only in ways that preserve X''s semantics; another edit''s operation cannot be cross-bound
+      under (D,k). visible_speculative_retention_coherence also holds at every user-visible client state:
+      every exposed speculative representation has a matching retained representation of the same logical
+      edit and full identity, and terminal removal/disposition of retained state cannot leave an orphaned
+      visible overlay. At every user-visible client state representing document D, visible_speculative_overlay_document_binding
       also holds: every currently exposed speculative overlay belongs to D. Retained overlays for another
       document may remain retained but must not be exposed while D is the visible document.'
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
     formal_intent: visible_speculative_overlay_document_binding AND
-      speculative_overlay_identity_provenance AND visible_speculative_retention_coherence
+      speculative_overlay_identity_provenance AND speculative_overlay_operation_provenance AND
+      visible_speculative_retention_coherence
     semantic_contracts:
       - visible_speculative_overlay_document_binding
       - speculative_overlay_identity_provenance
+      - speculative_overlay_operation_provenance
       - visible_speculative_retention_coherence
     kind: root
     depends_on:
@@ -2945,6 +2954,7 @@ claims:
       - L133_visible_overlay_document_binding_preserved_by_local_transitions
       - L176_visible_speculative_overlay_is_backed_by_retained_state
       - L179_speculative_overlay_identity_provenance_is_preserved
+      - L202_speculative_overlay_operation_provenance_is_preserved
   L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance:
     statement: Whenever a durable accepted-history lifecycle transformation outside the normal
       acceptance transaction—including compaction, cleanup, or snapshot replacement—creates,
@@ -4350,6 +4360,33 @@ claims:
             post-migration mapping to preserve each record's original full identity and producer
             provenance exactly.
     kind: leaf
+  L202_speculative_overlay_operation_provenance_is_preserved:
+    statement: "speculative_overlay_operation_provenance holds for every logical_client_edit: every retained
+      representation in client_speculative_overlays and every exposed representation in client_visible_speculative_overlays
+      continues to encode that same edit's logical_edit_operation across creation, retention, restoration,
+      tab/view switching, suppression/reactivation, ACK/retry bookkeeping, canonical publication, resync
+      publication, and every other client transition that preserves the same logical edit. Physical representation
+      may change, but another logical edit's operation cannot be substituted or cross-bound under the
+      preserved speculative identity merely because the resulting value is extensionally equal."
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - client_document_scoped_speculative_state
+    semantic_contracts:
+      - speculative_overlay_operation_provenance
+    formal_intent: speculative_overlay_operation_provenance
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Tag each created logical edit with immutable logical-operation provenance,
+            enumerate every client transition that creates, retains, restores, rewrites,
+            reactivates, or exposes a speculative representation of that edit, and reject any path
+            that sources the retained or visible representation from another edit's operation while
+            preserving the original logical edit/identity. Include adversarial fixtures with
+            extensionally equal operations from distinct edits so value equality cannot substitute
+            for producer provenance.
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -4486,6 +4523,13 @@ catalog:
         computed for one submitted_request and eligible to become an authoritative REJECTED terminal
         result. Timeout, cancellation, transport loss, and crash-before-decision are not definitive
         rejection decisions.
+      scope_dimensions:
+        - document
+    logical_edit_operation:
+      description: The semantic user operation carried by one logical_client_edit before canonical
+        acceptance. Retained or exposed optimistic representations may use different physical
+        encodings or rendering objects, but while they still represent that logical edit they must
+        preserve this same operation semantics rather than substitute another edit's operation.
       scope_dimensions:
         - document
   state:
@@ -4635,9 +4679,9 @@ catalog:
         the accepted append.
       automation_reusable: true
     idempotency_gate:
-      description: All authoritative ACCEPTED and definitive REJECTED outcomes for one (document_id,
-        client_change_id) arbitrate through one per-key terminal-result boundary so only one
-        terminal decision can linearize.
+      description: "All authoritative ACCEPTED and definitive REJECTED outcomes for one (document_id,
+        client_change_id) arbitrate through one per-key terminal-result boundary so only one terminal
+        decision can linearize."
       automation_reusable: true
     owner_epoch_fencing:
       description: Every authoritative append is conditioned on both the current document epoch and
@@ -5177,6 +5221,10 @@ catalog:
           model treats owner-generation identity as trusted server-side execution context rather
           than client-controlled input.
         - Does not itself prove revision-frontier serialization or idempotency arbitration.
+        - This contract authorizes canonical accepted-history append only. Per-key terminal-outcome
+          arbitration is a separate authority boundary and does not implicitly require the terminal
+          write itself to carry or match the current OT owner generation; an ACCEPTED terminal
+          outcome still depends separately on its matching fenced canonical append.
       automation_reusable: true
       scope_bindings:
         - dimension: document
@@ -5412,6 +5460,9 @@ catalog:
           non-terminal uncertainty and do not create REJECTED.
         - Does not by itself prove single-valued terminal arbitration or faithful replay of an
           already-linearized terminal result.
+        - Does not require definitive REJECTED terminalization to be authorized by the current OT
+          owner generation; terminal-outcome arbitration is an independent per-key authority
+          boundary unless another explicit contract states otherwise.
       automation_reusable: true
     accepted_terminal_result_binding:
       class: provenance_binding
@@ -5446,6 +5497,36 @@ catalog:
         - After the identity leaves the normal retry eligibility horizon, this contract does not
           require the terminal outcome or its producer provenance to be retained.
       automation_reusable: true
+    speculative_overlay_operation_provenance:
+      class: provenance_binding
+      definition: Every retained or exposed speculative representation of one logical_client_edit is
+        semantically derived from that same edit's logical_edit_operation. Creation, retention,
+        restoration, tab/view switching, suppression/reactivation, ACK/retry bookkeeping, canonical
+        publication, resync publication, and every other transition that preserves the same logical
+        edit may change physical representation only in semantics-preserving ways; they may not
+        substitute or cross-bind the operation of another logical edit while retaining the original
+        speculative identity, even when the substituted representation is extensionally equal at the
+        current UI observation.
+      source_symbols:
+        - logical_client_edit
+        - logical_edit_operation
+      bound_symbols:
+        - client_speculative_overlays
+        - client_visible_speculative_overlays
+      scope_bindings:
+        - dimension: document
+          source_symbols:
+            - logical_client_edit
+            - logical_edit_operation
+          bound_symbols:
+            - client_speculative_overlays
+            - client_visible_speculative_overlays
+      excludes:
+        - Does not require byte-identical speculative representation when multiple encodings
+          preserve the same logical operation semantics.
+        - Does not define client-side OT, automatic rebase, eventual reconciliation, or renderer
+          correctness for an already-canonical accepted change.
+      automation_reusable: true
   scope_dimensions:
     document:
       description: Collaborative document/resource namespace; document-scoped authority, history,
@@ -5456,7 +5537,7 @@ id_allocator:
     A: 7
     G: 13
     C: 48
-    L: 202
+    L: 203
     D: 15
     T: 3
 assurance:
@@ -5760,4 +5841,6 @@ assurance:
     L200_accepted_terminal_provenance_survives_compaction_and_retention:
       status: planned
     L201_accepted_terminal_provenance_survives_representation_migration:
+      status: planned
+    L202_speculative_overlay_operation_provenance_is_preserved:
       status: planned
