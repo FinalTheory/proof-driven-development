@@ -183,6 +183,7 @@ Snapshot Store:
 WebSocket Gateway:
   - pushes accepted change sets to online clients
   - delivery only, not truth
+  - every live stream is document-scoped: a change delivered on stream D must come from accepted-change-set history for the same document D; equal revision/payload values from another document are not interchangeable provenance
 ```
 
 这样拆开后，架构图里的方框不再是“Document Service handles everything”。每个组件都有明确职责、输入输出和故障语义。
@@ -393,6 +394,8 @@ freeze editing
 8. unacked edits retry with client_change_id
 ```
 
+这里的 **OT metadata** 在 correctness model 中由 `ot_owner_memory` 表示，并且它是 recovery 安装的完整 document-history-dependent OT metadata carrier：除 recovered logical document state 与 local head / next-revision 之外，任何仍能影响后续 server-side OT transform 或 canonical acceptance 的历史依赖 metadata 都必须包含在 `ot_owner_memory` 中；不存在另一个未建模但同样能影响 canonical semantics 的 recovered OT metadata bucket。
+
 这里还缺一个决定 failover 是否安全的边界：fencing 必须下沉到 accepted-change-set append 的条件写里，而不是只停留在 coordinator 的内存认知里。
 
 可以把 ownership 建模成：
@@ -404,7 +407,9 @@ document_owner_epoch:
 
 `owner_generation_id` 标识一次具体的 owner generation / ownership tenure；同一个进程重启、重新 acquire ownership，或者 ownership 从 A 切到 B，都必须得到新的 generation identity。它是 server-side ownership context 的一部分，不是 client request 可以自由填写或替换的业务字段。一个旧 owner generation 即使后来读到了新的 numeric epoch，也不能把自己的 generation identity 重新绑定成新 owner 的 generation。
 
-correctness model 把这条“append 所使用的 fencing tuple 必须来自执行该 append 的 immutable owner generation，并与 authoritative current owner generation 对齐；旧 generation 不能仅通过复制新 epoch/owner metadata 重新获得 authority”的 provenance relation 命名为 `owner_generation_authorization_binding`。
+这里的 authority identity 不是裸 `(epoch, owner_generation_id)`，而是 document-scoped tuple `(document_id, epoch, owner_generation_id)`。两个文档即使恰好出现相同的 epoch/generation scalar，也不能互相授权；执行 append 的 generation 必须就是目标 document 的 authoritative current generation。换句话说，document_id 是 fencing provenance 的 namespace coordinate，而不是 routing 层可以事后替换的旁路字段。
+
+correctness model 把这条“append 所使用的 document-scoped fencing tuple 必须来自执行该 append 的 immutable owner generation，并与同一 document 的 authoritative current owner generation 对齐；旧 generation 不能仅通过复制新 epoch/owner metadata 重新获得 authority”的 provenance relation 命名为 `owner_generation_authorization_binding`。
 
 新 owner 接管时：
 
@@ -481,6 +486,8 @@ new-owner recovery 可以具体写成：
 9. only now expose transform / acceptance entrypoints
 10. release lifecycle_lock
 ```
+
+Recovery 的 authoritative truth 还必须和 recovering document 本身做 provenance closure。对 recovery target `D`，ownership handoff、captured `recovery_head`、selected checkpoint、replayed canonical tail、重建出的 logical/OT runtime state，以及最终恢复服务的 owner context 必须全部属于同一个 `D`；即使另一个 document `D2` 的 checkpoint、tail 或重建结果在数值上与 `D` 完全相同，也不能替代 `D` 的 authoritative truth。`lifecycle_lock(D)` 只能序列化 `D` 的 checkpoint lifecycle，因此跨 document 取 checkpoint/tail 同样会破坏 lock boundary。correctness model 将这一关系命名为 `recovery_document_scope_binding`。
 
 snapshot publication 和 cleanup/compaction 也必须先拿同一把 `lifecycle_lock(document_id)`，并一直持有到各自 lifecycle procedure 正常结束或 abort。这样 recovery 选中并加载某个 checkpoint 的过程中，checkpoint lifecycle 不会从旁边切换或删除它。
 

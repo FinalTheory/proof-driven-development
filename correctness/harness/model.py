@@ -261,6 +261,22 @@ def _slice_catalog_context(graph: Graph, node_ids: Iterable[str]) -> dict[str, A
                     if symbol in typed_entries[namespace]:
                         refs[namespace].add(symbol)
 
+        scope_bindings = contract.get("scope_bindings", [])
+        if isinstance(scope_bindings, list):
+            for binding in scope_bindings:
+                if not isinstance(binding, dict):
+                    continue
+                dimension = binding.get("dimension")
+                if isinstance(dimension, str) and dimension in _catalog_namespace(graph, "scope_dimensions"):
+                    refs["scope_dimensions"].add(dimension)
+                for field in ("source_symbols", "bound_symbols"):
+                    for symbol in binding.get(field, []):
+                        if not isinstance(symbol, str):
+                            continue
+                        for namespace in ("terms", "state"):
+                            if symbol in typed_entries[namespace]:
+                                refs[namespace].add(symbol)
+
         contract_text_parts: list[str] = []
         definition = contract.get("definition")
         if isinstance(definition, str):

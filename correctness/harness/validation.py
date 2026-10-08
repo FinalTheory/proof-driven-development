@@ -402,6 +402,8 @@ def validate(graph: Graph) -> tuple[list[str], list[str]]:
         catalog = {}
     for namespace in CATALOG_NAMESPACES:
         entries = catalog.get(namespace) if isinstance(catalog, dict) else None
+        if namespace == "scope_dimensions" and entries is None:
+            continue
         if not isinstance(entries, dict) or not entries:
             errors.append(f"catalog.{namespace} must be a non-empty mapping")
             continue
@@ -449,13 +451,13 @@ def validate(graph: Graph) -> tuple[list[str], list[str]]:
 
     semantic_symbols = set(_catalog_namespace(graph, "terms")) | set(_catalog_namespace(graph, "state"))
     symbolic_dimensions = _catalog_namespace(graph, "symbolic_dimensions")
+    scope_dimensions = _catalog_namespace(graph, "scope_dimensions")
     state_catalog = _catalog_namespace(graph, "state")
+    term_catalog = _catalog_namespace(graph, "terms")
     for state_id, entry in state_catalog.items():
         if not isinstance(entry, dict):
             continue
         dimensions = entry.get("symbolic_dimensions")
-        if dimensions is None:
-            continue
         if isinstance(dimensions, list):
             for dimension in dimensions:
                 if isinstance(dimension, str) and dimension not in symbolic_dimensions:
@@ -463,6 +465,33 @@ def validate(graph: Graph) -> tuple[list[str], list[str]]:
                         f"catalog.state.{state_id}.symbolic_dimensions references unknown "
                         f"catalog.symbolic_dimensions entry {dimension!r}"
                     )
+
+    for namespace, entries in (("terms", term_catalog), ("state", state_catalog)):
+        for symbol_id, entry in entries.items():
+            if not isinstance(entry, dict):
+                continue
+            dimensions = entry.get("scope_dimensions")
+            if not isinstance(dimensions, list):
+                continue
+            for dimension in dimensions:
+                if isinstance(dimension, str) and dimension not in scope_dimensions:
+                    errors.append(
+                        f"catalog.{namespace}.{symbol_id}.scope_dimensions references unknown "
+                        f"catalog.scope_dimensions entry {dimension!r}"
+                    )
+
+    def semantic_symbol_scopes(symbol: str) -> set[str]:
+        # A semantic identifier may intentionally exist in both vocabulary and state namespaces.
+        # Scope is semantic, so preserve the union rather than letting one namespace shadow the other.
+        result: set[str] = set()
+        for entries in (term_catalog, state_catalog):
+            entry = entries.get(symbol)
+            if not isinstance(entry, dict):
+                continue
+            dimensions = entry.get("scope_dimensions", [])
+            if isinstance(dimensions, list):
+                result.update(d for d in dimensions if isinstance(d, str))
+        return result
 
     contracts = _catalog_namespace(graph, "semantic_contracts")
     for contract_id, entry in contracts.items():
@@ -493,6 +522,82 @@ def validate(graph: Graph) -> tuple[list[str], list[str]]:
                 errors.append(
                     f"catalog.semantic_contracts.{contract_id} provenance source_symbols and "
                     f"bound_symbols must be disjoint; overlap={overlap}"
+                )
+
+            shared_scope_dimensions = set()
+            source_by_dimension: dict[str, set[str]] = collections.defaultdict(set)
+            bound_by_dimension: dict[str, set[str]] = collections.defaultdict(set)
+            for symbol in source_symbols:
+                for dimension in semantic_symbol_scopes(symbol):
+                    source_by_dimension[dimension].add(symbol)
+            for symbol in bound_symbols:
+                for dimension in semantic_symbol_scopes(symbol):
+                    bound_by_dimension[dimension].add(symbol)
+            shared_scope_dimensions = set(source_by_dimension) & set(bound_by_dimension)
+
+            bindings = entry.get("scope_bindings", [])
+            if bindings is None:
+                bindings = []
+            seen_dimensions: set[str] = set()
+            if isinstance(bindings, list):
+                for index, binding in enumerate(bindings):
+                    if not isinstance(binding, dict):
+                        continue
+                    dimension = binding.get("dimension")
+                    if not isinstance(dimension, str):
+                        continue
+                    if dimension not in scope_dimensions:
+                        errors.append(
+                            f"catalog.semantic_contracts.{contract_id}.scope_bindings[{index}] references "
+                            f"unknown catalog.scope_dimensions entry {dimension!r}"
+                        )
+                    if dimension in seen_dimensions:
+                        errors.append(
+                            f"catalog.semantic_contracts.{contract_id}.scope_bindings repeats dimension {dimension!r}"
+                        )
+                    seen_dimensions.add(dimension)
+                    declared_sources = {
+                        symbol for symbol in binding.get("source_symbols", []) if isinstance(symbol, str)
+                    }
+                    declared_bounds = {
+                        symbol for symbol in binding.get("bound_symbols", []) if isinstance(symbol, str)
+                    }
+                    if not declared_sources <= source_symbols:
+                        errors.append(
+                            f"catalog.semantic_contracts.{contract_id}.scope_bindings[{index}].source_symbols "
+                            "must be a subset of provenance source_symbols"
+                        )
+                    if not declared_bounds <= bound_symbols:
+                        errors.append(
+                            f"catalog.semantic_contracts.{contract_id}.scope_bindings[{index}].bound_symbols "
+                            "must be a subset of provenance bound_symbols"
+                        )
+                    expected_sources = source_by_dimension.get(dimension, set())
+                    expected_bounds = bound_by_dimension.get(dimension, set())
+                    if declared_sources != expected_sources:
+                        errors.append(
+                            f"catalog.semantic_contracts.{contract_id}.scope_bindings[{index}] must enumerate "
+                            f"all {dimension!r}-scoped source symbols; expected={sorted(expected_sources)!r} "
+                            f"actual={sorted(declared_sources)!r}"
+                        )
+                    if declared_bounds != expected_bounds:
+                        errors.append(
+                            f"catalog.semantic_contracts.{contract_id}.scope_bindings[{index}] must enumerate "
+                            f"all {dimension!r}-scoped bound symbols; expected={sorted(expected_bounds)!r} "
+                            f"actual={sorted(declared_bounds)!r}"
+                        )
+
+            missing_scope_bindings = sorted(shared_scope_dimensions - seen_dimensions)
+            for dimension in missing_scope_bindings:
+                errors.append(
+                    f"catalog.semantic_contracts.{contract_id} provenance crosses shared scope dimension "
+                    f"{dimension!r} but scope_bindings does not preserve it"
+                )
+            extra_scope_bindings = sorted(seen_dimensions - shared_scope_dimensions)
+            for dimension in extra_scope_bindings:
+                errors.append(
+                    f"catalog.semantic_contracts.{contract_id} scope_bindings declares dimension {dimension!r} "
+                    "that is not present on both provenance source and bound sides"
                 )
 
     if graph.repository_root is not None:

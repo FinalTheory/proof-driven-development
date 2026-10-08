@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-SCHEMA_VERSION = "0.14"
+SCHEMA_VERSION = "0.15"
 PROOF_SEMANTICS_VERSION = "1"
 ASSUMPTION_STATUSES = (
     "external_assumption",
@@ -504,7 +504,16 @@ CATALOG_SCHEMA = _closed_object(
     {
         "terms": {
             **_catalog_map(_closed_object(
-                {"description": {**NONEMPTY_STRING, "description": "Definition of this protocol/domain term; vocabulary only, not a correctness premise."}},
+                {
+                    "description": {**NONEMPTY_STRING, "description": "Definition of this protocol/domain term; vocabulary only, not a correctness premise."},
+                    "scope_dimensions": {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": True,
+                        "items": {"type": "string", "pattern": LOWER_SNAKE},
+                        "description": "Semantic namespace/resource dimensions in which this term is meaningful; provenance bindings that preserve the term across a matching scoped boundary must preserve these coordinates.",
+                    },
+                },
                 required=("description",),
             )),
             "description": "Protocol/domain vocabulary registry. Dynamic keys must be lower_snake_case term IDs.",
@@ -536,6 +545,13 @@ CATALOG_SCHEMA = _closed_object(
                                 "per-document state value from being collapsed into Document -> Value."
                             ),
                         },
+                        "scope_dimensions": {
+                            "type": "array",
+                            "minItems": 1,
+                            "uniqueItems": True,
+                            "items": {"type": "string", "pattern": LOWER_SNAKE},
+                            "description": "Semantic namespace/resource dimensions in which this state item is meaningful; matching scoped provenance relations must preserve these coordinates.",
+                        },
                     },
                     required=("class", "description"),
                 )
@@ -553,6 +569,18 @@ CATALOG_SCHEMA = _closed_object(
                 required=("description",),
             )),
             "description": "Stable registry of semantic coordinates that may be referenced by catalog.state.*.symbolic_dimensions.",
+        },
+        "scope_dimensions": {
+            **_catalog_map(_closed_object(
+                {
+                    "description": {
+                        **NONEMPTY_STRING,
+                        "description": "Definition of one semantic namespace/resource coordinate whose identity must be preserved across scoped provenance relations.",
+                    }
+                },
+                required=("description",),
+            )),
+            "description": "Stable registry of semantic namespace/resource coordinates referenced by term/state scope_dimensions and provenance scope_bindings.",
         },
         "mechanisms": {
             **_catalog_map(
@@ -618,6 +646,20 @@ CATALOG_SCHEMA = _closed_object(
                             **SEMANTIC_SYMBOL_REFS,
                             "description": "Typed catalog term/state identifiers whose meaning is bound to source_symbols by a provenance_binding.",
                         },
+                        "scope_bindings": {
+                            "type": "array",
+                            "minItems": 1,
+                            "uniqueItems": True,
+                            "items": _closed_object(
+                                {
+                                    "dimension": {"type": "string", "pattern": LOWER_SNAKE, "description": "Semantic scope dimension preserved by this provenance relation."},
+                                    "source_symbols": {**SEMANTIC_SYMBOL_REFS, "description": "All provenance source symbols carrying this scope dimension."},
+                                    "bound_symbols": {**SEMANTIC_SYMBOL_REFS, "description": "All provenance bound symbols carrying this scope dimension."},
+                                },
+                                required=("dimension", "source_symbols", "bound_symbols"),
+                            ),
+                            "description": "Complete preservation map for each semantic scope dimension shared by source and bound sides of a provenance_binding. Every scoped source/bound symbol for that dimension must be enumerated here.",
+                        },
                     },
                     required=("class", "definition", "excludes", "automation_reusable"),
                     extra={
@@ -654,6 +696,7 @@ CATALOG_SCHEMA = _closed_object(
                                             {"required": ["observation_scope"]},
                                             {"required": ["source_symbols"]},
                                             {"required": ["bound_symbols"]},
+                                            {"required": ["scope_bindings"]},
                                         ]
                                     }
                                 },

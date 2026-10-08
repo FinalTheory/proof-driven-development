@@ -29,7 +29,7 @@ def _leaf(statement: str):
 def make_fixture():
     """Immutable synthetic DAG used only for correctness.py tool regression tests."""
     return {
-        "schema_version": "0.14",
+        "schema_version": "0.15",
         "system": {
             "id": "synthetic_correctness_tool_fixture",
             "summary": "Synthetic system used only to test correctness.py algorithms.",
@@ -51,6 +51,9 @@ def make_fixture():
             "symbolic_dimensions": {
                 "entity": {"description": "Synthetic entity coordinate."},
                 "observation": {"description": "Synthetic observation coordinate."},
+            },
+            "scope_dimensions": {
+                "document": {"description": "Synthetic document/resource namespace."},
             },
             "mechanisms": {
                 "synthetic_mechanism": {
@@ -1143,6 +1146,92 @@ class CorrectnessToolTests(unittest.TestCase):
             )
         )
 
+    def test_provenance_shared_scope_requires_complete_scope_binding(self):
+        doc = copy.deepcopy(self.base)
+        doc["catalog"]["state"]["scoped_source"] = {
+            "class": "authoritative",
+            "description": "Synthetic source scoped by document.",
+            "scope_dimensions": ["document"],
+        }
+        doc["catalog"]["state"]["scoped_bound"] = {
+            "class": "derived",
+            "description": "Synthetic bound state scoped by document.",
+            "scope_dimensions": ["document"],
+        }
+        doc["catalog"]["semantic_contracts"]["scoped_binding"] = {
+            "class": "provenance_binding",
+            "definition": "scoped_source is bound to scoped_bound in the same document scope.",
+            "source_symbols": ["scoped_source"],
+            "bound_symbols": ["scoped_bound"],
+            "excludes": [],
+            "automation_reusable": True,
+        }
+        errors, _ = correctness.validate(correctness.Graph(doc))
+        self.assertTrue(any("shared scope dimension 'document'" in error for error in errors))
+
+        doc["catalog"]["semantic_contracts"]["scoped_binding"]["scope_bindings"] = [{
+            "dimension": "document",
+            "source_symbols": ["scoped_source"],
+            "bound_symbols": ["scoped_bound"],
+        }]
+        errors, _ = correctness.validate(correctness.Graph(doc))
+        self.assertFalse(any("scoped_binding" in error and "scope" in error for error in errors))
+
+    def test_scope_dimensions_union_term_and_state_for_same_identifier(self):
+        doc = copy.deepcopy(self.base)
+        doc["catalog"]["terms"]["shared_symbol"] = {
+            "description": "Synthetic vocabulary alias with no scope metadata."
+        }
+        doc["catalog"]["state"]["shared_symbol"] = {
+            "class": "authoritative",
+            "description": "Synthetic authoritative state scoped by document.",
+            "scope_dimensions": ["document"],
+        }
+        doc["catalog"]["state"]["scoped_bound"] = {
+            "class": "derived",
+            "description": "Synthetic bound state scoped by document.",
+            "scope_dimensions": ["document"],
+        }
+        doc["catalog"]["semantic_contracts"]["scoped_binding"] = {
+            "class": "provenance_binding",
+            "definition": "shared_symbol is bound to scoped_bound within one document.",
+            "source_symbols": ["shared_symbol"],
+            "bound_symbols": ["scoped_bound"],
+            "excludes": [],
+            "automation_reusable": True,
+        }
+        errors, _ = correctness.validate(correctness.Graph(doc))
+        self.assertTrue(any("shared scope dimension 'document'" in error for error in errors))
+
+    def test_provenance_scope_binding_must_enumerate_all_scoped_symbols(self):
+        doc = copy.deepcopy(self.base)
+        for symbol in ("source_a", "source_b"):
+            doc["catalog"]["state"][symbol] = {
+                "class": "authoritative",
+                "description": f"Synthetic {symbol}.",
+                "scope_dimensions": ["document"],
+            }
+        doc["catalog"]["state"]["bound_a"] = {
+            "class": "derived",
+            "description": "Synthetic bound state.",
+            "scope_dimensions": ["document"],
+        }
+        doc["catalog"]["semantic_contracts"]["scoped_binding"] = {
+            "class": "provenance_binding",
+            "definition": "Document-scoped provenance relation.",
+            "source_symbols": ["source_a", "source_b"],
+            "bound_symbols": ["bound_a"],
+            "scope_bindings": [{
+                "dimension": "document",
+                "source_symbols": ["source_a"],
+                "bound_symbols": ["bound_a"],
+            }],
+            "excludes": [],
+            "automation_reusable": True,
+        }
+        errors, _ = correctness.validate(correctness.Graph(doc))
+        self.assertTrue(any("must enumerate all 'document'-scoped source symbols" in error for error in errors))
+
     def test_semantic_contract_reference_must_appear_in_referenced_source_section(self):
         doc = copy.deepcopy(self.base)
         doc["claims"]["L1_left_boundary"]["statement"] = (
@@ -1933,6 +2022,11 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("Terminal-decision coherence closure", text)
         self.assertIn("incompatible authoritative terminal outcomes", text)
         self.assertIn("semantic-neighborhood substitution attack", text)
+        self.assertIn("scope/namespace closure", text)
+        self.assertIn("cross-scope extensional-collision attack", text)
+        self.assertIn("scope_bindings", text)
+        self.assertIn("violated_current_claims", text)
+        self.assertIn("belongs to composition or implementation evidence", text)
         self.assertIn("spawn_chatgpt_subagents", text)
         self.assertIn("tool discovery", text)
         self.assertIn("FINAL VERDICT: EXECUTION INCOMPLETE", text)

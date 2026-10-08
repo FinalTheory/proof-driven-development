@@ -1,4 +1,4 @@
-schema_version: "0.14"
+schema_version: "0.15"
 system:
   id: google_docs_mini
   summary: This model describes the write, retry, ownership-failover, recovery, and reconnect paths
@@ -188,31 +188,31 @@ refinement:
     G2_canonical_history_is_linear_and_fenced:
       status: stable
       blocked_by: []
-      signature: eb3f0d03586f7c225300a1d893044178e11edb2aeec009f0fe351a8f4d49a6f7
+      signature: 317b4d77faf45ff2d18c66f670812b83651c29b0d3d74cee162d1954add04203
     G3_snapshot_and_recovery_preserve_state:
       status: stable
       blocked_by: []
-      signature: b7b43c872bb935efdf36e0f2869dfb82eabce6fc9e6336619870c9736a590bb8
+      signature: 79fb5c360a3be066af29aea95f53db159b95f3b445cac097d485beacf0d470ca
     G4_reconnect_converges_without_gap_or_duplicate:
       status: stable
       blocked_by: []
-      signature: 8e6c567790bbaece9dab68c1dcf0c7c9315bcb2afb4f5aee78cdd42d014969af
+      signature: c8ba86d9496a4f97cde26ca6ac968d21b5d88c44a432ad9b5cc2bf9691d3cc7c
     G5_retry_resolves_idempotently:
       status: stable
       blocked_by: []
-      signature: c2998f9897640f01c4adfe9d010fd15a19dbed8193dd521262d39a95add2e2d3
+      signature: c4386d1c1425ba27da756338cc73f79c1051739cab81313a04d0b3111eb5d617
     C7_revision_frontier_is_linear:
       status: stable
       blocked_by: []
-      signature: 2093b51a426605c371fc48f9c1984037426cb597b99cc18ab5389d92f55cbcc2
+      signature: 6a7db52a102a61ae1f186a00f4b04a89b82afe9291103ab71bafc50fcc5e9d5a
     C8_stale_owner_is_fenced:
       status: stable
       blocked_by: []
-      signature: f9aa2d61722ba08586602bb20f60f1ce695690a2a7ca43b90a71eec67380eec9
+      signature: caa3eb28cc44cc30653ce603f53a211bb01ad924c3751caa4c618dafa93f2b36
     C9_recovery_reconstructs_committed_state:
       status: stable
       blocked_by: []
-      signature: 7fc306e059b7c68bc9ebc097516360c30bce585e7c348a73e9bd7261e48883a9
+      signature: ebe0f33833685ba908cd1511e0db7f6c7e10bc1f3f416c254b835d7a153e3bdb
     C10_catchup_represents_exact_missing_suffix:
       status: stable
       blocked_by: []
@@ -224,7 +224,7 @@ refinement:
     C12_live_delivery_contains_only_accepted_changes:
       status: stable
       blocked_by: []
-      signature: 19ab992ed4e45b3afdb464a4e36f19959653e600d45fc66e221197f0837491bf
+      signature: 68f009e2601049f52c4be6e6409265a4a12dfc2b82839b1626038b4835199107
     C13_idempotency_key_is_temporally_unique:
       status: stable
       blocked_by: []
@@ -240,7 +240,7 @@ refinement:
     L5_append_requires_current_epoch:
       status: stable
       blocked_by: []
-      signature: acf99be8c9296ffe42466abce34f52138c43dd7fcee5da265198f184606442c5
+      signature: f781cf3749185227b21929f2f70d735610f3ca0db1c8e245f5a2f8f0d85df246
     L6_frontier_advance_and_insert_commit_together:
       status: stable
       blocked_by: []
@@ -292,7 +292,7 @@ refinement:
     L28_authoritative_epoch_never_regresses_or_reuses:
       status: stable
       blocked_by: []
-      signature: 496490e4d8e7458e6f9774519aaa74160a69fac7e19275c13e823f9e0f44c9b7
+      signature: 68ef8ac1a01508b495e986c4b34d3b9d90e02821dda2bd788f60e55d56ddad7a
     C16_non_append_lifecycle_preserves_logical_revision_prefix:
       status: stable
       blocked_by: []
@@ -356,15 +356,15 @@ refinement:
     C25_recovery_derives_complete_ot_metadata_from_truth:
       status: stable
       blocked_by: []
-      signature: 4eae122933615273193a89418b92f57d805299c921296f404cb0f5de9f08103f
+      signature: 399e11a9cc3fac7488f455da10d8ccefbb81499019fc7869c97e627fd81b4b24
     L64_recovered_ot_metadata_equals_clean_authoritative_reconstruction:
       status: stable
       blocked_by: []
-      signature: d40bb2d3150151c187943b247ee5b60eeb0af7a47a7e087ac8be71c0a2d14e1b
+      signature: 36c9887afb9ae93e39f73a6a831baf70c7a07ae817fe84f3941a7abf110b889b
     L65_failed_owner_volatile_state_cannot_influence_recovered_metadata:
       status: stable
       blocked_by: []
-      signature: 6caf24ddf5541048b5366ac4b8d6274363a81490e55f7e85c939ae35af578241
+      signature: 4d2d154806f1d048b2d5066511be2afafae12ea9dfd3fc3a57ece9495f7ea452
     L79_new_owner_accepts_only_after_reconstruction:
       status: stable
       blocked_by: []
@@ -372,7 +372,7 @@ refinement:
     L92_captured_recovery_head_equals_authoritative_frontier:
       status: stable
       blocked_by: []
-      signature: 1bf7ce81c045a5e8ce4b78c0b60302ed34deda82ed3d2cdc96771e4e404353de
+      signature: bacc75543543404aa08499fed07e9fb0adbc23369f708bde3fd9e1330024e8da
     L93_recovery_loads_selected_checkpoint_before_replay:
       status: stable
       blocked_by: []
@@ -380,7 +380,7 @@ refinement:
     L94_recovery_starts_after_epoch_handoff:
       status: stable
       blocked_by: []
-      signature: e152122bb66d6b2d081e2daf6ad63c11f0b1dc3c6e8a1e41bff50ec6358a44e5
+      signature: 3dfa805647fdf5dda0ec45d007f54897f5b62242ead0cd9caf131df097b4a14c
     L97_client_adopts_snapshot_before_tail:
       status: stable
       blocked_by: []
@@ -432,7 +432,7 @@ refinement:
     G9_accepted_idempotency_evidence_matches_committed_acceptance:
       status: stable
       blocked_by: []
-      signature: 7c7b518f910b1058eb77ef1671903391ba0d524af324e2732fec85d18cfa84e8
+      signature: 713a475b420fb50bc61c64da593619a21d6eea13cc2d6ffc48f835d6fd862daf
     L113_request_raw_edit_is_bound_to_authoring_frontier:
       status: stable
       blocked_by: []
@@ -448,7 +448,7 @@ refinement:
     L116_live_delivery_is_bound_to_committed_acceptance:
       status: stable
       blocked_by: []
-      signature: 42c385b9e497169a3ec59253db62873e0e4790828885d826d4d03a438f074f06
+      signature: 2222ed5860ad2ef62b1158b11b118ecade9db855bbeeffc52d5220d429c64ae0
     L117_retry_existing_acceptance_matches_full_idempotency_key:
       status: stable
       blocked_by: []
@@ -508,7 +508,7 @@ refinement:
     L131_post_recovery_acceptance_state_is_exhaustive:
       status: stable
       blocked_by: []
-      signature: 56052954c694a412d0e2c3de0d3baca213150f9c4138f03e63559b96e3aeed26
+      signature: fa1ad9ab32b74ca4a738af01666bc153f1d4568fdf7601f4441f3ea16140bf3d
     L132_visible_overlay_document_binding_established_on_publication:
       status: stable
       blocked_by: []
@@ -536,11 +536,11 @@ refinement:
     L137_authoritative_history_mutators_are_exhaustively_classified:
       status: stable
       blocked_by: []
-      signature: 871a7652a83f533665cf76204ccf0ab8f07384cdd31a382e3cacab3fe2cbaf5c
+      signature: 757406b6d70e8ae1c8dfc9be0f0f47a6a9dbe09e749c5ac527566f48fcb7ba8a
     C39_authoritative_history_state_is_gap_free:
       status: stable
       blocked_by: []
-      signature: 31b5ec39341e036396999957b72a7c007f677fdafc3feb5b61f2cf1dcb233ded
+      signature: fa4a9b306178e281800e9614e9e70537dc34f8016e80f106b85733e348be5e61
     L138_committed_append_preserves_gap_free_state_shape:
       status: stable
       blocked_by: []
@@ -552,11 +552,7 @@ refinement:
     L140_initial_authoritative_history_is_gap_free:
       status: stable
       blocked_by: []
-      signature: 5e97a85a6f29b3a3fecd2ead4ab7efbc2cc27be4be0f2d6ad788033541abade9
-    L141_authoritative_history_mutators_are_exhaustively_covered:
-      status: stable
-      blocked_by: []
-      signature: 2ca35bed62db12436b57b6c76cf2de5400dd43e07b23cbed68ac9d6ef93f0a75
+      signature: 893557634b2274312df3c39622ce16cc8eea770d7a2b8382e539de9ca5f22fed
     L143_acked_edit_completed_recovery_matches_canonical_replay:
       status: stable
       blocked_by: []
@@ -604,7 +600,7 @@ refinement:
     L156_owner_handoff_installs_fresh_epoch:
       status: stable
       blocked_by: []
-      signature: 7785501e880d318100077685118971ff8bbc568f467a9725582550d909c9f76a
+      signature: faa4d3751cdbafc050e3e7231e0ea54c17cb96ccd3ca816e984829e1852d2a52
     L157_foreground_reconnect_loses_publication_eligibility_after_document_switch:
       status: stable
       blocked_by: []
@@ -616,7 +612,7 @@ refinement:
     L159_owner_append_authorization_is_generation_bound:
       status: stable
       blocked_by: []
-      signature: f2e70b14946e84a410546ec6cfa15f5f9899dccd84ddf67a39e59f6e08f3a5ec
+      signature: fa2c5e0b3b3a470c17ea2c96975da551d58444d10ddb1e39019fb2771265db60
     L161_definitive_retry_response_comes_from_terminal_outcome:
       status: stable
       blocked_by: []
@@ -636,7 +632,7 @@ refinement:
     C40_terminal_outcome_is_single_valued_per_idempotency_key:
       status: stable
       blocked_by: []
-      signature: 0a0d709fd9d3ded5a478edf23ab76d8bbf307a00a777ded773c13d338e9d8104
+      signature: a6bae4219e7d0730ba57c5e467add1464ce7f59c22d6d02ab7514ee8f89457ae
     L165_pending_identity_revision_evidence_survives_retention:
       status: stable
       blocked_by: []
@@ -652,7 +648,7 @@ refinement:
     L168_owner_handoff_installs_fresh_generation:
       status: stable
       blocked_by: []
-      signature: f0bdf33315dddf09af83582e2f6c973054dc6f343b7e060e6d1b553ff1fb6a14
+      signature: ed3ba71a802d10246e245edb5a2f541951e6d74dd3e9779a1c369d073b3a8c5b
     C42_nonterminal_lifecycle_preserves_terminal_outcomes:
       status: stable
       blocked_by: []
@@ -677,6 +673,14 @@ refinement:
       status: stable
       blocked_by: []
       signature: fb1c22ae73c1e7468def3dce5dfc754e987dda664c1d90d28dc3426c1f0f869a
+    L174_recovery_inputs_and_state_are_document_bound:
+      status: stable
+      blocked_by: []
+      signature: 78bacf2f7ce83cab2d8bbee49bdb78f5bc6ce0d4c662d4017b34f96f8d21731d
+    L175_terminal_outcome_entry_state_is_coherent:
+      status: stable
+      blocked_by: []
+      signature: 0e6ce1246be6bd5d0e06554d10c98eb6b177e5dbf223cbca6e4db75c55518fca
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -764,12 +768,14 @@ claims:
   G2_canonical_history_is_linear_and_fenced:
     kind: root
     statement: >-
-      For each document, accepted history is a single gap-free revision sequence. Every authoritative
+      For each document D, accepted history is a single gap-free revision sequence. Every authoritative
       ownership handoff installs a strictly greater epoch and fresh immutable owner-generation identity
       before or atomically with the new generation becoming acceptance-eligible; superseded epochs/generations
-      never become authoritative again. Every canonical append commits only when both its epoch and generation-bound
-      server-side append identity match the authoritative current ownership generation, so equality to
-      a copied/current numeric epoch alone cannot let a superseded owner generation append.
+      never become authoritative again. Every canonical append for D commits only when its document-scoped
+      generation authorization—D together with its epoch and generation-bound server-side append identity—matches
+      D's authoritative current ownership generation. Equality to copied/current scalar fencing values,
+      including an accidental collision with another document's ownership tuple, cannot authorize a different
+      or superseded owner generation to append to D.
     depends_on:
       - C8_stale_owner_is_fenced
       - C39_authoritative_history_state_is_gap_free
@@ -895,13 +901,14 @@ claims:
   C8_stale_owner_is_fenced:
     kind: derived
     statement: >-
-      Every authoritative ownership handoff installs a strictly greater document_current_epoch and fresh
-      document_owner_generation_id before or atomically with the new generation becoming authoritative
+      Every authoritative ownership handoff for document D installs a strictly greater document_current_epoch
+      and fresh document_owner_generation_id before or atomically with the new generation becoming authoritative
       and acceptance-eligible. After supersession, the authoritative epoch never decreases or restores
-      a superseded value. owner_generation_authorization_binding holds for every canonical append: owner_epoch
-      and append_owner_generation_id remain bound to the immutable server-side generation executing the
-      append and must match the authoritative current epoch/generation at commit, so a superseded generation
-      cannot regain append authority by copying or substituting newer scalar fencing values.
+      a superseded value. owner_generation_authorization_binding holds for every canonical append: document
+      scope, owner_epoch, and append_owner_generation_id remain bound to the immutable server-side generation
+      for D executing the append and must match D's authoritative current epoch/generation at commit,
+      so neither a superseded generation nor another document's generation can regain append authority
+      through copied or colliding fencing values.
     depends_on:
       - L5_append_requires_current_epoch
       - L28_authoritative_epoch_never_regresses_or_reuses
@@ -918,11 +925,13 @@ claims:
   C9_recovery_reconstructs_committed_state:
     kind: derived
     statement: >-
-      If a new-owner recovery attempt completes at authoritative frontier H, the recovered logical document
-      state equals deterministic canonical replay of accepted revisions through H and the recovered service
+      For a new-owner recovery target document D that completes at authoritative frontier H, recovery_document_scope_binding
+      holds: the ownership context, captured head H, selected checkpoint, replayed canonical tail, and
+      installed recovered runtime state all belong to the same D. The recovered logical document state
+      equals deterministic canonical replay of D's accepted revisions through H and the recovered service
       frontier is H. If that recovered owner is used to resume acceptance, every document-history-dependent
       runtime state value that can influence server-side OT transformation or canonical acceptance is
-      equivalent to a clean reconstruction from authoritative canonical history through H, so resumed
+      equivalent to a clean reconstruction from D's authoritative canonical history through H, so resumed
       canonical semantics are unchanged. A recovery attempt may crash or abort before completion without
       any progress obligation.
     depends_on:
@@ -937,6 +946,7 @@ claims:
       - L92_captured_recovery_head_equals_authoritative_frontier
       - L131_post_recovery_acceptance_state_is_exhaustive
       - C8_stale_owner_is_fenced
+      - L174_recovery_inputs_and_state_are_document_bound
     source_refs:
       - authoritative_truth
       - snapshot_frontier
@@ -948,6 +958,9 @@ claims:
       - recovery_replay
       - server_authoritative_ot
       - snapshot_checkpoint
+    formal_intent: recovery_document_scope_binding
+    semantic_contracts:
+      - recovery_document_scope_binding
   C10_catchup_represents_exact_missing_suffix:
     kind: derived
     statement: >-
@@ -988,16 +1001,20 @@ claims:
   C12_live_delivery_contains_only_accepted_changes:
     kind: derived
     statement: >-
-      The live stream is derived from committed accepted history; delivery may duplicate
-      or reorder across reconnect boundaries, but it never invents an unaccepted change.
+      live_delivery_acceptance_binding holds: the live stream for document D is derived only from committed
+      accepted history for that same D. Delivery may duplicate or reorder across reconnect boundaries,
+      but it never invents an unaccepted change or substitutes a committed canonical record from another
+      document merely because revision/payload values are equal.
     depends_on:
       - L116_live_delivery_is_bound_to_committed_acceptance
     verification:
       verifiers:
         - kind: integration_test
-          intent: Every delivered revision must exist in the authoritative accepted log.
+          intent: Every delivered revision on stream D must resolve to a committed accepted-log
+            record for the same document D.
         - kind: runtime_invariant
-          intent: Observed delivery IDs must resolve to committed accepted-change records.
+          intent: Observed delivery identity must retain document scope plus committed
+            accepted-change provenance at the stream consumption boundary.
     source_refs:
       - authoritative_truth
       - reconnect_revision_boundary
@@ -1686,16 +1703,19 @@ claims:
       - retry_resolution
       - server_authoritative_ot
   C25_recovery_derives_complete_ot_metadata_from_truth:
-    statement: For authoritative recovery head H, every component of ot_owner_memory installed by
-      completed recovery is derived exclusively from the selected authoritative checkpoint and the
-      exact canonical tail through H, while the complete installed ot_owner_memory also exactly
-      equals an independent clean reconstruction from the full authoritative canonical accepted
-      history through H. Failed-owner memory, new-owner caches, process-local recovery data, or any
-      other non-authoritative runtime state cannot influence the recovered ot_owner_memory.
+    statement: "For recovery target document D at authoritative recovery head H, recovered_ot_state_provenance
+      holds: every component of ot_owner_memory installed by completed recovery is derived exclusively
+      from D's selected authoritative checkpoint and D's exact canonical accepted-history tail through
+      H, with checkpoint, tail, recovery_head, and installed ot_owner_memory all preserving the same document
+      scope D. The complete installed ot_owner_memory exactly equals an independent clean reconstruction
+      from D's full authoritative canonical accepted history through H. Failed-owner memory, new-owner
+      caches, process-local recovery data, another document's extensionally equal authoritative checkpoint/history,
+      or any other non-authoritative or wrong-document source cannot influence the recovered ot_owner_memory."
     kind: derived
     depends_on:
       - L64_recovered_ot_metadata_equals_clean_authoritative_reconstruction
       - L65_failed_owner_volatile_state_cannot_influence_recovered_metadata
+      - L174_recovery_inputs_and_state_are_document_bound
     source_refs:
       - authoritative_truth
       - owner_failover
@@ -2330,10 +2350,11 @@ claims:
       - L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance
       - L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance
   L116_live_delivery_is_bound_to_committed_acceptance:
-    statement: "Every change exposed through websocket_live_stream is bound to a committed canonical accepted-change
-      record in authoritative accepted history: every live-delivery producer preserves the committed record's
-      canonical payload and revision provenance, and no provisional, speculative, rejected, aborted, or
-      otherwise never-committed change can reach the live stream as a canonical change."
+    statement: "live_delivery_acceptance_binding holds for every change exposed through websocket_live_stream
+      for document D: the delivered change is bound to a committed canonical accepted-change record from
+      accepted_change_log for that same D, preserving document scope together with canonical payload and
+      revision provenance. A provisional, speculative, rejected, aborted, never-committed, or committed-but-other-document
+      change cannot reach D's live stream as D's canonical change, even when revision/payload values collide."
     source_refs:
       - authoritative_truth
       - reconnect_revision_boundary
@@ -2346,10 +2367,13 @@ claims:
     verification:
       verifiers:
         - kind: control_flow
-          intent: Enumerate every producer/control-flow path that can expose a canonical change
-            through websocket_live_stream. Trace payload and revision provenance to a committed
-            authoritative accepted-history record and prove that provisional, speculative, rejected,
-            aborted, or never-committed values cannot reach the delivery sink.
+          intent: Enumerate every producer/routing path that can expose a canonical change through
+            websocket_live_stream; trace document scope, payload, and revision to a committed
+            accepted-history record for the same document consumed by that stream.
+        - kind: state_machine
+          intent: Create two documents with equal next revision and equal payload/effect, then
+            cross-route B’s committed record to A’s stream; same-document provenance must reject the
+            substitution even though all non-scope observations collide.
     kind: leaf
   L117_retry_existing_acceptance_matches_full_idempotency_key:
     statement: If a normal retry within the 30-day eligibility horizon carrying idempotency identity
@@ -2723,10 +2747,11 @@ claims:
     statement: When a completed new-owner recovery at authoritative head H is used to resume owner
       service, every document-history-dependent runtime state value present on that owner that can
       influence server-side OT transformation or canonical acceptance is contained in the recovered
-      logical document state through H, the recovered local head and next-candidate revision, or the
-      recovered OT metadata set. No stale, retained, cached, or otherwise pre-existing or newly
-      produced per-document runtime state outside those components can influence post-recovery
-      canonical semantics.
+      logical document state through H, the recovered local head and next-candidate revision, or
+      ot_owner_memory. ot_owner_memory is the complete recovered OT metadata carrier for such
+      history-dependent influence; no separate recovered OT metadata bucket exists outside these
+      components. No stale, retained, cached, otherwise pre-existing, or newly produced per-document
+      runtime state outside those components can influence post-recovery canonical semantics.
     source_refs:
       - authoritative_truth
       - owner_failover
@@ -2740,9 +2765,10 @@ claims:
           intent: Trace every document-history-dependent state/control input read by post-recovery
             OT transformation and canonical-acceptance paths, including values retained from earlier
             ownership intervals, caches, process-local state, and values produced by the current
-            recovery. Require every influencing input to belong to the recovered document state,
-            recovered head/next-revision state, or recovered OT metadata set; reject any additional
-            influencing state.
+            recovery. Require every influencing input to belong to recovered document state,
+            recovered head/next-revision state, or ot_owner_memory; additionally require there to be
+            no distinct recovery-installed history-dependent OT metadata carrier outside
+            ot_owner_memory that can reach either path. Reject any additional influencing state.
     kind: leaf
   L132_visible_overlay_document_binding_established_on_publication:
     statement: Every user-visible client transition that establishes, replaces, or changes
@@ -2927,7 +2953,7 @@ claims:
       - L138_committed_append_preserves_gap_free_state_shape
       - L139_non_append_lifecycle_preserves_gap_free_state_shape
       - L140_initial_authoritative_history_is_gap_free
-      - L141_authoritative_history_mutators_are_exhaustively_covered
+      - L137_authoritative_history_mutators_are_exhaustively_classified
   L138_committed_append_preserves_gap_free_state_shape:
     statement: If an authoritative pre-state has one gap-free accepted revision sequence and a
       canonical accepted-change append commits, the authoritative post-state also has one gap-free
@@ -2983,29 +3009,6 @@ claims:
         - kind: integration_test
           intent: Exercise every document creation or bootstrap path and require the initialized
             authoritative accepted history to denote one gap-free revision sequence.
-    kind: leaf
-  L141_authoritative_history_mutators_are_exhaustively_covered:
-    statement: 'Every authoritative write that can create or change accepted_change_log is covered by
-      at least one correctness-relevant transition class whose history-shape preservation proof applies:
-      document-state initialization, a committed canonical accepted-change append, or an authoritative
-      non-append representation/lifecycle transition that accepts no new edit. No authoritative mutation
-      path may change accepted_change_log outside those covered classes.'
-    source_refs:
-      - accepted_change_log
-      - authoritative_truth
-      - final_architecture
-    mechanisms:
-      - accepted_history_log
-      - acceptance_transaction
-      - recovery_replay
-      - snapshot_checkpoint
-    verification:
-      verifiers:
-        - kind: control_flow
-          intent: Enumerate every authoritative write site and transaction path capable of creating
-            or mutating accepted_change_log. Require every site to be covered by initialization,
-            committed accepted append, or non-append representation/lifecycle preservation; reject
-            any unclassified accepted-history mutator.
     kind: leaf
   L143_acked_edit_completed_recovery_matches_canonical_replay:
     statement: For every edit e that received a success ACK after canonical acceptance at revision
@@ -3363,10 +3366,11 @@ claims:
     kind: leaf
   L159_owner_append_authorization_is_generation_bound:
     statement: 'owner_generation_authorization_binding holds for every canonical accepted-change append
-      attempt: owner_epoch and append_owner_generation_id are taken from the immutable server-side owner
-      generation executing that attempt, that generation tuple must match authoritative document_current_epoch
-      and document_owner_generation_id at commit, and a superseded owner generation cannot substitute
-      or rebind itself to a newer generation fencing tuple merely by learning the current values.'
+      attempt for document D: owner_epoch and append_owner_generation_id come from the immutable server-side
+      owner generation for that same D executing the attempt; the document-scoped generation tuple must
+      match D''s authoritative document_current_epoch and document_owner_generation_id at commit. A superseded
+      generation of D or a valid generation of D2 != D cannot gain authority for D by copying, substituting,
+      or colliding on scalar fencing values.'
     source_refs:
       - owner_failover
       - storage_selection
@@ -3380,15 +3384,14 @@ claims:
     verification:
       verifiers:
         - kind: control_flow
-          intent: Trace owner_epoch and append_owner_generation_id from server-side
-            ownership-session creation through every acceptance path; reject any path where either
-            field is client-controlled, recomputed from current shared state by a superseded
-            generation, or independently substituted before commit.
+          intent: Trace target document identity together with owner_epoch and
+            append_owner_generation_id from server-side ownership-session creation through every
+            acceptance path; require all three to remain bound to the same owner generation and
+            authoritative document at commit.
         - kind: state_machine
-          intent: Delay an old owner across handoff, let it observe the newer numeric epoch and
-            owner metadata, then resume all append paths; no execution by the superseded generation
-            may satisfy the generation-bound append authorization even when scalar epoch equality
-            can be forged by substitution.
+          intent: Use two documents with deliberately equal epoch/generation scalar values, delay or
+            cross-route one owner generation, and attempt append against the other document; scalar
+            equality must never authorize cross-document or superseded-generation append.
     kind: leaf
   L161_definitive_retry_response_comes_from_terminal_outcome:
     statement: 'terminal_response_outcome_binding holds within the normal retry horizon: every externally_terminal_result
@@ -3503,7 +3506,7 @@ claims:
       - L163_accepted_terminal_outcome_commits_with_canonical_acceptance
       - L164_terminal_paths_share_per_key_arbitration
       - C42_nonterminal_lifecycle_preserves_terminal_outcomes
-      - C7_revision_frontier_is_linear
+      - L175_terminal_outcome_entry_state_is_coherent
   L165_pending_identity_revision_evidence_survives_retention:
     statement: If canonical acceptance(D,k) commits at revision r and (D,k) is a
       normal_retry_eligible_identity, every snapshotting, compaction, cleanup, or other durable
@@ -3761,6 +3764,64 @@ claims:
             and takeover; any owner that starts from an optimized representation must remain
             non-accepting until completed recovery through its bound authoritative frontier.
     kind: leaf
+  L174_recovery_inputs_and_state_are_document_bound:
+    statement: 'recovery_document_scope_binding holds for every completed new-owner recovery: for recovery
+      target document D, the authoritative owner/epoch context, captured recovery_head, selected checkpoint,
+      every canonical tail entry consumed by replay, and the installed recovered_owner_runtime_state are
+      all document-scoped to the same D. A checkpoint, history entry, head, or runtime state from D2 !=
+      D cannot satisfy the recovery merely because its frontier, payload, logical state, or reconstructed
+      metadata is extensionally equal.'
+    source_refs:
+      - snapshot_frontier
+      - owner_failover
+      - final_architecture
+    mechanisms:
+      - document_lifecycle_lock
+      - recovery_replay
+      - snapshot_checkpoint
+      - accepted_history_log
+    formal_intent: recovery_document_scope_binding
+    semantic_contracts:
+      - recovery_document_scope_binding
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Trace recovery target document identity through owner/epoch lookup, recovery-head
+            capture, checkpoint selection, tail queries, metadata reconstruction, runtime
+            installation, and service resumption; every authoritative source and sink must retain
+            the same document scope.
+        - kind: state_machine
+          intent: Construct two documents with equal frontiers, checkpoint contents, canonical
+            tails, and reconstructed metadata, then cross-substitute one document recovery input at
+            a time; every cross-document substitution must be rejected or remain unable to
+            complete/install recovery.
+    kind: leaf
+  L175_terminal_outcome_entry_state_is_coherent:
+    statement: "At every authoritative initialization, restoration, import, or publication boundary that
+      makes a normal_retry_eligible_identity observable to the idempotency protocol, that key's entry
+      state already satisfies terminal-outcome coherence: idempotency_terminal_outcomes contains no terminal_result
+      for a fresh identity, or exactly one previously authoritative terminal_result. An entry state cannot
+      expose multiple or conflicting ACCEPTED/REJECTED results; if the single result is ACCEPTED, the
+      matching canonical accepted change is co-present, and if it is REJECTED, no canonical acceptance
+      for that key is present."
+    source_refs:
+      - accepted_change_log
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - idempotency_gate
+      - acceptance_transaction
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Enumerate every authoritative entry/publication transition by which a
+            normal-retry-eligible identity can first become observable after initialization,
+            restoration, import, or representation loading. Require the per-key terminal state to be
+            absent or exactly one coherent terminal result, and require ACCEPTED entry state to
+            co-exist with the matching canonical acceptance while REJECTED entry state has no
+            canonical acceptance. Reject any entry transition that can publish duplicate or
+            conflicting terminal results.
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -3802,6 +3863,8 @@ catalog:
     owner_epoch:
       description: A fencing token associated with document ownership. The rule that stale epochs
         are rejected is a correctness claim rather than part of the term's definition.
+      scope_dimensions:
+        - document
     latest_revision:
       description: Authoritative per-document frontier equal to the highest canonical accepted
         revision.
@@ -3816,6 +3879,8 @@ catalog:
     document_current_epoch:
       description: Authoritative persisted epoch identifying the current fenced document owner
         generation.
+      scope_dimensions:
+        - document
     snapshot_revision:
       description: Canonical revision frontier represented by a published snapshot checkpoint.
     new_epoch:
@@ -3846,6 +3911,8 @@ catalog:
       description: Authoritative revision frontier captured by new-owner recovery after epoch
         handoff and used to bound checkpoint selection, replay, metadata reconstruction, and
         resumption.
+      scope_dimensions:
+        - document
     ot_success_result:
       description: Successful transformed payload returned by the OT engine for one raw_edit,
         declared base_revision, and canonical committed context.
@@ -3863,6 +3930,8 @@ catalog:
       description: Immutable server-side owner-generation identity carried by one authoritative
         append attempt from the generation executing that attempt; it is not a client-controlled
         field.
+      scope_dimensions:
+        - document
     terminal_result:
       description: Authoritative terminal outcome for one idempotency_key within the normal retry
         horizon, either an accepted canonical result or a definitive rejected result.
@@ -3877,6 +3946,8 @@ catalog:
     accepted_change_log:
       class: authoritative
       description: Canonical ordered history of accepted changes for a document.
+      scope_dimensions:
+        - document
     document_latest_revision:
       class: authoritative
       description: Authoritative persisted canonical revision frontier for a document.
@@ -3886,16 +3957,29 @@ catalog:
       symbolic_dimensions:
         - document
         - observation
+      scope_dimensions:
+        - document
     snapshot_content_with_snapshot_revision:
       class: authoritative
       description: Atomically published checkpoint content paired with the exact canonical revision
         frontier it represents.
+      scope_dimensions:
+        - document
     ot_owner_memory:
       class: derived
-      description: Volatile materialized OT owner state reconstructable from authoritative truth.
+      description: Complete volatile materialized set of document-history-dependent OT
+        metadata/state on one owner that can influence server-side OT transformation or canonical
+        acceptance, reconstructable from authoritative truth for that document. Outside recovered
+        logical document state and local head/next-revision state, there is no separate
+        recovery-installed history-dependent OT metadata carrier that may influence canonical
+        semantics.
+      scope_dimensions:
+        - document
     websocket_live_stream:
       class: derived
       description: Best-effort live delivery stream of already accepted canonical changes.
+      scope_dimensions:
+        - document
     client_local_document:
       class: derived
       description: Client-side materialized document state reconstructed from canonical revisions.
@@ -3947,6 +4031,8 @@ catalog:
       description: Authoritative immutable generation identity of the currently designated
         acceptance-eligible owner for one document, installed together with the ownership epoch
         during handoff.
+      scope_dimensions:
+        - document
     idempotency_terminal_outcomes:
       class: authoritative
       description: Authoritative per-idempotency_key terminal outcome state. Within the normal retry
@@ -3958,6 +4044,13 @@ catalog:
         client_change_id) to its canonical accepted revision r. Physical representation may be compacted,
         but its query semantics are exact: for a response head H, the identity is included through H if
         and only if r <= H.'
+    recovered_owner_runtime_state:
+      class: derived
+      description: Completed recovery materialization for one document, including recovered logical
+        document state, recovered service frontier, and acceptance-relevant runtime state installed
+        before service resumption.
+      scope_dimensions:
+        - document
   symbolic_dimensions:
     document:
       description: Document identity coordinate preserved explicitly by symbolic functions whose
@@ -4328,10 +4421,12 @@ catalog:
       automation_reusable: true
     recovered_ot_state_provenance:
       class: provenance_binding
-      definition: OT state installed by completed new-owner recovery is derived exclusively from the
-        selected snapshot_content_with_snapshot_revision and the exact accepted_change_log tail
-        through recovery_head; failed-owner memory, caches, or other non-authoritative runtime state
-        cannot influence the recovered ot_owner_memory.
+      definition: OT state installed by completed new-owner recovery for document D is derived
+        exclusively from D's selected snapshot_content_with_snapshot_revision and the exact
+        accepted_change_log tail for D through D's recovery_head; all source objects and the
+        resulting ot_owner_memory preserve the same document scope. Failed-owner memory, caches,
+        another document's extensionally equal checkpoint/history, or other non-authoritative
+        runtime state cannot influence the recovered ot_owner_memory.
       source_symbols:
         - snapshot_content_with_snapshot_revision
         - accepted_change_log
@@ -4342,6 +4437,14 @@ catalog:
         - Does not prove the OT transformation algorithm itself correct.
         - Does not require recovery to eventually complete.
       automation_reusable: true
+      scope_bindings:
+        - dimension: document
+          source_symbols:
+            - snapshot_content_with_snapshot_revision
+            - accepted_change_log
+            - recovery_head
+          bound_symbols:
+            - ot_owner_memory
     ot_success_acceptance_binding:
       class: provenance_binding
       definition: Every canonical_accepted_change payload is bound to the exact ot_success_result
@@ -4381,9 +4484,12 @@ catalog:
       automation_reusable: true
     live_delivery_acceptance_binding:
       class: provenance_binding
-      definition: Every change exposed through websocket_live_stream is derived from a committed
-        record in accepted_change_log; live delivery may duplicate or reorder across reconnect
-        boundaries but cannot invent or expose a never-committed canonical change.
+      definition: Every change exposed through websocket_live_stream for document D is derived from
+        a committed record in accepted_change_log for that same document D; document scope,
+        canonical payload, and revision provenance remain bound from accepted history to the
+        consuming live stream. Delivery may duplicate or reorder across reconnect boundaries but
+        cannot invent, expose a never-committed change, or substitute an equally-valued committed
+        record from another document.
       source_symbols:
         - accepted_change_log
       bound_symbols:
@@ -4391,6 +4497,12 @@ catalog:
       excludes:
         - Does not guarantee exactly-once, ordered, timely, or eventually successful delivery.
       automation_reusable: true
+      scope_bindings:
+        - dimension: document
+          source_symbols:
+            - accepted_change_log
+          bound_symbols:
+            - websocket_live_stream
     visible_speculative_overlay_document_binding:
       class: state_invariant
       definition: At every user-visible client state representing document D, every speculative
@@ -4495,12 +4607,13 @@ catalog:
       automation_reusable: true
     owner_generation_authorization_binding:
       class: provenance_binding
-      definition: Every canonical append attempt binds its supplied owner_epoch and
-        append_owner_generation_id to the immutable server-side owner generation actually executing
-        that attempt, and that generation tuple must match the authoritative document_current_epoch
-        and document_owner_generation_id at commit. A superseded owner generation cannot refresh,
-        copy, substitute, or rebind itself to a newer generation's fencing tuple merely by obtaining
-        the current scalar values.
+      definition: Every canonical append attempt for document D binds its supplied owner_epoch and
+        append_owner_generation_id to the immutable server-side owner generation for that same
+        document D actually executing that attempt, and that document-scoped generation tuple must
+        match D's authoritative document_current_epoch and document_owner_generation_id at commit. A
+        generation owned by another document, or a superseded generation of D, cannot gain append
+        authority merely because epoch/generation scalar values collide or can be copied,
+        substituted, refreshed, or rebound.
       source_symbols:
         - document_current_epoch
         - document_owner_generation_id
@@ -4513,6 +4626,14 @@ catalog:
           than client-controlled input.
         - Does not itself prove revision-frontier serialization or idempotency arbitration.
       automation_reusable: true
+      scope_bindings:
+        - dimension: document
+          source_symbols:
+            - document_current_epoch
+            - document_owner_generation_id
+          bound_symbols:
+            - owner_epoch
+            - append_owner_generation_id
     idempotency_terminal_outcome_coherence:
       class: state_invariant
       definition: In every reachable authoritative state within the normal retry eligibility
@@ -4546,12 +4667,50 @@ catalog:
           non-terminal observations and need not bind to a terminal result.
         - Re-submission after the normal retry eligibility horizon is outside this contract.
       automation_reusable: true
+    recovery_document_scope_binding:
+      class: provenance_binding
+      definition: For a new-owner recovery target document D, the authoritative ownership
+        generation/current epoch context, captured recovery_head, selected
+        snapshot_content_with_snapshot_revision, every replayed accepted_change_log entry, and the
+        installed recovered_owner_runtime_state all belong to that same document D. Extensionally
+        equal authoritative objects from another document cannot substitute for D at checkpoint
+        selection, tail replay, metadata reconstruction, runtime installation, or service
+        resumption.
+      source_symbols:
+        - document_current_epoch
+        - document_owner_generation_id
+        - recovery_head
+        - snapshot_content_with_snapshot_revision
+        - accepted_change_log
+      bound_symbols:
+        - recovered_owner_runtime_state
+      scope_bindings:
+        - dimension: document
+          source_symbols:
+            - document_current_epoch
+            - document_owner_generation_id
+            - recovery_head
+            - snapshot_content_with_snapshot_revision
+            - accepted_change_log
+          bound_symbols:
+            - recovered_owner_runtime_state
+      excludes:
+        - Does not require checkpoint/history bytes from different documents to be distinguishable
+          when their logical values happen to be equal; correctness is the document provenance
+          binding itself.
+        - Does not require recovery to eventually complete.
+      automation_reusable: true
+  scope_dimensions:
+    document:
+      description: Collaborative document/resource namespace; document-scoped authority, history,
+        recovery, and delivery objects from distinct documents are not interchangeable even when
+        non-scope values are equal.
 id_allocator:
   next_sequence:
     A: 7
     G: 13
     C: 43
-    L: 174
+    L: 176
     D: 15
     T: 3
 assurance:
@@ -4579,14 +4738,7 @@ assurance:
     C10_catchup_represents_exact_missing_suffix:
       status: unaudited
     C12_live_delivery_contains_only_accepted_changes:
-      status: machine_checked
-      artifact_refs:
-        - symbolic_artifacts/C12_live_delivery_contains_only_accepted_changes.composition.yaml
-      rationale: Trusted symbolic translations exist for C12 and its direct premise L116. Z3 checked
-        L116 AND NOT(C12) as UNSAT. A mutation that removes the committed-history requirement from
-        L116 becomes SAT with a concrete uncommitted-source counterexample, demonstrating that the
-        entailment depends on the intended premise semantics.
-      signature: 4e8350746f352d7b9c9a76d8e747a6a08fb414d40b56a49f2a5ababb106c9b60
+      status: unaudited
     C13_idempotency_key_is_temporally_unique:
       status: unaudited
     C14_all_acceptance_paths_honor_idempotency_identity:
@@ -4769,8 +4921,6 @@ assurance:
       status: planned
     L140_initial_authoritative_history_is_gap_free:
       status: planned
-    L141_authoritative_history_mutators_are_exhaustively_covered:
-      status: planned
     L143_acked_edit_completed_recovery_matches_canonical_replay:
       status: planned
     L144_success_ack_follows_corresponding_canonical_commit:
@@ -4822,4 +4972,8 @@ assurance:
     L172_snapshot_compaction_preserves_concurrent_append_suffix:
       status: planned
     L173_optimized_lifecycle_representation_resumes_only_through_recovery:
+      status: planned
+    L174_recovery_inputs_and_state_are_document_bound:
+      status: planned
+    L175_terminal_outcome_entry_state_is_coherent:
       status: planned

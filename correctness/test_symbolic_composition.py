@@ -14,6 +14,7 @@ from harness.symbolic import (
     SymbolicCompositionError,
     SymbolicCompositionVerifier,
     TranslationAssuranceRegistry,
+    TranslationReviewError,
     build_claim_translation_subject,
     translation_subject_signature,
 )
@@ -95,43 +96,19 @@ class SymbolicCompositionTests(unittest.TestCase):
         self.assertFalse(result.machine_checked)
         self.assertIsNotNone(result.solver_result.model)
 
-    def test_trusted_c12_composition_succeeds(self):
+    def test_trusted_c12_composition_requires_fresh_translation_review(self):
         registry = TranslationAssuranceRegistry.load(ASSURANCE_PATH)
         verifier = SymbolicCompositionVerifier(self.graph, self.bridge, registry)
-        result = verifier.check(C12_TARGET, require_trusted=True)
-        self.assertEqual(result.solver_result.status, "unsat")
-        self.assertEqual(result.verdict, "ENTAILED")
-        self.assertTrue(result.machine_checked)
+        with self.assertRaises(TranslationReviewError) as ctx:
+            verifier.check(C12_TARGET, require_trusted=True)
+        self.assertIn("STALE", str(ctx.exception))
 
-    def test_persisted_c12_machine_check_artifact_is_current(self):
-        artifact = yaml.safe_load(C12_ARTIFACT_PATH.read_text())
-        registry = TranslationAssuranceRegistry.load(ASSURANCE_PATH)
-        verifier = SymbolicCompositionVerifier(self.graph, self.bridge, registry)
-        result = verifier.check(C12_TARGET, require_trusted=True)
-
-        target_subject = build_claim_translation_subject(
-            self.graph, self.bridge, C12_TARGET
-        )
-        premise_subject = build_claim_translation_subject(
-            self.graph, self.bridge, C12_PREMISE
-        )
-
+    def test_stale_c12_machine_check_artifact_is_not_persisted(self):
+        self.assertFalse(C12_ARTIFACT_PATH.exists())
         self.assertEqual(
-            artifact["composition_signature"],
-            result.composition_signature,
+            self.graph.doc["assurance"]["composition"][C12_TARGET]["status"],
+            "unaudited",
         )
-        self.assertEqual(
-            artifact["translation_assurance"]["target"]["subject_signature"],
-            translation_subject_signature(target_subject),
-        )
-        self.assertEqual(
-            artifact["translation_assurance"]["premises"][C12_PREMISE]["subject_signature"],
-            translation_subject_signature(premise_subject),
-        )
-        self.assertEqual(artifact["result"]["solver_status"], "unsat")
-        self.assertEqual(artifact["result"]["verdict"], "ENTAILED")
-        self.assertEqual(artifact["mutation_test"]["solver_status"], "sat")
-        self.assertEqual(artifact["mutation_test"]["verdict"], "COUNTEREXAMPLE")
 
     def test_c14_two_premise_composition_is_entailed_trusted(self):
         registry = TranslationAssuranceRegistry.load(ASSURANCE_PATH)
@@ -167,7 +144,7 @@ class SymbolicCompositionTests(unittest.TestCase):
         rendered = output.getvalue()
 
         self.assertEqual(rc, 0)
-        self.assertIn(f"{C12_TARGET}  [MACHINE-CHECKED]", rendered)
+        self.assertNotIn(f"{C12_TARGET}  [MACHINE-CHECKED]", rendered)
         self.assertIn(f"{C14_TARGET}  [MACHINE-CHECKED]", rendered)
         self.assertIn("SMT counterexample query:", rendered)
         self.assertIn("Solver: UNSAT → ENTAILED", rendered)

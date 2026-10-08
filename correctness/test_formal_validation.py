@@ -32,7 +32,7 @@ class FormalSchemaTests(unittest.TestCase):
             "coverage": ROOT / "symbolic_models" / "coverage.yaml",
             "composition-artifact": ROOT
             / "symbolic_artifacts"
-            / "C12_live_delivery_contains_only_accepted_changes.composition.yaml",
+            / "C14_all_acceptance_paths_honor_idempotency_identity.composition.yaml",
             "coverage-artifact": ROOT
             / "symbolic_artifacts"
             / "L108_acceptance_preserves_request_identity.coverage.yaml",
@@ -55,7 +55,7 @@ class FormalSchemaTests(unittest.TestCase):
         path = (
             ROOT
             / "symbolic_artifacts"
-            / "C12_live_delivery_contains_only_accepted_changes.composition.yaml"
+            / "C14_all_acceptance_paths_honor_idempotency_identity.composition.yaml"
         )
         raw = yaml.safe_load(path.read_text())
         broken = copy.deepcopy(raw)
@@ -88,7 +88,7 @@ class FormalSchemaTests(unittest.TestCase):
         graph = Graph.load()
         doc = copy.deepcopy(graph.doc)
         doc["assurance"]["composition"][
-            "C12_live_delivery_contains_only_accepted_changes"
+            "C14_all_acceptance_paths_honor_idempotency_identity"
         ]["artifact_refs"].append("ci://independent-model-checker/result")
         mixed = Graph(doc, repository_root=graph.repository_root)
         errors, warnings = validate_formal_layer(mixed)

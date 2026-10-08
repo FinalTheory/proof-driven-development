@@ -33,13 +33,14 @@ CATALOG_NAMESPACES = (
     "terms",
     "state",
     "symbolic_dimensions",
+    "scope_dimensions",
     "mechanisms",
     "semantic_contracts",
     "failure_events",
     "verifier_kinds",
     "sources",
 )
-SEMANTIC_CATALOG_NAMESPACES = ("terms", "state", "mechanisms", "semantic_contracts")
+SEMANTIC_CATALOG_NAMESPACES = ("terms", "state", "scope_dimensions", "mechanisms", "semantic_contracts")
 SNAKE_CASE_TERM_RE = re.compile(r"\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b")
 
 AUDIT_INTERPRETATION_RULES = (
@@ -603,7 +604,10 @@ relations.
 - `provenance_binding`: a typed origin/binding relation from `source_symbols` to `bound_symbols`. A
   referencing proof must establish producer/source/capture identity and preserve that binding through
   downstream use. Correct processing of a value does not establish that the value was sourced from or
-  bound to the correct execution/state.
+  bound to the correct execution/state. Terms/state may additionally declare semantic `scope_dimensions`
+  such as document or tenant. When a provenance relation has the same scope dimension on both source and
+  bound sides, the contract must declare a complete `scope_bindings` mapping for every scoped symbol on
+  both sides; validation fails closed if that namespace/resource coordinate is omitted.
 
 Automation may reuse only mechanisms whose `automation_reusable` flag is true, and may reference an
 approved reusable semantic contract when creating a new proof-structure claim. Changing or removing the

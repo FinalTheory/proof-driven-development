@@ -27,7 +27,7 @@ Harness 会校验文件末尾的 machine-checkable schema index。该索引来�
 
 | 字段 | 类型 / 可选值 | 必需性 | 含义 |
 | --- | --- | --- | --- |
-| `schema_version` | const `0.14` | required | canonical document schema 版本 |
+| `schema_version` | const `0.15` | required | canonical document schema 版本 |
 | `system` | closed object | required | 所有局部 proof audit 共享的全局系统语义 |
 | `source` | closed object | required | architecture narrative 的 traceability pointer |
 | `scope` | closed object | required | 明确哪些 product/protocol concern 被建模或排除 |
@@ -89,13 +89,14 @@ Harness 会校验文件末尾的 machine-checkable schema index。该索引来�
 
 ## `catalog`
 
-`catalog` 的八个 namespace 全部 required。除 `sources` 外，其余 dynamic key 使用 `lower_snake`；每个 namespace 至少包含一个 entry。
+`catalog` 的八个 core namespace required；`scope_dimensions` 是可选的 typed namespace，只有系统显式建模 semantic scope / resource namespace 时才需要出现。除 `sources` 外，其余 dynamic key 使用 `lower_snake`；任何已出现的 namespace 至少包含一个 entry。
 
 ### `catalog.terms`
 
 | 字段 | 类型 / 可选值 | 必需性 | 含义 |
 | --- | --- | --- | --- |
 | `terms.<id>.description` | non-empty string | required | protocol/domain vocabulary 定义；只是词义，不是 correctness premise |
+| `terms.<id>.scope_dimensions` | unique `lower_snake[]`, min 1 | optional | 该 term 所属的 semantic namespace/resource coordinates；每项必须解析到 `catalog.scope_dimensions` |
 
 ### `catalog.state`
 
@@ -104,12 +105,21 @@ Harness 会校验文件末尾的 machine-checkable schema index。该索引来�
 | `state.<id>.class` | `authoritative` / `derived` / `speculative` / `control` | required | state 的 semantic role |
 | `state.<id>.description` | non-empty string | required | state 的定义及其 correctness role |
 | `state.<id>.symbolic_dimensions` | unique `lower_snake[]`, min 1 | optional | symbolic mapping 读取该 state 时必须显式保留的有序语义坐标；每项必须解析到 `catalog.symbolic_dimensions` |
+| `state.<id>.scope_dimensions` | unique `lower_snake[]`, min 1 | optional | 该 state 所属的 semantic namespace/resource coordinates；matching provenance relation 必须保留这些 scope |
 
 ### `catalog.symbolic_dimensions`
 
 | 字段 | 类型 / 可选值 | 必需性 | 含义 |
 | --- | --- | --- | --- |
 | `symbolic_dimensions.<id>.description` | non-empty string | required | symbolic lowering 使用的稳定语义坐标定义；用于给 `state.*.symbolic_dimensions` 提供 closed vocabulary |
+
+### `catalog.scope_dimensions`
+
+这个 namespace 本身 optional；一旦任何 term/state 使用 `scope_dimensions`，对应 ID 必须在这里定义。
+
+| 字段 | 类型 / 可选值 | 必需性 | 含义 |
+| --- | --- | --- | --- |
+| `scope_dimensions.<id>.description` | non-empty string | required | semantic namespace/resource coordinate，例如 `document` / `tenant`；用于 provenance scope closure，不是 proof premise |
 
 ### `catalog.mechanisms`
 
@@ -130,15 +140,19 @@ Harness 会校验文件末尾的 machine-checkable schema index。该索引来�
 | `.observation_scope` | `all_reachable_states` / `authoritative_states` / `user_visible_states` / `protocol_internal_states` | `state_invariant` required | invariant 必须 inductively 成立的 state horizon |
 | `.source_symbols` | unique `lower_snake[]`, min 1 | `provenance_binding` required | provenance relation 的 semantic source symbols |
 | `.bound_symbols` | unique `lower_snake[]`, min 1 | `provenance_binding` required | 被绑定到 source 的 downstream token/state symbols |
+| `.scope_bindings` | object array, min 1 | conditional optional | 当 provenance source/bound 两侧共享已声明的 scope dimension 时必须存在；每个 entry 完整枚举该 dimension 上所有 source/bound symbols，validator fail closed 检查遗漏 |
+| `.scope_bindings[].dimension` | `lower_snake` | required in entry | 必须解析到 `catalog.scope_dimensions` 的 scope coordinate |
+| `.scope_bindings[].source_symbols` | unique `lower_snake[]`, min 1 | required in entry | contract source side 上属于该 scope 的完整 symbol 集 |
+| `.scope_bindings[].bound_symbols` | unique `lower_snake[]`, min 1 | required in entry | contract bound side 上属于该 scope 的完整 symbol 集 |
 
 Contract class 的排他约束：
 
 | `class` | 必须存在 | 明确禁止 |
 | --- | --- | --- |
 | `state_invariant` | `state_symbols`, `observation_scope` | `source_symbols`, `bound_symbols` |
-| `provenance_binding` | `source_symbols`, `bound_symbols` | `state_symbols`, `observation_scope` |
-| `safety_contract` | — | 上述四个 typed relation field |
-| `equivalence_relation` | — | 上述四个 typed relation field |
+| `provenance_binding` | `source_symbols`, `bound_symbols`；若两侧共享 scope dimension，则还需对应 `scope_bindings` | `state_symbols`, `observation_scope` |
+| `safety_contract` | — | 上述 state/provenance typed relation field（含 `scope_bindings`） |
+| `equivalence_relation` | — | 上述 state/provenance typed relation field（含 `scope_bindings`） |
 
 ### `catalog.failure_events`
 
@@ -313,6 +327,8 @@ Dynamic key 必须是现有 `claim_id`。
 - `catalog.mechanisms` => required; closed object; dynamic keys match ^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.mechanisms.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.automation_reusable` => required; boolean
 - `catalog.mechanisms.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.description` => required; string, minLength=1
+- `catalog.scope_dimensions` => optional; closed object; dynamic keys match ^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
+- `catalog.scope_dimensions.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.description` => required; string, minLength=1
 - `catalog.semantic_contracts` => required; closed object; dynamic keys match ^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.semantic_contracts.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.automation_reusable` => required; boolean
 - `catalog.semantic_contracts.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.bound_symbols` => required when class=provenance_binding; array, minItems=1, uniqueItems=true, items=string, itemPattern=^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
@@ -320,6 +336,10 @@ Dynamic key 必须是现有 `claim_id`。
 - `catalog.semantic_contracts.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.definition` => required; string, minLength=1
 - `catalog.semantic_contracts.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.excludes` => required; array, uniqueItems=true, items=string
 - `catalog.semantic_contracts.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.observation_scope` => required when class=state_invariant; enum=all_reachable_states|authoritative_states|user_visible_states|protocol_internal_states
+- `catalog.semantic_contracts.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.scope_bindings` => optional; array, minItems=1, uniqueItems=true, items=object
+- `catalog.semantic_contracts.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.scope_bindings.[].bound_symbols` => required; array, minItems=1, uniqueItems=true, items=string, itemPattern=^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
+- `catalog.semantic_contracts.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.scope_bindings.[].dimension` => required; string, pattern=^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
+- `catalog.semantic_contracts.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.scope_bindings.[].source_symbols` => required; array, minItems=1, uniqueItems=true, items=string, itemPattern=^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.semantic_contracts.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.source_symbols` => required when class=provenance_binding; array, minItems=1, uniqueItems=true, items=string, itemPattern=^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.semantic_contracts.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.state_symbols` => required when class=state_invariant; array, minItems=1, uniqueItems=true, items=string, itemPattern=^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.sources` => required; closed object; dynamic keys match ^(?!section_[0-9]+$)[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
@@ -327,11 +347,13 @@ Dynamic key 必须是现有 `claim_id`。
 - `catalog.state` => required; closed object; dynamic keys match ^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.state.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.class` => required; enum=authoritative|derived|speculative|control
 - `catalog.state.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.description` => required; string, minLength=1
+- `catalog.state.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.scope_dimensions` => optional; array, minItems=1, uniqueItems=true, items=string, itemPattern=^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.state.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.symbolic_dimensions` => optional; array, minItems=1, uniqueItems=true, items=string, itemPattern=^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.symbolic_dimensions` => required; closed object; dynamic keys match ^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.symbolic_dimensions.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.description` => required; string, minLength=1
 - `catalog.terms` => required; closed object; dynamic keys match ^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.terms.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.description` => required; string, minLength=1
+- `catalog.terms.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.scope_dimensions` => optional; array, minItems=1, uniqueItems=true, items=string, itemPattern=^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.verifier_kinds` => required; closed object; dynamic keys match ^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 - `catalog.verifier_kinds.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.description` => required; string, minLength=1
 - `claims` => required; closed object; dynamic keys match ^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
@@ -373,7 +395,7 @@ Dynamic key 必须是现有 `claim_id`。
 - `refinement.tooling_blockers.<key:^T[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.status` => required; enum=open|resolved
 - `refinement.tooling_blockers.<key:^T[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.suggested_change` => optional; string, minLength=1
 - `roots` => required; array, minItems=1, uniqueItems=true, items=string, itemPattern=^G[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
-- `schema_version` => required; const='0.14'
+- `schema_version` => required; const='0.15'
 - `scope` => required; closed object
 - `scope.excludes` => required; array, minItems=1, uniqueItems=true, items=string
 - `scope.includes` => required; array, minItems=1, uniqueItems=true, items=string

@@ -158,6 +158,8 @@ implementation evidence
 
 Coverage 是全局、开放式的 adversarial search；Composition 只看一个 proposition 与它的 direct premises；Implementation evidence 则把 terminal proof obligation 连接到真实实现。Coverage 在自由搜索前还会强制做几类 semantic closure：跨 reachable transition 的 inductive state-invariant closure、source/execution/identity/authority 的 provenance-binding closure，以及同一 logical identity 上互斥 authoritative terminal outcomes 的 decision-coherence closure。这里特别区分“值相等”和“authority provenance 正确”：fencing epoch、lease/generation token 等即使数值等于 current，也不能因此推出提交者属于 current owner generation。
 
+Provenance closure 进一步把 **semantic scope / namespace** 作为 typed coordinate。Catalog 中的 term/state 可以声明 `scope_dimensions`（例如 document、tenant）；当 `provenance_binding` 的 source/bound 两侧共享同一 scope dimension 时，contract 必须通过 `scope_bindings` 完整枚举该维度上的 source/bound symbols。Validator 会确定性地拒绝遗漏，因此一旦 scope 已被建模，“document-scoped 对象跨文档偷换但所有 payload/scalar 恰好相等”不再只是依赖 auditor 灵感。仍需要 semantic judgment 的部分是：哪些对象本来就应该属于哪个 scope；Harness 不能从字段名自动推断这一业务语义。
+
 这些 closure 只能把**已经被识别为 correctness-sensitive 的关系**结构化，并通过 typed contract、signature、validator 和 audit protocol 约束后续证明；Harness 不能仅凭程序静态地从自然语言设计中判定“系统还缺哪一个业务关系”。因此 coverage 仍需要 adversarial semantic search。为减少 repair→coverage→repair 的循环，coverage 还要求 semantic-neighborhood substitution attack：在保持表面 scalar predicates 成立的同时，单独替换 provenance coordinate、actor/generation、identity coordinate、terminal disposition source 或竞争终态，检查 repair 是否只是挡住了原始 witness 的具体形式。
 
 

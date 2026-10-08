@@ -36,7 +36,7 @@ def _node_semantic_signature(
     for namespace, keys in catalog_refs.items():
         # semantic_contracts was added in schema 0.9. Keep old signatures byte-for-byte stable
         # for nodes that do not reference a contract; only referenced contracts extend semantics.
-        if namespace == "semantic_contracts" and not keys:
+        if namespace in {"semantic_contracts", "scope_dimensions"} and not keys:
             continue
         entries = _catalog_namespace(graph, namespace)
         semantic_catalog[namespace] = {
@@ -76,7 +76,7 @@ def _node_semantic_signature(
 
 
 ASSURANCE_SEMANTICS_VERSION = "1"
-COVERAGE_AUDIT_SEMANTICS_VERSION = "4"
+COVERAGE_AUDIT_SEMANTICS_VERSION = "5"
 CONTRACT_REALIZATION_SEMANTICS_VERSION = "1"
 
 
@@ -89,7 +89,7 @@ def _node_proposition_signature(graph: Graph, node_id: str) -> str:
     catalog_refs = _semantic_catalog_refs_for_node(graph, node)
     semantic_catalog: dict[str, Any] = {}
     for namespace, keys in catalog_refs.items():
-        if namespace == "semantic_contracts" and not keys:
+        if namespace in {"semantic_contracts", "scope_dimensions"} and not keys:
             continue
         entries = _catalog_namespace(graph, namespace)
         semantic_catalog[namespace] = {
