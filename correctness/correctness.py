@@ -932,7 +932,7 @@ def _emit_coverage_audit_prompt(graph: Graph) -> None:
     print("If a proposed witness directly requires any existing universally quantified current claim to be false, classify it")
     print("as `DISQUALIFIED_EXISTING_CLAIM` even when implementation/composition evidence for that claim is not yet certified;")
     print("that concern belongs to composition or implementation evidence, not specification coverage. If the canonical design")
-    print("does not require the proposed property, classify it as `DISQUALIFIED_STRONGER_GUARANTEE` rather than treating mere")
+    print("does not require the proposed property, classify it as `DISQUALIFIED_STRONGER_OR_OUT_OF_SCOPE` rather than treating mere")
     print("consistency with current claims as evidence of a gap.")
     print()
     print("## Acceptance gate for a structural finding")

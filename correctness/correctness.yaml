@@ -200,7 +200,7 @@ refinement:
     G5_retry_resolves_idempotently:
       status: stable
       blocked_by: []
-      signature: 58efd14a0464a16adb8ea706830c8029cca2b3cf9e8edf50cc25cb815b206b37
+      signature: f8a24f2f0d74769c28250db075afa10e68596c47d0b1dd6d4abce7436fb16318
     C7_revision_frontier_is_linear:
       status: stable
       blocked_by: []
@@ -520,7 +520,7 @@ refinement:
     G11_visible_speculative_overlays_match_document:
       status: stable
       blocked_by: []
-      signature: 456afeaca6d3e32a387507a7d5723671ca1b8b8cb8a51e2f46b5fc2a72e728f6
+      signature: 338149f4b0b23020ae2ed6741101744554d109ed443e522e25931cd204ba38e0
     L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance:
       status: stable
       blocked_by: []
@@ -580,7 +580,7 @@ refinement:
     G12_client_pending_state_tracks_unresolved_edits:
       status: stable
       blocked_by: []
-      signature: 2fd1f5f82714f893f4a786d34dbafc21cd3243376e9346b682951332987ae11a
+      signature: 1720b2dd9c46b160c19d50a264dc08c29be979eba9c6d26c343d43208238ec15
     L156_owner_handoff_installs_fresh_epoch:
       status: stable
       blocked_by: []
@@ -765,6 +765,18 @@ refinement:
       status: stable
       blocked_by: []
       signature: da23c9d5fec23fc808c9b6f2c41c8a431f1d63483ff82decfba405a5f1f8a670
+    L204_state_dependent_rejection_uses_authoritative_context:
+      status: stable
+      blocked_by: []
+      signature: 0071e2e73422c0e8761d5a58fe1336c7cb4380f473abc0e43b4acc653933fc69
+    L205_visible_speculative_effect_is_unique_per_identity:
+      status: stable
+      blocked_by: []
+      signature: 3afd4b775874e0f0fcc0c5261712cd91d783b80bdc7ba0cab2d715c03c85c0d7
+    L206_terminal_speculative_lifecycle_is_absorbing:
+      status: stable
+      blocked_by: []
+      signature: c9fc52b45f1464dfb860842553c2247d3b7bfc16a59bf601322a491bf334e84a
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -938,8 +950,12 @@ claims:
       rebind it to another producer. If an authoritative REJECTED(definitive rejection reason) linearizes,
       definitive_rejection_request_binding also holds: that rejected terminal result derives from a definitive
       rejection decision produced for the exact same submitted request identity and rejection-relevant
-      request context, not from another request. The first authoritative terminal_result to linearize
-      for full identity (document_id=D, client_change_id=k) is immutable and is either ACCEPTED(canonical
+      request context, not from another request. If that rejection reason depends on document/history
+      state, state_dependent_rejection_context_binding also holds: the decision is justified by same-document
+      authoritative_rejection_context whose reason-specific evidence remains sufficient at terminalization;
+      stale superseded-owner local state alone cannot justify the authoritative REJECTED. Request-intrinsic
+      rejection reasons do not require document-context authority. The first authoritative terminal_result
+      to linearize for full identity (document_id=D, client_change_id=k) is immutable and is either ACCEPTED(canonical
       result) or REJECTED(definitive reason); the two are mutually exclusive, all acceptance and definitive-rejection
       attempts arbitrate through the same per-key terminal state, and every externally terminal result
       for that key exactly reproduces the already-linearized terminal result. Pending, timeout, cancellation,
@@ -961,6 +977,7 @@ claims:
       - L182_logical_edit_request_payload_binding_is_preserved
       - L183_definitive_rejection_preserves_request_provenance
       - C46_accepted_terminal_result_preserves_acceptance_provenance
+      - L204_state_dependent_rejection_uses_authoritative_context
     source_refs:
       - ot_input_output
       - accepted_change_log
@@ -968,11 +985,13 @@ claims:
       - storage_selection
       - final_architecture
     formal_intent: idempotency_terminal_outcome_coherence; accepted_terminal_result_binding;
-      definitive_rejection_request_binding; terminal_response_outcome_binding
+      definitive_rejection_request_binding; state_dependent_rejection_context_binding;
+      terminal_response_outcome_binding
     semantic_contracts:
       - idempotency_terminal_outcome_coherence
       - accepted_terminal_result_binding
       - definitive_rejection_request_binding
+      - state_dependent_rejection_context_binding
       - terminal_response_outcome_binding
   C7_revision_frontier_is_linear:
     kind: derived
@@ -2935,22 +2954,26 @@ claims:
       restoration, tab/view switching, suppression/reactivation, ACK/retry bookkeeping, canonical publication,
       resync publication, and every other transition that preserves the same logical edit. Physical representation
       may change only in ways that preserve X''s semantics; another edit''s operation cannot be cross-bound
-      under (D,k). visible_speculative_retention_coherence also holds at every user-visible client state:
-      every exposed speculative representation has a matching retained representation of the same logical
-      edit and full identity, and terminal removal/disposition of retained state cannot leave an orphaned
-      visible overlay. At every user-visible client state representing document D, visible_speculative_overlay_document_binding
-      also holds: every currently exposed speculative overlay belongs to D. Retained overlays for another
-      document may remain retained but must not be exposed while D is the visible document.'
+      under (D,k). visible_speculative_effect_uniqueness also holds at every user-visible client state:
+      each full logical identity (D,k) contributes at most one effective speculative logical operation
+      to the rendered document, even if multiple physical representations exist. visible_speculative_retention_coherence
+      also holds at every user-visible client state: every exposed speculative representation has a matching
+      retained representation of the same logical edit and full identity, and terminal removal/disposition
+      of retained state cannot leave an orphaned visible overlay. At every user-visible client state representing
+      document D, visible_speculative_overlay_document_binding also holds: every currently exposed speculative
+      overlay belongs to D. Retained overlays for another document may remain retained but must not be
+      exposed while D is the visible document.'
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
     formal_intent: visible_speculative_overlay_document_binding AND
       speculative_overlay_identity_provenance AND speculative_overlay_operation_provenance AND
-      visible_speculative_retention_coherence
+      visible_speculative_effect_uniqueness AND visible_speculative_retention_coherence
     semantic_contracts:
       - visible_speculative_overlay_document_binding
       - speculative_overlay_identity_provenance
       - speculative_overlay_operation_provenance
+      - visible_speculative_effect_uniqueness
       - visible_speculative_retention_coherence
     kind: root
     depends_on:
@@ -2959,6 +2982,7 @@ claims:
       - L176_visible_speculative_overlay_is_backed_by_retained_state
       - L179_speculative_overlay_identity_provenance_is_preserved
       - L202_speculative_overlay_operation_provenance_is_preserved
+      - L205_visible_speculative_effect_is_unique_per_identity
   L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance:
     statement: Whenever a durable accepted-history lifecycle transformation outside the normal
       acceptance transaction—including compaction, cleanup, or snapshot replacement—creates,
@@ -3298,39 +3322,45 @@ claims:
             justified only by authoritative reconciliation or an explicit terminal disposition.
     kind: leaf
   G12_client_pending_state_tracks_unresolved_edits:
-    statement: In every reachable client protocol state, pending_edit_identity_provenance,
-      pending_speculative_lifecycle_coverage, pending_retirement_acceptance_binding, and
-      non_acceptance_terminal_disposition_binding hold for the normal speculative lifecycle. For
-      every logical client edit created for document D with client_change_id k that remains
-      unresolved, acceptance-eligible, within the normal retry/reconnect eligibility horizon, and
-      represented in retained speculative state, client_pending_edits contains a matching pending
-      representation bound to the same creation identity (D,k). That binding is preserved across
-      restore, tab/view switching, ACK/retry bookkeeping, reconnect capture, and reconciliation
-      until authoritative reconciliation or an explicit terminal disposition ends the lifecycle.
-      Mere bookkeeping deletion or relabeling cannot resolve the edit. If the edit is retired with
-      authoritative accepted/reconciled semantics, that retirement must derive from canonical
-      acceptance or equivalent authoritative accepted evidence for the exact same full identity
-      (D,k); an acceptance for another document or another client_change_id cannot retire it merely
-      because one identity coordinate matches. If the edit is instead retired by expiry,
-      abandonment, conflict/manual resolution, or another explicit non-acceptance terminal
-      disposition, that disposition must itself have been produced for the same logical edit and
-      preserve the exact full identity (D,k) through the destructive retirement path; a disposition
-      for another edit cannot retire this one.
+    statement: "In every reachable client protocol state, pending_edit_identity_provenance, pending_speculative_lifecycle_coverage,
+      pending_retirement_acceptance_binding, non_acceptance_terminal_disposition_binding, and terminal_speculative_lifecycle_closure
+      hold for the normal speculative lifecycle. For every logical client edit created for document D
+      with client_change_id k that remains unresolved, acceptance-eligible, within the normal retry/reconnect
+      eligibility horizon, and represented in retained speculative state, client_pending_edits contains
+      a matching pending representation bound to the same creation identity (D,k). That binding is preserved
+      across restore, tab/view switching, ACK/retry bookkeeping, reconnect capture, and reconciliation
+      until authoritative reconciliation or an explicit terminal disposition ends the lifecycle. Mere
+      bookkeeping deletion or relabeling cannot resolve the edit. If the edit is retired with authoritative
+      accepted/reconciled semantics, that retirement must derive from canonical acceptance or equivalent
+      authoritative accepted evidence for the exact same full identity (D,k); an acceptance for another
+      document or another client_change_id cannot retire it merely because one identity coordinate matches.
+      If the edit is instead retired by expiry, abandonment, conflict/manual resolution, or another explicit
+      non-acceptance terminal disposition, that disposition must itself have been produced for the same
+      logical edit and preserve the exact full identity (D,k) through the destructive retirement path;
+      a disposition for another edit cannot retire this one. Once either authoritative reconciliation
+      or an explicit terminal disposition ends (D,k)'s normal speculative lifecycle, terminal_speculative_lifecycle_closure
+      makes that terminal state absorbing: the same lifecycle cannot later reappear in pending, retained
+      speculative, or visible speculative state through restore, reactivation, view switching, bookkeeping,
+      or resync/publication. Archival/non-reactivatable state may remain, and a genuinely new user edit
+      receives a new client_change_id."
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
     formal_intent: pending_edit_identity_provenance; pending_speculative_lifecycle_coverage;
-      pending_retirement_acceptance_binding; non_acceptance_terminal_disposition_binding
+      pending_retirement_acceptance_binding; non_acceptance_terminal_disposition_binding;
+      terminal_speculative_lifecycle_closure
     semantic_contracts:
       - pending_edit_identity_provenance
       - pending_speculative_lifecycle_coverage
       - pending_retirement_acceptance_binding
       - non_acceptance_terminal_disposition_binding
+      - terminal_speculative_lifecycle_closure
     depends_on:
       - L154_pending_edit_identity_provenance_is_preserved
       - L155_unresolved_speculative_edit_has_pending_entry
       - L158_pending_retirement_requires_matching_acceptance_identity
       - L203_non_acceptance_terminal_disposition_preserves_edit_provenance
+      - L206_terminal_speculative_lifecycle_is_absorbing
     kind: root
   L156_owner_handoff_installs_fresh_epoch:
     statement: For every authoritative transition from one document-owner generation to a distinct
@@ -4427,6 +4457,102 @@ claims:
             routing/bookkeeping order, and require that pending/retained/visible state for X cannot
             be removed or suppressed by Y's disposition.
     kind: leaf
+  L204_state_dependent_rejection_uses_authoritative_context:
+    statement: 'state_dependent_rejection_context_binding holds for every authoritative REJECTED terminal_result
+      whose reason depends on document/history state: the producing definitive_rejection_decision is bound
+      to an authoritative_rejection_context for the same document whose reason-specific evidence remains
+      sufficient at terminalization to establish that rejection. A superseded owner cannot terminalize
+      REBASE_REQUIRED or another state-dependent rejection from unvalidated stale OT/runtime state merely
+      because it received the exact legitimate request and wins the independent per-key terminal arbitration.
+      Request-intrinsic rejection reasons remain outside this context-authority requirement.'
+    source_refs:
+      - accepted_change_log
+      - ot_input_output
+      - owner_failover
+      - final_architecture
+    mechanisms:
+      - server_authoritative_ot
+      - idempotency_gate
+      - durable_terminal_outcome_store
+    semantic_contracts:
+      - state_dependent_rejection_context_binding
+    formal_intent: state_dependent_rejection_context_binding
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Enumerate every definitive rejection path that can reach authoritative REJECTED.
+            Classify whether the reason is request-intrinsic or document/history-state-dependent.
+            For each state-dependent path, trace the document-scoped rejection context/evidence from
+            authoritative truth through decision production and terminal arbitration, and require
+            either direct authoritative evaluation or a reason-specific guard/revalidation proving
+            the same reason remains valid at terminalization.
+        - kind: state_machine
+          intent: Explore failover races where an old owner captured document state at N, ownership
+            moves and the authoritative document advances to M, then the stale owner receives the
+            exact valid request and computes a state-dependent rejection from N. The rejection may
+            terminalize only if independent authoritative evidence still proves the reason at the
+            terminal boundary; stale owner-local state alone must not permanently reject the edit.
+    kind: leaf
+  L205_visible_speculative_effect_is_unique_per_identity:
+    statement: "visible_speculative_effect_uniqueness holds at every user-visible client state: for each
+      full logical edit identity (document_id=D, client_change_id=k), the visible speculative composition
+      contributes at most one effective instance of that edit's optimistic logical operation to the rendered
+      document. Duplicate physical representations are permitted only when the projection/composition
+      path deduplicates them by full logical identity before they can apply the operation more than once."
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - client_document_scoped_speculative_state
+    semantic_contracts:
+      - visible_speculative_effect_uniqueness
+    formal_intent: visible_speculative_effect_uniqueness
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Enumerate creation, restore, reactivation, view-switch, ACK/retry bookkeeping, and
+            resync/publication transitions that can introduce or expose speculative representations.
+            Inject two physical representations with the same (D,k) and operation and require the
+            user-visible composition to produce effective application multiplicity at most one in
+            every reachable visible state.
+        - kind: integration_test
+          intent: Create one insertion edit, force duplicate retained/exposed representations
+            through restore or reactivation races, and assert that the rendered document reflects
+            exactly one optimistic insertion before canonical acceptance regardless of physical
+            duplicate objects.
+    kind: leaf
+  L206_terminal_speculative_lifecycle_is_absorbing:
+    statement: "terminal_speculative_lifecycle_closure holds in every reachable client protocol state:
+      when authoritative reconciliation or an explicit terminal disposition ends logical edit (D,k)'s
+      normal speculative lifecycle, the identity enters client_terminalized_speculative_lifecycles and
+      no subsequent restore, tab/view switch, reactivation, ACK/retry bookkeeping, reconnect/resync publication,
+      or other transition can reintroduce that same lifecycle into client_pending_edits, client_speculative_overlays,
+      or client_visible_speculative_overlays. Archival/non-reactivatable representation may remain outside
+      those normal speculative-state sets."
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    mechanisms:
+      - client_document_scoped_speculative_state
+      - catchup_protocol
+    semantic_contracts:
+      - terminal_speculative_lifecycle_closure
+    formal_intent: terminal_speculative_lifecycle_closure
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Enumerate both terminalization classes—authoritative acceptance/reconciliation and
+            explicit non-acceptance disposition—then explore every later transition capable of
+            creating/restoring pending, retained, or visible speculative state. Once (D,k) is
+            terminal, reject any path that restores or exposes the same lifecycle under (D,k); only
+            a newly created logical edit with a new client_change_id may re-enter normal speculative
+            state.
+        - kind: control_flow
+          intent: Trace every restore/reactivation/publication producer of client_pending_edits,
+            client_speculative_overlays, and client_visible_speculative_overlays and prove it cannot
+            source a representation whose normal lifecycle was terminalized, including retained
+            archival objects that survive physical cleanup.
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -4579,6 +4705,14 @@ catalog:
         the full logical-edit identity it is produced for.
       scope_dimensions:
         - document
+    authoritative_rejection_context:
+      description: Document-scoped authoritative context or reason-specific authoritative evidence
+        used to establish a definitive rejection whose truth depends on canonical document/history
+        state. It may be a canonical committed prefix/frontier, authoritative metadata, or a
+        proof/guard derived from authoritative state; stale owner-local runtime state is not
+        authoritative merely because it was once valid.
+      scope_dimensions:
+        - document
   state:
     accepted_change_log:
       class: authoritative
@@ -4700,6 +4834,14 @@ catalog:
         document by a non-append snapshotting, checkpoint-replacement, cleanup, or compaction
         lifecycle procedure. Physical bytes/storage may be shared, but the semantic authoritative
         binding remains document-scoped.
+      scope_dimensions:
+        - document
+    client_terminalized_speculative_lifecycles:
+      class: control
+      description: Logical control-state classification of full logical-edit identities whose normal
+        speculative lifecycle has ended by authoritative reconciliation or an explicit terminal
+        disposition. An implementation may realize this by deletion or non-reactivatable archival
+        state rather than a separately materialized tombstone set.
       scope_dimensions:
         - document
   symbolic_dimensions:
@@ -5604,6 +5746,83 @@ catalog:
         - Authoritative acceptance-based retirement is governed separately by
           pending_retirement_acceptance_binding.
       automation_reusable: true
+    state_dependent_rejection_context_binding:
+      class: provenance_binding
+      definition: "Every authoritative REJECTED terminal_result whose definitive rejection reason depends
+        on document or history state derives from a definitive_rejection_decision bound to an authoritative_rejection_context
+        for the same document. That context/evidence must be sufficient at terminalization to establish
+        the rejection reason: the decision may be computed directly from current authoritative state,
+        or may use an earlier authoritative context only when a reason-specific guard, monotonicity argument,
+        or revalidation proves the same rejection remains valid. A superseded owner's unvalidated stale
+        OT/runtime state cannot by itself justify a state-dependent authoritative REJECTED merely because
+        the request identity is correct or the decision wins per-key terminal arbitration."
+      source_symbols:
+        - authoritative_rejection_context
+        - definitive_rejection_decision
+      bound_symbols:
+        - terminal_result
+      scope_bindings:
+        - dimension: document
+          source_symbols:
+            - authoritative_rejection_context
+            - definitive_rejection_decision
+          bound_symbols:
+            - terminal_result
+      excludes:
+        - Request-intrinsic rejection reasons whose truth depends only on the bound request do not
+          require document/history context authority.
+        - Does not require every state-dependent rejection to read the latest head at terminal
+          commit when reason-specific authoritative evidence proves the reason remains valid across
+          later state evolution.
+        - Does not require terminal-outcome mutation to be authorized by the current OT owner
+          generation; it constrains the truth/provenance of the rejection decision, not the terminal
+          store's arbitration mechanism.
+        - Does not itself prove single-valued terminal arbitration or request provenance.
+      automation_reusable: true
+    visible_speculative_effect_uniqueness:
+      class: state_invariant
+      definition: At every user-visible client state, each full logical edit identity
+        (document_id=D, client_change_id=k) contributes at most one effective speculative logical
+        operation to the rendered document through client_visible_speculative_overlays. Multiple
+        physical representations of the same logical edit may exist only if projection/composition
+        deduplicates them so the edit's optimistic effect is applied at most once; correct identity
+        and operation provenance on each object is not sufficient if the same logical operation is
+        effectively applied twice.
+      state_symbols:
+        - client_visible_speculative_overlays
+      observation_scope: user_visible_states
+      excludes:
+        - Does not require the physical visible-overlay container to contain at most one object per
+          identity when the composition layer provably deduplicates by full logical identity.
+        - Does not constrain canonical accepted-change rendering; canonical/speculative double
+          rendering is governed separately by visible_canonical_speculative_exclusion.
+        - Does not require eventual reconciliation or progress for unresolved edits.
+      automation_reusable: true
+    terminal_speculative_lifecycle_closure:
+      class: state_invariant
+      definition: In every reachable client protocol state, once a logical edit identity
+        (document_id=D, client_change_id=k) enters client_terminalized_speculative_lifecycles
+        because authoritative reconciliation or an explicit terminal disposition ended that normal
+        speculative lifecycle, that same lifecycle remains terminal and cannot again appear in
+        client_pending_edits, client_speculative_overlays, or client_visible_speculative_overlays.
+        Restore, tab/view switching, reactivation, ACK/retry bookkeeping, reconnect/resync
+        publication, and every other transition must preserve this absorbing classification. A later
+        user operation is a new logical edit and therefore uses a new client_change_id.
+      state_symbols:
+        - client_terminalized_speculative_lifecycles
+        - client_pending_edits
+        - client_speculative_overlays
+        - client_visible_speculative_overlays
+      observation_scope: all_reachable_states
+      excludes:
+        - Does not require physical deletion of terminalized representations;
+          archival/history/non-reactivatable state may retain them outside the normal
+          speculative-state sets.
+        - Does not require a separately persisted tombstone set when implementation structure makes
+          reactivation impossible by construction.
+        - Does not require every unresolved logical edit to eventually reach a terminal lifecycle
+          state.
+      automation_reusable: true
   scope_dimensions:
     document:
       description: Collaborative document/resource namespace; document-scoped authority, history,
@@ -5614,7 +5833,7 @@ id_allocator:
     A: 7
     G: 13
     C: 48
-    L: 204
+    L: 207
     D: 15
     T: 3
 assurance:
@@ -5922,4 +6141,10 @@ assurance:
     L202_speculative_overlay_operation_provenance_is_preserved:
       status: planned
     L203_non_acceptance_terminal_disposition_preserves_edit_provenance:
+      status: planned
+    L204_state_dependent_rejection_uses_authoritative_context:
+      status: planned
+    L205_visible_speculative_effect_is_unique_per_identity:
+      status: planned
+    L206_terminal_speculative_lifecycle_is_absorbing:
       status: planned

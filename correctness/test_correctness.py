@@ -2034,6 +2034,7 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("coverage_gate_result", text)
         self.assertIn("SURVIVES_GATE", text)
         self.assertIn("DISQUALIFIED_STRONGER_OR_OUT_OF_SCOPE", text)
+        self.assertNotIn("DISQUALIFIED_STRONGER_GUARANTEE", text)
         self.assertIn("Never emit a bare `SURVIVES` verdict", text)
         self.assertIn("spawn_chatgpt_subagents", text)
         self.assertIn("tool discovery", text)
