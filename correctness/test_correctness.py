@@ -238,6 +238,34 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertNotIn("**synthetic_key**", text)
         self.assertIn("### Failure model", text)
 
+    def test_prompt_explicitly_labels_target_semantic_contract_membership(self):
+        doc = copy.deepcopy(self.base)
+        child = doc["claims"]["L3_independent_boundary"]
+        child["semantic_contracts"] = ["synthetic_safety_contract"]
+        child["formal_intent"] = "synthetic_safety_contract"
+
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            correctness._emit_slice_markdown(
+                correctness.Graph(doc), "G1_primary_goal", set(), prompt=True
+            )
+        text = output.getvalue()
+        self.assertIn("**synthetic_safety_contract** [safety_contract]", text)
+        self.assertIn("Referenced semantic contracts: []", text)
+
+        target = doc["claims"]["G1_primary_goal"]
+        target["semantic_contracts"] = ["synthetic_safety_contract"]
+        target["formal_intent"] = "synthetic_safety_contract"
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            correctness._emit_slice_markdown(
+                correctness.Graph(doc), "G1_primary_goal", set(), prompt=True
+            )
+        self.assertIn(
+            "Referenced semantic contracts: `synthetic_safety_contract`",
+            output.getvalue(),
+        )
+
     def test_refinement_frontier_is_bottom_up(self):
         snapshot = correctness._refinement_snapshot(self.graph())
         self.assertEqual(snapshot["state"], "CONTINUE")
@@ -320,6 +348,8 @@ class CorrectnessToolTests(unittest.TestCase):
         text = output.getvalue()
         self.assertIn("Clean-context correctness refinement audit", text)
         self.assertIn("analysis-only", text)
+        self.assertIn("do not modify repository/model files", text)
+        self.assertIn("designated output file is permitted", text)
         self.assertIn("do not invoke `mutate`", text)
         self.assertIn("Reason freely in prose", text)
         self.assertIn("small YAML verdict block", text)
@@ -1099,6 +1129,20 @@ class CorrectnessToolTests(unittest.TestCase):
             )
         )
 
+    def test_semantic_contract_identifier_in_claim_text_must_be_declared(self):
+        doc = copy.deepcopy(self.base)
+        doc["claims"]["L1_left_boundary"]["statement"] = (
+            "The left boundary says synthetic_safety_contract holds, but omits metadata."
+        )
+        errors, _ = correctness.validate(correctness.Graph(doc))
+        self.assertTrue(
+            any(
+                "L1_left_boundary: statement or formal_intent names semantic contract synthetic_safety_contract but semantic_contracts does not declare it"
+                in error
+                for error in errors
+            )
+        )
+
     def test_semantic_contract_reference_must_appear_in_referenced_source_section(self):
         doc = copy.deepcopy(self.base)
         doc["claims"]["L1_left_boundary"]["statement"] = (
@@ -1857,6 +1901,10 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("FINAL VERDICT: CLOSED", text)
         self.assertIn("semantic alignment", text)
         self.assertIn(".venv/bin/python3 correctness.py validate", text)
+        self.assertIn("git -C .. status --short", text)
+        self.assertIn("sha256sum correctness.yaml ../design/synthetic.md", text)
+        self.assertIn("Record the exact initial Git-status output", text)
+        self.assertIn("FINAL VERDICT: EXECUTION INCOMPLETE", text)
 
     def test_repository_validation_warns_on_unreferenced_semantic_contract(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1878,8 +1926,13 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("Mandatory semantic-closure pass", text)
         self.assertIn("Inductive state-invariant closure", text)
         self.assertIn("Semantic provenance/binding closure", text)
+        self.assertIn("authority-bearing values", text)
+        self.assertIn("Equality to the current numeric/scalar value is not sufficient", text)
         self.assertIn("composite identities or semantic tuples", text)
         self.assertIn("tuple closure", text)
+        self.assertIn("Terminal-decision coherence closure", text)
+        self.assertIn("incompatible authoritative terminal outcomes", text)
+        self.assertIn("semantic-neighborhood substitution attack", text)
         self.assertIn("spawn_chatgpt_subagents", text)
         self.assertIn("tool discovery", text)
         self.assertIn("FINAL VERDICT: EXECUTION INCOMPLETE", text)

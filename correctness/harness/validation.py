@@ -93,6 +93,18 @@ def _validate_source_traceability(graph: Graph, errors: list[str]) -> None:
                     f"{node_id}: semantic contract {contract_id} must appear as an exact identifier "
                     "in statement or formal_intent"
                 )
+        if isinstance(contracts, dict):
+            ref_set = {ref for ref in refs if isinstance(ref, str)}
+            for contract_id in contracts:
+                if (
+                    isinstance(contract_id, str)
+                    and contract_id not in ref_set
+                    and _contains_exact_identifier(claim_text, contract_id)
+                ):
+                    errors.append(
+                        f"{node_id}: statement or formal_intent names semantic contract {contract_id} "
+                        "but semantic_contracts does not declare it"
+                    )
 
     if graph.repository_root is None:
         return

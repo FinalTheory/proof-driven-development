@@ -97,10 +97,11 @@ unacked = retryable
 4. server assigns revision N+1 to the candidate
 5. acceptance transaction atomically appends candidate_canonical_change@N+1 to accepted_change_log only if:
      - document.current_epoch == owner_epoch
+     - document.owner_generation_id == append_owner_generation_id
      - document.latest_revision == N
-     - client_change_id not already accepted
-   then advances document frontier
-6. transaction commits; candidate_canonical_change@N+1 becomes canonical_accepted_change@N+1
+     - (document_id, client_change_id) has no authoritative terminal result
+   then advances document frontier and records terminal result ACCEPTED(canonical_result)
+6. transaction commits; candidate_canonical_change@N+1 becomes canonical_accepted_change@N+1 and the same-key terminal result becomes authoritative
 7. server ACKs client and broadcasts canonical_accepted_change@N+1
 ```
 
@@ -114,11 +115,13 @@ unacked = retryable
 
 但这份 evidence 还必须满足反方向的 soundness：**authoritative state 只有在同一个 `(document_id, client_change_id)` 已经存在 committed canonical acceptance 时，才能把这个 identity 分类为 `accepted`。** 幂等 gate 内部可以有 reservation、in-progress arbitration 或 transient ownership state，但这些状态必须与 `accepted` 明确区分，不能提前充当“已经接受”的事实。实现上，accepted evidence 可以直接来自 canonical accepted row / unique index，也可以是与 accepted append 在同一提交边界内原子产生的 durable index；不能先永久写下 `accepted(k)`，再尝试另一个可能失败的 canonical append。否则如果 accepted marker 已持久化而 append 没发生，客户端 retry 会被一个不存在的成功结果永久挡住：系统既没有接受这次 edit，也不再允许它被接受。
 
-因此，对于仍处在 30-day normal retry/reconnect eligibility horizon 内、协议仍可能合法查询的 idempotency identity，`accepted` evidence 与 canonical acceptance 的关系不是单向的“接受以后记住 key”，而是事实对应关系：evidence 不能漏掉真实 acceptance，也不能凭空制造不存在的 acceptance。超过 eligibility horizon 后，这项 authoritative classification guarantee 不再适用于把旧 identity 当作普通 retry/reconnect 请求重新提交的行为。
+因此，对于仍处在 30-day normal retry/reconnect eligibility horizon 内、协议仍可能合法查询的 idempotency identity，服务端维护的是同一 `(document_id, client_change_id)` 的 **authoritative terminal result**，而不只是“是否 accepted”的单向 marker。terminal result 只有两类：`ACCEPTED(canonical_result)` 或 `REJECTED(definitive_reason)`。timeout、cancellation、crash-before-decision、网络中断等只表示本次 attempt 没有观察到 authoritative terminal decision，不会占用这个 identity 的终态。对同一个 `(D,k)`，首次在线性化边界上成功写入的 terminal result 获胜并成为不可变事实；此后所有 normal retry 都直接返回同一个 terminal result，不重新计算一个可能不同的成功或失败结论。
 
-在正常 hot path 上，最简单的实现其实不需要第二套“成功状态表”：`accepted_changes` 中带 `UNIQUE (document_id, client_change_id)` 的 committed row 本身就可以同时作为 canonical acceptance 和 idempotency success evidence。若实现为了查询或生命周期管理另外维护 accepted-key index，那么该 index 不能成为独立 truth；它必须与 canonical append 在同一个数据库 acceptance transaction 中一起 commit 或一起 rollback。也就是说，事务提交以后可以观察到“canonical acceptance + accepted evidence”，事务未提交或 abort 后只能观察到“两者都没有”，不能留下一个 phantom `already accepted` marker。
+`ACCEPTED` 与 canonical acceptance 必须原子对应：正常 hot path 上，acceptance transaction 在同一个提交边界内 append canonical accepted change 并把 `(D,k)` 的 terminal result 设为 `ACCEPTED(canonical_result)`；事务 abort 时两者都不存在。`REJECTED(definitive_reason)` 也必须经过同一个 per-key arbitration boundary 持久化，只有当 `(D,k)` 尚无 terminal result 时才能获胜；一旦 `REJECTED` 成为 authoritative terminal result，任何重叠或后续 attempt 都不能再为同一个 `(D,k)` commit canonical acceptance。反过来，一旦 `ACCEPTED` 获胜，任何 stale-base、OT-invalid、rebase-required 或其他 definitive rejection 都不能再成为该 identity 的 externally terminal result。实现可以用一张带 `UNIQUE(document_id, client_change_id)` 的 terminal-outcome 表、一个等价的 transactional idempotency record，或其他能让 ACCEPTED/REJECTED 竞争同一线性化点的表示；关键是两类终态不能由彼此独立的 arbitration path 决定。
 
-这里也不要求每一次失败 attempt 都持久化 terminal `FAILED`。timeout、crash-before-commit、cancellation 等只说明本次 attempt 没有得到确定的 committed success；在 30-day normal retry eligibility horizon 内，只要不存在 committed canonical acceptance / accepted evidence，同一个 logical edit 仍可按原 `client_change_id` 重试。超过这个 horizon，客户端不再走普通 retry 路径，因此这里也不要求服务端继续为这种 expired identity 保持正常 retry-resolution guarantee。只有未来协议显式引入“可重放的永久 rejection”时，才需要把 terminal rejection 作为另一类 durable outcome 建模。
+这条规则并不要求所有失败都永久化。只有产品/协议愿意对外承诺“这次 logical operation 已被确定拒绝”的结果，才写入 `REJECTED`；timeout、cancellation、crash-before-terminal-commit 等仍然是 non-terminal uncertainty，同一 logical edit 可以继续以原 `client_change_id` 重试。超过 30-day eligibility horizon 后，客户端不再走普通 retry 路径，因此这里也不要求服务端继续为 expired identity 保持 normal retry-resolution guarantee。
+
+correctness model 把“同一 `(D,k)` 的 authoritative terminal result 单值、不可翻转，且 ACCEPTED/REJECTED 与 canonical acceptance 互斥一致”的状态性质命名为 `idempotency_terminal_outcome_coherence`；把“任何 externally definitive response 必须来自该 key 已提交的 authoritative terminal result，而不是 attempt-local 临时判断”的来源关系命名为 `terminal_response_outcome_binding`。
 
 history compaction 是这个简单关系唯一会发生物理表示变化的地方：原始 accepted row 可以被压缩，但替代它的 tombstone / idempotency index 只能从已经 committed 的 acceptance 派生，并继续代表同一个 `(document_id, client_change_id)` 的既有事实，而不能成为新的 acceptance source of truth。
 
@@ -285,7 +288,7 @@ WebSocket 是 delivery。Revision log 才是 ordering proof。
 
 `last_applied_revision` 还必须和当前 user-visible document identity、客户端保存的 canonical materialization 构成一个持续状态不变量，而不能只在 catch-up 或 revision 前进的瞬间正确。correctness model 把它命名为 `client_canonical_frontier_coherence`：**在每一个代表文档 `D` 的 user-visible client state 中，`client_document_id=D`，并且 `client_local_document` 必须等于文档 `D` 的 canonical accepted history replay through `last_applied_revision` 的结果。** `document_id`、canonical document 和 frontier 是一个不可 cross-bind 的 visible canonical tuple；任何初始化、tab/view 切换、local restore、live delivery、catch-up publication 或其他能够修改、恢复、替换、发布其中任一坐标的 transition，都必须保持这组三元关系，即使该 transition 根本没有推进 revision。resync 内部尚未 publication 的 private candidate state 不属于这个 user-visible observer boundary。
 
-Speculative state 也必须遵守同一个 document observer boundary，但需要区分 **locally retained** 与 **currently exposed**。客户端可以按文档保留尚未解决的 speculative state；切换到另一个文档并不要求删除这些 retained overlays。这里采用 `client_document_scoped_speculative_state` 作为实现边界：retained overlays 按 document identity 分区，而当前 exposed overlay set 只能从当前 visible document 的分区投影出来。真正的 user-visible invariant 是：在每一个代表文档 `D` 的 visible client state 中，所有当前 exposed speculative overlays 都必须同样属于 `D`。因此 tab/view switch、restore、overlay activation/reactivation、canonical publication、resync publication，以及任何能够改变 visible document identity 或 exposed overlay set 的 transition，都不能把 `A` 的 retained overlay 暴露在当前代表 `B` 的界面上。correctness model 把这条关系命名为 `visible_speculative_overlay_document_binding`。它不禁止后台保留其他文档的 unresolved overlay，只禁止 cross-document exposure。
+Speculative state 也必须遵守同一个 document observer boundary，但需要区分 **locally retained** 与 **currently exposed**。客户端可以按文档保留尚未解决的 speculative state；切换到另一个文档并不要求删除这些 retained overlays。这里采用 `client_document_scoped_speculative_state` 作为实现边界：retained overlays 按 document identity 分区，而当前 exposed overlay set 只能从当前 visible document 的分区投影出来。这个 document identity 还是 logical edit 的 creation-bound provenance，而不是可以在 restore/switch/reactivation 时任意改写的 label：同一个 logical edit 一旦为文档 `D` 创建，其 retained / restored / exposed representation 在整个生命周期里都必须继续属于 `D`，不能保留同一个 `client_change_id` 或 logical edit identity 却把 document binding 从 `A` 重写成 `B`。correctness model 把这条关系命名为 `speculative_overlay_document_provenance`。真正的 user-visible invariant 是：在每一个代表文档 `D` 的 visible client state 中，所有当前 exposed speculative overlays 都必须同样属于 `D`。因此 tab/view switch、restore、overlay activation/reactivation、canonical publication、resync publication，以及任何能够改变 visible document identity 或 exposed overlay set 的 transition，都不能把 `A` 的 retained overlay 暴露在当前代表 `B` 的界面上。correctness model 把这条关系命名为 `visible_speculative_overlay_document_binding`。它不禁止后台保留其他文档的 unresolved overlay，只禁止 cross-document exposure。
 
 这里还需要一条与 revision continuity 正交的客户端 observer invariant。真实用户看到的不是单独的 canonical base，而是 **canonical base + speculative overlays** 的组合。即使 canonical base 本身已经严格等于 replay through frontier F，如果同一个 logical edit 又以 optimistic overlay 的形式继续可见，用户仍然会看到重复结果。
 
@@ -313,11 +316,17 @@ correctness model 把这条持续 observer invariant 命名为 `visible_canonica
 
 ### 5.1 Pending optimistic edit：重连只保证 identity reconciliation，不保证自动 local rebase
 
-本文中的 **normal reconnect / catch-up 是 foreground、visible-document-bound 的协议路径**。如果一次正常重连针对文档 `D`，那么它只能在当前 user-visible canonical tuple 也代表 `D` 时启动，并且该 attempt 的 reconnect-start canonical base 与 `last_applied_revision` 都从这一个 visible tuple 原子捕获。也就是说，当前屏幕正在展示 `A@F` 时，不能把这组 state/frontier 当作后台 `reconnect(B)` 的起点。若未来产品需要在文档 A 可见时同时后台同步文档 B，则必须另外维护 B 自己的 per-document canonical state/frontier，并为 background publication 与后续 view-switch 定义独立的 correctness boundary；这种 background/non-visible synchronization 不属于本文当前 reconnect protocol 的范围。
+本文中的 **normal reconnect / catch-up 是 foreground、visible-document-bound 的协议路径**。如果一次正常重连针对文档 `D`，那么它只能在当前 user-visible canonical tuple 也代表 `D` 时启动，并且该 attempt 的 reconnect-start canonical base 与 `last_applied_revision` 都从这一个 visible tuple 原子捕获。这个 foreground 资格必须持续到 user-visible publication：如果 attempt 尚未 publication 时当前 visible document 已经从 `D` 切走，那么该 attempt 立即失去 foreground publication eligibility；其延迟 response 可以被丢弃，或在未来另行定义的 background/non-visible synchronization 边界内继续处理，但不能再通过本文这条 foreground reconnect path 修改当前 user-visible state。也就是说，当前屏幕正在展示 `A@F` 时，不能把这组 state/frontier 当作后台 `reconnect(B)` 的起点，也不能让此前针对 A 启动但已经失去 visible-document binding 的 delayed response 重新获得 foreground publication 权限。若未来产品需要在文档 A 可见时同时后台同步文档 B，则必须另外维护 B 自己的 per-document canonical state/frontier，并为 background publication 与后续 view-switch 定义独立的 correctness boundary；这种 background/non-visible synchronization 不属于本文当前 reconnect protocol 的范围。
 
 `last_applied_revision` 只能描述客户端已经吸收的 canonical history。真实客户端还会有另一类状态：已经在本地 optimistic 展示、但尚未得到服务端确定结果的 logical edits。它们必须继续保留原始 `client_change_id`，因为 reconnect 后客户端不能仅凭 payload 判断某个本地 edit 是否已经被 canonical history 吸收：raw edit 和服务端 OT 后的 canonical change 本来就可能不同。
 
-因此，对文档 `D` 的重连请求除了 `last_applied_revision=L`，还携带当前仍处在 **30-day normal reconnect eligibility horizon** 内的 pending edit `client_change_id` 集合；这些 key 的完整语义身份始终是 `(document_id=D, client_change_id=k)`。正常参与协议的客户端不得把 pending/retry age 已超过 30 天的旧 identity 继续作为普通 authoritative reconciliation 输入：这种 expired pending operation 应被丢弃，或进入显式 expired / conflict / manual-resolution 路径。超出这个 eligibility boundary 后，本文不再要求服务端对重新提交的旧 identity 提供 authoritative reconciliation 或 exactly-once retry 语义，也不把缺少 accepted evidence 解释为“证明从未 accepted”。客户端进入 resync 状态后可以暂时禁止新的编辑；这是一种有意选择的简单 UX，用来避免在 canonical base 正在切换时继续制造新的 speculative state。
+因此，对文档 `D` 的重连请求除了 `last_applied_revision=L`，还携带当前仍处在 **30-day normal reconnect eligibility horizon** 内的 pending edit `client_change_id` 集合；这些 key 的完整语义身份始终是 `(document_id=D, client_change_id=k)`。这里的 pending bookkeeping 本身也是 logical edit identity 的语义状态，而不是可以在 restore、tab/view switch、ACK/retry bookkeeping 或 reconnect capture 时重新贴标签的临时记录：对为文档 `D` 创建并分配 `client_change_id=k` 的 logical edit，任何 pending representation 都必须在整个 normal speculative lifecycle 中继续绑定同一个 `(D,k)`，直到 authoritative reconciliation 或显式 terminal disposition 结束该 lifecycle。correctness model 把这条 provenance relation 命名为 `pending_edit_identity_provenance`。
+
+pending identity 保持正确还不够，**用来退休它的 authoritative acceptance 也必须绑定同一个完整 identity**：只有 canonical acceptance `(D,k)` 或等价的 same-identity authoritative evidence 才能以“already accepted / reconciled”的理由结束 pending `(D,k)`；另一个文档上的 `(D2,k)` acceptance、另一个 change id `(D,k2)`，都不能成为该 pending edit 的 acceptance-retirement source。显式 expiry、conflict/manual resolution 或 abandonment 仍可作为非-acceptance terminal disposition。correctness model 把这条关系命名为 `pending_retirement_acceptance_binding`。
+
+同时，pending set 不能只是一个可丢失的辅助索引。只要一个 logical edit 仍然 unresolved、acceptance-eligible、处在 normal eligibility horizon 内，并且仍作为 retained speculative state 参与正常协议，它就必须有 matching pending entry，直到 authoritative reconciliation 或显式 expiry / conflict / manual resolution / abandonment 结束这次 normal speculative lifecycle。单纯删除 pending bookkeeping、但仍保留这个 unresolved acceptance-eligible speculative edit，不能把它变成“已解决”。correctness model 把这个 inductive relation 命名为 `pending_speculative_lifecycle_coverage`。
+
+正常参与协议的客户端不得把 pending/retry age 已超过 30 天的旧 identity 继续作为普通 authoritative reconciliation 输入：这种 expired pending operation 应被丢弃，或进入显式 expired / conflict / manual-resolution 路径。超出这个 eligibility boundary 后，本文不再要求服务端对重新提交的旧 identity 提供 authoritative reconciliation 或 exactly-once retry 语义，也不把缺少 accepted evidence 解释为“证明从未 accepted”。客户端进入 resync 状态后可以暂时禁止新的编辑；这是一种有意选择的简单 UX，用来避免在 canonical base 正在切换时继续制造新的 speculative state。
 
 服务端为一次 catch-up 在一个明确的 authoritative-store read / linearization point 读取 `document_latest_revision`，并把当时读到的值固定为这次响应的 authoritative response head `H`。后续 canonical range / snapshot mode selection、pending-key reconciliation、completion 与 publication 都必须使用这个同一个 captured `H`；`H` 捕获之后系统当然可以继续接受新的 revision，这些更晚的 acceptance 不属于本次 response，也不要求本次 catch-up 追上一个持续移动的 head。
 
@@ -390,16 +399,24 @@ freeze editing
 
 ```text
 document_owner_epoch:
-  document_id -> current_epoch, owner_id, lease_expire_time
+  document_id -> current_epoch, owner_id, owner_generation_id, lease_expire_time
 ```
+
+`owner_generation_id` 标识一次具体的 owner generation / ownership tenure；同一个进程重启、重新 acquire ownership，或者 ownership 从 A 切到 B，都必须得到新的 generation identity。它是 server-side ownership context 的一部分，不是 client request 可以自由填写或替换的业务字段。一个旧 owner generation 即使后来读到了新的 numeric epoch，也不能把自己的 generation identity 重新绑定成新 owner 的 generation。
+
+correctness model 把这条“append 所使用的 fencing tuple 必须来自执行该 append 的 immutable owner generation，并与 authoritative current owner generation 对齐；旧 generation 不能仅通过复制新 epoch/owner metadata 重新获得 authority”的 provenance relation 命名为 `owner_generation_authorization_binding`。
 
 新 owner 接管时：
 
 ```text
-1. coordinator uses conditional write / CAS to bump epoch
-2. new owner gets a strictly larger epoch
-3. every accepted-change-set append carries owner_epoch
-4. accepted-change-set store only accepts writes with epoch == current_epoch
+1. coordinator uses conditional write / CAS to install a new ownership generation
+2. the handoff atomically/persistently installs a strictly larger current_epoch
+   and a fresh owner_generation_id before the new generation becomes acceptance-eligible
+3. every accepted-change-set append carries the owner_epoch plus the immutable
+   server-side owner_generation_id of the generation performing that append
+4. accepted-change-set store accepts the write only if both
+      supplied owner_epoch == current_epoch
+   and supplied owner_generation_id == authoritative owner_generation_id
 ```
 
 因此写入不应该只是：
@@ -413,24 +430,28 @@ append document_id, revision=N+1
 ```text
 append accepted_change@revision=N+1
 only if document.current_epoch == my_epoch
+and     document.owner_generation_id == my_owner_generation_id
 and     document.latest_revision == N
-and     client_change_id not already accepted
+and     idempotency terminal result for client_change_id is still absent
 ```
 
-这三个条件分别解决三件事：
+这四个条件分别解决四件事：
 
 ```text
 epoch / fencing token:
-  防旧 owner 在 GC pause、网络隔离、慢恢复后“死后复活”继续写
+  防旧 generation 继续使用自己已经 superseded 的 epoch
+
+owner_generation provenance:
+  防旧 owner 仅通过复制/替换新的 numeric epoch 重新取得写权限
 
 latest_revision conditional check:
-  防并发 owner 或重复处理导致 revision 冲突
+  防并发处理导致 revision 冲突
 
-client_change_id idempotency:
-  防 ACK 丢失后的 retry 触发 double apply
+idempotency terminal-outcome arbitration:
+  防 ACK 丢失、重叠 retry 或并发 rejection/acceptance 为同一 logical edit 产生两个互相矛盾的终态
 ```
 
-这里还要把两种完全不同的 serialization boundary 分开。正常 edit acceptance 是高频 hot path，它不需要拿一个覆盖整个文档生命周期的长锁；它只需要在短数据库事务里原子检查 `current_epoch`、`latest_revision` 和 `client_change_id`，然后 append accepted change 并推进 frontier。
+这里还要把两种完全不同的 serialization boundary 分开。正常 edit acceptance 是高频 hot path，它不需要拿一个覆盖整个文档生命周期的长锁；它只需要在短数据库事务里原子检查 `current_epoch`、`owner_generation_id`、`latest_revision` 和 `(document_id, client_change_id)` 的 terminal-outcome arbitration 状态，然后 append accepted change、写入 `ACCEPTED` terminal result 并推进 frontier。
 
 但 owner recovery、snapshot publication、snapshot cleanup/compaction 属于低频 lifecycle 操作。它们会跨越 snapshot I/O、replay、metadata rebuild 等多步过程；如果让这些过程互相穿插，正确性证明会迅速变复杂。这里更便宜的做法是为每个 document 使用同一个 **session-scoped PostgreSQL advisory lock**：
 
@@ -462,6 +483,8 @@ new-owner recovery 可以具体写成：
 ```
 
 snapshot publication 和 cleanup/compaction 也必须先拿同一把 `lifecycle_lock(document_id)`，并一直持有到各自 lifecycle procedure 正常结束或 abort。这样 recovery 选中并加载某个 checkpoint 的过程中，checkpoint lifecycle 不会从旁边切换或删除它。
+
+这里还有一个必须显式固定的 observer boundary：snapshot publication / compaction 只改变 durable authoritative representation，不直接替换当前 active owner 已安装的 acceptance-relevant runtime state，也不能绕过 recovery barrier 直接开放新的 transform / acceptance entrypoint。某个 snapshot / compacted representation 如果后来被用来初始化或恢复 active owner，必须走上面的 recovery 路径：绑定 authoritative head、恢复 logical state 与 OT metadata，并在 reconstruction 完成后才开放 acceptance。这样 optimized representation 自身只需要保持可恢复的 authoritative semantics，而“继续从 H 正确接受下一条 canonical change”的运行时等价性由 completed recovery 建立。
 
 这里刻意不使用一个跨越 snapshot I/O/replay 的长 PostgreSQL transaction 或 row lock。那会把外部 I/O、连接占用、MVCC snapshot、vacuum/bloat 等成本压到数据库上；session advisory lock 更适合这种低频、跨多步的互斥，而且 session/process/connection 失败时会自动释放。
 

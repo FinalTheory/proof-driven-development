@@ -89,7 +89,7 @@ Catalog 的作用，是给 claim 中使用的重要名字一个稳定、可复�
 
 ### Semantic contracts
 
-Semantic contract 与 claim 的逻辑地位必须分开：**contract 定义 property，claim 才断言 property 在系统中成立。** Catalog 中存在一个 contract 不构成任何 proof premise，也不意味着任何 execution 已满足它。`claim.semantic_contracts: [C]` 的含义是该 claim 自己声明完整 realization：它必须推出 C 的 truth condition，并覆盖至少 C 定义的 minimum semantic scope。若 parent 只是通过 `depends_on` 使用一个已经 realization C 的 child，则不应把 C 沿 DAG 向上复制；只有 parent 自己也独立断言完整 C 时，重复 carrier 才是有意的。
+Semantic contract 与 claim 的逻辑地位必须分开：**contract 定义 property，claim 才断言 property 在系统中成立。** Catalog 中存在一个 contract 不构成任何 proof premise，也不意味着任何 execution 已满足它。`claim.semantic_contracts: [C]` 的含义是该 claim 自己声明完整 realization：它必须推出 C 的 truth condition，并覆盖至少 C 定义的 minimum semantic scope。若 parent 只是通过 `depends_on` 使用一个已经 realization C 的 child，则不应把 C 沿 DAG 向上复制；只有 parent 自己也独立断言完整 C 时，重复 carrier 才是有意的。Harness 对 contract identity 做双向结构校验：metadata 中声明的 contract 必须以 exact identifier 出现在 claim 文本中，而 claim 文本一旦直接命名 canonical contract identifier，也必须在 `semantic_contracts` 中显式声明，避免 prose 与 realization metadata 漂移。
 
 | Contract | 含义 | 它主要用来暴露什么问题 |
 | --- | --- | --- |
@@ -156,7 +156,9 @@ composition certification
 implementation evidence
 ```
 
-Coverage 是全局、开放式的 adversarial search；Composition 只看一个 proposition 与它的 direct premises；Implementation evidence 则把 terminal proof obligation 连接到真实实现。
+Coverage 是全局、开放式的 adversarial search；Composition 只看一个 proposition 与它的 direct premises；Implementation evidence 则把 terminal proof obligation 连接到真实实现。Coverage 在自由搜索前还会强制做几类 semantic closure：跨 reachable transition 的 inductive state-invariant closure、source/execution/identity/authority 的 provenance-binding closure，以及同一 logical identity 上互斥 authoritative terminal outcomes 的 decision-coherence closure。这里特别区分“值相等”和“authority provenance 正确”：fencing epoch、lease/generation token 等即使数值等于 current，也不能因此推出提交者属于 current owner generation。
+
+这些 closure 只能把**已经被识别为 correctness-sensitive 的关系**结构化，并通过 typed contract、signature、validator 和 audit protocol 约束后续证明；Harness 不能仅凭程序静态地从自然语言设计中判定“系统还缺哪一个业务关系”。因此 coverage 仍需要 adversarial semantic search。为减少 repair→coverage→repair 的循环，coverage 还要求 semantic-neighborhood substitution attack：在保持表面 scalar predicates 成立的同时，单独替换 provenance coordinate、actor/generation、identity coordinate、terminal disposition source 或竞争终态，检查 repair 是否只是挡住了原始 witness 的具体形式。
 
 
 对于可以机械化的 symbolic 子问题，Harness 把“语义翻译”和“solver 检查”分开管理。Canonical proposition 的 symbolic mapping 仍需 translation assurance；coverage bad-state 则作为独立 declarative case 保存。
