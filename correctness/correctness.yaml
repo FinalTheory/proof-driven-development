@@ -5972,14 +5972,19 @@ id_allocator:
 assurance:
   specification_coverage:
     status: closed
-    auditor_count: 6
-    rationale: Four independent clean-context coverage scouts audited the frozen repaired model.
-      Scouts B, C, and D found no serious all-roots-true structural candidate. Scout A found only
-      the accepted-result to canonical-publication visibility-gap candidate; a fresh root-local
-      checker classified it ORTHOGONAL and a fresh full-gate challenger returned
-      DISQUALIFIED_STRONGER_OR_OUT_OF_SCOPE with design_requires_property=false. No SURVIVES_GATE
-      finding remained, and the canonical model/design hashes stayed unchanged throughout the
-      campaign.
+    auditor_count: 12
+    rationale: Two consecutive independent clean-context specification-coverage campaigns closed
+      against the same unchanged model signature
+      143043429133a2964a563eb9fa62d15dc414cb4103cca1912be6ab06925db530. In the first campaign,
+      Scouts B/C/D found no structural candidate and Scout A's accepted-result to
+      canonical-publication visibility-hole candidate was independently classified ORTHOGONAL and
+      DISQUALIFIED_STRONGER_OR_OUT_OF_SCOPE. In the second campaign, Scouts B/C/D again found no
+      surviving all-roots-true structural candidate; Scout A's false request-intrinsic rejection
+      candidate was independently classified ORTHOGONAL and DISQUALIFIED_STRONGER_OR_OUT_OF_SCOPE
+      because request-intrinsic validator predicate correctness is not part of the current
+      distributed correctness guarantee. No campaign produced coverage_gate_result SURVIVES_GATE,
+      canonical design semantics were unchanged, validation remained clean, and the full 175-test
+      suite passed.
     signature: 143043429133a2964a563eb9fa62d15dc414cb4103cca1912be6ab06925db530
   composition:
     G0_acked_edit_survives_failover:
