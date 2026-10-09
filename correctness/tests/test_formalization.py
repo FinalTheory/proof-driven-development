@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import copy
 import unittest
+
+import yaml
 from pathlib import Path
 
 from harness.formalization import (
@@ -34,15 +36,50 @@ class FormalizationRoutingTests(unittest.TestCase):
         )
 
     def test_symbolic_subject_without_mapping_is_explicitly_blocked(self) -> None:
+        subject_id = next(
+            node_id
+            for node_id in sorted(self.graph.claims)
+            if self.graph.doc["formalization"]["claims"][node_id]["mode"] == "symbolic"
+            and node_id not in self.bridge.claims
+        )
         state = subject_formalization_state(
             self.graph,
             self.bridge,
             self.registry,
             kind="claim",
-            subject_id="G0_acked_edit_survives_failover",
+            subject_id=subject_id,
         )
         self.assertEqual(state.mode, "symbolic")
         self.assertEqual(state.effective, "MAPPING_MISSING")
+
+    def test_opaque_symbolic_mapping_is_never_proof_ready(self) -> None:
+        raw = yaml.safe_load(BRIDGE.read_text(encoding="utf-8"))
+        raw["claims"]["G0_acked_edit_survives_failover"]["capability"] = "opaque"
+        bridge = SymbolicBridge.from_data(raw)
+
+        state = subject_formalization_state(
+            self.graph,
+            bridge,
+            self.registry,
+            kind="claim",
+            subject_id="G0_acked_edit_survives_failover",
+        )
+        self.assertEqual(state.mode, "symbolic")
+        self.assertEqual(state.symbolic_capability, "opaque")
+        self.assertEqual(state.effective, "SYMBOLIC_OPAQUE")
+
+        route = composition_formalization_route(
+            self.graph, bridge, self.registry, "G0_acked_edit_survives_failover"
+        )
+        self.assertEqual(route["backend"], "symbolic")
+        self.assertEqual(route["state"], "BLOCKED")
+        self.assertTrue(
+            any(
+                item["subject"] == "G0_acked_edit_survives_failover"
+                and item["state"] == "SYMBOLIC_OPAQUE"
+                for item in route["blocking"]
+            )
+        )
 
     def test_trusted_symbolic_subject_is_ready(self) -> None:
         state = subject_formalization_state(

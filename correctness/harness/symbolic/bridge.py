@@ -21,6 +21,7 @@ class ContractMapping:
     contract_class: str
     formula: dict[str, Any]
     catalog_symbols: frozenset[str]
+    capability: str = "relational"
     observation_scope: str | None = None
 
 
@@ -30,6 +31,9 @@ class ClaimMapping:
     contract_ids: tuple[str, ...]
     formula: dict[str, Any]
     catalog_symbols: frozenset[str]
+    capability: str = "relational"
+    formula_from_contracts: bool = False
+    residual_formula: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -37,6 +41,7 @@ class AssumptionMapping:
     assumption_id: str
     formula: dict[str, Any]
     catalog_symbols: frozenset[str]
+    capability: str = "relational"
 
 
 @dataclass(frozen=True)
@@ -166,8 +171,9 @@ class SymbolicBridge:
             if not isinstance(contract_id, str) or not contract_id or not isinstance(mapping, dict):
                 raise SymbolicBridgeError("symbolic contract mappings must be named mappings")
             contract_class = mapping.get("class")
-            expected_fields = {"class", "formula", "observation_scope"} if contract_class == "state_invariant" else {"class", "formula"}
-            if set(mapping) != expected_fields:
+            required_fields = {"class", "formula", "observation_scope"} if contract_class == "state_invariant" else {"class", "formula"}
+            allowed_fields = required_fields | {"capability"}
+            if not required_fields.issubset(mapping) or set(mapping) - allowed_fields:
                 raise SymbolicBridgeError(
                     f"contract mapping {contract_id} must contain exactly {sorted(expected_fields)}"
                 )
@@ -195,11 +201,17 @@ class SymbolicBridge:
                     raise SymbolicBridgeError(
                         f"contract mapping {contract_id} uses function {fn} outside its semantic_anchors {anchors}"
                     )
+            capability = mapping.get("capability", "relational")
+            if capability not in {"relational", "opaque"}:
+                raise SymbolicBridgeError(
+                    f"contract mapping {contract_id}.capability must be relational or opaque"
+                )
             normalized_contracts[contract_id] = ContractMapping(
                 contract_id=contract_id,
                 contract_class=contract_class,
                 formula=formula,
                 catalog_symbols=frozenset(catalog_symbols),
+                capability=capability,
                 observation_scope=observation_scope,
             )
 
@@ -210,9 +222,18 @@ class SymbolicBridge:
         for assumption_id, mapping in raw_assumptions.items():
             if not isinstance(assumption_id, str) or not assumption_id or not isinstance(mapping, dict):
                 raise SymbolicBridgeError("symbolic assumption mappings must be named mappings")
-            if set(mapping) != {"formula"} or not isinstance(mapping.get("formula"), dict):
+            if (
+                not {"formula"}.issubset(mapping)
+                or set(mapping) - {"formula", "capability"}
+                or not isinstance(mapping.get("formula"), dict)
+            ):
                 raise SymbolicBridgeError(
-                    f"assumption mapping {assumption_id} must contain exactly formula"
+                    f"assumption mapping {assumption_id} must contain formula and optional capability"
+                )
+            capability = mapping.get("capability", "relational")
+            if capability not in {"relational", "opaque"}:
+                raise SymbolicBridgeError(
+                    f"assumption mapping {assumption_id}.capability must be relational or opaque"
                 )
             formula = mapping["formula"]
             used_functions = _formula_function_names(formula)
@@ -233,6 +254,7 @@ class SymbolicBridge:
                 assumption_id=assumption_id,
                 formula=formula,
                 catalog_symbols=frozenset(catalog_symbols),
+                capability=capability,
             )
 
         raw_claims = raw.get("claims", {})
@@ -242,12 +264,28 @@ class SymbolicBridge:
         for claim_id, mapping in raw_claims.items():
             if not isinstance(claim_id, str) or not claim_id or not isinstance(mapping, dict):
                 raise SymbolicBridgeError("symbolic claim mappings must be named mappings")
-            if set(mapping) != {"contracts", "formula"}:
+            allowed_claim_fields = {"contracts", "formula", "formula_from_contracts", "residual_formula", "capability"}
+            if "contracts" not in mapping or set(mapping) - allowed_claim_fields:
                 raise SymbolicBridgeError(
-                    f"claim mapping {claim_id} must contain exactly contracts and formula"
+                    f"claim mapping {claim_id} must contain contracts and exactly one formula source"
+                )
+            has_formula = "formula" in mapping
+            from_contracts = mapping.get("formula_from_contracts") is True
+            has_residual = "residual_formula" in mapping
+            if has_formula == from_contracts:
+                raise SymbolicBridgeError(
+                    f"claim mapping {claim_id} must provide exactly one of formula or formula_from_contracts: true"
+                )
+            if has_residual and not from_contracts:
+                raise SymbolicBridgeError(
+                    f"claim mapping {claim_id}.residual_formula requires formula_from_contracts: true"
+                )
+            capability = mapping.get("capability", "relational")
+            if capability not in {"relational", "opaque"}:
+                raise SymbolicBridgeError(
+                    f"claim mapping {claim_id}.capability must be relational or opaque"
                 )
             contract_ids = mapping["contracts"]
-            formula = mapping["formula"]
             if (
                 not isinstance(contract_ids, list)
                 or not all(isinstance(item, str) and item for item in contract_ids)
@@ -264,6 +302,26 @@ class SymbolicBridge:
                 raise SymbolicBridgeError(
                     f"claim mapping {claim_id} references unmapped contracts {missing_contracts}"
                 )
+            if from_contracts:
+                if not contract_ids:
+                    raise SymbolicBridgeError(
+                        f"claim mapping {claim_id} formula_from_contracts requires at least one contract"
+                    )
+                formula_parts = [normalized_contracts[item].formula for item in contract_ids]
+                if has_residual:
+                    residual = mapping["residual_formula"]
+                    if not isinstance(residual, dict):
+                        raise SymbolicBridgeError(
+                            f"claim mapping {claim_id}.residual_formula must be a mapping"
+                        )
+                    formula_parts.append(residual)
+                formula = (
+                    formula_parts[0]
+                    if len(formula_parts) == 1
+                    else {"and": formula_parts}
+                )
+            else:
+                formula = mapping["formula"]
             if not isinstance(formula, dict):
                 raise SymbolicBridgeError(
                     f"claim mapping {claim_id}.formula must be a mapping"
@@ -290,6 +348,9 @@ class SymbolicBridge:
                 contract_ids=tuple(contract_ids),
                 formula=formula,
                 catalog_symbols=frozenset(catalog_symbols),
+                capability=capability,
+                formula_from_contracts=from_contracts,
+                residual_formula=(mapping.get("residual_formula") if has_residual else None),
             )
 
         return cls(
@@ -300,6 +361,36 @@ class SymbolicBridge:
             assumptions=normalized_assumptions,
             claims=normalized_claims,
         )
+
+    def materialize_claim_formula(
+        self,
+        claim_id: str,
+        *,
+        contract_formula_overrides: dict[str, dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Materialize one claim formula from its single canonical symbolic source.
+
+        For formula_from_contracts mappings the persisted YAML stores only contract IDs
+        plus an optional residual formula.  Re-materializing here keeps contract formulas
+        single-sourced and makes mutation overrides propagate through every referencing root.
+        """
+        mapping = self.claims.get(claim_id)
+        if mapping is None:
+            raise SymbolicBridgeError(f"no symbolic claim mapping for {claim_id}")
+        if not mapping.formula_from_contracts:
+            return mapping.formula
+        overrides = contract_formula_overrides or {}
+        parts = [
+            overrides.get(contract_id, self.contracts[contract_id].formula)
+            for contract_id in mapping.contract_ids
+        ]
+        if mapping.residual_formula is not None:
+            parts.append(mapping.residual_formula)
+        if not parts:
+            raise SymbolicBridgeError(
+                f"claim mapping {claim_id} formula_from_contracts has no formula parts"
+            )
+        return parts[0] if len(parts) == 1 else {"and": parts}
 
     def validate_against_graph(self, graph: Graph) -> None:
         formula_functions = {
@@ -449,7 +540,11 @@ class SymbolicBridge:
                     f"{claim_id} symbolic claim-contract coverage mismatch: "
                     f"missing={missing}, extra={extra}"
                 )
-            expected_symbols: set[str] = set(_direct_claim_catalog_symbols(claim, known_catalog_symbols))
+            expected_symbols: set[str] = (
+                set()
+                if mapping.formula_from_contracts and mapping.residual_formula is None
+                else set(_direct_claim_catalog_symbols(claim, known_catalog_symbols))
+            )
             for contract_id in mapping.contract_ids:
                 expected_symbols.update(self.contracts[contract_id].catalog_symbols)
             if mapping.catalog_symbols != frozenset(expected_symbols):

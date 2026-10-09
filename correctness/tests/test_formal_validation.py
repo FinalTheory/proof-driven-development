@@ -44,6 +44,29 @@ class FormalSchemaTests(unittest.TestCase):
             with self.subTest(name=name):
                 _load_yaml_mapping(path, schema_name=name)
 
+    def test_formal_yaml_directories_are_schema_exhaustive(self) -> None:
+        model_files = {
+            path.name
+            for path in (ROOT / "symbolic_models").iterdir()
+            if path.is_file() and path.suffix in {".yaml", ".yml"}
+        }
+        self.assertEqual(
+            model_files,
+            {"bridge.yaml", "assurance.yaml", "coverage.yaml", "design_obligations.yaml"},
+        )
+
+        for path in (ROOT / "symbolic_artifacts").iterdir():
+            if not path.is_file() or path.suffix not in {".yaml", ".yml"}:
+                continue
+            with self.subTest(path=path.name):
+                if path.name.endswith(".composition.yaml"):
+                    schema_name = "composition-artifact"
+                elif path.name.endswith(".coverage.yaml"):
+                    schema_name = "coverage-artifact"
+                else:
+                    self.fail(f"formal artifact has no registered schema: {path.name}")
+                _load_yaml_mapping(path, schema_name=schema_name)
+
     def test_bridge_schema_rejects_unrecognized_function_metadata(self) -> None:
         raw = yaml.safe_load((ROOT / "symbolic_models" / "bridge.yaml").read_text())
         broken = copy.deepcopy(raw)
@@ -161,6 +184,31 @@ class FormalSchemaTests(unittest.TestCase):
         self.assertEqual(first_warnings, [])
         self.assertEqual(second_errors, [])
         self.assertEqual(second_warnings, [])
+
+    def test_repository_preflight_rejects_unregistered_formal_yaml(self) -> None:
+        graph = Graph.load()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repository_root = Path(temp_dir)
+            correctness_root = repository_root / "correctness"
+            models = correctness_root / "symbolic_models"
+            artifacts = correctness_root / "symbolic_artifacts"
+            models.mkdir(parents=True)
+            artifacts.mkdir(parents=True)
+            for source in (ROOT / "symbolic_models").iterdir():
+                if source.is_file() and source.suffix in {".yaml", ".yml"}:
+                    (models / source.name).write_text(source.read_text(), encoding="utf-8")
+            (models / "freeform.yaml").write_text("anything: goes\n", encoding="utf-8")
+            (artifacts / "notes.yaml").write_text("anything: goes\n", encoding="utf-8")
+            synthetic = Graph(copy.deepcopy(graph.doc), repository_root=repository_root)
+            errors, _ = validate_formal_layer(synthetic)
+        self.assertTrue(
+            any("unregistered symbolic_models YAML" in error for error in errors),
+            errors,
+        )
+        self.assertTrue(
+            any("unregistered symbolic_artifacts YAML" in error for error in errors),
+            errors,
+        )
 
     def test_repository_preflight_reports_formal_schema_drift(self) -> None:
         graph = Graph.load()

@@ -209,7 +209,7 @@ class DesignObligationResult:
 
 
 class DesignObligationVerifier:
-    """Check whether selected current-spec formulas entail an independent design property."""
+    """Check whether the declared current-spec proof boundary entails an independent design property."""
 
     def __init__(
         self,
@@ -253,7 +253,7 @@ class DesignObligationVerifier:
             failures = [f"{key}={status}" for key, status in trust.items() if status != SubjectTrustStatus.TRUSTED.value]
             if failures:
                 raise TranslationReviewError(
-                    "design-obligation check requires TRUSTED selected constraints: "
+                    "design-obligation check requires TRUSTED constraints: "
                     + "; ".join(failures)
                 )
             if oracle_trust != SubjectTrustStatus.TRUSTED.value:
@@ -266,7 +266,7 @@ class DesignObligationVerifier:
         selected_formulas = (
             [self.bridge.contracts[cid].formula for cid in contract_ids]
             + [self.bridge.assumptions[aid].formula for aid in assumption_ids]
-            + [self.bridge.claims[cid].formula for cid in claim_ids]
+            + [self.bridge.materialize_claim_formula(cid) for cid in claim_ids]
         )
         constrained_program = self._compile(
             negated_obligation,
@@ -312,10 +312,17 @@ class DesignObligationVerifier:
         claim_overrides = claim_formula_overrides or {}
         contract_overrides = contract_formula_overrides or {}
         unknown_claims = set(claim_overrides) - set(claim_ids)
-        unknown_contracts = set(contract_overrides) - set(contract_ids)
+        derived_contract_ids = {
+            contract_id
+            for claim_id in claim_ids
+            if self.bridge.claims[claim_id].formula_from_contracts
+            for contract_id in self.bridge.claims[claim_id].contract_ids
+        }
+        overrideable_contract_ids = set(contract_ids) | derived_contract_ids
+        unknown_contracts = set(contract_overrides) - overrideable_contract_ids
         if unknown_claims or unknown_contracts:
             raise DesignObligationError(
-                "obligation overrides must target selected constraints: "
+                "obligation overrides must target selected constraints or contracts used to materialize them: "
                 f"claims={sorted(unknown_claims)} contracts={sorted(unknown_contracts)}"
             )
         negated_obligation = {"not": obligation.formula}
@@ -327,7 +334,12 @@ class DesignObligationVerifier:
             ]
             + [self.bridge.assumptions[aid].formula for aid in assumption_ids]
             + [
-                claim_overrides.get(cid, self.bridge.claims[cid].formula)
+                claim_overrides.get(
+                    cid,
+                    self.bridge.materialize_claim_formula(
+                        cid, contract_formula_overrides=contract_overrides
+                    ),
+                )
                 for cid in claim_ids
             ]
         )
@@ -395,6 +407,8 @@ class DesignObligationVerifier:
                 "all_roots coverage requires every current root and assumption to have a symbolic mapping; "
                 f"missing_roots={missing_roots} missing_assumptions={missing_assumptions}"
             )
+        # Root-declared contracts are materialized inside the root formulas.  They are not
+        # asserted a second time at the authoritative coverage boundary.
         return roots, assumptions, []
 
     def _validate_obligation(
@@ -469,16 +483,25 @@ class DesignObligationVerifier:
                 result[f"claim:{cid}"] = SubjectTrustStatus.UNVERIFIED.value
             return result
         for cid in contract_ids:
+            if self.bridge.contracts[cid].capability == "opaque":
+                result[f"contract:{cid}"] = "OPAQUE"
+                continue
             trust = self.assurance_registry.evaluate(
                 self.graph, self.bridge, kind="contract", subject_id=cid
             )
             result[f"contract:{cid}"] = trust.status.value
         for aid in assumption_ids:
+            if self.bridge.assumptions[aid].capability == "opaque":
+                result[f"assumption:{aid}"] = "OPAQUE"
+                continue
             trust = self.assurance_registry.evaluate(
                 self.graph, self.bridge, kind="assumption", subject_id=aid
             )
             result[f"assumption:{aid}"] = trust.status.value
         for cid in claim_ids:
+            if self.bridge.claims[cid].capability == "opaque":
+                result[f"claim:{cid}"] = "OPAQUE"
+                continue
             trust = self.assurance_registry.evaluate(
                 self.graph, self.bridge, kind="claim", subject_id=cid
             )
@@ -545,7 +568,7 @@ def design_obligation_coverage_signature(
         "obligation_signature": obligation_signature,
         "coverage_scope": obligation.coverage_scope,
         "claims": {
-            cid: bridge.claims[cid].formula for cid in sorted(claim_ids)
+            cid: bridge.materialize_claim_formula(cid) for cid in sorted(claim_ids)
         },
         "assumptions": {
             aid: bridge.assumptions[aid].formula for aid in sorted(assumption_ids)

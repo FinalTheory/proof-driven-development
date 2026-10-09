@@ -119,7 +119,7 @@ FUNCTION_SCHEMA["anyOf"] = [
 ]
 
 ASSUMPTION_MAPPING_SCHEMA = _closed(
-    {"formula": {"$ref": "#/$defs/formula"}},
+    {"formula": {"$ref": "#/$defs/formula"}, "capability": {"enum": ["relational", "opaque"]}},
     ("formula",),
 )
 
@@ -131,15 +131,27 @@ CLAIM_MAPPING_SCHEMA = _closed(
             "uniqueItems": True,
         },
         "formula": {"$ref": "#/$defs/formula"},
+        "formula_from_contracts": {"const": True},
+        "residual_formula": {"$ref": "#/$defs/formula"},
+        "capability": {"enum": ["relational", "opaque"]},
     },
-    ("contracts", "formula"),
+    ("contracts",),
 )
+CLAIM_MAPPING_SCHEMA["oneOf"] = [
+    {
+        "required": ["formula"],
+        "not": {"anyOf": [{"required": ["formula_from_contracts"]}, {"required": ["residual_formula"]}]},
+    },
+    {"required": ["formula_from_contracts"], "not": {"required": ["formula"]}},
+]
+
 
 STATE_INVARIANT_MAPPING_SCHEMA = _closed(
     {
         "class": {"const": "state_invariant"},
         "observation_scope": NONEMPTY_STRING,
         "formula": {"$ref": "#/$defs/formula"},
+        "capability": {"enum": ["relational", "opaque"]},
     },
     ("class", "observation_scope", "formula"),
 )
@@ -148,6 +160,7 @@ PROVENANCE_MAPPING_SCHEMA = _closed(
     {
         "class": {"const": "provenance_binding"},
         "formula": {"$ref": "#/$defs/formula"},
+        "capability": {"enum": ["relational", "opaque"]},
     },
     ("class", "formula"),
 )
@@ -156,6 +169,7 @@ SAFETY_CONTRACT_MAPPING_SCHEMA = _closed(
     {
         "class": {"const": "safety_contract"},
         "formula": {"$ref": "#/$defs/formula"},
+        "capability": {"enum": ["relational", "opaque"]},
     },
     ("class", "formula"),
 )
@@ -164,6 +178,7 @@ EQUIVALENCE_MAPPING_SCHEMA = _closed(
     {
         "class": {"const": "equivalence_relation"},
         "formula": {"$ref": "#/$defs/formula"},
+        "capability": {"enum": ["relational", "opaque"]},
     },
     ("class", "formula"),
 )

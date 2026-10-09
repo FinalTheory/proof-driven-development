@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import copy
 import unittest
-from dataclasses import replace
 from pathlib import Path
 
 from harness.model import Graph
@@ -97,27 +95,38 @@ class SymbolicDesignObligationTests(unittest.TestCase):
         self.assertEqual(weakened.constrained.status, "sat")
         self.assertEqual(weakened.verdict, "GAP")
 
-    def test_all_roots_fails_closed_until_every_root_is_symbolically_mapped(self) -> None:
-        original = self.spec.require(
-            "accepted_reconciliation_closes_pending_lifecycle"
-        )
-        all_roots = replace(
-            original,
-            coverage_scope="all_roots",
-            claim_ids=(),
-            contract_ids=(),
-        )
-        with self.assertRaisesRegex(
-            DesignObligationError,
-            "all_roots coverage requires every current root",
-        ):
-            self.verifier.check(all_roots, require_trusted=False)
-
-    def test_trusted_mode_fails_closed_for_unreviewed_selected_constraints(self) -> None:
+    def test_all_roots_uses_exact_root_and_assumption_boundary(self) -> None:
         obligation = self.spec.require(
             "accepted_reconciliation_closes_pending_lifecycle"
         )
-        with self.assertRaisesRegex(Exception, "requires TRUSTED selected constraints"):
+        result = self.verifier.check(obligation, require_trusted=False)
+        expected_roots = {
+            node_id
+            for node_id, claim in self.graph.claims.items()
+            if claim.get("kind") == "root"
+        }
+        expected_assumptions = set(self.graph.assumptions)
+        self.assertEqual(set(result.claim_ids), expected_roots)
+        self.assertEqual(set(result.assumption_ids), expected_assumptions)
+        self.assertEqual(result.contract_ids, ())
+
+    def test_all_roots_unreviewed_constraints_cannot_be_canonically_certified(self) -> None:
+        obligation = self.spec.require(
+            "accepted_reconciliation_closes_pending_lifecycle"
+        )
+        result = self.verifier.check(obligation, require_trusted=False)
+        self.assertNotIn("OPAQUE", set(result.constraint_trust.values()))
+        self.assertTrue(
+            any(status in {"UNVERIFIED", "STALE"} for status in result.constraint_trust.values())
+        )
+        self.assertFalse(result.all_constraints_trusted)
+        self.assertFalse(result.canonical_certified)
+
+    def test_trusted_mode_fails_closed_for_unreviewed_all_roots_boundary(self) -> None:
+        obligation = self.spec.require(
+            "accepted_reconciliation_closes_pending_lifecycle"
+        )
+        with self.assertRaisesRegex(Exception, "requires TRUSTED constraints"):
             self.verifier.check(obligation, require_trusted=True)
 
 

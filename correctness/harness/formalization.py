@@ -18,6 +18,7 @@ class FormalizationState:
     reason: str | None = None
     rationale: str | None = None
     translation_status: str | None = None
+    symbolic_capability: str | None = None
 
 
 def formalization_entry(graph: Graph, *, kind: str, subject_id: str) -> dict[str, Any]:
@@ -47,6 +48,16 @@ def _mapping_exists(bridge: Any, *, kind: str, subject_id: str) -> bool:
         return subject_id in bridge.assumptions
     if kind == "semantic_contract":
         return subject_id in bridge.contracts
+    raise ValueError(kind)
+
+
+def _mapping_capability(bridge: Any, *, kind: str, subject_id: str) -> str:
+    if kind == "claim":
+        return bridge.claims[subject_id].capability
+    if kind == "assumption":
+        return bridge.assumptions[subject_id].capability
+    if kind == "semantic_contract":
+        return bridge.contracts[subject_id].capability
     raise ValueError(kind)
 
 
@@ -83,6 +94,7 @@ def subject_formalization_state(
             mode=mode,
             effective="MAPPING_MISSING",
         )
+    capability = _mapping_capability(bridge, kind=kind, subject_id=subject_id)
     assurance_kind = "contract" if kind == "semantic_contract" else kind
     trust = registry.evaluate(
         graph,
@@ -90,7 +102,9 @@ def subject_formalization_state(
         kind=assurance_kind,
         subject_id=subject_id,
     )
-    if trust.status.value == "TRUSTED":
+    if capability == "opaque":
+        effective = "SYMBOLIC_OPAQUE"
+    elif trust.status.value == "TRUSTED":
         effective = "SYMBOLIC_READY"
     else:
         effective = "TRANSLATION_" + trust.status.value
@@ -100,6 +114,7 @@ def subject_formalization_state(
         mode=mode,
         effective=effective,
         translation_status=trust.status.value,
+        symbolic_capability=capability,
     )
 
 
@@ -124,6 +139,7 @@ def formalization_snapshot(graph: Graph, bridge: Any, registry: Any) -> dict[str
                 "mode": state.mode,
                 "effective": state.effective,
                 **({"translation_status": state.translation_status} if state.translation_status else {}),
+                **({"symbolic_capability": state.symbolic_capability} if state.symbolic_capability else {}),
                 **({"reason": state.reason} if state.reason else {}),
                 **({"rationale": state.rationale} if state.rationale else {}),
             }

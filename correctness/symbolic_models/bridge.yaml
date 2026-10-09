@@ -16,6 +16,14 @@ sorts:
 - RecoveryAttempt
 - DurableIdempotencyEvidence
 - ProtocolTransition
+- OTInvocation
+- LogicalEdit
+- DocumentState
+- AcceptedChangeSequence
+- TerminalResultRecord
+- RejectionDecision
+- OTSuccessResult
+- ExternalTerminalResult
 functions:
   visible_document:
     args:
@@ -23,8 +31,7 @@ functions:
     returns: Document
     catalog_symbols:
     - client_document_id
-    meaning: The document identity represented by this user-visible canonical client
-      state.
+    meaning: The document identity represented by this user-visible canonical client state.
   visible_frontier:
     args:
     - ClientState
@@ -40,8 +47,7 @@ functions:
     returns: Bool
     catalog_symbols:
     - client_local_document
-    meaning: The client state's canonical content is exactly deterministic replay
-      of document D through revision F.
+    meaning: The client state's canonical content is exactly deterministic replay of document D through revision F.
   visible_overlay:
     args:
     - ClientState
@@ -49,8 +55,7 @@ functions:
     returns: Bool
     catalog_symbols:
     - client_visible_speculative_overlays
-    meaning: Overlay o is currently exposed as a speculative user-visible overlay
-      in client state s.
+    meaning: Overlay o is currently exposed as a speculative user-visible overlay in client state s.
   canonical_contains_same_edit:
     args:
     - ClientState
@@ -59,8 +64,7 @@ functions:
     catalog_symbols:
     - client_local_document
     - last_applied_revision
-    meaning: The canonical prefix visible in state s already contains the accepted
-      logical edit represented by overlay o.
+    meaning: The canonical prefix visible in state s already contains the accepted logical edit represented by overlay o.
   authored_from:
     args:
     - Request
@@ -92,15 +96,13 @@ functions:
     catalog_symbols:
     - raw_edit
     - client_local_document
-    meaning: The raw edit carried by request r is the edit authored against the canonical
-      client content in source state s.
+    meaning: The raw edit carried by request r is the edit authored against the canonical client content in source state s.
   eligible_catchup_response:
     args:
     - CatchupResponse
     returns: Bool
     catalog_symbols: []
-    meaning: Response r belongs to a normal catch-up/reconnect attempt within the
-      protocol guarantee being modeled.
+    meaning: Response r belongs to a normal catch-up/reconnect attempt within the protocol guarantee being modeled.
     semantic_anchors:
     - contract:catchup_head_binding
   captured_authoritative_head:
@@ -109,8 +111,7 @@ functions:
     returns: Revision
     catalog_symbols:
     - document_latest_revision
-    meaning: The authoritative document latest revision captured for the catch-up
-      response's attempt.
+    meaning: The authoritative document latest revision captured for the catch-up response's attempt.
   catchup_response_head_value:
     args:
     - CatchupResponse
@@ -124,17 +125,14 @@ functions:
     returns: Bool
     catalog_symbols:
     - catchup_response_head
-    meaning: The captured response head remains the same bound value through construction,
-      return, and candidate publication for this response.
+    meaning: The captured response head remains the same bound value through construction, return, and candidate publication for this response.
   within_retry_reconnect_eligibility:
     args:
     - AuthoritativeState
     - IdempotencyKey
     returns: Bool
     catalog_symbols: []
-    meaning: Composite authoritative idempotency identity k = (document_id, client_change_id)
-      is within the 30-day normal retry/reconnect eligibility horizon in authoritative
-      state s.
+    meaning: Composite authoritative idempotency identity k = (document_id, client_change_id) is within the 30-day normal retry/reconnect eligibility horizon in authoritative state s.
     semantic_anchors:
     - contract:accepted_evidence_correspondence
   accepted_evidence_for_key:
@@ -145,8 +143,7 @@ functions:
     catalog_symbols:
     - accepted_idempotency_evidence
     - idempotency_key
-    meaning: authoritative accepted_idempotency_evidence exists in state s for the
-      same composite idempotency_key k = (document_id, client_change_id).
+    meaning: authoritative accepted_idempotency_evidence exists in state s for the same composite idempotency_key k = (document_id, client_change_id).
   exactly_one_committed_acceptance_for_key:
     args:
     - AuthoritativeState
@@ -154,9 +151,7 @@ functions:
     returns: Bool
     catalog_symbols:
     - accepted_change_log
-    meaning: accepted_change_log in authoritative state s contains exactly one committed
-      canonical acceptance whose authoritative idempotency_key is the same composite
-      identity k = (document_id, client_change_id).
+    meaning: accepted_change_log in authoritative state s contains exactly one committed canonical acceptance whose authoritative idempotency_key is the same composite identity k = (document_id, client_change_id).
   authoritative_evidence:
     args:
     - AcceptedEvidence
@@ -178,16 +173,14 @@ functions:
     catalog_symbols:
     - canonical_accepted_change
     - accepted_change_log
-    meaning: Canonical acceptance a is a committed canonical accepted-change record
-      in authoritative accepted history.
+    meaning: Canonical acceptance a is a committed canonical accepted-change record in authoritative accepted history.
   acceptance_key:
     args:
     - CanonicalAcceptance
     returns: IdempotencyKey
     catalog_symbols:
     - canonical_accepted_change
-    meaning: The authoritative idempotency identity carried by canonical acceptance
-      a.
+    meaning: The authoritative idempotency identity carried by canonical acceptance a.
   evidence_derived_from_acceptance:
     args:
     - AcceptedEvidence
@@ -196,8 +189,7 @@ functions:
     catalog_symbols:
     - accepted_idempotency_evidence
     - canonical_accepted_change
-    meaning: Evidence e is derived from and corresponds to committed canonical acceptance
-      a.
+    meaning: Evidence e is derived from and corresponds to committed canonical acceptance a.
   request_change_id:
     args:
     - Request
@@ -214,6 +206,7 @@ functions:
     meaning: Canonical acceptance a was produced from submitted request r.
     semantic_anchors:
     - contract:acceptance_request_identity_binding
+    - claim:G6_accepted_change_preserves_ot_semantics
   acceptance_document:
     args:
     - CanonicalAcceptance
@@ -235,8 +228,7 @@ functions:
     returns: Bool
     catalog_symbols:
     - idempotency_key
-    meaning: The authoritative idempotency identity associated with acceptance a is
-      exactly the request's (document_id, client_change_id).
+    meaning: The authoritative idempotency identity associated with acceptance a is exactly the request's (document_id, client_change_id).
   acceptance_identity_preserved_end_to_end:
     args:
     - CanonicalAcceptance
@@ -246,10 +238,7 @@ functions:
     - canonical_accepted_change
     - document_id
     - client_change_id
-    meaning: From request admission through OT dispatch, idempotency arbitration,
-      retry handling, and canonical commit, neither document_id nor client_change_id
-      is dropped, regenerated, substituted, or cross-bound; every identity handoff
-      for acceptance a remains the originating request r identity.
+    meaning: From request admission through OT dispatch, idempotency arbitration, retry handling, and canonical commit, neither document_id nor client_change_id is dropped, regenerated, substituted, or cross-bound; every identity handoff for acceptance a remains the originating request r identity.
   durable_idempotency_evidence_for_acceptance:
     args:
     - DurableIdempotencyEvidence
@@ -257,8 +246,7 @@ functions:
     returns: Bool
     catalog_symbols:
     - idempotency_key
-    meaning: Durable idempotency evidence e is associated with canonical acceptance
-      a.
+    meaning: Durable idempotency evidence e is associated with canonical acceptance a.
   durable_evidence_identity_matches_request:
     args:
     - DurableIdempotencyEvidence
@@ -268,19 +256,14 @@ functions:
     - idempotency_key
     - document_id
     - client_change_id
-    meaning: Durable idempotency evidence e identifies exactly the same (document_id,
-      client_change_id) carried by originating request r.
+    meaning: Durable idempotency evidence e identifies exactly the same (document_id, client_change_id) carried by originating request r.
   live_delivery_record:
     args:
     - LiveDelivery
     returns: Bool
     catalog_symbols:
     - websocket_live_stream
-    meaning: 'Delivery d is any change actually exposed through the websocket live
-      stream. This predicate does not pre-classify the delivery as canonical or committed:
-      if a provisional, speculative, rejected, aborted, or never-committed change
-      were exposed, it would still satisfy live_delivery_record(d) and would have
-      to satisfy the formula''s separate committed-source obligations.'
+    meaning: 'Delivery d is any change actually exposed through the websocket live stream. This predicate does not pre-classify the delivery as canonical or committed: if a provisional, speculative, rejected, aborted, or never-committed change were exposed, it would still satisfy live_delivery_record(d) and would have to satisfy the formula''s separate committed-source obligations.'
   committed_history_record:
     args:
     - CanonicalAcceptance
@@ -294,9 +277,7 @@ functions:
     - CanonicalAcceptance
     returns: Bool
     catalog_symbols: []
-    meaning: Live delivery d originates from acceptance record a as its accepted-history
-      source; this relation alone does not assert that a is committed or that every
-      payload/revision field is preserved exactly.
+    meaning: Live delivery d originates from acceptance record a as its accepted-history source; this relation alone does not assert that a is committed or that every payload/revision field is preserved exactly.
     semantic_anchors:
     - contract:live_delivery_acceptance_binding
   live_delivery_preserves_payload_revision:
@@ -305,9 +286,7 @@ functions:
     - CanonicalAcceptance
     returns: Bool
     catalog_symbols: []
-    meaning: Live delivery d preserves acceptance record a's canonical payload and
-      revision provenance exactly; whether a is committed is expressed separately
-      by committed_history_record(a).
+    meaning: Live delivery d preserves acceptance record a's canonical payload and revision provenance exactly; whether a is committed is expressed separately by committed_history_record(a).
     semantic_anchors:
     - contract:live_delivery_acceptance_binding
   recovery_head_capture_event:
@@ -315,9 +294,7 @@ functions:
     - RecoveryAttempt
     returns: Bool
     catalog_symbols: []
-    meaning: Recovery attempt r has reached the new-owner recovery-head capture event
-      after epoch handoff, at which it reads the authoritative frontier and binds
-      recovery_head.
+    meaning: Recovery attempt r has reached the new-owner recovery-head capture event after epoch handoff, at which it reads the authoritative frontier and binds recovery_head.
     semantic_anchors:
     - contract:recovery_head_binding
   captured_recovery_authoritative_head:
@@ -326,8 +303,7 @@ functions:
     returns: Revision
     catalog_symbols:
     - document_latest_revision
-    meaning: The authoritative document_latest_revision value read when recovery attempt
-      r captures its recovery frontier.
+    meaning: The authoritative document_latest_revision value read when recovery attempt r captures its recovery frontier.
   recovery_head_value:
     args:
     - RecoveryAttempt
@@ -341,17 +317,13 @@ functions:
     returns: Bool
     catalog_symbols:
     - recovery_head
-    meaning: The same captured recovery_head governs checkpoint selection, exact tail
-      replay, recovered metadata reconstruction, and acceptance resumption for recovery
-      attempt r.
+    meaning: The same captured recovery_head governs checkpoint selection, exact tail replay, recovered metadata reconstruction, and acceptance resumption for recovery attempt r.
   acceptance_capable_transition:
     args:
     - ProtocolTransition
     returns: Bool
     catalog_symbols: []
-    meaning: Transition t is any normal submission, retry, delayed execution, owner-recovery,
-      resumed-owner, or other protocol transition capable of creating a canonical
-      accepted change.
+    meaning: Transition t is any normal submission, retry, delayed execution, owner-recovery, resumed-owner, or other protocol transition capable of creating a canonical accepted change.
     semantic_anchors:
     - claim:L20_acceptance_paths_are_authoritatively_mediated
     - claim:C14_all_acceptance_paths_honor_idempotency_identity
@@ -360,9 +332,7 @@ functions:
     - ProtocolTransition
     returns: Bool
     catalog_symbols: []
-    meaning: Transition t routes its acceptance decision through the authoritative
-      accepted-key identity gate before any acceptance sink and cannot bypass that
-      gate.
+    meaning: Transition t routes its acceptance decision through the authoritative accepted-key identity gate before any acceptance sink and cannot bypass that gate.
     semantic_anchors:
     - claim:L20_acceptance_paths_are_authoritatively_mediated
     - claim:L21_accepted_key_gate_rejects_new_acceptance
@@ -371,8 +341,7 @@ functions:
     - ProtocolTransition
     returns: Bool
     catalog_symbols: []
-    meaning: At transition t's authoritative accepted-key gate decision, authoritative
-      state records t's idempotency key as already accepted.
+    meaning: At transition t's authoritative accepted-key gate decision, authoritative state records t's idempotency key as already accepted.
     semantic_anchors:
     - claim:L21_accepted_key_gate_rejects_new_acceptance
     - claim:C14_all_acceptance_paths_honor_idempotency_identity
@@ -546,10 +515,12 @@ functions:
     - ClientState
     - LogicalEditIdentity
     returns: Bool
-    catalog_symbols: []
+    catalog_symbols:
+    - externally_terminal_result
     meaning: The normally participating client has observed an authoritative externally terminal definitive REJECTED result for exact logical edit identity e before or atomically with visible state s.
     semantic_anchors:
     - contract:rejected_terminal_speculative_retirement
+    - source:reconnect_revision_boundary
   same_session_later_visible_continuous_same_document:
     args:
     - ClientState
@@ -568,6 +539,7 @@ functions:
     meaning: Both states are ordinary user-visible states in the same normal client/session; the second is later than the first and both represent the same document.
     semantic_anchors:
     - contract:visible_canonical_frontier_non_regression
+    - source:reconnect_revision_boundary
   visible_frontier_regresses:
     args:
     - ClientState
@@ -577,8 +549,869 @@ functions:
     meaning: The later state's last_applied_revision for the same document is strictly lower than the earlier state's visible frontier.
     semantic_anchors:
     - contract:visible_canonical_frontier_non_regression
-assumptions: {}
-
+    - source:reconnect_revision_boundary
+  pending_representation_bound_to_creation_identity:
+    args:
+    - ClientState
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - logical_client_edit
+    - document_id
+    - client_change_id
+    meaning: The pending representation active for exact logical edit identity e in client state s remains bound to that logical edit creation identity, preserving both document_id and client_change_id rather than being relabeled or cross-bound.
+    semantic_anchors:
+    - contract:pending_edit_identity_provenance
+  non_acceptance_retirement_transition:
+    args:
+    - ProtocolTransition
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - non_acceptance_terminal_disposition
+    meaning: Protocol transition t uses a non_acceptance_terminal_disposition to terminally retire the normal speculative lifecycle of exact logical edit identity e.
+    semantic_anchors:
+    - contract:non_acceptance_terminal_disposition_binding
+  non_acceptance_disposition_preserves_edit_identity:
+    args:
+    - ProtocolTransition
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - logical_client_edit
+    - document_id
+    - client_change_id
+    meaning: The non-acceptance terminal disposition consumed by transition t was produced for the same logical edit e and preserves e full document_id plus client_change_id identity through routing and the destructive retirement sink.
+    semantic_anchors:
+    - contract:non_acceptance_terminal_disposition_binding
+  success_ack_for_acceptance:
+    args:
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    meaning: A success ACK was exposed to the client for the logical edit whose canonical acceptance is a.
+    semantic_anchors:
+    - contract:acked_edit_failover_survival
+  completed_recovery_covers_acceptance:
+    args:
+    - RecoveryAttempt
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    meaning: Recovery attempt r completed, resumed service from authoritative frontier H, and the canonical revision of acceptance a is at or before H.
+    semantic_anchors:
+    - contract:acked_edit_failover_survival
+  recovery_matches_replay_including_acceptance:
+    args:
+    - RecoveryAttempt
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    meaning: The recovered logical document state equals canonical replay through the recovery frontier, so canonical acceptance a is not omitted relative to that replay even if later accepted edits alter its visible effect.
+    semantic_anchors:
+    - contract:acked_edit_failover_survival
+  optimized_authoritative_representation_at_frontier:
+    args:
+    - AuthoritativeState
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: Authoritative state representation s is an optimized authoritative lifecycle representation (snapshot/checkpoint/cleanup/compaction result) at frontier H.
+    semantic_anchors:
+    - contract:logical_state_equivalence_at_frontier
+  completed_owner_recovery_at_frontier:
+    args:
+    - AuthoritativeState
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: Authoritative state representation s is the result of a completed owner recovery at frontier H.
+    semantic_anchors:
+    - contract:logical_state_equivalence_at_frontier
+  logical_state_matches_canonical_replay:
+    args:
+    - AuthoritativeState
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: The logical document state denoted by authoritative representation s equals deterministic canonical replay of accepted revisions through frontier H.
+    semantic_anchors:
+    - contract:logical_state_equivalence_at_frontier
+  authoritative_latest_revision_equals_frontier:
+    args:
+    - AuthoritativeState
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: The authoritative representation s preserves latest_revision exactly equal to frontier H.
+    semantic_anchors:
+    - contract:logical_state_equivalence_at_frontier
+  representation_resumes_owner_service:
+    args:
+    - AuthoritativeState
+    returns: Bool
+    catalog_symbols: []
+    meaning: The authoritative representation s is used to resume owner service.
+    semantic_anchors:
+    - contract:logical_state_equivalence_at_frontier
+  acceptance_state_reconstructed_at_frontier:
+    args:
+    - AuthoritativeState
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: The representation s reconstructs the acceptance-relevant state required to continue accepting from frontier H without changing canonical semantics.
+    semantic_anchors:
+    - contract:logical_state_equivalence_at_frontier
+  ot_engine_invocation:
+    args:
+    - OTInvocation
+    returns: Bool
+    catalog_symbols:
+    - raw_edit
+    meaning: Invocation i supplies one raw_edit together with a canonical committed prefix and submitted client base revision to the OT engine.
+    semantic_anchors:
+    - assumption:A2_ot_engine_is_correct
+  ot_success_satisfies_algorithmic_contract:
+    args:
+    - OTInvocation
+    returns: Bool
+    catalog_symbols: []
+    meaning: The OT engine returns a canonical transformed change for invocation i and that success satisfies the declared algorithmic convergence contract for the invocation raw edit, submitted base, and canonical prefix.
+    semantic_anchors:
+    - assumption:A2_ot_engine_is_correct
+  ot_rejects_invalid_or_rebase_required:
+    args:
+    - OTInvocation
+    returns: Bool
+    catalog_symbols: []
+    meaning: The OT engine rejects invocation i as invalid or rebase-required rather than returning a successful transformed change.
+    semantic_anchors:
+    - assumption:A2_ot_engine_is_correct
+  logical_edit_change_id:
+    args:
+    - LogicalEdit
+    returns: ClientChangeId
+    catalog_symbols:
+    - client_change_id
+    meaning: The client_change_id assigned to logical edit e.
+  retry_request_of_logical_edit:
+    args:
+    - Request
+    - LogicalEdit
+    returns: Bool
+    catalog_symbols: []
+    meaning: Request r is a retry/retransmission of the same logical client edit e rather than a new logical edit.
+    semantic_anchors:
+    - assumption:A3_client_change_id_identifies_logical_edit
+  same_document_logical_edits:
+    args:
+    - LogicalEdit
+    - LogicalEdit
+    returns: Bool
+    catalog_symbols: []
+    meaning: Logical edits e1 and e2 belong to the same document namespace in which client_change_id uniqueness is required.
+    semantic_anchors:
+    - assumption:A3_client_change_id_identifies_logical_edit
+  distinct_logical_edits_use_distinct_change_ids:
+    args:
+    - LogicalEdit
+    - LogicalEdit
+    returns: Bool
+    catalog_symbols:
+    - client_change_ids
+    meaning: The two distinct logical edits carry different client_change_id values.
+    semantic_anchors:
+    - assumption:A3_client_change_id_identifies_logical_edit
+  apply_accepted_sequence:
+    args:
+    - DocumentState
+    - AcceptedChangeSequence
+    returns: DocumentState
+    catalog_symbols: []
+    meaning: The deterministic document state obtained by applying one canonical accepted-change sequence to one starting document state.
+    semantic_anchors:
+    - assumption:A5_apply_accepted_change_is_deterministic
+  normal_retry_or_reconnect_submission:
+    args:
+    - AuthoritativeState
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - document_id
+    - client_change_id
+    meaning: In protocol state s, a normally participating client submits exact logical edit identity e through a normal retry or authoritative reconnect-reconciliation path.
+    semantic_anchors:
+    - assumption:A6_normal_retry_reconnect_identity_is_eligible_for_30_days
+  identity_within_30_day_normal_horizon:
+    args:
+    - AuthoritativeState
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: Exact logical edit identity e has pending/retry age no more than 30 days in state s and remains eligible for the normal retry/reconnect protocol.
+    semantic_anchors:
+    - assumption:A6_normal_retry_reconnect_identity_is_eligible_for_30_days
+    - claim:G1_retry_is_logically_exactly_once
+  identity_handled_outside_normal_retry_protocol:
+    args:
+    - AuthoritativeState
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: Because exact identity e is outside the normal 30-day horizon in state s, the client discards it or routes it through an explicit expired, conflict, or manual-resolution path rather than normal retry/reconnect.
+    semantic_anchors:
+    - assumption:A6_normal_retry_reconnect_identity_is_eligible_for_30_days
+  at_most_one_committed_acceptance_for_identity:
+    args:
+    - AuthoritativeState
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - document_id
+    - client_change_id
+    meaning: Canonical accepted history contains at most one accepted canonical change for the exact full logical edit identity e=(document_id, client_change_id) in authoritative state s.
+    semantic_anchors:
+    - claim:G1_retry_is_logically_exactly_once
+  canonical_history_gap_free_for_document:
+    args:
+    - AuthoritativeState
+    - Document
+    returns: Bool
+    catalog_symbols: []
+    meaning: In authoritative state s, accepted canonical history for document d is one gap-free revision sequence.
+    semantic_anchors:
+    - claim:G2_canonical_history_is_linear_and_fenced
+  authoritative_handoff_for_document:
+    args:
+    - ProtocolTransition
+    - Document
+    returns: Bool
+    catalog_symbols: []
+    meaning: Transition t is an authoritative ownership handoff for document d.
+    semantic_anchors:
+    - claim:G2_canonical_history_is_linear_and_fenced
+  handoff_installs_strictly_new_generation:
+    args:
+    - ProtocolTransition
+    - Document
+    returns: Bool
+    catalog_symbols: []
+    meaning: Ownership handoff t installs a strictly greater epoch and fresh immutable generation identity before or atomically with the new generation becoming acceptance-eligible.
+    semantic_anchors:
+    - claim:G2_canonical_history_is_linear_and_fenced
+  superseded_generation_is_authoritative:
+    args:
+    - AuthoritativeState
+    - Document
+    returns: Bool
+    catalog_symbols: []
+    meaning: In authoritative state s, a superseded epoch/generation for document d has become authoritative again.
+    semantic_anchors:
+    - claim:G2_canonical_history_is_linear_and_fenced
+  canonical_append_for_document:
+    args:
+    - ProtocolTransition
+    - Document
+    returns: Bool
+    catalog_symbols: []
+    meaning: Transition t performs a canonical accepted-history append for document d.
+    semantic_anchors:
+    - claim:G2_canonical_history_is_linear_and_fenced
+  append_uses_exact_current_document_generation:
+    args:
+    - ProtocolTransition
+    - Document
+    returns: Bool
+    catalog_symbols: []
+    meaning: Append transition t is authorized by the exact current document-scoped generation identity for d, including epoch and generation-bound server append identity; copied scalar values or another document tuple do not authorize it.
+    semantic_anchors:
+    - claim:G2_canonical_history_is_linear_and_fenced
+  accepted_terminal_result_record:
+    args:
+    - TerminalResultRecord
+    returns: Bool
+    catalog_symbols:
+    - terminal_result
+    meaning: Terminal result t is an authoritative ACCEPTED(canonical result) outcome.
+    semantic_anchors:
+    - contract:accepted_terminal_result_binding
+  terminal_result_idempotency_key:
+    args:
+    - TerminalResultRecord
+    returns: IdempotencyKey
+    catalog_symbols:
+    - idempotency_key
+    meaning: The full idempotency_key carried by authoritative terminal result t.
+  accepted_terminal_result_within_retry_horizon:
+    args:
+    - TerminalResultRecord
+    returns: Bool
+    catalog_symbols: []
+    meaning: Accepted terminal result t is still within the normal retry eligibility horizon in which producer provenance must be retained.
+    semantic_anchors:
+    - contract:accepted_terminal_result_binding
+  terminal_result_bound_to_acceptance_execution:
+    args:
+    - TerminalResultRecord
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols:
+    - terminal_result
+    - canonical_accepted_change
+    meaning: Accepted terminal result t stores the canonical result produced by the same acceptance execution that produced canonical acceptance a; an extensionally equal result from another producer is not sufficient.
+    semantic_anchors:
+    - contract:accepted_terminal_result_binding
+  rejected_terminal_result_record:
+    args:
+    - TerminalResultRecord
+    returns: Bool
+    catalog_symbols:
+    - terminal_result
+    meaning: Terminal result t is an authoritative REJECTED(definitive rejection reason) outcome.
+    semantic_anchors:
+    - contract:definitive_rejection_request_binding
+    - contract:state_dependent_rejection_context_binding
+  terminal_result_rejection_decision:
+    args:
+    - TerminalResultRecord
+    returns: RejectionDecision
+    catalog_symbols:
+    - definitive_rejection_decision
+    meaning: The definitive rejection decision from which authoritative rejected terminal result t derives.
+    semantic_anchors:
+    - contract:definitive_rejection_request_binding
+    - contract:state_dependent_rejection_context_binding
+  rejection_decision_submitted_request:
+    args:
+    - RejectionDecision
+    returns: Request
+    catalog_symbols:
+    - submitted_request
+    meaning: The exact submitted_request for which definitive rejection decision d was produced.
+    semantic_anchors:
+    - contract:definitive_rejection_request_binding
+  rejected_terminal_identity_matches_request:
+    args:
+    - TerminalResultRecord
+    - Request
+    returns: Bool
+    catalog_symbols:
+    - document_id
+    - client_change_id
+    meaning: Rejected terminal result t and submitted request r carry the exact same full (document_id, client_change_id) identity.
+    semantic_anchors:
+    - contract:definitive_rejection_request_binding
+  rejection_context_values_match_request:
+    args:
+    - RejectionDecision
+    - Request
+    returns: Bool
+    catalog_symbols:
+    - raw_edit
+    - base_revision
+    meaning: When the definitive rejection reason depends on raw_edit or base_revision, decision d uses those exact values from its bound submitted request r.
+    semantic_anchors:
+    - contract:definitive_rejection_request_binding
+  terminal_key_within_retry_horizon:
+    args:
+    - AuthoritativeState
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols: []
+    meaning: Idempotency key k is within the normal retry eligibility horizon in authoritative state s.
+    semantic_anchors:
+    - contract:idempotency_terminal_outcome_coherence
+  at_most_one_terminal_outcome_for_key:
+    args:
+    - AuthoritativeState
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols:
+    - idempotency_terminal_outcomes
+    meaning: Authoritative state s contains at most one durable terminal result for idempotency key k.
+    semantic_anchors:
+    - contract:idempotency_terminal_outcome_coherence
+  accepted_terminal_outcome_matches_canonical_acceptance:
+    args:
+    - AuthoritativeState
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols:
+    - idempotency_terminal_outcomes
+    - accepted_change_log
+    meaning: If key k has an ACCEPTED terminal outcome in s, canonical accepted history contains the matching acceptance for k and no incompatible REJECTED outcome exists.
+    semantic_anchors:
+    - contract:idempotency_terminal_outcome_coherence
+  rejected_terminal_outcome_excludes_canonical_acceptance:
+    args:
+    - AuthoritativeState
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols:
+    - idempotency_terminal_outcomes
+    - accepted_change_log
+    meaning: If key k has a REJECTED terminal outcome in s, canonical accepted history contains no canonical acceptance for that key.
+    semantic_anchors:
+    - contract:idempotency_terminal_outcome_coherence
+  terminal_outcome_is_immutable:
+    args:
+    - AuthoritativeState
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols:
+    - idempotency_terminal_outcomes
+    meaning: Once a terminal outcome for key k has linearized, later acceptance or definitive-rejection attempts preserve that same single-valued outcome.
+    semantic_anchors:
+    - contract:idempotency_terminal_outcome_coherence
+  canonical_acceptance_payload_record:
+    args:
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols:
+    - canonical_accepted_change
+    meaning: a is a canonical_accepted_change whose payload requires successful OT provenance.
+    semantic_anchors:
+    - contract:ot_success_acceptance_binding
+  acceptance_exact_ot_success_result:
+    args:
+    - CanonicalAcceptance
+    - OTSuccessResult
+    returns: Bool
+    catalog_symbols:
+    - canonical_accepted_change
+    - ot_success_result
+    meaning: Canonical acceptance a is bound to the exact successful OT result r that produced its accepted payload; no synthesized or substituted result qualifies.
+    semantic_anchors:
+    - contract:ot_success_acceptance_binding
+  ot_success_matches_submitted_input:
+    args:
+    - CanonicalAcceptance
+    - OTSuccessResult
+    returns: Bool
+    catalog_symbols:
+    - raw_edit
+    - base_revision
+    meaning: OT success result r bound to acceptance a was produced for the corresponding submitted raw_edit and base_revision.
+    semantic_anchors:
+    - contract:ot_success_acceptance_binding
+  state_dependent_rejected_terminal_result:
+    args:
+    - TerminalResultRecord
+    returns: Bool
+    catalog_symbols:
+    - terminal_result
+    meaning: Rejected terminal result t has a definitive rejection reason whose truth depends on document/history state.
+    semantic_anchors:
+    - contract:state_dependent_rejection_context_binding
+  rejection_decision_has_authoritative_context:
+    args:
+    - RejectionDecision
+    returns: Bool
+    catalog_symbols:
+    - authoritative_rejection_context
+    meaning: Rejection decision d is bound to authoritative same-document rejection context rather than unvalidated stale owner-local state.
+    semantic_anchors:
+    - contract:state_dependent_rejection_context_binding
+  rejection_context_sufficient_at_terminalization:
+    args:
+    - TerminalResultRecord
+    - RejectionDecision
+    returns: Bool
+    catalog_symbols: []
+    meaning: The authoritative context/evidence for decision d remains sufficient when terminal result t linearizes, either because it is current or because a reason-specific guard, monotonicity argument, or revalidation preserves the rejection truth.
+    semantic_anchors:
+    - contract:state_dependent_rejection_context_binding
+  externally_terminal_result_record:
+    args:
+    - ExternalTerminalResult
+    returns: Bool
+    catalog_symbols:
+    - externally_terminal_result
+    meaning: x is a definitive externally_terminal_result exposed to a client.
+    semantic_anchors:
+    - contract:terminal_response_outcome_binding
+  external_terminal_result_key:
+    args:
+    - ExternalTerminalResult
+    returns: IdempotencyKey
+    catalog_symbols:
+    - idempotency_key
+    meaning: The full idempotency_key associated with externally terminal result x.
+  external_result_reproduces_authoritative_outcome:
+    args:
+    - ExternalTerminalResult
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols:
+    - idempotency_terminal_outcomes
+    meaning: External terminal result x exactly reproduces the already-linearized authoritative terminal outcome for the same full key k; attempt-local transient computations cannot substitute a conflicting result.
+    semantic_anchors:
+    - contract:terminal_response_outcome_binding
+  normal_retry_submitted_request:
+    args:
+    - Request
+    returns: Bool
+    catalog_symbols:
+    - submitted_request
+    meaning: Request r is a normal submitted_request representing one logical edit within the normal retry eligibility horizon.
+    semantic_anchors:
+    - claim:G5_retry_resolves_idempotently
+  retry_request_identity_payload_frontier_coherent:
+    args:
+    - Request
+    returns: Bool
+    catalog_symbols:
+    - document_id
+    - client_change_id
+    - raw_edit
+    - base_revision
+    meaning: Normal retry request r preserves the same full request identity, raw_edit semantics, and canonical authoring frontier for its logical operation; those coordinates are not cross-bound from another operation.
+    semantic_anchors:
+    - claim:G5_retry_resolves_idempotently
+  request_represents_logical_edit:
+    args:
+    - Request
+    - LogicalEdit
+    returns: Bool
+    catalog_symbols:
+    - submitted_request
+    - logical_client_edit
+    meaning: Submitted request r represents logical client edit e rather than a different logical operation.
+    semantic_anchors:
+    - claim:G6_accepted_change_preserves_ot_semantics
+  accepted_ot_context_is_preceding_canonical_prefix:
+    args:
+    - CanonicalAcceptance
+    - Request
+    returns: Bool
+    catalog_symbols: []
+    meaning: The successful OT result committed as canonical acceptance a was computed for request r against the canonical committed prefix immediately preceding a accepted revision.
+    semantic_anchors:
+    - claim:G6_accepted_change_preserves_ot_semantics
+  accepted_ot_success_satisfies_algorithmic_contract:
+    args:
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    meaning: The successful OT result bound to canonical acceptance a satisfies the OT engine algorithmic convergence contract for the submitted raw edit, base revision, and preceding canonical prefix.
+    semantic_anchors:
+    - claim:G6_accepted_change_preserves_ot_semantics
+    - assumption:A2_ot_engine_is_correct
+  foreground_catchup_attempt:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: c is one normal foreground visible-document-bound reconnect/catch-up attempt eligible to participate in the current-document protocol.
+    semantic_anchors:
+    - claim:G4_reconnect_converges_without_gap_or_duplicate
+  catchup_starts_from_visible_frontier:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols:
+    - last_applied_revision
+    meaning: Catch-up attempt c starts from the client currently visible canonical last_applied_revision rather than a stale or foreign starting frontier.
+    semantic_anchors:
+    - claim:G4_reconnect_converges_without_gap_or_duplicate
+  catchup_head_captured_from_authoritative_latest:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols:
+    - document_latest_revision
+    meaning: Catch-up attempt c binds one response-specific head H captured from the same document authoritative document_latest_revision at one authoritative-store read/linearization point.
+    semantic_anchors:
+    - claim:G4_reconnect_converges_without_gap_or_duplicate
+  catchup_head_preserved_to_publication:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: The response-specific head captured for c is preserved unchanged through response selection, reconciliation, completion, and any publication.
+    semantic_anchors:
+    - claim:G4_reconnect_converges_without_gap_or_duplicate
+  catchup_visible_document_binding_uninterrupted:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: The visible-document binding for catch-up attempt c remains uninterrupted from start through publication eligibility.
+    semantic_anchors:
+    - claim:G4_reconnect_converges_without_gap_or_duplicate
+  catchup_attempt_publishes:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: Catch-up attempt c completes and publishes its reconciled result to the user-visible canonical state.
+    semantic_anchors:
+    - claim:G4_reconnect_converges_without_gap_or_duplicate
+  catchup_published_state_is_exact_replay_through_head:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: If c publishes, the user-visible canonical state equals canonical replay of that same document through c captured response head with no omitted or double-applied accepted revision through H.
+    semantic_anchors:
+    - claim:G4_reconnect_converges_without_gap_or_duplicate
+  catchup_publication_is_atomic_and_non_regressing:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: Publication of c exposes no intermediate candidate prefix and cannot regress or otherwise mutate the already-visible canonical/frontier state when c head is below the visible frontier.
+    semantic_anchors:
+    - claim:G4_reconnect_converges_without_gap_or_duplicate
+  catchup_excludes_acceptances_after_captured_head:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: Acceptances that occur after c response head was captured are outside c response rather than being partially mixed into that response.
+    semantic_anchors:
+    - claim:G4_reconnect_converges_without_gap_or_duplicate
+  catchup_binding_break_permanently_blocks_publication:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: If the user-visible document switches away before publication, c permanently loses foreground publication eligibility and cannot later publish merely because the user switches back.
+    semantic_anchors:
+    - claim:G4_reconnect_converges_without_gap_or_duplicate
+  foreground_resync_attempt:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: c is a normal foreground reconnect/resync attempt for one visible document.
+    semantic_anchors:
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+  resync_freezes_new_speculative_edits:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: While resync c is in progress, the client creates or applies no new acceptance-eligible speculative local edits for that document.
+    semantic_anchors:
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+  pending_identity_at_resync_start:
+    args:
+    - CatchupResponse
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: Exact logical edit identity e is pending at the start of resync c.
+    semantic_anchors:
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+  resync_identity_within_normal_horizon:
+    args:
+    - CatchupResponse
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: Pending identity e is within the normal 30-day reconnect eligibility horizon for resync c.
+    semantic_anchors:
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+  resync_request_reconciles_identity_through_head:
+    args:
+    - CatchupResponse
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: The catch-up request for c includes e for authoritative same-full-identity reconciliation through the response head.
+    semantic_anchors:
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+  response_contains_same_identity_acceptance:
+    args:
+    - CatchupResponse
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: Canonical acceptance for the exact same full logical identity e is included through c response head.
+    semantic_anchors:
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+  resync_publication_excludes_canonical_speculative_duplicate:
+    args:
+    - CatchupResponse
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: No intermediate or published user-visible state for c exposes both the canonical acceptance for e and a speculative overlay for e; matching overlay removal/suppression occurs before or atomically with canonical publication.
+    semantic_anchors:
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+  stale_resync_cannot_restore_retired_overlay:
+    args:
+    - CatchupResponse
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: A stale response for c cannot restore a speculative overlay for e that a newer published reconciliation already removed.
+    semantic_anchors:
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+  expired_identity_uses_non_normal_resolution_path:
+    args:
+    - CatchupResponse
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: If e is outside the normal reconnect horizon, c does not submit it through normal authoritative reconciliation and the client discards it or uses an explicit expired/conflict/manual-resolution path.
+    semantic_anchors:
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+  identity_unresolved_after_reconciled_publication:
+    args:
+    - CatchupResponse
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: After reconciled publication or conflict entry for c, identity e remains protocol-eligible and unresolved.
+    semantic_anchors:
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+  unresolved_identity_blocks_normal_editing:
+    args:
+    - CatchupResponse
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: While e remains unresolved after c publication/conflict entry, the client stays read-only or in explicit conflict/reconciliation state and creates no new acceptance-eligible speculative edit.
+    semantic_anchors:
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+assumptions:
+  A2_ot_engine_is_correct:
+    capability: relational
+    formula:
+      forall:
+        vars:
+          i: OTInvocation
+        body:
+          implies:
+          - call:
+              fn: ot_engine_invocation
+              args:
+              - var: i
+          - and:
+            - or:
+              - call:
+                  fn: ot_success_satisfies_algorithmic_contract
+                  args:
+                  - var: i
+              - call:
+                  fn: ot_rejects_invalid_or_rebase_required
+                  args:
+                  - var: i
+            - not:
+                and:
+                - call:
+                    fn: ot_success_satisfies_algorithmic_contract
+                    args:
+                    - var: i
+                - call:
+                    fn: ot_rejects_invalid_or_rebase_required
+                    args:
+                    - var: i
+  A3_client_change_id_identifies_logical_edit:
+    capability: relational
+    formula:
+      and:
+      - forall:
+          vars:
+            r: Request
+            e: LogicalEdit
+          body:
+            implies:
+            - call:
+                fn: retry_request_of_logical_edit
+                args:
+                - var: r
+                - var: e
+            - eq:
+              - call:
+                  fn: request_change_id
+                  args:
+                  - var: r
+              - call:
+                  fn: logical_edit_change_id
+                  args:
+                  - var: e
+      - forall:
+          vars:
+            e1: LogicalEdit
+            e2: LogicalEdit
+          body:
+            implies:
+            - and:
+              - neq:
+                - var: e1
+                - var: e2
+              - call:
+                  fn: same_document_logical_edits
+                  args:
+                  - var: e1
+                  - var: e2
+            - call:
+                fn: distinct_logical_edits_use_distinct_change_ids
+                args:
+                - var: e1
+                - var: e2
+  A5_apply_accepted_change_is_deterministic:
+    capability: relational
+    formula:
+      forall:
+        vars:
+          s: DocumentState
+          q: AcceptedChangeSequence
+        body:
+          eq:
+          - call:
+              fn: apply_accepted_sequence
+              args:
+              - var: s
+              - var: q
+          - call:
+              fn: apply_accepted_sequence
+              args:
+              - var: s
+              - var: q
+  A6_normal_retry_reconnect_identity_is_eligible_for_30_days:
+    capability: relational
+    formula:
+      forall:
+        vars:
+          s: AuthoritativeState
+          e: LogicalEditIdentity
+        body:
+          and:
+          - implies:
+            - call:
+                fn: normal_retry_or_reconnect_submission
+                args:
+                - var: s
+                - var: e
+            - call:
+                fn: identity_within_30_day_normal_horizon
+                args:
+                - var: s
+                - var: e
+          - implies:
+            - not:
+                call:
+                  fn: identity_within_30_day_normal_horizon
+                  args:
+                  - var: s
+                  - var: e
+            - and:
+              - not:
+                  call:
+                    fn: normal_retry_or_reconnect_submission
+                    args:
+                    - var: s
+                    - var: e
+              - call:
+                  fn: identity_handled_outside_normal_retry_protocol
+                  args:
+                  - var: s
+                  - var: e
 claims:
   L20_acceptance_paths_are_authoritatively_mediated:
     contracts: []
@@ -780,6 +1613,337 @@ claims:
                 fn: captured_recovery_authoritative_head
                 args:
                 - var: r
+  G0_acked_edit_survives_failover:
+    contracts:
+    - acked_edit_failover_survival
+    capability: relational
+    formula_from_contracts: true
+  G10_user_visible_client_state_matches_document:
+    contracts:
+    - client_canonical_frontier_coherence
+    - visible_canonical_frontier_non_regression
+    capability: relational
+    formula_from_contracts: true
+  G11_visible_speculative_overlays_match_document:
+    contracts:
+    - visible_speculative_overlay_document_binding
+    - speculative_overlay_identity_provenance
+    - speculative_overlay_operation_provenance
+    - visible_speculative_effect_uniqueness
+    - visible_speculative_retention_coherence
+    capability: relational
+    formula_from_contracts: true
+  G12_client_pending_state_tracks_unresolved_edits:
+    contracts:
+    - pending_edit_identity_provenance
+    - pending_speculative_lifecycle_coverage
+    - pending_retirement_acceptance_binding
+    - accepted_terminal_speculative_retirement
+    - non_acceptance_terminal_disposition_binding
+    - terminal_speculative_lifecycle_closure
+    - rejected_terminal_speculative_retirement
+    capability: relational
+    formula_from_contracts: true
+  G1_retry_is_logically_exactly_once:
+    contracts: []
+    capability: relational
+    formula:
+      forall:
+        vars:
+          s: AuthoritativeState
+          e: LogicalEditIdentity
+        body:
+          implies:
+          - call:
+              fn: identity_within_30_day_normal_horizon
+              args:
+              - var: s
+              - var: e
+          - call:
+              fn: at_most_one_committed_acceptance_for_identity
+              args:
+              - var: s
+              - var: e
+  G2_canonical_history_is_linear_and_fenced:
+    contracts: []
+    capability: relational
+    formula:
+      and:
+      - forall:
+          vars:
+            s: AuthoritativeState
+            d: Document
+          body:
+            and:
+            - call:
+                fn: canonical_history_gap_free_for_document
+                args:
+                - var: s
+                - var: d
+            - not:
+                call:
+                  fn: superseded_generation_is_authoritative
+                  args:
+                  - var: s
+                  - var: d
+      - forall:
+          vars:
+            t: ProtocolTransition
+            d: Document
+          body:
+            and:
+            - implies:
+              - call:
+                  fn: authoritative_handoff_for_document
+                  args:
+                  - var: t
+                  - var: d
+              - call:
+                  fn: handoff_installs_strictly_new_generation
+                  args:
+                  - var: t
+                  - var: d
+            - implies:
+              - call:
+                  fn: canonical_append_for_document
+                  args:
+                  - var: t
+                  - var: d
+              - call:
+                  fn: append_uses_exact_current_document_generation
+                  args:
+                  - var: t
+                  - var: d
+  G3_snapshot_and_recovery_preserve_state:
+    contracts:
+    - logical_state_equivalence_at_frontier
+    capability: relational
+    formula_from_contracts: true
+  G4_reconnect_converges_without_gap_or_duplicate:
+    contracts: []
+    capability: relational
+    formula:
+      forall:
+        vars:
+          c: CatchupResponse
+        body:
+          implies:
+          - call:
+              fn: foreground_catchup_attempt
+              args:
+              - var: c
+          - and:
+            - call:
+                fn: catchup_starts_from_visible_frontier
+                args:
+                - var: c
+            - call:
+                fn: catchup_head_captured_from_authoritative_latest
+                args:
+                - var: c
+            - call:
+                fn: catchup_head_preserved_to_publication
+                args:
+                - var: c
+            - call:
+                fn: catchup_excludes_acceptances_after_captured_head
+                args:
+                - var: c
+            - call:
+                fn: catchup_binding_break_permanently_blocks_publication
+                args:
+                - var: c
+            - implies:
+              - call:
+                  fn: catchup_attempt_publishes
+                  args:
+                  - var: c
+              - and:
+                - call:
+                    fn: catchup_visible_document_binding_uninterrupted
+                    args:
+                    - var: c
+                - call:
+                    fn: catchup_published_state_is_exact_replay_through_head
+                    args:
+                    - var: c
+                - call:
+                    fn: catchup_publication_is_atomic_and_non_regressing
+                    args:
+                    - var: c
+  G5_retry_resolves_idempotently:
+    contracts:
+    - idempotency_terminal_outcome_coherence
+    - accepted_terminal_result_binding
+    - definitive_rejection_request_binding
+    - state_dependent_rejection_context_binding
+    - terminal_response_outcome_binding
+    formula_from_contracts: true
+    residual_formula:
+      forall:
+        vars:
+          r: Request
+        body:
+          implies:
+          - call:
+              fn: normal_retry_submitted_request
+              args:
+              - var: r
+          - call:
+              fn: retry_request_identity_payload_frontier_coherent
+              args:
+              - var: r
+    capability: relational
+  G6_accepted_change_preserves_ot_semantics:
+    contracts:
+    - ot_success_acceptance_binding
+    formula_from_contracts: true
+    residual_formula:
+      forall:
+        vars:
+          a: CanonicalAcceptance
+        body:
+          implies:
+          - call:
+              fn: canonical_acceptance_payload_record
+              args:
+              - var: a
+          - exists:
+              vars:
+                r: Request
+                e: LogicalEdit
+              body:
+                and:
+                - call:
+                    fn: acceptance_produced_from_request
+                    args:
+                    - var: a
+                    - var: r
+                - call:
+                    fn: request_represents_logical_edit
+                    args:
+                    - var: r
+                    - var: e
+                - eq:
+                  - call:
+                      fn: acceptance_document
+                      args:
+                      - var: a
+                  - call:
+                      fn: request_document
+                      args:
+                      - var: r
+                - eq:
+                  - call:
+                      fn: acceptance_change_id
+                      args:
+                      - var: a
+                  - call:
+                      fn: request_change_id
+                      args:
+                      - var: r
+                - call:
+                    fn: accepted_ot_context_is_preceding_canonical_prefix
+                    args:
+                    - var: a
+                    - var: r
+                - call:
+                    fn: accepted_ot_success_satisfies_algorithmic_contract
+                    args:
+                    - var: a
+    capability: relational
+  G7_reconnect_does_not_double_render_accepted_optimistic_edit:
+    contracts: []
+    capability: relational
+    formula:
+      forall:
+        vars:
+          c: CatchupResponse
+          e: LogicalEditIdentity
+        body:
+          implies:
+          - call:
+              fn: foreground_resync_attempt
+              args:
+              - var: c
+          - and:
+            - call:
+                fn: resync_freezes_new_speculative_edits
+                args:
+                - var: c
+            - implies:
+              - and:
+                - call:
+                    fn: pending_identity_at_resync_start
+                    args:
+                    - var: c
+                    - var: e
+                - call:
+                    fn: resync_identity_within_normal_horizon
+                    args:
+                    - var: c
+                    - var: e
+              - call:
+                  fn: resync_request_reconciles_identity_through_head
+                  args:
+                  - var: c
+                  - var: e
+            - implies:
+              - call:
+                  fn: response_contains_same_identity_acceptance
+                  args:
+                  - var: c
+                  - var: e
+              - and:
+                - call:
+                    fn: resync_publication_excludes_canonical_speculative_duplicate
+                    args:
+                    - var: c
+                    - var: e
+                - call:
+                    fn: stale_resync_cannot_restore_retired_overlay
+                    args:
+                    - var: c
+                    - var: e
+            - implies:
+              - and:
+                - call:
+                    fn: pending_identity_at_resync_start
+                    args:
+                    - var: c
+                    - var: e
+                - not:
+                    call:
+                      fn: resync_identity_within_normal_horizon
+                      args:
+                      - var: c
+                      - var: e
+              - call:
+                  fn: expired_identity_uses_non_normal_resolution_path
+                  args:
+                  - var: c
+                  - var: e
+            - implies:
+              - call:
+                  fn: identity_unresolved_after_reconciled_publication
+                  args:
+                  - var: c
+                  - var: e
+              - call:
+                  fn: unresolved_identity_blocks_normal_editing
+                  args:
+                  - var: c
+                  - var: e
+  G8_user_visible_state_does_not_double_render_accepted_optimistic_edit:
+    contracts:
+    - visible_canonical_speculative_exclusion
+    capability: relational
+    formula_from_contracts: true
+  G9_accepted_idempotency_evidence_matches_committed_acceptance:
+    contracts:
+    - accepted_evidence_correspondence
+    capability: relational
+    formula_from_contracts: true
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
@@ -1353,3 +2517,319 @@ contracts:
                 args:
                 - var: earlier
                 - var: later
+  accepted_terminal_result_binding:
+    class: provenance_binding
+    capability: relational
+    formula:
+      forall:
+        vars:
+          t: TerminalResultRecord
+        body:
+          implies:
+          - and:
+            - call:
+                fn: accepted_terminal_result_record
+                args:
+                - var: t
+            - call:
+                fn: accepted_terminal_result_within_retry_horizon
+                args:
+                - var: t
+          - exists:
+              vars:
+                a: CanonicalAcceptance
+              body:
+                and:
+                - call:
+                    fn: committed_canonical_acceptance
+                    args:
+                    - var: a
+                - eq:
+                  - call:
+                      fn: terminal_result_idempotency_key
+                      args:
+                      - var: t
+                  - call:
+                      fn: acceptance_key
+                      args:
+                      - var: a
+                - call:
+                    fn: terminal_result_bound_to_acceptance_execution
+                    args:
+                    - var: t
+                    - var: a
+  acked_edit_failover_survival:
+    class: safety_contract
+    capability: relational
+    formula:
+      and:
+      - forall:
+          vars:
+            a: CanonicalAcceptance
+          body:
+            implies:
+            - call:
+                fn: success_ack_for_acceptance
+                args:
+                - var: a
+            - call:
+                fn: committed_canonical_acceptance
+                args:
+                - var: a
+      - forall:
+          vars:
+            r: RecoveryAttempt
+            a: CanonicalAcceptance
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: success_ack_for_acceptance
+                  args:
+                  - var: a
+              - call:
+                  fn: completed_recovery_covers_acceptance
+                  args:
+                  - var: r
+                  - var: a
+            - call:
+                fn: recovery_matches_replay_including_acceptance
+                args:
+                - var: r
+                - var: a
+  definitive_rejection_request_binding:
+    class: provenance_binding
+    capability: relational
+    formula:
+      forall:
+        vars:
+          t: TerminalResultRecord
+        body:
+          implies:
+          - call:
+              fn: rejected_terminal_result_record
+              args:
+              - var: t
+          - and:
+            - call:
+                fn: rejected_terminal_identity_matches_request
+                args:
+                - var: t
+                - call:
+                    fn: rejection_decision_submitted_request
+                    args:
+                    - call:
+                        fn: terminal_result_rejection_decision
+                        args:
+                        - var: t
+            - call:
+                fn: rejection_context_values_match_request
+                args:
+                - call:
+                    fn: terminal_result_rejection_decision
+                    args:
+                    - var: t
+                - call:
+                    fn: rejection_decision_submitted_request
+                    args:
+                    - call:
+                        fn: terminal_result_rejection_decision
+                        args:
+                        - var: t
+  idempotency_terminal_outcome_coherence:
+    class: state_invariant
+    observation_scope: all_reachable_states
+    capability: relational
+    formula:
+      forall:
+        vars:
+          s: AuthoritativeState
+          k: IdempotencyKey
+        body:
+          implies:
+          - call:
+              fn: terminal_key_within_retry_horizon
+              args:
+              - var: s
+              - var: k
+          - and:
+            - call:
+                fn: at_most_one_terminal_outcome_for_key
+                args:
+                - var: s
+                - var: k
+            - call:
+                fn: accepted_terminal_outcome_matches_canonical_acceptance
+                args:
+                - var: s
+                - var: k
+            - call:
+                fn: rejected_terminal_outcome_excludes_canonical_acceptance
+                args:
+                - var: s
+                - var: k
+            - call:
+                fn: terminal_outcome_is_immutable
+                args:
+                - var: s
+                - var: k
+  logical_state_equivalence_at_frontier:
+    class: equivalence_relation
+    capability: relational
+    formula:
+      forall:
+        vars:
+          s: AuthoritativeState
+          h: Revision
+        body:
+          implies:
+          - or:
+            - call:
+                fn: optimized_authoritative_representation_at_frontier
+                args:
+                - var: s
+                - var: h
+            - call:
+                fn: completed_owner_recovery_at_frontier
+                args:
+                - var: s
+                - var: h
+          - and:
+            - call:
+                fn: logical_state_matches_canonical_replay
+                args:
+                - var: s
+                - var: h
+            - call:
+                fn: authoritative_latest_revision_equals_frontier
+                args:
+                - var: s
+                - var: h
+            - implies:
+              - call:
+                  fn: representation_resumes_owner_service
+                  args:
+                  - var: s
+              - call:
+                  fn: acceptance_state_reconstructed_at_frontier
+                  args:
+                  - var: s
+                  - var: h
+  non_acceptance_terminal_disposition_binding:
+    class: provenance_binding
+    capability: relational
+    formula:
+      forall:
+        vars:
+          t: ProtocolTransition
+          e: LogicalEditIdentity
+        body:
+          implies:
+          - call:
+              fn: non_acceptance_retirement_transition
+              args:
+              - var: t
+              - var: e
+          - call:
+              fn: non_acceptance_disposition_preserves_edit_identity
+              args:
+              - var: t
+              - var: e
+  ot_success_acceptance_binding:
+    class: provenance_binding
+    capability: relational
+    formula:
+      forall:
+        vars:
+          a: CanonicalAcceptance
+        body:
+          implies:
+          - call:
+              fn: canonical_acceptance_payload_record
+              args:
+              - var: a
+          - exists:
+              vars:
+                r: OTSuccessResult
+              body:
+                and:
+                - call:
+                    fn: acceptance_exact_ot_success_result
+                    args:
+                    - var: a
+                    - var: r
+                - call:
+                    fn: ot_success_matches_submitted_input
+                    args:
+                    - var: a
+                    - var: r
+  pending_edit_identity_provenance:
+    class: provenance_binding
+    capability: relational
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          e: LogicalEditIdentity
+        body:
+          implies:
+          - call:
+              fn: pending_identity_active
+              args:
+              - var: s
+              - var: e
+          - call:
+              fn: pending_representation_bound_to_creation_identity
+              args:
+              - var: s
+              - var: e
+  state_dependent_rejection_context_binding:
+    class: provenance_binding
+    capability: relational
+    formula:
+      forall:
+        vars:
+          t: TerminalResultRecord
+        body:
+          implies:
+          - call:
+              fn: state_dependent_rejected_terminal_result
+              args:
+              - var: t
+          - and:
+            - call:
+                fn: rejection_decision_has_authoritative_context
+                args:
+                - call:
+                    fn: terminal_result_rejection_decision
+                    args:
+                    - var: t
+            - call:
+                fn: rejection_context_sufficient_at_terminalization
+                args:
+                - var: t
+                - call:
+                    fn: terminal_result_rejection_decision
+                    args:
+                    - var: t
+  terminal_response_outcome_binding:
+    class: provenance_binding
+    capability: relational
+    formula:
+      forall:
+        vars:
+          x: ExternalTerminalResult
+        body:
+          implies:
+          - call:
+              fn: externally_terminal_result_record
+              args:
+              - var: x
+          - call:
+              fn: external_result_reproduces_authoritative_outcome
+              args:
+              - var: x
+              - call:
+                  fn: external_terminal_result_key
+                  args:
+                  - var: x

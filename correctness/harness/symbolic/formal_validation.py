@@ -291,10 +291,18 @@ def validate_formal_layer(graph: Graph) -> tuple[list[str], list[str]]:
     if graph.repository_root is None:
         return errors, warnings
     correctness_root = graph.repository_root / "correctness"
-    bridge_path = correctness_root / "symbolic_models" / "bridge.yaml"
-    assurance_path = correctness_root / "symbolic_models" / "assurance.yaml"
-    coverage_path = correctness_root / "symbolic_models" / "coverage.yaml"
-    obligations_path = correctness_root / "symbolic_models" / "design_obligations.yaml"
+    models_root = correctness_root / "symbolic_models"
+    artifacts_root = correctness_root / "symbolic_artifacts"
+    model_schemas = {
+        "bridge.yaml": "bridge",
+        "assurance.yaml": "assurance",
+        "coverage.yaml": "coverage",
+        "design_obligations.yaml": "design-obligations",
+    }
+    bridge_path = models_root / "bridge.yaml"
+    assurance_path = models_root / "assurance.yaml"
+    coverage_path = models_root / "coverage.yaml"
+    obligations_path = models_root / "design_obligations.yaml"
     paths = (bridge_path, assurance_path, coverage_path, obligations_path)
     present = [path.exists() for path in paths]
     if not any(present):
@@ -306,6 +314,39 @@ def validate_formal_layer(graph: Graph) -> tuple[list[str], list[str]]:
             if not path.exists()
         ]
         return [f"formal symbolic layer is incomplete; missing {missing}"], warnings
+
+    # Persisted formal YAML is a closed namespace. Adding a new sidecar or artifact
+    # requires registering a schema first; otherwise the repository would silently
+    # acquire an unconstrained source of formal metadata.
+    discovered_models = {
+        path.name
+        for path in models_root.iterdir()
+        if path.is_file() and path.suffix in {".yaml", ".yml"}
+    }
+    unknown_models = sorted(discovered_models - set(model_schemas))
+    if unknown_models:
+        errors.append(
+            "unregistered symbolic_models YAML files have no declared formal schema: "
+            + ", ".join(unknown_models)
+        )
+
+    if artifacts_root.exists():
+        for path in sorted(artifacts_root.iterdir()):
+            if not path.is_file() or path.suffix not in {".yaml", ".yml"}:
+                continue
+            if path.name.endswith(".composition.yaml"):
+                schema_name = "composition-artifact"
+            elif path.name.endswith(".coverage.yaml"):
+                schema_name = "coverage-artifact"
+            else:
+                errors.append(
+                    f"unregistered symbolic_artifacts YAML file has no declared formal schema: {path.name}"
+                )
+                continue
+            try:
+                _load_yaml_mapping(path, schema_name=schema_name)
+            except Exception as exc:
+                errors.append(f"{path.relative_to(correctness_root)}: {exc}")
 
     try:
         bridge_raw = _load_yaml_mapping(bridge_path, schema_name="bridge")
@@ -339,10 +380,10 @@ def validate_formal_layer(graph: Graph) -> tuple[list[str], list[str]]:
         except Exception as exc:
             errors.append(f"coverage case {case.case_id}: {exc}")
 
-    # Design obligations are source-anchored but their NL->formula oracle translation is
-    # deliberately not certified in v1. Preflight still compiles every obligation and
-    # replays its selected-constraint solver query in exploratory mode so sidecar/bridge
-    # drift fails closed without turning an intentionally discovered GAP into a repo error.
+    # Preflight compiles every Design Obligation and replays its declared proof boundary
+    # in exploratory mode so model/bridge drift fails closed without treating an intentional
+    # GAP or incomplete translation assurance as repository corruption. Canonical coverage
+    # certification is a separate trust gate and requires current TRUSTED translations.
     obligation_verifier = DesignObligationVerifier(graph, bridge, registry)
     for obligation in obligations.obligations.values():
         try:
