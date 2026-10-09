@@ -91,25 +91,6 @@ Human judgment remains essential, but its role changes. Engineers decide what th
 
 ---
 
-## What this project is actually testing
-
-This repository is an experiment, not a claim that the methodology already works universally.
-
-The hard questions are economic and operational:
-
-1. Can correctness reasoning for a non-trivial distributed system converge into explicit, maintainable obligations instead of remaining an open-ended sequence of reviewer challenges?
-2. Can local proof obligations become precise enough that multiple independent AI auditors are sufficiently reliable on them?
-3. Can specification gaps and bad decompositions be discovered without repeatedly reopening the entire system context?
-4. Can implementation changes be mapped to affected proof obligations with sufficiently high recall?
-5. Can enough leaf obligations ultimately be discharged by mechanical evidence that the model reduces, rather than increases, human review cost?
-6. Can invalidation propagation remain local enough that AI can keep changing the system without forcing whole-system correctness reasoning after every meaningful modification?
-
-If the answers are mostly no, Proof-Driven Development becomes specification bureaucracy.
-
-If the answers are mostly yes, correctness reasoning can become a reusable and maintainable engineering asset instead of something that existed briefly in the previous reviewer’s head.
-
----
-
 ## The core intuition: make the reasoning problem smaller
 
 Suppose you open a fresh AI agent and ask only one question:
@@ -194,6 +175,25 @@ re-establish only the affected guarantees
 A compiler rebuilds artifacts after source dependencies change. The Harness tries to do something analogous for correctness reasoning.
 
 The detailed Harness semantics and type system live in [`correctness/SPEC.md`](correctness/SPEC.md); the current machine-readable model lives in [`correctness/correctness.yaml`](correctness/correctness.yaml).
+
+---
+
+## What this project is actually testing
+
+This repository is an experiment, not a claim that the methodology already works universally.
+
+The hard questions are economic and operational:
+
+1. Can correctness reasoning for a non-trivial distributed system converge into explicit, maintainable obligations instead of remaining an open-ended sequence of reviewer challenges?
+2. Can local proof obligations become precise enough that multiple independent AI auditors are sufficiently reliable on them?
+3. Can specification gaps and bad decompositions be discovered without repeatedly reopening the entire system context?
+4. Can implementation changes be mapped to affected proof obligations with sufficiently high recall?
+5. Can enough leaf obligations ultimately be discharged by mechanical evidence that the model reduces, rather than increases, human review cost?
+6. Can invalidation propagation remain local enough that AI can keep changing the system without forcing whole-system correctness reasoning after every meaningful modification?
+
+If the answers are mostly no, Proof-Driven Development becomes specification bureaucracy.
+
+If the answers are mostly yes, correctness reasoning can become a reusable and maintainable engineering asset instead of something that existed briefly in the previous reviewer’s head.
 
 ---
 
