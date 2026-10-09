@@ -19,6 +19,7 @@ from harness.symbolic import (
     TranslationStatus,
     assurance_record_payload,
     aggregate_translation_assurance,
+    build_assumption_translation_subject,
     build_claim_translation_subject,
     build_direct_comparison_prompt,
     build_roundtrip_comparison_prompt,
@@ -115,6 +116,21 @@ ambiguities: []
         self.assertIn("within_retry_reconnect_eligibility", prompt)
         self.assertIn("declared dimensions above are authoritative", prompt)
         self.assertIn("do not collapse distinct entity, state, or observation dimensions", prompt)
+
+    def test_assumption_roundtrip_prompt_preserves_generic_proof_boundary(self):
+        subject = build_assumption_translation_subject(
+            self.graph,
+            self.bridge,
+            "A6_normal_retry_reconnect_identity_is_eligible_for_30_days",
+        )
+        prompt = build_roundtrip_translation_prompt(subject)
+        source_statement = subject.canonical_assumption["statement"]
+        self.assertNotIn(source_statement, prompt)
+        self.assertIn(
+            "outside any correctness guarantee whose proof depends on that assumption",
+            prompt,
+        )
+        self.assertIn("Do not invent a separate product-state predicate", prompt)
 
     def test_direct_prompt_contains_source_and_symbolic_formula(self):
         prompt = build_direct_comparison_prompt(self.subject, focus="weakening")

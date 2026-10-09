@@ -484,6 +484,14 @@ def build_roundtrip_translation_prompt(
     """Blind symbolic -> NL translation. Deliberately excludes the source contract text."""
 
     subject_signature = translation_subject_signature(subject)
+    assumption_boundary = ""
+    if isinstance(subject, AssumptionTranslationSubject):
+        assumption_boundary = (
+            "\nBecause this subject is an accepted proof assumption, preserve its generic proof-boundary "
+            "semantics: an execution/state that violates the assumption is outside any correctness "
+            "guarantee whose proof depends on that assumption. Do not invent a separate product-state "
+            "predicate for this proof boundary.\n"
+        )
     return f"""You are performing a blind semantic round-trip for one symbolic correctness proposition.
 
 You MUST NOT infer or reconstruct any unavailable source prose. Interpret only the typed symbolic material below.
@@ -500,7 +508,7 @@ Preserve every quantifier, implication guard, equality/inequality, existence req
 Preserve semantic coordinates carried by typed function arguments; do not collapse distinct entity, state, or observation dimensions into one timeless or unscoped value.
 Do not strengthen the formula. Do not add likely product requirements. Do not omit awkward conditions.
 Predicate/function meanings and declared dimensions above are authoritative for this task.
-
+{assumption_boundary}
 Return exactly one YAML object:
 subject_signature: {subject_signature}
 status: TRANSLATED | INCOMPLETE

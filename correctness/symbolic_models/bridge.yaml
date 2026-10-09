@@ -752,8 +752,34 @@ functions:
     catalog_symbols: []
     meaning: Exact logical edit identity e has pending/retry age no more than 30 days in state s and remains eligible for the normal retry/reconnect protocol.
     semantic_anchors:
-    - assumption:A6_normal_retry_reconnect_identity_is_eligible_for_30_days
     - claim:G1_retry_is_logically_exactly_once
+  normal_retry_reconnect_identity_in_scope:
+    args:
+    - AuthoritativeState
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: In state s, exact logical edit identity e denotes a pending logical edit of a normally participating client to which the normal retry/reconnect age-boundary assumption applies; this scope predicate does not itself assert submission or eligibility.
+    semantic_anchors:
+    - assumption:A6_normal_retry_reconnect_identity_is_eligible_for_30_days
+  identity_pending_retry_age_at_most_30_days:
+    args:
+    - AuthoritativeState
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: Exact in-scope logical edit identity e has a defined pending/retry age no more than 30 days in state s; this predicate does not assert retention, eligibility, or submission.
+    semantic_anchors:
+    - assumption:A6_normal_retry_reconnect_identity_is_eligible_for_30_days
+  identity_pending_retry_age_exceeds_30_days:
+    args:
+    - AuthoritativeState
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: Exact in-scope logical edit identity e has a defined pending/retry age greater than 30 days in state s.
+    semantic_anchors:
+    - assumption:A6_normal_retry_reconnect_identity_is_eligible_for_30_days
   identity_handled_outside_normal_retry_protocol:
     args:
     - AuthoritativeState
@@ -1393,37 +1419,42 @@ assumptions:
           s: AuthoritativeState
           e: LogicalEditIdentity
         body:
-          and:
-          - implies:
-            - call:
-                fn: normal_retry_or_reconnect_submission
-                args:
-                - var: s
-                - var: e
-            - call:
-                fn: identity_within_30_day_normal_horizon
-                args:
-                - var: s
-                - var: e
-          - implies:
-            - not:
-                call:
-                  fn: identity_within_30_day_normal_horizon
+          implies:
+          - call:
+              fn: normal_retry_reconnect_identity_in_scope
+              args:
+              - var: s
+              - var: e
+          - and:
+            - implies:
+              - call:
+                  fn: normal_retry_or_reconnect_submission
                   args:
                   - var: s
                   - var: e
-            - and:
-              - not:
-                  call:
-                    fn: normal_retry_or_reconnect_submission
+              - call:
+                  fn: identity_pending_retry_age_at_most_30_days
+                  args:
+                  - var: s
+                  - var: e
+            - implies:
+              - call:
+                  fn: identity_pending_retry_age_exceeds_30_days
+                  args:
+                  - var: s
+                  - var: e
+              - and:
+                - not:
+                    call:
+                      fn: normal_retry_or_reconnect_submission
+                      args:
+                      - var: s
+                      - var: e
+                - call:
+                    fn: identity_handled_outside_normal_retry_protocol
                     args:
                     - var: s
                     - var: e
-              - call:
-                  fn: identity_handled_outside_normal_retry_protocol
-                  args:
-                  - var: s
-                  - var: e
 claims:
   L20_acceptance_paths_are_authoritatively_mediated:
     contracts: []
