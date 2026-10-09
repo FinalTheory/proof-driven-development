@@ -41,7 +41,6 @@ class CoverageCase:
     trusted_claim_ids: tuple[str, ...]
     trusted_contract_ids: tuple[str, ...]
     formula: dict[str, Any]
-    artifact_ref: str
 
 
 @dataclass(frozen=True)
@@ -82,7 +81,6 @@ class CoverageSpec:
             "trusted_claims",
             "trusted_contracts",
             "formula",
-            "artifact",
         }
         for case_id, raw_case in raw_cases.items():
             if not isinstance(case_id, str) or not case_id:
@@ -98,8 +96,6 @@ class CoverageSpec:
             trusted_claims = raw_case["trusted_claims"]
             trusted_contracts = raw_case["trusted_contracts"]
             formula = raw_case["formula"]
-            artifact_ref = raw_case["artifact"]
-
             if not isinstance(description, str) or not description.strip():
                 raise SymbolicCoverageError(
                     f"coverage case {case_id}.description must be non-empty"
@@ -128,24 +124,6 @@ class CoverageSpec:
                 raise SymbolicCoverageError(
                     f"coverage case {case_id}.formula must be an expression mapping"
                 )
-            if not isinstance(artifact_ref, str) or not artifact_ref:
-                raise SymbolicCoverageError(
-                    f"coverage case {case_id}.artifact must be a non-empty relative path"
-                )
-            artifact_path = Path(artifact_ref)
-            if artifact_path.is_absolute() or ".." in artifact_path.parts:
-                raise SymbolicCoverageError(
-                    f"coverage case {case_id}.artifact must stay inside correctness/"
-                )
-            if (
-                not artifact_ref.startswith("symbolic_artifacts/")
-                or not artifact_ref.endswith(".coverage.yaml")
-            ):
-                raise SymbolicCoverageError(
-                    f"coverage case {case_id}.artifact must be "
-                    "symbolic_artifacts/*.coverage.yaml"
-                )
-
             cases[case_id] = CoverageCase(
                 case_id=case_id,
                 description=description.strip(),
@@ -153,7 +131,6 @@ class CoverageSpec:
                 trusted_claim_ids=tuple(trusted_claims),
                 trusted_contract_ids=tuple(trusted_contracts),
                 formula=formula,
-                artifact_ref=artifact_ref,
             )
 
         return cls(version=1, cases=cases)
@@ -533,7 +510,6 @@ def build_coverage_artifact(
         "version": 1,
         "kind": "symbolic_coverage_machine_check",
         "case": case.case_id,
-        "artifact_ref": case.artifact_ref,
         "coverage_signature": result.coverage_signature,
         "candidate": {
             "statement": case.candidate_statement,

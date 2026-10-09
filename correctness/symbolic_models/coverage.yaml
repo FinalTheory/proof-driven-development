@@ -17,7 +17,6 @@ cases:
     trusted_claims:
       - L108_acceptance_preserves_request_identity
     trusted_contracts: []
-    artifact: symbolic_artifacts/L108_acceptance_preserves_request_identity.coverage.yaml
     formula:
       exists:
         vars:

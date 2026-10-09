@@ -254,7 +254,7 @@ Dynamic key 必须是现有 `claim_id`。
 | `.status` | `unaudited` / `single_agent_audited` / `multi_agent_audited` / `machine_checked` | required | composition assurance level |
 | `.signature` | 64-hex SHA-256 | audited / machine-checked 状态 required | target proposition + direct dependency propositions + interpretation context 的签名；不包含更深 decomposition |
 | `.auditor_count` | integer >= 1 | agent-audited 状态 required | independent semantic auditor 数量 |
-| `.artifact_refs` | unique non-empty `string[]`, min 1 | `machine_checked` required | machine-checkable proof/model artifact references |
+| `.artifact_refs` | unique non-empty `string[]`, min 1 | optional | optional external machine-check evidence references; reproducible symbolic outputs live under ignored `temp/` |
 | `.rationale` | non-empty string | audited / machine-checked 状态 required | 为什么当前 composition 被认为满足该 assurance level |
 
 额外约束：
@@ -263,7 +263,7 @@ Dynamic key 必须是现有 `claim_id`。
 | --- | --- |
 | `single_agent_audited` | `auditor_count == 1` |
 | `multi_agent_audited` | `auditor_count >= 2` |
-| `machine_checked` | 必须有 `artifact_refs`；不要求 `auditor_count` |
+| `machine_checked` | 必须有 `signature` 与 `rationale`；不要求 `artifact_refs` 或 `auditor_count`，symbolic proof 由 validate 现场重放 |
 
 `stale` 仍由 composition signature mismatch 派生，不是可写 status。
 
@@ -313,7 +313,7 @@ Dynamic key 必须是现有 `claim_id`。
 - `assumptions.<key:^A[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.status` => required; enum=external_assumption|protocol_assumption|environment_assumption
 - `assurance` => required; closed object
 - `assurance.composition` => required; closed object; dynamic keys match ^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
-- `assurance.composition.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.artifact_refs` => required when status=machine_checked; forbidden when status=single_agent_audited or status=multi_agent_audited; array, minItems=1, uniqueItems=true, items=string
+- `assurance.composition.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.artifact_refs` => optional; forbidden when status=single_agent_audited or status=multi_agent_audited; array, minItems=1, uniqueItems=true, items=string
 - `assurance.composition.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.auditor_count` => required when status=single_agent_audited or status=multi_agent_audited; forbidden when status=machine_checked; integer, minimum=1
 - `assurance.composition.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.rationale` => required when status=single_agent_audited or status=multi_agent_audited or status=machine_checked; string, minLength=1
 - `assurance.composition.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.signature` => required when status=single_agent_audited or status=multi_agent_audited or status=machine_checked; string, pattern=^[0-9a-f]{64}$

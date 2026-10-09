@@ -9,10 +9,15 @@ import yaml
 from jsonschema import Draft202012Validator
 
 from harness.model import Graph
-from harness.symbolic import SymbolicBridge, TranslationAssuranceRegistry
+from harness.symbolic import (
+    CoverageSpec,
+    SymbolicBridge,
+    SymbolicCoverageVerifier,
+    TranslationAssuranceRegistry,
+    build_coverage_artifact,
+)
 from harness.symbolic.formal_schema import FORMAL_SCHEMAS
 from harness.symbolic.formal_validation import (
-    _composition_artifact_errors,
     _load_yaml_mapping,
     validate_formal_layer,
 )
@@ -33,12 +38,6 @@ class FormalSchemaTests(unittest.TestCase):
             "assurance": ROOT / "symbolic_models" / "assurance.yaml",
             "coverage": ROOT / "symbolic_models" / "coverage.yaml",
             "design-obligations": ROOT / "symbolic_models" / "design_obligations.yaml",
-            "composition-artifact": ROOT
-            / "symbolic_artifacts"
-            / "C14_all_acceptance_paths_honor_idempotency_identity.composition.yaml",
-            "coverage-artifact": ROOT
-            / "symbolic_artifacts"
-            / "L108_acceptance_preserves_request_identity.coverage.yaml",
         }
         for name, path in cases.items():
             with self.subTest(name=name):
@@ -54,18 +53,7 @@ class FormalSchemaTests(unittest.TestCase):
             model_files,
             {"bridge.yaml", "assurance.yaml", "coverage.yaml", "design_obligations.yaml"},
         )
-
-        for path in (ROOT / "symbolic_artifacts").iterdir():
-            if not path.is_file() or path.suffix not in {".yaml", ".yml"}:
-                continue
-            with self.subTest(path=path.name):
-                if path.name.endswith(".composition.yaml"):
-                    schema_name = "composition-artifact"
-                elif path.name.endswith(".coverage.yaml"):
-                    schema_name = "coverage-artifact"
-                else:
-                    self.fail(f"formal artifact has no registered schema: {path.name}")
-                _load_yaml_mapping(path, schema_name=schema_name)
+        self.assertFalse((ROOT / "symbolic_artifacts").exists())
 
     def test_bridge_schema_rejects_unrecognized_function_metadata(self) -> None:
         raw = yaml.safe_load((ROOT / "symbolic_models" / "bridge.yaml").read_text())
@@ -77,91 +65,19 @@ class FormalSchemaTests(unittest.TestCase):
         )
         self.assertTrue(errors)
 
-    def test_composition_artifact_schema_rejects_non_entailed_result(self) -> None:
-        path = (
-            ROOT
-            / "symbolic_artifacts"
-            / "C14_all_acceptance_paths_honor_idempotency_identity.composition.yaml"
-        )
-        raw = yaml.safe_load(path.read_text())
-        broken = copy.deepcopy(raw)
-        broken["result"]["solver_status"] = "sat"
-        broken["result"]["verdict"] = "COUNTEREXAMPLE"
-        errors = list(
-            Draft202012Validator(
-                FORMAL_SCHEMAS["composition-artifact"]
-            ).iter_errors(broken)
-        )
-        self.assertTrue(errors)
-
-    def test_composition_artifact_schema_requires_replayable_mutation(self) -> None:
-        path = (
-            ROOT
-            / "symbolic_artifacts"
-            / "C14_all_acceptance_paths_honor_idempotency_identity.composition.yaml"
-        )
-        raw = yaml.safe_load(path.read_text())
-        broken = copy.deepcopy(raw)
-        broken["mutation_tests"][0].pop("premise_formula_override")
-        errors = list(
-            Draft202012Validator(
-                FORMAL_SCHEMAS["composition-artifact"]
-            ).iter_errors(broken)
-        )
-        self.assertTrue(errors)
-
-    def test_formal_preflight_replays_mutation_instead_of_trusting_claimed_sat(self) -> None:
+    def test_generated_coverage_artifact_schema_requires_non_vacuous_sat_to_unsat_proof(self) -> None:
         graph = Graph.load()
         bridge = SymbolicBridge.load(ROOT / "symbolic_models" / "bridge.yaml")
-        registry = TranslationAssuranceRegistry.load(
-            ROOT / "symbolic_models" / "assurance.yaml"
-        )
-        node_id = "C14_all_acceptance_paths_honor_idempotency_identity"
-        source = (
-            ROOT
-            / "symbolic_artifacts"
-            / f"{node_id}.composition.yaml"
-        )
-        artifact = yaml.safe_load(source.read_text())
-        mutation = artifact["mutation_tests"][0]
-        premise = mutation["weakened_premise"]
-        mutation["premise_formula_override"] = copy.deepcopy(
-            bridge.claims[premise].formula
-        )
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            correctness_root = Path(temp_dir)
-            artifact_ref = "replayed.composition.yaml"
-            (correctness_root / artifact_ref).write_text(
-                yaml.safe_dump(artifact, sort_keys=False, allow_unicode=True),
-                encoding="utf-8",
-            )
-            errors = _composition_artifact_errors(
-                graph,
-                bridge,
-                registry,
-                node_id,
-                artifact_ref,
-                correctness_root=correctness_root,
-            )
-        self.assertTrue(
-            any("fresh mutation sensitivity check" in error for error in errors),
-            errors,
-        )
-
-    def test_coverage_artifact_schema_requires_non_vacuous_sat_to_unsat_proof(self) -> None:
-        path = (
-            ROOT
-            / "symbolic_artifacts"
-            / "L108_acceptance_preserves_request_identity.coverage.yaml"
-        )
-        raw = yaml.safe_load(path.read_text())
+        registry = TranslationAssuranceRegistry.load(ROOT / "symbolic_models" / "assurance.yaml")
+        coverage = CoverageSpec.load(ROOT / "symbolic_models" / "coverage.yaml")
+        case = coverage.require_case("L108_acceptance_preserves_request_identity")
+        verifier = SymbolicCoverageVerifier(graph, bridge, registry)
+        result = verifier.check(case, require_trusted=True)
+        raw = build_coverage_artifact(graph, bridge, registry, case, result)
         broken = copy.deepcopy(raw)
         broken["proof"]["baseline"]["solver_status"] = "unsat"
         errors = list(
-            Draft202012Validator(FORMAL_SCHEMAS["coverage-artifact"]).iter_errors(
-                broken
-            )
+            Draft202012Validator(FORMAL_SCHEMAS["coverage-artifact"]).iter_errors(broken)
         )
         self.assertTrue(errors)
 
@@ -170,7 +86,7 @@ class FormalSchemaTests(unittest.TestCase):
         doc = copy.deepcopy(graph.doc)
         doc["assurance"]["composition"][
             "C14_all_acceptance_paths_honor_idempotency_identity"
-        ]["artifact_refs"].append("ci://independent-model-checker/result")
+        ]["artifact_refs"] = ["ci://independent-model-checker/result"]
         mixed = Graph(doc, repository_root=graph.repository_root)
         errors, warnings = validate_formal_layer(mixed)
         self.assertEqual(errors, [])
@@ -191,22 +107,15 @@ class FormalSchemaTests(unittest.TestCase):
             repository_root = Path(temp_dir)
             correctness_root = repository_root / "correctness"
             models = correctness_root / "symbolic_models"
-            artifacts = correctness_root / "symbolic_artifacts"
             models.mkdir(parents=True)
-            artifacts.mkdir(parents=True)
             for source in (ROOT / "symbolic_models").iterdir():
                 if source.is_file() and source.suffix in {".yaml", ".yml"}:
                     (models / source.name).write_text(source.read_text(), encoding="utf-8")
             (models / "freeform.yaml").write_text("anything: goes\n", encoding="utf-8")
-            (artifacts / "notes.yaml").write_text("anything: goes\n", encoding="utf-8")
             synthetic = Graph(copy.deepcopy(graph.doc), repository_root=repository_root)
             errors, _ = validate_formal_layer(synthetic)
         self.assertTrue(
             any("unregistered symbolic_models YAML" in error for error in errors),
-            errors,
-        )
-        self.assertTrue(
-            any("unregistered symbolic_artifacts YAML" in error for error in errors),
             errors,
         )
 

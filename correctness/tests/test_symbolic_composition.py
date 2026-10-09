@@ -6,8 +6,6 @@ from io import StringIO
 from pathlib import Path
 from types import SimpleNamespace
 
-import yaml
-
 from harness.model import Graph
 from harness.symbolic import (
     SymbolicBridge,
@@ -15,8 +13,6 @@ from harness.symbolic import (
     SymbolicCompositionVerifier,
     TranslationAssuranceRegistry,
     TranslationReviewError,
-    build_claim_translation_subject,
-    translation_subject_signature,
 )
 from harness.symbolic.cli import _cmd_symbolic_report
 
@@ -26,19 +22,11 @@ ASSURANCE_PATH = Path(__file__).resolve().parents[1] / "symbolic_models" / "assu
 
 C12_TARGET = "C12_live_delivery_contains_only_accepted_changes"
 C12_PREMISE = "L116_live_delivery_is_bound_to_committed_acceptance"
-C12_ARTIFACT_PATH = (
-    Path(__file__).resolve().parents[1] / "symbolic_artifacts"
-    / "C12_live_delivery_contains_only_accepted_changes.composition.yaml"
-)
 
 C14_TARGET = "C14_all_acceptance_paths_honor_idempotency_identity"
 C14_PREMISES = (
     "L20_acceptance_paths_are_authoritatively_mediated",
     "L21_accepted_key_gate_rejects_new_acceptance",
-)
-C14_ARTIFACT_PATH = (
-    Path(__file__).resolve().parents[1] / "symbolic_artifacts"
-    / "C14_all_acceptance_paths_honor_idempotency_identity.composition.yaml"
 )
 
 
@@ -103,12 +91,10 @@ class SymbolicCompositionTests(unittest.TestCase):
             verifier.check(C12_TARGET, require_trusted=True)
         self.assertIn("STALE", str(ctx.exception))
 
-    def test_stale_c12_machine_check_artifact_is_not_persisted(self):
-        self.assertFalse(C12_ARTIFACT_PATH.exists())
-        self.assertEqual(
-            self.graph.doc["assurance"]["composition"][C12_TARGET]["status"],
-            "unaudited",
-        )
+    def test_stale_c12_machine_check_is_not_recorded(self):
+        entry = self.graph.doc["assurance"]["composition"][C12_TARGET]
+        self.assertEqual(entry["status"], "unaudited")
+        self.assertNotIn("artifact_refs", entry)
 
     def test_c14_two_premise_composition_is_entailed_trusted(self):
         registry = TranslationAssuranceRegistry.load(ASSURANCE_PATH)
@@ -161,63 +147,25 @@ class SymbolicCompositionTests(unittest.TestCase):
         with self.assertRaises(SymbolicCompositionError):
             _cmd_symbolic_report(self.graph, args)
 
-    def test_persisted_c14_machine_check_artifact_is_current(self):
-        artifact = yaml.safe_load(C14_ARTIFACT_PATH.read_text())
+    def test_recorded_c14_machine_check_is_replayable_from_current_model(self):
         registry = TranslationAssuranceRegistry.load(ASSURANCE_PATH)
         verifier = SymbolicCompositionVerifier(self.graph, self.bridge, registry)
         result = verifier.check(C14_TARGET, require_trusted=True)
+        entry = self.graph.doc["assurance"]["composition"][C14_TARGET]
 
-        target_subject = build_claim_translation_subject(
-            self.graph, self.bridge, C14_TARGET
-        )
-        premise_subject_signatures = {
-            premise: translation_subject_signature(
-                build_claim_translation_subject(self.graph, self.bridge, premise)
-            )
-            for premise in C14_PREMISES
-        }
+        self.assertEqual(entry["status"], "machine_checked")
+        self.assertEqual(entry["signature"], result.composition_signature)
+        self.assertNotIn("artifact_refs", entry)
+        self.assertEqual(result.solver_result.status, "unsat")
+        self.assertEqual(result.verdict, "ENTAILED")
 
-        self.assertEqual(
-            artifact["composition_signature"],
-            result.composition_signature,
-        )
-        self.assertEqual(
-            artifact["translation_assurance"]["target"]["subject_signature"],
-            translation_subject_signature(target_subject),
-        )
         for premise in C14_PREMISES:
-            self.assertEqual(
-                artifact["translation_assurance"]["premises"][premise]["subject_signature"],
-                premise_subject_signatures[premise],
-            )
-
-        self.assertEqual(artifact["result"]["solver_status"], "unsat")
-        self.assertEqual(artifact["result"]["verdict"], "ENTAILED")
-
-        mutation_by_premise = {
-            item["weakened_premise"]: item
-            for item in artifact["mutation_tests"]
-        }
-        self.assertEqual(set(mutation_by_premise), set(C14_PREMISES))
-        for premise in C14_PREMISES:
-            mutation = mutation_by_premise[premise]
-            self.assertEqual(mutation["operation"], "replace_formula")
-            self.assertEqual(
-                mutation["solver_status"],
-                "sat",
-            )
-            self.assertEqual(
-                mutation["verdict"],
-                "COUNTEREXAMPLE",
-            )
             replayed = verifier.check_with_premise_overrides(
-                C14_TARGET,
-                premise_formula_overrides={
-                    premise: mutation["premise_formula_override"]
-                },
+                C14_TARGET, premise_formula_overrides={premise: {"bool": True}}
             )
             self.assertEqual(replayed.solver_result.status, "sat")
             self.assertEqual(replayed.verdict, "COUNTEREXAMPLE")
+
 
 
 if __name__ == "__main__":

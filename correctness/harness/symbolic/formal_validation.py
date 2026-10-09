@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from pathlib import Path
 from typing import Any
 
@@ -8,17 +7,12 @@ import yaml
 from jsonschema import Draft202012Validator
 
 from ..model import Graph, UniqueKeyLoader
-from .assurance_registry import SubjectTrustStatus, TranslationAssuranceRegistry
+from .assurance_registry import TranslationAssuranceRegistry
 from .bridge import SymbolicBridge
 from .composition import SymbolicCompositionVerifier
 from .coverage import CoverageSpec, SymbolicCoverageVerifier, build_coverage_artifact
 from .obligations import DesignObligationSpec, DesignObligationVerifier
 from .formal_schema import FORMAL_SCHEMAS
-from .translation_assurance import (
-    build_claim_translation_subject,
-    build_assumption_translation_subject,
-    translation_subject_signature,
-)
 
 
 def _load_yaml_mapping(path: Path, *, schema_name: str | None = None) -> dict[str, Any]:
@@ -47,206 +41,6 @@ def _load_yaml_mapping(path: Path, *, schema_name: str | None = None) -> dict[st
                 f"{path}: invalid {schema_name} schema: " + "; ".join(rendered)
             )
     return raw
-
-
-def _coverage_artifact_matches_fresh_check(
-    artifact: dict[str, Any],
-    expected: dict[str, Any],
-) -> bool:
-    """Compare coverage evidence while treating a SAT witness as diagnostic.
-
-    Z3 may return different satisfying models for the same baseline formula on
-    successive checks in one process. Fresh validation therefore verifies the
-    baseline SAT status and every semantic/signature field, but does not require
-    the persisted witness text to match the particular model returned this run.
-    The closed artifact schema still requires a non-empty persisted witness.
-    """
-    persisted = copy.deepcopy(artifact)
-    fresh = copy.deepcopy(expected)
-    for payload in (persisted, fresh):
-        payload["proof"]["baseline"].pop("witness_model", None)
-    return persisted == fresh
-
-
-def _composition_artifact_errors(
-    graph: Graph,
-    bridge: SymbolicBridge,
-    registry: TranslationAssuranceRegistry,
-    node_id: str,
-    artifact_ref: str,
-    *,
-    correctness_root: Path,
-) -> list[str]:
-    errors: list[str] = []
-    path = correctness_root / artifact_ref
-    try:
-        artifact = _load_yaml_mapping(path, schema_name="composition-artifact")
-    except ValueError as exc:
-        return [str(exc)]
-
-    common = {
-        "version",
-        "kind",
-        "node",
-        "direct_premises",
-        "composition_signature",
-        "translation_assurance",
-        "query_semantics",
-        "solver",
-        "result",
-    }
-    mutation_keys = {"mutation_test", "mutation_tests"} & set(artifact)
-    expected_top = common | mutation_keys
-    if set(artifact) != expected_top or len(mutation_keys) != 1:
-        errors.append(
-            f"{artifact_ref}: composition artifact must contain exactly the canonical fields "
-            "and exactly one of mutation_test/mutation_tests"
-        )
-        return errors
-
-    verifier = SymbolicCompositionVerifier(graph, bridge, registry)
-    try:
-        result = verifier.check(node_id, require_trusted=True)
-    except Exception as exc:
-        return [f"{artifact_ref}: fresh symbolic composition check failed: {exc}"]
-
-    expected_scalars = {
-        "version": 1,
-        "kind": "symbolic_composition_machine_check",
-        "node": node_id,
-        "direct_premises": list(result.premise_ids),
-        "composition_signature": result.composition_signature,
-        "query_semantics": "AND(all direct premise formulas) AND NOT(target formula)",
-    }
-    for field, expected in expected_scalars.items():
-        if artifact.get(field) != expected:
-            errors.append(
-                f"{artifact_ref}: {field} is stale/invalid: "
-                f"expected={expected!r} actual={artifact.get(field)!r}"
-            )
-
-    solver = artifact.get("solver")
-    if not isinstance(solver, dict) or set(solver) != {"name", "version"} or solver.get("name") != "z3":
-        errors.append(f"{artifact_ref}: solver must be exactly name/version for z3")
-
-    expected_result = {
-        "solver_status": result.solver_result.status,
-        "verdict": result.verdict,
-        "counterexample_model": (
-            result.solver_result.model if result.solver_result.status == "sat" else None
-        ),
-    }
-    if artifact.get("result") != expected_result:
-        errors.append(f"{artifact_ref}: result does not match a fresh symbolic composition check")
-
-    assurance = artifact.get("translation_assurance")
-    if not isinstance(assurance, dict) or set(assurance) != {"target", "premises"}:
-        errors.append(f"{artifact_ref}: translation_assurance must contain target and premises")
-    else:
-        target = assurance.get("target")
-        target_trust = registry.evaluate(graph, bridge, kind="claim", subject_id=node_id)
-        target_sig = translation_subject_signature(
-            build_claim_translation_subject(graph, bridge, node_id)
-        )
-        expected_target = {
-            "status": target_trust.status.value,
-            "subject_signature": target_sig,
-        }
-        if target != expected_target or target_trust.status != SubjectTrustStatus.TRUSTED:
-            errors.append(f"{artifact_ref}: target translation assurance is stale or untrusted")
-
-        premises = assurance.get("premises")
-        if not isinstance(premises, dict) or set(premises) != set(result.premise_ids):
-            errors.append(f"{artifact_ref}: premise translation assurance set is stale")
-        else:
-            for premise_id in result.premise_ids:
-                premise = graph.require_node(premise_id)
-                premise_kind = "claim" if premise.node_type == "claim" else "assumption"
-                trust = registry.evaluate(
-                    graph, bridge, kind=premise_kind, subject_id=premise_id
-                )
-                premise_subject = (
-                    build_claim_translation_subject(graph, bridge, premise_id)
-                    if premise_kind == "claim"
-                    else build_assumption_translation_subject(graph, bridge, premise_id)
-                )
-                sig = translation_subject_signature(premise_subject)
-                expected = {
-                    "status": trust.status.value,
-                    "subject_signature": sig,
-                }
-                if premises.get(premise_id) != expected or trust.status != SubjectTrustStatus.TRUSTED:
-                    errors.append(
-                        f"{artifact_ref}: premise {premise_id} translation assurance is stale or untrusted"
-                    )
-
-    raw_mutations = (
-        [artifact["mutation_test"]]
-        if "mutation_test" in artifact
-        else artifact.get("mutation_tests")
-    )
-    if not isinstance(raw_mutations, list) or not raw_mutations:
-        errors.append(f"{artifact_ref}: at least one mutation sensitivity check is required")
-    else:
-        replayed_premises: set[str] = set()
-        for index, mutation in enumerate(raw_mutations):
-            if not isinstance(mutation, dict):
-                errors.append(f"{artifact_ref}: mutation test {index} must be a mapping")
-                continue
-            weakened_premise = mutation.get("weakened_premise")
-            if weakened_premise not in result.premise_ids:
-                errors.append(
-                    f"{artifact_ref}: mutation test {index} weakens non-direct premise "
-                    f"{weakened_premise!r}"
-                )
-                continue
-            if weakened_premise in replayed_premises:
-                errors.append(
-                    f"{artifact_ref}: mutation test {index} duplicates weakened premise "
-                    f"{weakened_premise}"
-                )
-                continue
-            replayed_premises.add(weakened_premise)
-            if mutation.get("solver_status") != "sat" or mutation.get("verdict") != "COUNTEREXAMPLE":
-                errors.append(
-                    f"{artifact_ref}: mutation test {index} must produce SAT / COUNTEREXAMPLE"
-                )
-            if not isinstance(mutation.get("counterexample_model"), str) or not mutation[
-                "counterexample_model"
-            ].strip():
-                errors.append(
-                    f"{artifact_ref}: mutation test {index} must persist a counterexample model"
-                )
-            if mutation.get("operation") != "replace_formula":
-                errors.append(
-                    f"{artifact_ref}: mutation test {index} has unsupported operation"
-                )
-                continue
-            override = mutation.get("premise_formula_override")
-            if not isinstance(override, dict):
-                errors.append(
-                    f"{artifact_ref}: mutation test {index} must persist a formula override"
-                )
-                continue
-            try:
-                mutation_result = verifier.check_with_premise_overrides(
-                    node_id,
-                    premise_formula_overrides={weakened_premise: override},
-                )
-            except Exception as exc:
-                errors.append(
-                    f"{artifact_ref}: fresh mutation sensitivity check {index} failed: {exc}"
-                )
-                continue
-            if (
-                mutation_result.solver_result.status != "sat"
-                or mutation_result.verdict != "COUNTEREXAMPLE"
-            ):
-                errors.append(
-                    f"{artifact_ref}: fresh mutation sensitivity check {index} does not "
-                    "reproduce SAT / COUNTEREXAMPLE"
-                )
-    return errors
 
 
 def _formalization_bridge_errors(graph: Graph, bridge: SymbolicBridge) -> list[str]:
@@ -292,7 +86,6 @@ def validate_formal_layer(graph: Graph) -> tuple[list[str], list[str]]:
         return errors, warnings
     correctness_root = graph.repository_root / "correctness"
     models_root = correctness_root / "symbolic_models"
-    artifacts_root = correctness_root / "symbolic_artifacts"
     model_schemas = {
         "bridge.yaml": "bridge",
         "assurance.yaml": "assurance",
@@ -330,24 +123,6 @@ def validate_formal_layer(graph: Graph) -> tuple[list[str], list[str]]:
             + ", ".join(unknown_models)
         )
 
-    if artifacts_root.exists():
-        for path in sorted(artifacts_root.iterdir()):
-            if not path.is_file() or path.suffix not in {".yaml", ".yml"}:
-                continue
-            if path.name.endswith(".composition.yaml"):
-                schema_name = "composition-artifact"
-            elif path.name.endswith(".coverage.yaml"):
-                schema_name = "coverage-artifact"
-            else:
-                errors.append(
-                    f"unregistered symbolic_artifacts YAML file has no declared formal schema: {path.name}"
-                )
-                continue
-            try:
-                _load_yaml_mapping(path, schema_name=schema_name)
-            except Exception as exc:
-                errors.append(f"{path.relative_to(correctness_root)}: {exc}")
-
     try:
         bridge_raw = _load_yaml_mapping(bridge_path, schema_name="bridge")
         assurance_raw = _load_yaml_mapping(assurance_path, schema_name="assurance")
@@ -363,19 +138,16 @@ def validate_formal_layer(graph: Graph) -> tuple[list[str], list[str]]:
         return [f"formal symbolic sidecar validation failed: {exc}"], warnings
 
     coverage_verifier = SymbolicCoverageVerifier(graph, bridge, registry)
+    coverage_artifact_validator = Draft202012Validator(FORMAL_SCHEMAS["coverage-artifact"])
     for case in coverage.cases.values():
         try:
             result = coverage_verifier.check(case, require_trusted=True)
-            expected = build_coverage_artifact(
-                graph, bridge, registry, case, result
-            )
-            artifact = _load_yaml_mapping(
-                correctness_root / case.artifact_ref,
-                schema_name="coverage-artifact",
-            )
-            if not _coverage_artifact_matches_fresh_check(artifact, expected):
+            generated = build_coverage_artifact(graph, bridge, registry, case, result)
+            schema_errors = list(coverage_artifact_validator.iter_errors(generated))
+            if schema_errors:
                 errors.append(
-                    f"{case.artifact_ref}: persisted coverage artifact does not match a fresh trusted check"
+                    f"coverage case {case.case_id}: generated artifact violates coverage-artifact schema: "
+                    + "; ".join(error.message for error in schema_errors[:4])
                 )
         except Exception as exc:
             errors.append(f"coverage case {case.case_id}: {exc}")
@@ -393,31 +165,23 @@ def validate_formal_layer(graph: Graph) -> tuple[list[str], list[str]]:
 
     composition = graph.doc.get("assurance", {}).get("composition", {})
     if isinstance(composition, dict):
+        composition_verifier = SymbolicCompositionVerifier(graph, bridge, registry)
         for node_id, entry in composition.items():
             if not isinstance(entry, dict) or entry.get("status") != "machine_checked":
                 continue
-            refs = entry.get("artifact_refs", [])
-            if not isinstance(refs, list) or not refs:
-                errors.append(f"machine_checked composition {node_id} has no artifact_refs")
-                continue
-            for artifact_ref in refs:
-                if not isinstance(artifact_ref, str):
-                    errors.append(f"machine_checked composition {node_id} has invalid artifact_ref")
-                    continue
-                if not (
-                    artifact_ref.startswith("symbolic_artifacts/")
-                    and artifact_ref.endswith(".composition.yaml")
-                ):
-                    continue
-                errors.extend(
-                    _composition_artifact_errors(
-                        graph,
-                        bridge,
-                        registry,
-                        node_id,
-                        artifact_ref,
-                        correctness_root=correctness_root,
+            try:
+                result = composition_verifier.check(node_id, require_trusted=True)
+                if not result.machine_checked:
+                    errors.append(
+                        f"machine_checked composition {node_id} no longer machine-checks: {result.verdict}"
                     )
-                )
+                recorded_signature = entry.get("signature")
+                if recorded_signature != result.composition_signature:
+                    errors.append(
+                        f"machine_checked composition {node_id} has stale signature: "
+                        f"recorded={recorded_signature!r} current={result.composition_signature!r}"
+                    )
+            except Exception as exc:
+                errors.append(f"machine_checked composition {node_id}: {exc}")
 
     return errors, warnings

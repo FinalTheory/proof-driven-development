@@ -6070,8 +6070,6 @@ assurance:
       status: unaudited
     C14_all_acceptance_paths_honor_idempotency_identity:
       status: machine_checked
-      artifact_refs:
-        - symbolic_artifacts/C14_all_acceptance_paths_honor_idempotency_identity.composition.yaml
       rationale: Trusted symbolic translations exist for C14 and both direct premises L20 and L21.
         Z3 checked L20 AND L21 AND NOT(C14) as UNSAT. Independent mutation tests that replace either
         L20 or L21 with True each become SAT with a concrete counterexample, demonstrating that both

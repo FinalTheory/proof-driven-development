@@ -266,12 +266,12 @@ Automation 可以重新组织已经批准的 proof structure，但不能静默�
 | --- | --- |
 | Harness 的人类 mental model | `SPEC.md` |
 | `correctness.yaml` 哪些字段 / shape 在结构上合法 | `graph_schema.py` / `graph-schema` / `schema-fields` |
-| Formal sidecar / artifact 哪些字段 / shape 在结构上合法 | `harness/symbolic/formal_schema.py` / `formal-schema` |
+| Formal model / generated artifact 哪些字段 / shape 在结构上合法 | `harness/symbolic/formal_schema.py` / `formal-schema` |
 | 当前 proposition、catalog 和 campaign state | `correctness.yaml` |
 | validation、signature、prompt、scheduler、mutation 如何执行 | `correctness.py` |
 | 当前建模的系统 architecture | `../design/google-docs.md` |
 | Symbolic proposition mapping、Design Obligation oracle 与 translation assurance | `symbolic_models/*.yaml` |
-| 可独立人工审阅的 symbolic machine-check artifact | `symbolic_artifacts/*.yaml` |
+| 可选的 symbolic machine-check 临时输出 | `../temp/symbolic_artifacts/*.yaml`（ignored；可从 models 重新生成） |
 | Agent 操作 repository 时必须遵守什么规则 | `../AGENTS.md` |
 | 当前 operational workflow | `correctness.py workflow-help` |
 

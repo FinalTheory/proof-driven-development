@@ -425,8 +425,13 @@ def _cmd_symbolic_cover(graph: Graph, args: argparse.Namespace) -> int:
             raise SymbolicCoverageError(
                 f"refusing to persist non-machine-checked coverage result: {result.verdict}"
             )
-        correctness_root = Path(__file__).resolve().parent.parent.parent
-        artifact_path = correctness_root / case.artifact_ref
+        repository_root = Path(__file__).resolve().parent.parent.parent.parent
+        artifact_path = (
+            repository_root
+            / "temp"
+            / "symbolic_artifacts"
+            / f"{case.case_id}.coverage.yaml"
+        )
         artifact_path.parent.mkdir(parents=True, exist_ok=True)
         artifact_path.write_text(
             yaml.safe_dump(artifact, sort_keys=False, allow_unicode=True),
@@ -451,7 +456,7 @@ def _cmd_symbolic_cover(graph: Graph, args: argparse.Namespace) -> int:
         print("constrained_counterexample_model:")
         print(result.constrained.model)
     if wrote_artifact:
-        print(f"artifact={case.artifact_ref}")
+        print(f"artifact={artifact_path.relative_to(repository_root)}")
     return 0
 
 
@@ -608,50 +613,22 @@ def _cmd_symbolic_report(graph: Graph, args: argparse.Namespace) -> int:
             )
 
         result = verifier.check(node_id, require_trusted=True)
-        artifact_refs = entry.get("artifact_refs", [])
-        if not isinstance(artifact_refs, list) or not artifact_refs:
+        recorded_signature = entry.get("signature")
+        if recorded_signature != result.composition_signature:
             raise SymbolicCompositionError(
-                f"{node_id} is machine_checked but has no composition artifact_refs"
+                f"{node_id} recorded machine_checked signature is stale: "
+                f"recorded={recorded_signature!r} current={result.composition_signature!r}"
             )
 
-        artifacts = []
-        for artifact_ref in artifact_refs:
-            if not isinstance(artifact_ref, str) or not artifact_ref:
-                raise SymbolicCompositionError(
-                    f"{node_id} has invalid composition artifact reference"
-                )
-            artifact_path = Path(__file__).resolve().parent.parent.parent / artifact_ref
-            try:
-                artifact = yaml.safe_load(artifact_path.read_text(encoding="utf-8"))
-            except OSError as exc:
-                raise SymbolicCompositionError(
-                    f"{node_id} composition artifact unavailable at {artifact_ref}: {exc}"
-                ) from exc
-            except yaml.YAMLError as exc:
-                raise SymbolicCompositionError(
-                    f"{node_id} composition artifact is invalid YAML at {artifact_ref}: {exc}"
-                ) from exc
-            if not isinstance(artifact, dict):
-                raise SymbolicCompositionError(
-                    f"{node_id} composition artifact must be a mapping: {artifact_ref}"
-                )
-            artifacts.append({"path": artifact_ref, "data": artifact})
-
         target_trust = registry.evaluate(
-            graph,
-            bridge,
-            kind="claim",
-            subject_id=node_id,
+            graph, bridge, kind="claim", subject_id=node_id
         )
         premise_reports = []
         for premise_id in result.premise_ids:
             premise = graph.require_node(premise_id)
             premise_kind = "claim" if premise.node_type == "claim" else "assumption"
             premise_trust = registry.evaluate(
-                graph,
-                bridge,
-                kind=premise_kind,
-                subject_id=premise_id,
+                graph, bridge, kind=premise_kind, subject_id=premise_id
             )
             premise_reports.append(
                 {
@@ -662,15 +639,20 @@ def _cmd_symbolic_report(graph: Graph, args: argparse.Namespace) -> int:
             )
 
         mutation_tests: list[dict[str, Any]] = []
-        for artifact in artifacts:
-            data = artifact["data"]
-            if isinstance(data.get("mutation_test"), dict):
-                mutation_tests.append(data["mutation_test"])
-            raw_mutations = data.get("mutation_tests")
-            if isinstance(raw_mutations, list):
-                mutation_tests.extend(
-                    item for item in raw_mutations if isinstance(item, dict)
-                )
+        for premise_id in result.premise_ids:
+            weakened = verifier.check_with_premise_overrides(
+                node_id, premise_formula_overrides={premise_id: {"bool": True}}
+            )
+            mutation_tests.append(
+                {
+                    "weakened_premise": premise_id,
+                    "operation": "replace_formula",
+                    "premise_formula_override": {"bool": True},
+                    "solver_status": weakened.solver_result.status,
+                    "verdict": weakened.verdict,
+                    "counterexample_model": weakened.solver_result.model,
+                }
+            )
 
         reports.append(
             {
@@ -691,9 +673,9 @@ def _cmd_symbolic_report(graph: Graph, args: argparse.Namespace) -> int:
                     else "A counterexample model exists under the current symbolic abstraction."
                 ),
                 "mutation_tests": mutation_tests,
-                "artifact_refs": artifact_refs,
                 "rationale": entry.get("rationale", ""),
                 "composition_signature": result.composition_signature,
+                "evidence_mode": "regenerated_from_current_symbolic_model",
             }
         )
 
@@ -723,20 +705,14 @@ def _cmd_symbolic_report(graph: Graph, args: argparse.Namespace) -> int:
         if report["mutation_tests"]:
             print("Mutation sensitivity:")
             for mutation in report["mutation_tests"]:
-                weakened = (
-                    mutation.get("weakened_premise")
-                    or mutation.get("description")
-                    or "mutated premise"
-                )
+                weakened = mutation.get("weakened_premise") or "mutated premise"
                 status = str(mutation.get("solver_status", "unknown")).upper()
                 verdict = mutation.get("verdict", "")
                 print(
                     f"  - {weakened}: {status}"
                     + (f" → {verdict}" if verdict else "")
                 )
-        print("Evidence:")
-        for artifact_ref in report["artifact_refs"]:
-            print(f"  - {artifact_ref}")
+        print("Evidence: regenerated from the current trusted symbolic model.")
         if report["rationale"]:
             print(f"Recorded rationale: {report['rationale']}")
     return 0

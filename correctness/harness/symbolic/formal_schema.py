@@ -336,10 +336,6 @@ COVERAGE_CASE_SCHEMA = _closed(
             "items": SYMBOLIC_NAME,
             "uniqueItems": True,
         },
-        "artifact": {
-            "type": "string",
-            "pattern": "^symbolic_artifacts/[A-Za-z0-9_.-]+\\.coverage\\.yaml$",
-        },
         "formula": {"$ref": "#/$defs/formula"},
     },
     (
@@ -347,7 +343,6 @@ COVERAGE_CASE_SCHEMA = _closed(
         "candidate_statement",
         "trusted_claims",
         "trusted_contracts",
-        "artifact",
         "formula",
     ),
 )
@@ -596,10 +591,6 @@ COVERAGE_ARTIFACT_SCHEMA: dict[str, Any] = {
             "version": {"const": 1},
             "kind": {"const": "symbolic_coverage_machine_check"},
             "case": NONEMPTY_STRING,
-            "artifact_ref": {
-                "type": "string",
-                "pattern": "^symbolic_artifacts/[A-Za-z0-9_.-]+\\.coverage\\.yaml$",
-            },
             "coverage_signature": SHA256,
             "candidate": _closed(
                 {
@@ -673,7 +664,6 @@ COVERAGE_ARTIFACT_SCHEMA: dict[str, Any] = {
             "version",
             "kind",
             "case",
-            "artifact_ref",
             "coverage_signature",
             "candidate",
             "trusted_constraints",

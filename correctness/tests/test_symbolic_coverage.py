@@ -25,11 +25,6 @@ BRIDGE_PATH = Path(__file__).resolve().parents[1] / "symbolic_models" / "bridge.
 ASSURANCE_PATH = Path(__file__).resolve().parents[1] / "symbolic_models" / "assurance.yaml"
 COVERAGE_PATH = Path(__file__).resolve().parents[1] / "symbolic_models" / "coverage.yaml"
 TARGET = "L108_acceptance_preserves_request_identity"
-ARTIFACT_PATH = (
-    Path(__file__).resolve().parents[1] / "symbolic_artifacts"
-    / "L108_acceptance_preserves_request_identity.coverage.yaml"
-)
-
 
 class SymbolicCoverageTests(unittest.TestCase):
     def setUp(self):
@@ -75,7 +70,6 @@ class SymbolicCoverageTests(unittest.TestCase):
             self.case,
             case_id="synthetic_vacuous_candidate",
             formula={"and": [{"bool": True}, {"bool": False}]},
-            artifact_ref="symbolic_artifacts/synthetic_vacuous_candidate.coverage.yaml",
         )
         verifier = SymbolicCoverageVerifier(self.graph, self.bridge, self.registry)
         result = verifier.check(vacuous, require_trusted=True)
@@ -102,7 +96,6 @@ class SymbolicCoverageTests(unittest.TestCase):
         )
 
         self.assertEqual(artifact["case"], TARGET)
-        self.assertEqual(artifact["artifact_ref"], self.case.artifact_ref)
         self.assertEqual(artifact["candidate"]["formula"], self.case.formula)
         self.assertIn(
             "acceptance_produced_from_request",
@@ -120,25 +113,47 @@ class SymbolicCoverageTests(unittest.TestCase):
         self.assertEqual(artifact["proof"]["constrained"]["solver_status"], "unsat")
         self.assertEqual(artifact["result"]["verdict"], "EXCLUDED")
 
-    def test_persisted_l108_coverage_artifact_is_current(self):
-        artifact = yaml.safe_load(ARTIFACT_PATH.read_text(encoding="utf-8"))
+    def test_generated_coverage_artifact_is_current_and_has_no_source_path(self):
         verifier = SymbolicCoverageVerifier(
             self.graph,
             self.bridge,
             self.registry,
         )
         result = verifier.check(self.case, require_trusted=True)
+        artifact = build_coverage_artifact(
+            self.graph, self.bridge, self.registry, self.case, result
+        )
 
         self.assertEqual(artifact["coverage_signature"], result.coverage_signature)
-        self.assertEqual(artifact["artifact_ref"], self.case.artifact_ref)
-        self.assertEqual(
-            artifact["candidate"]["signature"],
-            result.candidate_signature,
-        )
+        self.assertNotIn("artifact_ref", artifact)
+        self.assertEqual(artifact["candidate"]["signature"], result.candidate_signature)
         self.assertEqual(artifact["candidate"]["formula"], self.case.formula)
         self.assertEqual(artifact["proof"]["baseline"]["solver_status"], "sat")
         self.assertEqual(artifact["proof"]["constrained"]["solver_status"], "unsat")
         self.assertTrue(artifact["result"]["machine_checked"])
+
+    def test_write_artifact_goes_only_to_ignored_temp(self):
+        repository_root = Path(__file__).resolve().parents[2]
+        artifact_path = repository_root / "temp" / "symbolic_artifacts" / f"{TARGET}.coverage.yaml"
+        artifact_path.unlink(missing_ok=True)
+        args = SimpleNamespace(
+            case=TARGET,
+            coverage=str(COVERAGE_PATH),
+            model=str(BRIDGE_PATH),
+            assurance=str(ASSURANCE_PATH),
+            allow_untrusted=False,
+            write_artifact=True,
+            format="text",
+        )
+        output = StringIO()
+        try:
+            with redirect_stdout(output):
+                rc = _cmd_symbolic_cover(self.graph, args)
+            self.assertEqual(rc, 0)
+            self.assertTrue(artifact_path.exists())
+            self.assertIn("artifact=temp/symbolic_artifacts/", output.getvalue())
+        finally:
+            artifact_path.unlink(missing_ok=True)
 
     def test_symbolic_cover_yaml_output_contains_full_proof(self):
         args = SimpleNamespace(

@@ -371,7 +371,7 @@ COMPOSITION_ASSURANCE_ENTRY_SCHEMA = _closed_object(
         },
         "artifact_refs": {
             **_string_list(min_items=1),
-            "description": "Machine-checkable proof/model artifacts supporting machine_checked composition assurance.",
+            "description": "Optional external machine-check evidence references. Reproducible symbolic proof outputs are generated under temp/ and are not canonical state.",
         },
         "rationale": {
             **NONEMPTY_STRING,
@@ -400,7 +400,7 @@ COMPOSITION_ASSURANCE_ENTRY_SCHEMA = _closed_object(
             {
                 "if": {"properties": {"status": {"const": "machine_checked"}}, "required": ["status"]},
                 "then": {
-                    "required": ["signature", "artifact_refs", "rationale"],
+                    "required": ["signature", "rationale"],
                     "not": {"required": ["auditor_count"]},
                 },
             },
