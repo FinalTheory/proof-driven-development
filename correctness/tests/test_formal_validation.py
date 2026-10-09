@@ -55,6 +55,29 @@ class FormalSchemaTests(unittest.TestCase):
         )
         self.assertFalse((ROOT / "symbolic_artifacts").exists())
 
+    def test_assurance_schema_accepts_single_balanced_roundtrip_review(self) -> None:
+        raw = yaml.safe_load((ROOT / "symbolic_models" / "assurance.yaml").read_text())
+        candidate = copy.deepcopy(raw)
+        record = next(iter(candidate["records"].values()))
+        legacy_review = record["roundtrip_reviews"]["weakening"]
+        record["roundtrip_reviews"] = {"balanced": legacy_review}
+        errors = list(
+            Draft202012Validator(FORMAL_SCHEMAS["assurance"]).iter_errors(candidate)
+        )
+        self.assertEqual(errors, [])
+
+    def test_assurance_schema_rejects_single_directional_roundtrip_review(self) -> None:
+        raw = yaml.safe_load((ROOT / "symbolic_models" / "assurance.yaml").read_text())
+        candidate = copy.deepcopy(raw)
+        record = next(iter(candidate["records"].values()))
+        record["roundtrip_reviews"] = {
+            "weakening": record["roundtrip_reviews"]["weakening"]
+        }
+        errors = list(
+            Draft202012Validator(FORMAL_SCHEMAS["assurance"]).iter_errors(candidate)
+        )
+        self.assertTrue(errors)
+
     def test_bridge_schema_rejects_unrecognized_function_metadata(self) -> None:
         raw = yaml.safe_load((ROOT / "symbolic_models" / "bridge.yaml").read_text())
         broken = copy.deepcopy(raw)

@@ -612,34 +612,24 @@ def _cmd_audit_prompt(graph: Graph, args: argparse.Namespace) -> int:
 
 
 COMPOSITION_AUDIT_FOCUS: dict[str, str] = {
-    "general": (
-        "Search broadly for any allowed execution in which every direct dependency is exactly true "
-        "but the target proposition is false. Prefer the smallest concrete counterexample."
-    ),
-    "execution": (
-        "Act as an execution counterexample generator. Concentrate on concurrency, delay, retry, crash, "
-        "recovery, observer, and state-transition paths that keep every direct dependency true while "
-        "falsifying the target."
-    ),
-    "quantifier": (
-        "Act as a quantifier/boundary auditor. Concentrate on forall-vs-exists mismatches, same-vs-some "
-        "request/key/document distinctions, observer boundaries, captured frontier/head mismatches, "
-        "before/after timing, and per-attempt versus cross-attempt semantics."
+    "counterexample": (
+        "Act as a concrete counterexample generator. Search concurrency, delay, retry, crash, recovery, "
+        "observer, and state-transition paths that keep every direct dependency true while falsifying the target. "
+        "Explicitly attack quantifier and boundary mismatches as executable witnesses: forall-vs-exists, "
+        "same-vs-some request/key/document distinctions, observer boundaries, before/after timing, and "
+        "per-attempt versus cross-attempt semantics."
     ),
     "premise": (
         "Act as a hidden-premise auditor. Look for facts used by the target implication that are not "
-        "actually guaranteed by any direct dependency, including vacuous antecedents and identity/provenance "
-        "bridges that the prose may be assuming implicitly."
+        "actually guaranteed by any direct dependency, including vacuous antecedents, scope assumptions, "
+        "and identity/provenance bridges that the prose may be assuming implicitly."
     ),
 }
 
 
 def _recommended_composition_auditors(claim: dict[str, Any]) -> int:
-    """Return the fixed independent-auditor count for semantic composition certification."""
-    kind = claim.get("kind")
-    if kind == "root":
-        return 3
-    if kind == "derived":
+    """Return the two orthogonal semantic auditor roles for non-symbolic composition."""
+    if claim.get("kind") in {"root", "derived"}:
         return 2
     raise SystemExit("Composition assurance applies only to root/derived claims")
 
@@ -697,11 +687,7 @@ def _composition_campaign_snapshot(graph: Graph) -> dict[str, Any]:
                     **base,
                     "action": "composition-audit-prompt",
                     "recommended_auditors": recommended,
-                    "suggested_focuses": (
-                        ["execution", "quantifier"]
-                        if recommended == 2
-                        else ["execution", "quantifier", "premise"]
-                    ),
+                    "suggested_focuses": ["counterexample", "premise"],
                     "priority": 200 if claim.get("kind") == "root" else 100,
                 }
             )

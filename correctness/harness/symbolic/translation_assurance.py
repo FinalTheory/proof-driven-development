@@ -707,7 +707,7 @@ def aggregate_translation_assurance(
     direct_reviews: Iterable[ComparisonReview],
     roundtrip_reviews: Iterable[ComparisonReview],
     min_direct_reviews: int = 2,
-    min_roundtrip_reviews: int = 2,
+    min_roundtrip_reviews: int = 1,
 ) -> TranslationAssuranceSummary:
     direct = tuple(direct_reviews)
     roundtrip = tuple(roundtrip_reviews)

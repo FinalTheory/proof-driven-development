@@ -159,9 +159,9 @@ For one mapping, the intended fresh-agent gate is:
 
 1. one blind round-trip agent sees only typed predicate meanings, catalog vocabulary, Harness contract-class semantics, and the formula, then renders the symbolic proposition back into natural language;
 2. two direct reviewers compare the original proposition with the symbolic formula, one biased toward finding weakening/omission and one toward strengthening/scope expansion;
-3. two round-trip reviewers compare the original proposition only with the blind natural-language rendering, again with complementary weakening/strengthening attack directions.
+3. one independent balanced round-trip reviewer compares the original proposition only with the blind natural-language rendering. This tests source-independent semantic reconstruction without duplicating the direct weakening/strengthening attack pair.
 
-The default aggregation rule requires at least two direct and two round-trip `EQUIVALENT` verdicts. Any concrete `WEAKER`, `STRONGER`, or `MISMATCH` verdict rejects the mapping. Reviewer execution/format failures or unresolved ambiguity produce `INCOMPLETE`, never a trusted result.
+The default aggregation rule therefore requires two directional direct `EQUIVALENT` verdicts and one balanced round-trip `EQUIVALENT` verdict. Any concrete `WEAKER`, `STRONGER`, or `MISMATCH` verdict rejects the mapping. Reviewer execution/format failures or unresolved ambiguity produce `INCOMPLETE`, never a trusted result. Existing persisted records with the legacy pair of round-trip weakening/strengthening reviews remain valid so already-established assurance is not discarded solely by this protocol simplification.
 
 Predicate declarations include explicit natural-language `meaning`; identifiers alone are not semantic authority. Review context also includes generic Harness semantics such as: a `state_invariant` holds at every state in its `observation_scope`, while a `provenance_binding` does not imply liveness or ordering unless explicitly encoded.
 

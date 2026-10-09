@@ -168,14 +168,16 @@ class TranslationAssuranceRegistry:
                     f"subject signature: {mismatched_artifacts}"
                 )
 
-            required_roles = {"weakening", "strengthening"}
-            if not required_roles.issubset(direct):
+            required_direct_roles = {"weakening", "strengthening"}
+            if not required_direct_roles.issubset(direct):
                 raise TranslationReviewError(
-                    f"{key}.direct_reviews must include {sorted(required_roles)}"
+                    f"{key}.direct_reviews must include {sorted(required_direct_roles)}"
                 )
-            if not required_roles.issubset(roundtrip_reviews):
+            legacy_roundtrip_roles = {"weakening", "strengthening"}
+            if "balanced" not in roundtrip_reviews and not legacy_roundtrip_roles.issubset(roundtrip_reviews):
                 raise TranslationReviewError(
-                    f"{key}.roundtrip_reviews must include {sorted(required_roles)}"
+                    f"{key}.roundtrip_reviews must include balanced, or the legacy "
+                    f"{sorted(legacy_roundtrip_roles)} pair"
                 )
 
             records[key] = TranslationAssuranceRecord(

@@ -270,7 +270,7 @@ REVIEW_SCHEMA["allOf"] = [
     }
 ]
 
-REVIEW_SET_SCHEMA = _closed(
+DIRECT_REVIEW_SET_SCHEMA = _closed(
     {
         "weakening": {"$ref": "#/$defs/review"},
         "strengthening": {"$ref": "#/$defs/review"},
@@ -278,14 +278,27 @@ REVIEW_SET_SCHEMA = _closed(
     ("weakening", "strengthening"),
 )
 
+ROUNDTRIP_REVIEW_SET_SCHEMA = _closed(
+    {
+        "balanced": {"$ref": "#/$defs/review"},
+        "weakening": {"$ref": "#/$defs/review"},
+        "strengthening": {"$ref": "#/$defs/review"},
+    },
+    (),
+)
+ROUNDTRIP_REVIEW_SET_SCHEMA["anyOf"] = [
+    {"required": ["balanced"]},
+    {"required": ["weakening", "strengthening"]},
+]
+
 ASSURANCE_RECORD_SCHEMA = _closed(
     {
         "kind": {"enum": ["contract", "claim", "assumption", "obligation"]},
         "subject_id": NONEMPTY_STRING,
         "subject_signature": SHA256,
         "roundtrip": {"$ref": "#/$defs/roundtrip"},
-        "direct_reviews": {"$ref": "#/$defs/review_set"},
-        "roundtrip_reviews": {"$ref": "#/$defs/review_set"},
+        "direct_reviews": {"$ref": "#/$defs/direct_review_set"},
+        "roundtrip_reviews": {"$ref": "#/$defs/roundtrip_review_set"},
     },
     (
         "kind",
@@ -317,7 +330,8 @@ ASSURANCE_SCHEMA: dict[str, Any] = {
     "$defs": {
         "roundtrip": ROUNDTRIP_SCHEMA,
         "review": REVIEW_SCHEMA,
-        "review_set": REVIEW_SET_SCHEMA,
+        "direct_review_set": DIRECT_REVIEW_SET_SCHEMA,
+        "roundtrip_review_set": ROUNDTRIP_REVIEW_SET_SCHEMA,
         "assurance_record": ASSURANCE_RECORD_SCHEMA,
     },
 }

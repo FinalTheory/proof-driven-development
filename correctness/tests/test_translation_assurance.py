@@ -69,8 +69,7 @@ ambiguities: []
                 "strengthening": equivalent,
             },
             roundtrip_reviews={
-                "weakening": equivalent,
-                "strengthening": equivalent,
+                "balanced": equivalent,
             },
         )
         return TranslationAssuranceRegistry.from_data(
@@ -180,7 +179,7 @@ differences: []
         )
         self.assertEqual(parsed.verdict, ComparisonVerdict.EQUIVALENT)
 
-    def test_aggregation_requires_two_independent_reviews_per_path(self):
+    def test_aggregation_requires_two_direct_reviews_and_one_roundtrip_review(self):
         equivalent = ComparisonReview(
             ComparisonVerdict.EQUIVALENT,
             "equivalent",
@@ -188,13 +187,13 @@ differences: []
         )
         incomplete = aggregate_translation_assurance(
             direct_reviews=[equivalent],
-            roundtrip_reviews=[equivalent, equivalent],
+            roundtrip_reviews=[equivalent],
         )
         self.assertEqual(incomplete.status, AssuranceStatus.INCOMPLETE)
 
         trusted = aggregate_translation_assurance(
             direct_reviews=[equivalent, equivalent],
-            roundtrip_reviews=[equivalent, equivalent],
+            roundtrip_reviews=[equivalent],
         )
         self.assertEqual(trusted.status, AssuranceStatus.TRUSTED)
 
@@ -211,7 +210,7 @@ differences: []
         )
         summary = aggregate_translation_assurance(
             direct_reviews=[equivalent, stronger],
-            roundtrip_reviews=[equivalent, equivalent],
+            roundtrip_reviews=[equivalent],
         )
         self.assertEqual(summary.status, AssuranceStatus.REJECTED)
 
@@ -246,10 +245,53 @@ ambiguities: []
                     "strengthening": equivalent,
                 },
                 roundtrip_reviews={
-                    "weakening": equivalent,
-                    "strengthening": equivalent,
+                    "balanced": equivalent,
                 },
             )
+
+    def test_assurance_registry_accepts_legacy_directional_roundtrip_pair(self):
+        equivalent = ComparisonReview(
+            ComparisonVerdict.EQUIVALENT,
+            "equivalent",
+            (),
+            self.signature,
+        )
+        roundtrip = parse_roundtrip_translation(
+            f"""
+subject_signature: {self.signature}
+status: TRANSLATED
+natural_language: Equivalent proposition.
+ambiguities: []
+"""
+        )
+        record = assurance_record_payload(
+            self.subject,
+            roundtrip=roundtrip,
+            direct_reviews={
+                "weakening": equivalent,
+                "strengthening": equivalent,
+            },
+            roundtrip_reviews={
+                "weakening": equivalent,
+                "strengthening": equivalent,
+            },
+        )
+        registry = TranslationAssuranceRegistry.from_data(
+            {
+                "version": 1,
+                "records": {
+                    "contract:accepted_evidence_correspondence": record,
+                },
+            }
+        )
+        self.assertTrue(
+            registry.evaluate(
+                self.graph,
+                self.bridge,
+                kind="contract",
+                subject_id="accepted_evidence_correspondence",
+            ).trusted
+        )
 
     def test_assurance_registry_marks_matching_subject_trusted(self):
         registry = self._trusted_registry()

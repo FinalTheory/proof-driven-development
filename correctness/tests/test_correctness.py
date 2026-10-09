@@ -1931,11 +1931,11 @@ class CorrectnessToolTests(unittest.TestCase):
         nodes = {item["node"]: item for item in snapshot["runnable"]}
         self.assertEqual(set(nodes), {"G1_primary_goal", "G2_secondary_goal", "C1_composite_claim"})
         self.assertEqual(nodes["C1_composite_claim"]["recommended_auditors"], 2)
-        self.assertEqual(nodes["C1_composite_claim"]["suggested_focuses"], ["execution", "quantifier"])
+        self.assertEqual(nodes["C1_composite_claim"]["suggested_focuses"], ["counterexample", "premise"])
         self.assertNotIn("severity", nodes["C1_composite_claim"])
         self.assertNotIn("assurance_required", nodes["C1_composite_claim"])
-        self.assertEqual(nodes["G1_primary_goal"]["recommended_auditors"], 3)
-        self.assertEqual(nodes["G1_primary_goal"]["suggested_focuses"], ["execution", "quantifier", "premise"])
+        self.assertEqual(nodes["G1_primary_goal"]["recommended_auditors"], 2)
+        self.assertEqual(nodes["G1_primary_goal"]["suggested_focuses"], ["counterexample", "premise"])
         self.assertEqual(snapshot["target_assurance"], "machine_checked_for_symbolic_or_multi_agent_for_non_symbolic")
         self.assertNotIn("L1_left_boundary", nodes)
 
@@ -1968,7 +1968,7 @@ class CorrectnessToolTests(unittest.TestCase):
     def test_composition_audit_prompt_contains_only_direct_premises(self):
         doc = copy.deepcopy(self.base)
         graph = self._freeze_refinement_for_certification(doc)
-        args = argparse.Namespace(node="G1_primary_goal", focus="quantifier")
+        args = argparse.Namespace(node="G1_primary_goal", focus="counterexample")
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
             correctness._cmd_composition_audit_prompt(graph, args)
@@ -1979,11 +1979,12 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("A1_fixture_environment", text)
         self.assertNotIn("L1_left_boundary", text)
         self.assertNotIn("L2_right_boundary", text)
-        self.assertIn("quantifier/boundary auditor", text)
+        self.assertIn("concrete counterexample generator", text)
+        self.assertIn("quantifier and boundary mismatches", text)
         self.assertIn("Composition signature", text)
 
     def test_composition_audit_prompt_refuses_unfrozen_refinement(self):
-        args = argparse.Namespace(node="G1_primary_goal", focus="general")
+        args = argparse.Namespace(node="G1_primary_goal", focus="counterexample")
         with self.assertRaises(SystemExit) as ctx:
             correctness._cmd_composition_audit_prompt(self.graph(), args)
         self.assertIn("requires a frozen refinement graph", str(ctx.exception))
@@ -1998,7 +1999,7 @@ class CorrectnessToolTests(unittest.TestCase):
                 correctness._emit_composition_audit_prompt(graph, "C1_composite_claim", focus)
             rendered[focus] = out.getvalue()
         self.assertEqual(len(set(rendered.values())), len(correctness.COMPOSITION_AUDIT_FOCUS))
-        self.assertIn("execution counterexample generator", rendered["execution"])
+        self.assertIn("concrete counterexample generator", rendered["counterexample"])
         self.assertIn("hidden-premise auditor", rendered["premise"])
 
     def test_coverage_audit_prompt_binds_current_model_signature_and_roots(self):
@@ -2097,7 +2098,7 @@ class CorrectnessToolTests(unittest.TestCase):
         outputs = []
         for render in (
             lambda: correctness._emit_audit_prompt(self.graph(), "L1_left_boundary"),
-            lambda: correctness._emit_composition_audit_prompt(frozen, "G1_primary_goal", "general"),
+            lambda: correctness._emit_composition_audit_prompt(frozen, "G1_primary_goal", "counterexample"),
             lambda: correctness._emit_coverage_audit_prompt(frozen),
         ):
             out = io.StringIO()
@@ -2115,7 +2116,7 @@ class CorrectnessToolTests(unittest.TestCase):
         outputs = []
         for render in (
             lambda: correctness._emit_audit_prompt(self.graph(), "L1_left_boundary"),
-            lambda: correctness._emit_composition_audit_prompt(frozen, "G1_primary_goal", "general"),
+            lambda: correctness._emit_composition_audit_prompt(frozen, "G1_primary_goal", "counterexample"),
             lambda: correctness._emit_coverage_audit_prompt(frozen),
         ):
             out = io.StringIO()

@@ -195,7 +195,7 @@ Coverage challenger 还必须把“当前 claims 没有直接杀掉 witness”�
 
 对于可以机械化的 symbolic 子问题，Harness 把“语义翻译”和“solver 检查”分开管理。Canonical proposition 的 symbolic mapping 仍需 translation assurance；Design Obligation 则作为独立于 DAG topology 的 formal test oracle 保存。它直接从 canonical design source sections 翻译，而不能从当前 roots 自动生成，否则 `Roots ⊨ Obligations` 会退化成自证循环。
 
-Design Obligation 使用与 claim/contract 相同的 independent translation assurance：blind symbolic→NL round trip，再由 weakening/strengthening reviewer 同时检查 formula fidelity 与“提取出的 obligation 是否真的被引用的 canonical design 支持”。因此一个 SMT `SAT` witness 可以是真实的形式反例，但如果 obligation 相对 source prose 是 `STRONGER`，它不能被升级成 canonical specification gap。正式 machine-certified coverage 的目标查询是：
+Design Obligation 使用与 claim/contract 相同的 independent translation assurance：blind symbolic→NL round trip；direct path 分别由 weakening/strengthening reviewer 攻击语义丢失与意外加强，round-trip path 再由一个独立 balanced reviewer 检查 source-independent reconstruction 与 canonical design 是否等价。对 Design Obligation，这些 reviewer 还必须检查“提取出的 obligation 是否真的被引用的 canonical design 支持”。因此一个 SMT `SAT` witness 可以是真实的形式反例，但如果 obligation 相对 source prose 是 `STRONGER`，它不能被升级成 canonical specification gap。正式 machine-certified coverage 的目标查询是：
 
 ```text
 ALL current roots

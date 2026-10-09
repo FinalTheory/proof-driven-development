@@ -909,8 +909,7 @@ composition as separate frozen-DAG campaigns:
 
     python3 -B correctness.py coverage-audit-prompt
     python3 -B correctness.py composition-status --format compact-yaml
-    python3 -B correctness.py composition-audit-prompt NODE --focus execution
-    python3 -B correctness.py composition-audit-prompt NODE --focus quantifier
+    python3 -B correctness.py composition-audit-prompt NODE --focus counterexample
     python3 -B correctness.py composition-audit-prompt NODE --focus premise
 
 `coverage-audit-prompt` generates the canonical global root-coverage campaign and binds it to the current
@@ -929,9 +928,11 @@ reason/rationale—may use the clean multi-agent backend and target `multi_agent
 
 For an explicitly non-symbolic node, `composition-audit-prompt NODE` exposes exactly the target proposition
 and its direct dependency propositions as opaque premises. It never recursively opens grandchildren and
-never asks whether those premises are themselves true. Independent auditors should use different `--focus`
-roles; the orchestrator accepts `multi_agent_audited` only after reconciling their results and challenging
-any surviving `deps=true, target=false` counterexample. Record the result through `set_composition_assurance`.
+never asks whether those premises are themselves true. Independent auditors use the two orthogonal `--focus` roles: `counterexample` searches for a concrete
+`deps=true, target=false` execution (including quantifier/boundary witnesses), while `premise` attacks hidden
+logical bridges that no direct dependency actually supplies. Additional auditors are escalation, not a fixed
+root-vs-derived tax. The orchestrator accepts `multi_agent_audited` only after reconciling both results and
+challenging any surviving counterexample. Record the result through `set_composition_assurance`.
 
 These certification prompts are analysis-only. They do not mutate the graph, and assurance metadata must
 never be used as a proof premise.
@@ -947,8 +948,9 @@ the obligation inside the modeled abstraction. `all_roots` fails closed until ev
 a symbolic mapping; unmapped roots are never silently omitted.
 
 Design-obligation formulas use the same independent translation-assurance registry as claims/contracts.
-A trusted obligation requires a blind symbolic round trip plus independent weakening/strengthening reviews
-against the cited canonical design sections. `canonical_certified=true` is possible only for `all_roots`
+A trusted obligation requires a blind symbolic round trip, direct weakening/strengthening reviews, and one
+independent balanced comparison of the blind round-trip rendering against the cited canonical design sections.
+`canonical_certified=true` is possible only for `all_roots`
 checks whose obligation oracle and every root/assumption translation are current and TRUSTED; selected-constraint
 checks remain diagnostic/regression evidence even when their translations are trusted.
 
@@ -1040,7 +1042,7 @@ __HARNESS_FEEDBACK_CONTRACT__
     python3 -B correctness.py audit-prompt NODE
     python3 -B correctness.py coverage-audit-prompt
     python3 -B correctness.py composition-status --format compact-yaml
-    python3 -B correctness.py composition-audit-prompt NODE --focus execution
+    python3 -B correctness.py composition-audit-prompt NODE --focus counterexample
     python3 -B correctness.py mutate --plan PLAN.yaml
     python3 -B correctness.py slice NODE --format prompt
     python3 -B correctness.py refinement-signature NODE
