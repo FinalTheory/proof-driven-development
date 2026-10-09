@@ -26,25 +26,66 @@ The goal is not to formally prove every line of application code. The goal is to
 
 ---
 
+## When does system design converge?
+
+Real system-design reasoning often advances one counterexample at a time:
+
+```text
+Use a leader.
+→ What if the old leader keeps running after failover?
+→ Add fencing.
+
+Persist before ACK.
+→ What if the ACK is lost and the client retries?
+→ Preserve logical request identity.
+
+Compact history into snapshots.
+→ Can a retry after compaction still recover the same accepted result?
+→ Preserve identity and provenance across lifecycle transitions.
+```
+
+This is useful reasoning. But it has no explicit stopping condition. A design discussion often ends because the reviewers can no longer think of another counterexample, not because the correctness argument has reached a state we can inspect, preserve, and maintain.
+
+Most of that reasoning is ephemeral. It lives in working memory, whiteboards, design-review threads, and the experience of whoever happened to be in the room. Six months later, a performance optimization can invalidate one of those arguments without anyone realizing which responsibility the old implementation was carrying.
+
+Proof-Driven Development asks whether system-design reasoning can have an explicit convergence process:
+
+```text
+What are we trying to prove?
+What remains open?
+What assumptions does each claim depend on?
+Can a bad execution still exist while every current claim remains true?
+What implementation evidence supports the leaves?
+What reasoning became stale after this design change?
+```
+
+The goal is not to make uncertainty disappear. It is to make the remaining uncertainty explicit, and to make each new challenge either discharge an existing obligation or expose a missing correctness responsibility that can be added to the model.
+
+---
+
 ## Why Proof-Driven Development now?
 
-AI makes implementation cheaper. It does not automatically make trustworthy implementation cheaper.
+AI did not create this correctness problem. It changes its economics.
 
-As code-generation throughput rises, a new bottleneck becomes visible: humans still have to decide whether the generated system preserves the right semantics.
+Agents can now make broad implementation changes at a throughput that human reviewers cannot match. The urgent problem is therefore not merely how to review more code. It is how to let AI change a system aggressively **without silently breaking the small set of correctness responsibilities the architecture depends on**.
 
-If every code review requires a senior engineer to reconstruct distributed invariants from scratch, that process does not scale. The higher-leverage alternative is to amortize the reasoning cost:
+If every change requires a senior engineer to reconstruct distributed invariants from scratch, AI-driven development does not scale safely. The higher-leverage alternative is to make those invariants persistent and machine-trackable:
 
 ```text
 senior / staff reasoning once
         ↓
 explicit guarantee / proof obligation
         ↓
-reusable verification boundary
+implementation surface / verification boundary
         ↓
-future humans and agents reuse it
+AI changes the system
+        ↓
+affected obligations are invalidated and reverified
+        ↓
+unaffected reasoning is reused
 ```
 
-Human judgment remains essential, but its role changes. Engineers decide what the system actually promises, which assumptions are acceptable, which failure models must be covered, and what evidence is strong enough to trust. Automation helps preserve those decisions instead of rediscovering them every time.
+Human judgment remains essential, but its role changes. Engineers decide what the system actually promises, which assumptions are acceptable, which failure models must be covered, and what evidence is strong enough to trust. Automation should preserve those decisions, detect when a change threatens them, and force the affected reasoning to be reopened instead of silently drifting away from the architecture's original guarantees.
 
 > **Senior engineers find correctness bugs. Staff engineers try to make the entire class of bugs harder to reintroduce.**
 
@@ -56,12 +97,12 @@ This repository is an experiment, not a claim that the methodology already works
 
 The hard questions are economic and operational:
 
-1. Can a non-trivial distributed system be decomposed into proof obligations that remain understandable over time?
+1. Can correctness reasoning for a non-trivial distributed system converge into explicit, maintainable obligations instead of remaining an open-ended sequence of reviewer challenges?
 2. Can local proof obligations become precise enough that multiple independent AI auditors are sufficiently reliable on them?
 3. Can specification gaps and bad decompositions be discovered without repeatedly reopening the entire system context?
 4. Can implementation changes be mapped to affected proof obligations with sufficiently high recall?
 5. Can enough leaf obligations ultimately be discharged by mechanical evidence that the model reduces, rather than increases, human review cost?
-6. Can invalidation propagation remain local enough for the methodology to survive real system evolution?
+6. Can invalidation propagation remain local enough that AI can keep changing the system without forcing whole-system correctness reasoning after every meaningful modification?
 
 If the answers are mostly no, Proof-Driven Development becomes specification bureaucracy.
 
@@ -416,6 +457,8 @@ The repository deliberately separates the target-system design from the Correctn
 A ten-minute architecture diagram can show where requests go.
 
 A serious system design must also explain what remains true when requests race, retries overlap, machines fail, ownership changes, snapshots replace history, and future engineers start optimizing the implementation.
+
+The deeper problem is not merely finding a good design. It is knowing when the correctness argument has converged enough to trust, preserving the reasoning that got us there, and reopening exactly the right parts when the system changes.
 
 The core insight of this project is that we do not need one human or AI to hold the entire proof in its head at once.
 
