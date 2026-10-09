@@ -205,13 +205,16 @@ class SymbolicBridgeTests(unittest.TestCase):
     def test_canonical_client_coherence_excludes_wrong_visible_base(self):
         bad_state = exists(
             {"s": "ClientState"},
-            not_(
-                call(
-                    "canonical_content_matches",
-                    var("s"),
-                    call("visible_document", var("s")),
-                    call("visible_frontier", var("s")),
-                )
+            and_(
+                call("user_visible_client_state", var("s")),
+                not_(
+                    call(
+                        "canonical_content_matches",
+                        var("s"),
+                        call("visible_document", var("s")),
+                        call("visible_frontier", var("s")),
+                    )
+                ),
             ),
         )
         without_contract = self.bridge.compile_program(
@@ -226,6 +229,28 @@ class SymbolicBridgeTests(unittest.TestCase):
         )
         self.assertEqual(check_program(without_contract).status, "sat")
         self.assertEqual(check_program(with_contract).status, "unsat")
+
+    def test_canonical_client_coherence_allows_private_resync_candidate(self):
+        private_candidate = exists(
+            {"s": "ClientState"},
+            and_(
+                not_(call("user_visible_client_state", var("s"))),
+                not_(
+                    call(
+                        "canonical_content_matches",
+                        var("s"),
+                        call("visible_document", var("s")),
+                        call("visible_frontier", var("s")),
+                    )
+                ),
+            ),
+        )
+        with_contract = self.bridge.compile_program(
+            self.graph,
+            contract_ids=["client_canonical_frontier_coherence"],
+            query=private_candidate,
+        )
+        self.assertEqual(check_program(with_contract).status, "sat")
 
     def test_request_provenance_excludes_cross_document_request_binding(self):
         bad_request = exists(

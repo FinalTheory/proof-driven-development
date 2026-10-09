@@ -25,6 +25,15 @@ sorts:
 - OTSuccessResult
 - ExternalTerminalResult
 functions:
+  user_visible_client_state:
+    args:
+    - ClientState
+    returns: Bool
+    catalog_symbols: []
+    meaning: Client state s is a published user-visible state; private or intermediate resynchronization candidates that have not been published are outside this predicate. This predicate does not exclude a user-visible historical-version or rollback mode.
+    semantic_anchors:
+    - contract:client_canonical_frontier_coherence
+    - claim:G10_user_visible_client_state_matches_document
   visible_document:
     args:
     - ClientState
@@ -65,6 +74,27 @@ functions:
     - client_local_document
     - last_applied_revision
     meaning: The canonical prefix visible in state s already contains the accepted logical edit represented by overlay o.
+  new_logical_edit_speculative_overlay_creation:
+    args:
+    - ProtocolTransition
+    - Overlay
+    returns: Bool
+    catalog_symbols:
+    - document_id
+    - client_change_id
+    meaning: Protocol transition t creates speculative overlay o for a genuinely new logical client edit rather than a retry or continued representation of an existing logical edit.
+    semantic_anchors:
+    - claim:G8_user_visible_state_does_not_double_render_accepted_optimistic_edit
+  created_new_overlay_uses_distinct_change_id:
+    args:
+    - ProtocolTransition
+    - Overlay
+    returns: Bool
+    catalog_symbols:
+    - client_change_id
+    meaning: The genuinely new logical edit represented by overlay o uses a client_change_id distinct from every other distinct logical client edit in the same document.
+    semantic_anchors:
+    - claim:G8_user_visible_state_does_not_double_render_accepted_optimistic_edit
   authored_from:
     args:
     - Request
@@ -143,7 +173,22 @@ functions:
     catalog_symbols:
     - accepted_idempotency_evidence
     - idempotency_key
-    meaning: authoritative accepted_idempotency_evidence exists in state s for the same composite idempotency_key k = (document_id, client_change_id).
+    meaning: Authoritative durable accepted_idempotency_evidence exists in state s for the same composite idempotency_key k = (document_id, client_change_id).
+  accepted_evidence_mechanism_valid:
+    args:
+    - AuthoritativeState
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols:
+    - accepted_idempotency_evidence
+    - accepted_change_log
+    - idempotency_key
+    - document_id
+    - client_change_id
+    meaning: >-
+      Any authoritative accepted evidence counted for composite key k in state s is established only by a valid committed-acceptance mechanism: the committed accepted row or unique identity itself; a separate hot-path accepted-key success record that commits and aborts atomically with the same canonical acceptance in the same acceptance transaction; or lifecycle/compaction replacement evidence that is equivalent accepted evidence derived from a previously committed canonical acceptance. Reservation, in-progress arbitration, timeout, cancellation, or another non-committed attempt is not classified as accepted evidence.
+    semantic_anchors:
+    - claim:G9_accepted_idempotency_evidence_matches_committed_acceptance
   exactly_one_committed_acceptance_for_key:
     args:
     - AuthoritativeState
@@ -536,7 +581,7 @@ functions:
     - ClientState
     returns: Bool
     catalog_symbols: []
-    meaning: Both states are ordinary user-visible states in the same normal client/session; the second is later than the first and both represent the same document.
+    meaning: The earlier state is a user-visible exposure of one document in the normal current-document protocol of a client/session; the later state is a later ordinary user-visible state in that same session that again represents the same document. Separately modeled historical-version or rollback mode is outside this relation.
     semantic_anchors:
     - contract:visible_canonical_frontier_non_regression
     - source:reconnect_revision_boundary
@@ -789,6 +834,28 @@ functions:
     meaning: Because exact identity e is outside the normal 30-day horizon in state s, the client discards it or routes it through an explicit expired, conflict, or manual-resolution path rather than normal retry/reconnect.
     semantic_anchors:
     - assumption:A6_normal_retry_reconnect_identity_is_eligible_for_30_days
+  ack_loss_reconnect_retry_acceptance_transition:
+    args:
+    - ProtocolTransition
+    - LogicalEdit
+    returns: Bool
+    catalog_symbols:
+    - document_id
+    - client_change_id
+    meaning: Transition t is acceptance-capable processing caused by ACK loss, reconnect, or retry of logical client edit e for a normally participating client while e's (document_id, client_change_id) remains within the 30-day normal retry/reconnect eligibility horizon.
+    semantic_anchors:
+    - claim:G1_retry_is_logically_exactly_once
+  transition_creates_second_acceptance_for_logical_edit:
+    args:
+    - ProtocolTransition
+    - LogicalEdit
+    returns: Bool
+    catalog_symbols:
+    - document_id
+    - client_change_id
+    meaning: Transition t causes logical client edit e to have more than one committed canonical acceptance, either by committing another acceptance for e when one already existed or by creating multiple accepted records for e in the transition itself.
+    semantic_anchors:
+    - claim:G1_retry_is_logically_exactly_once
   at_most_one_committed_acceptance_for_identity:
     args:
     - AuthoritativeState
@@ -1693,20 +1760,21 @@ claims:
     formula:
       forall:
         vars:
-          s: AuthoritativeState
-          e: LogicalEditIdentity
+          t: ProtocolTransition
+          e: LogicalEdit
         body:
           implies:
           - call:
-              fn: identity_within_30_day_normal_horizon
+              fn: ack_loss_reconnect_retry_acceptance_transition
               args:
-              - var: s
+              - var: t
               - var: e
-          - call:
-              fn: at_most_one_committed_acceptance_for_identity
-              args:
-              - var: s
-              - var: e
+          - not:
+              call:
+                fn: transition_creates_second_acceptance_for_logical_edit
+                args:
+                - var: t
+                - var: e
   G2_canonical_history_is_linear_and_fenced:
     contracts: []
     capability: relational
@@ -1984,11 +2052,51 @@ claims:
     - visible_canonical_speculative_exclusion
     capability: relational
     formula_from_contracts: true
+    residual_formula:
+      forall:
+        vars:
+          t: ProtocolTransition
+          o: Overlay
+        body:
+          implies:
+          - call:
+              fn: new_logical_edit_speculative_overlay_creation
+              args:
+              - var: t
+              - var: o
+          - call:
+              fn: created_new_overlay_uses_distinct_change_id
+              args:
+              - var: t
+              - var: o
   G9_accepted_idempotency_evidence_matches_committed_acceptance:
     contracts:
     - accepted_evidence_correspondence
     capability: relational
     formula_from_contracts: true
+    residual_formula:
+      forall:
+        vars:
+          s: AuthoritativeState
+          k: IdempotencyKey
+        body:
+          implies:
+          - and:
+            - call:
+                fn: within_retry_reconnect_eligibility
+                args:
+                - var: s
+                - var: k
+            - call:
+                fn: accepted_evidence_for_key
+                args:
+                - var: s
+                - var: k
+          - call:
+              fn: accepted_evidence_mechanism_valid
+              args:
+              - var: s
+              - var: k
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
@@ -1998,18 +2106,23 @@ contracts:
         vars:
           s: ClientState
         body:
-          call:
-            fn: canonical_content_matches
-            args:
-            - var: s
-            - call:
-                fn: visible_document
-                args:
-                - var: s
-            - call:
-                fn: visible_frontier
-                args:
-                - var: s
+          implies:
+          - call:
+              fn: user_visible_client_state
+              args:
+              - var: s
+          - call:
+              fn: canonical_content_matches
+              args:
+              - var: s
+              - call:
+                  fn: visible_document
+                  args:
+                  - var: s
+              - call:
+                  fn: visible_frontier
+                  args:
+                  - var: s
   visible_canonical_speculative_exclusion:
     class: state_invariant
     observation_scope: user_visible_states
