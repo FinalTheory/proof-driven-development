@@ -453,9 +453,9 @@ When the Writer MCP exposes `spawn_chatgpt_subagents`, that is the canonical cle
 execution primitive and the orchestrator MUST use it rather than simulating multiple roles
 inside its own context. If that function is not present in the initially loaded tool subset,
 perform Writer-tool discovery before concluding that clean-context execution is unavailable.
-Browser-slot exhaustion or a child-task failure is an execution/capacity
-condition, not evidence that clean-context tooling does not exist: reap/finish existing tasks and
-retry when capacity is available. If a clean sub-agent cannot actually be obtained, do not silently
+Backend capacity exhaustion or a child-task failure is an execution/capacity
+condition, not evidence that clean-context tooling does not exist. The MCP may route clean tasks across
+its available delegated backends; retry when capacity is available. If a clean sub-agent cannot actually be obtained, do not silently
 downgrade the audit to same-context reasoning and do not claim a clean audit result.
 
 The clean verifier may use general distributed-systems knowledge to understand terms and
