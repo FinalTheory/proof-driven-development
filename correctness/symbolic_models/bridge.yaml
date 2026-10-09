@@ -723,13 +723,14 @@ functions:
     meaning: The two distinct logical edits carry different client_change_id values.
     semantic_anchors:
     - assumption:A3_client_change_id_identifies_logical_edit
-  apply_accepted_sequence:
+  accepted_sequence_application_result:
     args:
     - DocumentState
     - AcceptedChangeSequence
-    returns: DocumentState
+    - DocumentState
+    returns: Bool
     catalog_symbols: []
-    meaning: The deterministic document state obtained by applying one canonical accepted-change sequence to one starting document state.
+    meaning: One application of canonical accepted-change sequence q to starting document state s may yield result document state r; this relation does not itself assume uniqueness of r.
     semantic_anchors:
     - assumption:A5_apply_accepted_change_is_deterministic
   normal_retry_or_reconnect_submission:
@@ -1362,17 +1363,28 @@ assumptions:
           s: DocumentState
           q: AcceptedChangeSequence
         body:
-          eq:
-          - call:
-              fn: apply_accepted_sequence
-              args:
-              - var: s
-              - var: q
-          - call:
-              fn: apply_accepted_sequence
-              args:
-              - var: s
-              - var: q
+          forall:
+            vars:
+              r1: DocumentState
+              r2: DocumentState
+            body:
+              implies:
+              - and:
+                - call:
+                    fn: accepted_sequence_application_result
+                    args:
+                    - var: s
+                    - var: q
+                    - var: r1
+                - call:
+                    fn: accepted_sequence_application_result
+                    args:
+                    - var: s
+                    - var: q
+                    - var: r2
+              - eq:
+                - var: r1
+                - var: r2
   A6_normal_retry_reconnect_identity_is_eligible_for_30_days:
     capability: relational
     formula:

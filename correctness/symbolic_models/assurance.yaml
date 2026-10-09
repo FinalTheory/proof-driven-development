@@ -781,3 +781,37 @@ records:
           against stale-head mutation, and exclusion of acceptances after capture
           without requiring convergence to an advancing live head.
         differences: []
+  assumption:A5_apply_accepted_change_is_deterministic:
+    kind: assumption
+    subject_id: A5_apply_accepted_change_is_deterministic
+    subject_signature: 4976bc7f74d129189fb28223df354be39f009ff685ea703ac707bebcc6731957
+    roundtrip:
+      subject_signature: 4976bc7f74d129189fb28223df354be39f009ff685ea703ac707bebcc6731957
+      status: TRANSLATED
+      natural_language: For any starting document state and canonical accepted-change sequence, if applying
+        that sequence to that starting state may yield two result document states, those result document
+        states are equal.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 4976bc7f74d129189fb28223df354be39f009ff685ea703ac707bebcc6731957
+        verdict: EQUIVALENT
+        reason: 'The source expresses determinism: applying the same canonical accepted-change sequence
+          to the same starting state cannot produce different document states. The formula enforces precisely
+          this by requiring any two application results for identical s and q to be equal, without assuming
+          uniqueness in application_result itself.'
+        differences: []
+      strengthening:
+        subject_signature: 4976bc7f74d129189fb28223df354be39f009ff685ea703ac707bebcc6731957
+        verdict: EQUIVALENT
+        reason: 'The formula captures the stated determinism: any two results of applying the same canonical
+          accepted-change sequence q to the same starting state s must be equal. It does not assume uniqueness
+          in application_result or impose additional requirements such as termination or result existence.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 4976bc7f74d129189fb28223df354be39f009ff685ea703ac707bebcc6731957
+        verdict: EQUIVALENT
+        reason: 'Both express determinism: the same starting state and canonical accepted-change sequence
+          cannot produce distinct resulting document states.'
+        differences: []
