@@ -1102,17 +1102,17 @@ functions:
     args:
     - CatchupResponse
     returns: Bool
-    catalog_symbols: []
-    meaning: c is one normal foreground visible-document-bound reconnect/catch-up attempt eligible to participate in the current-document protocol.
+    catalog_symbols:
+    - last_applied_revision
+    meaning: c is one normal foreground visible-document-bound reconnect/catch-up attempt for the current document starting from the client's last_applied_revision L, the highest contiguous canonical revision already applied by that client.
     semantic_anchors:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
-  catchup_starts_from_visible_frontier:
+  catchup_eligible_for_completion_or_publication:
     args:
     - CatchupResponse
     returns: Bool
-    catalog_symbols:
-    - last_applied_revision
-    meaning: Catch-up attempt c starts from the client currently visible canonical last_applied_revision rather than a stale or foreign starting frontier.
+    catalog_symbols: []
+    meaning: Catch-up attempt c is eligible for completion or foreground publication under the reconnect/catch-up protocol.
     semantic_anchors:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
   catchup_head_captured_from_authoritative_latest:
@@ -1161,7 +1161,7 @@ functions:
     - CatchupResponse
     returns: Bool
     catalog_symbols: []
-    meaning: Publication of c exposes no intermediate candidate prefix and cannot regress or otherwise mutate the already-visible canonical/frontier state when c head is below the visible frontier.
+    meaning: Any user-visible publication effect of catch-up attempt c is one atomic publication transition with no intermediate candidate prefix exposed; additionally, any response of c whose head H is below the already-visible canonical frontier cannot regress or otherwise mutate that visible canonical/frontier state.
     semantic_anchors:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
   catchup_excludes_acceptances_after_captured_head:
@@ -1734,43 +1734,45 @@ claims:
               - var: c
           - and:
             - call:
-                fn: catchup_starts_from_visible_frontier
-                args:
-                - var: c
-            - call:
-                fn: catchup_head_captured_from_authoritative_latest
-                args:
-                - var: c
-            - call:
-                fn: catchup_head_preserved_to_publication
-                args:
-                - var: c
-            - call:
-                fn: catchup_excludes_acceptances_after_captured_head
-                args:
-                - var: c
-            - call:
                 fn: catchup_binding_break_permanently_blocks_publication
+                args:
+                - var: c
+            - call:
+                fn: catchup_publication_is_atomic_and_non_regressing
                 args:
                 - var: c
             - implies:
               - call:
-                  fn: catchup_attempt_publishes
+                  fn: catchup_eligible_for_completion_or_publication
                   args:
                   - var: c
               - and:
                 - call:
-                    fn: catchup_visible_document_binding_uninterrupted
+                    fn: catchup_head_captured_from_authoritative_latest
                     args:
                     - var: c
                 - call:
-                    fn: catchup_published_state_is_exact_replay_through_head
+                    fn: catchup_head_preserved_to_publication
                     args:
                     - var: c
                 - call:
-                    fn: catchup_publication_is_atomic_and_non_regressing
+                    fn: catchup_excludes_acceptances_after_captured_head
                     args:
                     - var: c
+                - implies:
+                  - call:
+                      fn: catchup_attempt_publishes
+                      args:
+                      - var: c
+                  - and:
+                    - call:
+                        fn: catchup_visible_document_binding_uninterrupted
+                        args:
+                        - var: c
+                    - call:
+                        fn: catchup_published_state_is_exact_replay_through_head
+                        args:
+                        - var: c
   G5_retry_resolves_idempotently:
     contracts:
     - idempotency_terminal_outcome_coherence

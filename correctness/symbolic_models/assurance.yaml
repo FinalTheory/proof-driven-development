@@ -704,3 +704,80 @@ records:
           or other excluded boundaries. The cited design section explicitly states
           this non-regression requirement.'
         differences: []
+  claim:G4_reconnect_converges_without_gap_or_duplicate:
+    kind: claim
+    subject_id: G4_reconnect_converges_without_gap_or_duplicate
+    subject_signature: 4e352efdfea7709e0db1401984366a705b7e1bac074a23706700094a5ee6f068
+    roundtrip:
+      subject_signature: 4e352efdfea7709e0db1401984366a705b7e1bac074a23706700094a5ee6f068
+      status: TRANSLATED
+      natural_language: For every catch-up response c, if c is a normal foreground,
+        visible-document-bound reconnect/catch-up attempt for the current document
+        starting from the client's last_applied_revision L, where L is the highest
+        contiguous canonical revision already applied by that client, then all of
+        the following hold. If the user-visible document switches away before publication,
+        c permanently loses foreground publication eligibility and cannot later publish
+        merely because the user switches back. Any user-visible publication effect
+        of c is one atomic publication transition, with no intermediate candidate
+        prefix exposed; additionally, any response of c whose head H is below the
+        already-visible canonical frontier cannot regress or otherwise mutate that
+        visible canonical/frontier state. If c is eligible for completion or foreground
+        publication under the reconnect/catch-up protocol, then c binds one response-specific
+        head H captured from the same document's authoritative document_latest_revision,
+        its persisted canonical revision frontier, at one authoritative-store read/linearization
+        point; that captured head remains unchanged through response selection, reconciliation,
+        completion, and any publication; and acceptances occurring after that head
+        was captured are outside c's response rather than partially mixed into it.
+        Under that same eligibility condition, if c completes and publishes its reconciled
+        result to the user-visible canonical state, then c's visible-document binding
+        remains uninterrupted from start through publication eligibility, and the
+        published user-visible canonical state equals canonical replay of that same
+        document through c's captured response head H, with no accepted revision through
+        H omitted or applied twice.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 4e352efdfea7709e0db1401984366a705b7e1bac074a23706700094a5ee6f068
+        verdict: EQUIVALENT
+        reason: The formula preserves the foreground-attempt scope, eligibility guard,
+          authoritative response-specific head capture and preservation, exclusion
+          of later acceptances, and exact replay upon eligible publication. Its unconditional
+          predicates preserve permanent loss of publication eligibility after a document
+          switch and atomic, non-regressing publication across overlapping or retried
+          attempts. The supplied predicate meanings retain the source's document,
+          head, temporal, and visible-state coordinates without adding requirements.
+        differences: []
+      strengthening:
+        subject_signature: 4e352efdfea7709e0db1401984366a705b7e1bac074a23706700094a5ee6f068
+        verdict: EQUIVALENT
+        reason: The supplied predicate meanings preserve the foreground-attempt scope,
+          eligibility guards, same-document authoritative head capture and preservation,
+          permanent publication disqualification after a binding break, exact replay
+          upon eligible publication, and atomic non-regressing publication across
+          attempts. Post-capture acceptances remain excluded without requiring convergence
+          to an advancing live head. No additional identity, temporal, provenance,
+          or cardinality requirement is introduced.
+        differences: []
+    roundtrip_reviews:
+      weakening:
+        subject_signature: 4e352efdfea7709e0db1401984366a705b7e1bac074a23706700094a5ee6f068
+        verdict: EQUIVALENT
+        reason: The rendering preserves the eligible-attempt scope, document identity,
+          single authoritative head capture and its preservation, permanent publication
+          disqualification after switching away, exact canonical replay through H,
+          atomic publication, and protection against stale responses mutating visible
+          state across overlapping or retried attempts. Excluding post-capture acceptances
+          preserves the bounded response scope without requiring convergence to a
+          continuously advancing live head.
+        differences: []
+      strengthening:
+        subject_signature: 4e352efdfea7709e0db1401984366a705b7e1bac074a23706700094a5ee6f068
+        verdict: EQUIVALENT
+        reason: The rendering preserves the foreground applicability boundary, eligibility
+          guards, document identity, authoritative capture of one response-specific
+          H, and preservation of H throughout processing. It also preserves permanent
+          publication disqualification on switching away, uninterrupted binding for
+          publication, exact canonical replay through H, atomic publication, protection
+          against stale-head mutation, and exclusion of acceptances after capture
+          without requiring convergence to an advancing live head.
+        differences: []
