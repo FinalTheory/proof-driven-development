@@ -19,6 +19,15 @@ from .coverage import (
     coverage_candidate_signature,
     coverage_semantic_signature,
 )
+from .obligations import (
+    DesignObligation,
+    DesignObligationError,
+    DesignObligationResult,
+    DesignObligationSpec,
+    DesignObligationVerifier,
+    design_obligation_coverage_signature,
+    design_obligation_signature,
+)
 from .dsl import ParsedProgram, parse_program
 from .ir import (
     BOOL,
@@ -74,6 +83,11 @@ __all__ = [
     "CoverageCase",
     "CoverageResult",
     "CoverageSpec",
+    "DesignObligation",
+    "DesignObligationError",
+    "DesignObligationResult",
+    "DesignObligationSpec",
+    "DesignObligationVerifier",
     "Eq",
     "ExclusionCheck",
     "Exists",
@@ -122,5 +136,7 @@ __all__ = [
     "check_program",
     "coverage_candidate_signature",
     "coverage_semantic_signature",
+    "design_obligation_coverage_signature",
+    "design_obligation_signature",
     "parse_program",
 ]

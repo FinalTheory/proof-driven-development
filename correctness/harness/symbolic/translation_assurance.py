@@ -614,6 +614,12 @@ def _contract_class_interpretation(
             "It does not imply liveness, delivery, ordering, or additional temporal behavior "
             "unless those are explicitly encoded."
         )
+    if contract_class == "safety_contract":
+        return (
+            "A safety_contract forbids the explicitly described bad transition/state pattern "
+            "inside its applicability boundary. It does not imply progress or eventual delivery "
+            "unless the canonical contract says so."
+        )
     return (
         "No additional Harness-level semantic interpretation is defined for this contract class."
     )

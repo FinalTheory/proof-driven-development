@@ -20,6 +20,11 @@ from .coverage import (
     SymbolicCoverageVerifier,
     build_coverage_artifact,
 )
+from .obligations import (
+    DesignObligationError,
+    DesignObligationSpec,
+    DesignObligationVerifier,
+)
 from .translation_assurance import TranslationReviewError
 from .verification import SymbolicVerifier
 
@@ -27,6 +32,7 @@ from .verification import SymbolicVerifier
 DEFAULT_SYMBOLIC_MODEL = Path(__file__).resolve().parent.parent.parent / "symbolic_models" / "bridge.yaml"
 DEFAULT_ASSURANCE_REGISTRY = Path(__file__).resolve().parent.parent.parent / "symbolic_models" / "assurance.yaml"
 DEFAULT_COVERAGE_MODEL = Path(__file__).resolve().parent.parent.parent / "symbolic_models" / "coverage.yaml"
+DEFAULT_DESIGN_OBLIGATIONS = Path(__file__).resolve().parent.parent.parent / "symbolic_models" / "design_obligations.yaml"
 
 
 def add_symbolic_subparsers(sub: argparse._SubParsersAction) -> None:
@@ -130,6 +136,66 @@ def add_symbolic_subparsers(sub: argparse._SubParsersAction) -> None:
     )
 
 
+    obligation = sub.add_parser(
+        "symbolic-obligation-check",
+        help="Check whether current symbolic specification constraints entail one design obligation.",
+    )
+    obligation.add_argument("obligation", help="Design obligation ID from design_obligations.yaml.")
+    obligation.add_argument(
+        "--obligations",
+        default=str(DEFAULT_DESIGN_OBLIGATIONS),
+        help="Design-obligation sidecar YAML path.",
+    )
+    obligation.add_argument(
+        "--model",
+        default=str(DEFAULT_SYMBOLIC_MODEL),
+        help="Symbolic sidecar YAML path.",
+    )
+    obligation.add_argument(
+        "--assurance",
+        default=str(DEFAULT_ASSURANCE_REGISTRY),
+        help="Translation-assurance registry YAML path.",
+    )
+    obligation.add_argument(
+        "--allow-untrusted",
+        action="store_true",
+        help=(
+            "Exploratory only: run even when selected claim/contract symbolic translations "
+            "are not TRUSTED. The design-obligation oracle itself is source-anchored but "
+            "unreviewed in v1, so no result is canonical-certified yet."
+        ),
+    )
+    obligation.add_argument(
+        "--format",
+        choices=["text", "yaml"],
+        default="text",
+    )
+
+    obligation_status = sub.add_parser(
+        "symbolic-obligation-status",
+        help="Evaluate every design obligation and report solver/trust status without certifying the oracle translation.",
+    )
+    obligation_status.add_argument(
+        "--obligations",
+        default=str(DEFAULT_DESIGN_OBLIGATIONS),
+        help="Design-obligation sidecar YAML path.",
+    )
+    obligation_status.add_argument(
+        "--model",
+        default=str(DEFAULT_SYMBOLIC_MODEL),
+        help="Symbolic sidecar YAML path.",
+    )
+    obligation_status.add_argument(
+        "--assurance",
+        default=str(DEFAULT_ASSURANCE_REGISTRY),
+        help="Translation-assurance registry YAML path.",
+    )
+    obligation_status.add_argument(
+        "--format",
+        choices=["text", "yaml"],
+        default="text",
+    )
+
     compose = sub.add_parser(
         "symbolic-compose",
         help="Check whether a root/derived claim follows from its direct symbolic premises.",
@@ -193,6 +259,10 @@ def handle_symbolic_command(graph: Graph, args: argparse.Namespace) -> int | Non
             return _cmd_symbolic_check(graph, args)
         if args.command == "symbolic-cover":
             return _cmd_symbolic_cover(graph, args)
+        if args.command == "symbolic-obligation-check":
+            return _cmd_symbolic_obligation_check(graph, args)
+        if args.command == "symbolic-obligation-status":
+            return _cmd_symbolic_obligation_status(graph, args)
         if args.command == "symbolic-compose":
             return _cmd_symbolic_compose(graph, args)
         if args.command == "symbolic-report":
@@ -203,6 +273,7 @@ def handle_symbolic_command(graph: Graph, args: argparse.Namespace) -> int | Non
         SymbolicBridgeError,
         SymbolicCompositionError,
         SymbolicCoverageError,
+        DesignObligationError,
     ) as exc:
         print(f"symbolic error: {exc}", file=sys.stderr)
         return 2
@@ -369,6 +440,92 @@ def _cmd_symbolic_cover(graph: Graph, args: argparse.Namespace) -> int:
         print(result.constrained.model)
     if wrote_artifact:
         print(f"artifact={case.artifact_ref}")
+    return 0
+
+
+def _obligation_payload(result: Any) -> dict[str, Any]:
+    return {
+        "obligation": result.obligation_id,
+        "coverage_scope": result.coverage_scope,
+        "obligation_signature": result.obligation_signature,
+        "coverage_signature": result.coverage_signature,
+        "claims": list(result.claim_ids),
+        "contracts": list(result.contract_ids),
+        "constraint_translation_trust": result.constraint_trust,
+        "trusted_constraints_required": result.trusted_constraints_required,
+        "oracle_translation_assurance": "SOURCE_ANCHORED_UNREVIEWED",
+        "baseline": {
+            "query": "NOT(design_obligation)",
+            "status": result.baseline.status,
+            "model": result.baseline.model,
+        },
+        "constrained": {
+            "query": "AND(selected current-spec constraints) AND NOT(design_obligation)",
+            "status": result.constrained.status,
+            "model": result.constrained.model,
+        },
+        "verdict": result.verdict,
+        "solver_checked": result.solver_checked,
+        "all_constraints_trusted": result.all_constraints_trusted,
+        "canonical_certified": result.canonical_certified,
+    }
+
+
+def _cmd_symbolic_obligation_check(graph: Graph, args: argparse.Namespace) -> int:
+    bridge = _load_bridge(args.model)
+    registry = _load_registry(args.assurance)
+    spec = DesignObligationSpec.load(Path(args.obligations))
+    obligation = spec.require(args.obligation)
+    verifier = DesignObligationVerifier(graph, bridge, registry)
+    result = verifier.check(obligation, require_trusted=not args.allow_untrusted)
+    payload = _obligation_payload(result)
+    if args.format == "yaml":
+        print(yaml.safe_dump(payload, sort_keys=False, allow_unicode=True).rstrip())
+        return 0
+    print(
+        f"obligation={result.obligation_id} verdict={result.verdict} "
+        f"baseline={result.baseline.status} constrained={result.constrained.status} "
+        f"scope={result.coverage_scope} all_constraints_trusted={str(result.all_constraints_trusted).lower()} "
+        "oracle_assurance=SOURCE_ANCHORED_UNREVIEWED canonical_certified=false"
+    )
+    if result.constrained.status == "sat" and result.constrained.model:
+        print("counterexample_model:")
+        print(result.constrained.model)
+    return 0
+
+
+def _cmd_symbolic_obligation_status(graph: Graph, args: argparse.Namespace) -> int:
+    bridge = _load_bridge(args.model)
+    registry = _load_registry(args.assurance)
+    spec = DesignObligationSpec.load(Path(args.obligations))
+    verifier = DesignObligationVerifier(graph, bridge, registry)
+    reports = []
+    for obligation_id in sorted(spec.obligations):
+        obligation = spec.obligations[obligation_id]
+        try:
+            result = verifier.check(obligation, require_trusted=False)
+            reports.append(_obligation_payload(result))
+        except Exception as exc:
+            reports.append({
+                "obligation": obligation_id,
+                "verdict": "ERROR",
+                "error": str(exc),
+                "canonical_certified": False,
+            })
+    if args.format == "yaml":
+        print(yaml.safe_dump({"obligations": reports}, sort_keys=False, allow_unicode=True).rstrip())
+        return 0
+    for report in reports:
+        if report["verdict"] == "ERROR":
+            print(f"{report['obligation']}: ERROR — {report['error']}")
+            continue
+        print(
+            f"{report['obligation']}: {report['verdict']} "
+            f"({report['baseline']['status']} -> {report['constrained']['status']}) "
+            f"scope={report['coverage_scope']} "
+            f"constraints_trusted={str(report['all_constraints_trusted']).lower()} "
+            "oracle=SOURCE_ANCHORED_UNREVIEWED"
+        )
     return 0
 
 

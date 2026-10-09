@@ -384,6 +384,156 @@ functions:
     semantic_anchors:
     - claim:L21_accepted_key_gate_rejects_new_acceptance
     - claim:C14_all_acceptance_paths_honor_idempotency_identity
+  pending_edit:
+    args:
+    - ClientState
+    - Overlay
+    returns: Bool
+    catalog_symbols:
+    - client_pending_edits
+    meaning: Logical edit identity represented by overlay token o remains active in client_pending_edits in client state s.
+  retained_overlay:
+    args:
+    - ClientState
+    - Overlay
+    returns: Bool
+    catalog_symbols:
+    - client_speculative_overlays
+    meaning: Logical edit/overlay token o remains in retained client_speculative_overlays in client state s.
+  terminalized_speculative_edit:
+    args:
+    - ClientState
+    - Overlay
+    returns: Bool
+    catalog_symbols:
+    - client_terminalized_speculative_lifecycles
+    meaning: The normal speculative lifecycle represented by o is terminalized in client state s.
+  unresolved_eligible_retained_edit:
+    args:
+    - ClientState
+    - Overlay
+    returns: Bool
+    catalog_symbols:
+    - client_speculative_overlays
+    meaning: In state s, o represents an unresolved acceptance-eligible logical edit within the normal retry/reconnect horizon that remains retained.
+    semantic_anchors:
+    - contract:pending_speculative_lifecycle_coverage
+  acceptance_based_pending_retirement:
+    args:
+    - ClientState
+    - Overlay
+    returns: Bool
+    catalog_symbols:
+    - client_pending_edits
+    meaning: State s reflects retirement of pending edit o with authoritative accepted/reconciled semantics.
+    semantic_anchors:
+    - contract:pending_retirement_acceptance_binding
+  pending_retirement_has_matching_acceptance_source:
+    args:
+    - ClientState
+    - Overlay
+    returns: Bool
+    catalog_symbols:
+    - canonical_accepted_change
+    - accepted_idempotency_evidence
+    - document_id
+    - client_change_id
+    meaning: The acceptance-based retirement of pending edit o in state s is sourced from canonical acceptance or equivalent authoritative accepted evidence for the exact same full identity.
+    semantic_anchors:
+    - contract:pending_retirement_acceptance_binding
+  speculative_identity_provenance_ok:
+    args:
+    - ClientState
+    - Overlay
+    returns: Bool
+    catalog_symbols:
+    - logical_client_edit
+    - document_id
+    - client_change_id
+    - client_speculative_overlays
+    - client_visible_speculative_overlays
+    meaning: Retained/exposed representation o in state s preserves the same logical edit's complete creation identity.
+    semantic_anchors:
+    - contract:speculative_overlay_identity_provenance
+  speculative_operation_provenance_ok:
+    args:
+    - ClientState
+    - Overlay
+    returns: Bool
+    catalog_symbols:
+    - logical_client_edit
+    - logical_edit_operation
+    - client_speculative_overlays
+    - client_visible_speculative_overlays
+    meaning: Retained/exposed representation o in state s remains semantically derived from the same logical edit operation rather than another edit's operation.
+    semantic_anchors:
+    - contract:speculative_overlay_operation_provenance
+  single_effective_speculative_contribution:
+    args:
+    - ClientState
+    - Overlay
+    returns: Bool
+    catalog_symbols:
+    - client_visible_speculative_overlays
+    meaning: The logical identity represented by o contributes at most one effective speculative operation to the rendered state s.
+    semantic_anchors:
+    - contract:visible_speculative_effect_uniqueness
+  visible_overlay_matches_visible_document:
+    args:
+    - ClientState
+    - Overlay
+    returns: Bool
+    catalog_symbols:
+    - client_document_id
+    - client_visible_speculative_overlays
+    meaning: Exposed overlay o belongs to the same document represented by user-visible client state s.
+    semantic_anchors:
+    - contract:visible_speculative_overlay_document_binding
+  accepted_reconciliation_published:
+    args:
+    - ClientState
+    - Overlay
+    returns: Bool
+    catalog_symbols: []
+    meaning: The user-visible state s is the result of authoritative reconnect/reconciliation that classified the exact logical identity represented by o as ACCEPTED within the published response head.
+    semantic_anchors:
+    - source:reconnect_revision_boundary
+  overlay_compatible_with_visible_canonical_base:
+    args:
+    - ClientState
+    - Overlay
+    returns: Bool
+    catalog_symbols: []
+    meaning: Composing exposed speculative representation o over the canonical base visible in state s still realizes the original logical edit operation represented by o.
+    semantic_anchors:
+    - source:reconnect_revision_boundary
+  definitive_rejection_observed:
+    args:
+    - ClientState
+    - Overlay
+    returns: Bool
+    catalog_symbols: []
+    meaning: The normally participating client has observed an authoritative externally terminal definitive REJECTED result for the exact logical identity represented by o before or atomically with visible state s.
+    semantic_anchors:
+    - contract:rejected_terminal_speculative_retirement
+  same_session_later_visible_same_document:
+    args:
+    - ClientState
+    - ClientState
+    returns: Bool
+    catalog_symbols: []
+    meaning: The second state is a later ordinary user-visible state in the same normal client/session and represents the same document as the first state.
+    semantic_anchors:
+    - contract:visible_canonical_frontier_non_regression
+  visible_frontier_regresses:
+    args:
+    - ClientState
+    - ClientState
+    returns: Bool
+    catalog_symbols: []
+    meaning: The later state's last_applied_revision for the same document is strictly lower than the earlier state's visible frontier.
+    semantic_anchors:
+    - contract:visible_canonical_frontier_non_regression
 claims:
   L20_acceptance_paths_are_authoritatively_mediated:
     contracts: []
@@ -879,3 +1029,244 @@ contracts:
                 fn: recovery_head_preserved
                 args:
                 - var: r
+  pending_speculative_lifecycle_coverage:
+    class: state_invariant
+    observation_scope: all_reachable_states
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          o: Overlay
+        body:
+          implies:
+          - call:
+              fn: unresolved_eligible_retained_edit
+              args:
+              - var: s
+              - var: o
+          - call:
+              fn: pending_edit
+              args:
+              - var: s
+              - var: o
+  pending_retirement_acceptance_binding:
+    class: provenance_binding
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          o: Overlay
+        body:
+          implies:
+          - call:
+              fn: acceptance_based_pending_retirement
+              args:
+              - var: s
+              - var: o
+          - call:
+              fn: pending_retirement_has_matching_acceptance_source
+              args:
+              - var: s
+              - var: o
+  terminal_speculative_lifecycle_closure:
+    class: state_invariant
+    observation_scope: all_reachable_states
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          o: Overlay
+        body:
+          implies:
+          - call:
+              fn: terminalized_speculative_edit
+              args:
+              - var: s
+              - var: o
+          - and:
+            - not:
+                call:
+                  fn: pending_edit
+                  args:
+                  - var: s
+                  - var: o
+            - not:
+                call:
+                  fn: retained_overlay
+                  args:
+                  - var: s
+                  - var: o
+            - not:
+                call:
+                  fn: visible_overlay
+                  args:
+                  - var: s
+                  - var: o
+  speculative_overlay_identity_provenance:
+    class: provenance_binding
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          o: Overlay
+        body:
+          implies:
+          - or:
+            - call:
+                fn: retained_overlay
+                args:
+                - var: s
+                - var: o
+            - call:
+                fn: visible_overlay
+                args:
+                - var: s
+                - var: o
+          - call:
+              fn: speculative_identity_provenance_ok
+              args:
+              - var: s
+              - var: o
+  speculative_overlay_operation_provenance:
+    class: provenance_binding
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          o: Overlay
+        body:
+          implies:
+          - or:
+            - call:
+                fn: retained_overlay
+                args:
+                - var: s
+                - var: o
+            - call:
+                fn: visible_overlay
+                args:
+                - var: s
+                - var: o
+          - call:
+              fn: speculative_operation_provenance_ok
+              args:
+              - var: s
+              - var: o
+  visible_speculative_effect_uniqueness:
+    class: state_invariant
+    observation_scope: user_visible_states
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          o: Overlay
+        body:
+          implies:
+          - call:
+              fn: visible_overlay
+              args:
+              - var: s
+              - var: o
+          - call:
+              fn: single_effective_speculative_contribution
+              args:
+              - var: s
+              - var: o
+  visible_speculative_retention_coherence:
+    class: state_invariant
+    observation_scope: user_visible_states
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          o: Overlay
+        body:
+          implies:
+          - call:
+              fn: visible_overlay
+              args:
+              - var: s
+              - var: o
+          - call:
+              fn: retained_overlay
+              args:
+              - var: s
+              - var: o
+  visible_speculative_overlay_document_binding:
+    class: state_invariant
+    observation_scope: user_visible_states
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          o: Overlay
+        body:
+          implies:
+          - call:
+              fn: visible_overlay
+              args:
+              - var: s
+              - var: o
+          - call:
+              fn: visible_overlay_matches_visible_document
+              args:
+              - var: s
+              - var: o
+  rejected_terminal_speculative_retirement:
+    class: safety_contract
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          o: Overlay
+        body:
+          implies:
+          - call:
+              fn: definitive_rejection_observed
+              args:
+              - var: s
+              - var: o
+          - and:
+            - not:
+                call:
+                  fn: pending_edit
+                  args:
+                  - var: s
+                  - var: o
+            - not:
+                call:
+                  fn: retained_overlay
+                  args:
+                  - var: s
+                  - var: o
+            - not:
+                call:
+                  fn: visible_overlay
+                  args:
+                  - var: s
+                  - var: o
+            - call:
+                fn: terminalized_speculative_edit
+                args:
+                - var: s
+                - var: o
+  visible_canonical_frontier_non_regression:
+    class: safety_contract
+    formula:
+      forall:
+        vars:
+          earlier: ClientState
+          later: ClientState
+        body:
+          implies:
+          - call:
+              fn: same_session_later_visible_same_document
+              args:
+              - var: earlier
+              - var: later
+          - not:
+              call:
+                fn: visible_frontier_regresses
+                args:
+                - var: earlier
+                - var: later

@@ -9,7 +9,7 @@ SHA256: dict[str, Any] = {"type": "string", "pattern": "^[0-9a-f]{64}$"}
 SYMBOLIC_NAME: dict[str, Any] = {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$"}
 ANCHOR: dict[str, Any] = {
     "type": "string",
-    "pattern": "^(?:contract|claim):[A-Za-z0-9_]+$",
+    "pattern": "^(?:contract|claim|source):[A-Za-z0-9_]+$",
 }
 
 
@@ -147,6 +147,14 @@ PROVENANCE_MAPPING_SCHEMA = _closed(
     ("class", "formula"),
 )
 
+SAFETY_CONTRACT_MAPPING_SCHEMA = _closed(
+    {
+        "class": {"const": "safety_contract"},
+        "formula": {"$ref": "#/$defs/formula"},
+    },
+    ("class", "formula"),
+)
+
 BRIDGE_SCHEMA: dict[str, Any] = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "urn:proof-driven-development:symbolic-bridge:v1",
@@ -175,6 +183,7 @@ BRIDGE_SCHEMA: dict[str, Any] = {
                 "oneOf": [
                     {"$ref": "#/$defs/state_invariant_mapping"},
                     {"$ref": "#/$defs/provenance_mapping"},
+                    {"$ref": "#/$defs/safety_contract_mapping"},
                 ]
             },
         },
@@ -187,6 +196,7 @@ BRIDGE_SCHEMA: dict[str, Any] = {
         "claim_mapping": CLAIM_MAPPING_SCHEMA,
         "state_invariant_mapping": STATE_INVARIANT_MAPPING_SCHEMA,
         "provenance_mapping": PROVENANCE_MAPPING_SCHEMA,
+        "safety_contract_mapping": SAFETY_CONTRACT_MAPPING_SCHEMA,
     },
 }
 
@@ -327,6 +337,86 @@ COVERAGE_SCHEMA: dict[str, Any] = {
     "$defs": {
         "formula": FORMULA_SCHEMA,
         "coverage_case": COVERAGE_CASE_SCHEMA,
+    },
+}
+
+DESIGN_OBLIGATION_CASE_SCHEMA = _closed(
+    {
+        "description": NONEMPTY_STRING,
+        "statement": NONEMPTY_STRING,
+        "source_refs": {
+            "type": "array",
+            "items": SYMBOLIC_NAME,
+            "minItems": 1,
+            "uniqueItems": True,
+        },
+        "coverage_scope": {"enum": ["selected_constraints", "all_roots"]},
+        "claims": {
+            "type": "array",
+            "items": NONEMPTY_STRING,
+            "uniqueItems": True,
+        },
+        "contracts": {
+            "type": "array",
+            "items": SYMBOLIC_NAME,
+            "uniqueItems": True,
+        },
+        "formula": {"$ref": "#/$defs/formula"},
+    },
+    (
+        "description",
+        "statement",
+        "source_refs",
+        "coverage_scope",
+        "claims",
+        "contracts",
+        "formula",
+    ),
+)
+DESIGN_OBLIGATION_CASE_SCHEMA["allOf"] = [
+    {
+        "if": {
+            "properties": {"coverage_scope": {"const": "selected_constraints"}},
+            "required": ["coverage_scope"],
+        },
+        "then": {
+            "anyOf": [
+                {"properties": {"claims": {"minItems": 1}}},
+                {"properties": {"contracts": {"minItems": 1}}},
+            ]
+        },
+    },
+    {
+        "if": {
+            "properties": {"coverage_scope": {"const": "all_roots"}},
+            "required": ["coverage_scope"],
+        },
+        "then": {
+            "properties": {
+                "claims": {"maxItems": 0},
+                "contracts": {"maxItems": 0},
+            }
+        },
+    },
+]
+
+DESIGN_OBLIGATION_SCHEMA: dict[str, Any] = {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:proof-driven-development:design-obligations:v1",
+    **_closed(
+        {
+            "version": {"const": 1},
+            "obligations": {
+                "type": "object",
+                "propertyNames": NONEMPTY_STRING,
+                "additionalProperties": {"$ref": "#/$defs/design_obligation"},
+            },
+        },
+        ("version", "obligations"),
+    ),
+    "$defs": {
+        "formula": FORMULA_SCHEMA,
+        "design_obligation": DESIGN_OBLIGATION_CASE_SCHEMA,
     },
 }
 
@@ -561,6 +651,7 @@ FORMAL_SCHEMAS: dict[str, dict[str, Any]] = {
     "bridge": BRIDGE_SCHEMA,
     "assurance": ASSURANCE_SCHEMA,
     "coverage": COVERAGE_SCHEMA,
+    "design-obligations": DESIGN_OBLIGATION_SCHEMA,
     "composition-artifact": COMPOSITION_ARTIFACT_SCHEMA,
     "coverage-artifact": COVERAGE_ARTIFACT_SCHEMA,
 }

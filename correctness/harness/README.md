@@ -95,6 +95,29 @@ This means the bridge can reject a structurally incomplete or over-scoped transl
 
 
 
+### Design-obligation entailment pilot
+
+`symbolic/obligations.py` adds an independent, source-anchored property layer above the current correctness DAG. A design obligation is not another DAG root: it is a required semantic property translated independently from canonical design source sections and used as an external coverage oracle.
+
+For obligation `O` and selected current-spec constraints `C1..Cn`, the Harness asks two solver questions:
+
+```text
+NOT(O)
+C1 ∧ ... ∧ Cn ∧ NOT(O)
+```
+
+The first query must be `SAT`, proving the obligation is not a tautology/vacuous oracle. The second query determines coverage:
+
+- `UNSAT` => `COVERED`: the selected symbolic specification entails the obligation.
+- `SAT` => `GAP`: the selected symbolic specification admits a concrete counterexample to the required design property.
+- `UNKNOWN` / vacuous obligation => no coverage conclusion.
+
+`../symbolic_models/design_obligations.yaml` is intentionally independent from the DAG topology. Each obligation names canonical `catalog.sources` sections, a structured formula, and either a selected constraint slice or `all_roots`. `all_roots` fails closed until every current root has a symbolic mapping; unmapped roots are never silently omitted. Helper predicates used only by an obligation must be grounded in canonical catalog vocabulary or by a `source:<source_ref>` semantic anchor.
+
+The v1 pilot deliberately separates **solver determinism** from **semantic trust**. Current obligation formulas are source-anchored but have not yet passed an independent obligation-specific NL↔symbolic translation-assurance workflow, so `canonical_certified` remains false even when the solver returns a definite `COVERED` or `GAP`. Likewise, selected current-spec mappings must be `TRUSTED` for the default check; `--allow-untrusted` is exploratory only. This prevents a formal-looking SAT/UNSAT result from being promoted to canonical authority before both sides of the entailment boundary have independent semantic assurance.
+
+The initial regression corpus contains four previously observed failure patterns: ACCEPTED reconciliation that leaves pending lifecycle state active, stale speculative composition on a changed canonical base, definitive REJECTED lifecycle retirement, and same-session visible canonical-frontier non-regression. The first two currently reproduce `GAP`; the latter two reproduce `COVERED`, and unit mutation tests weaken the corresponding repaired contract and require the result to return to `SAT/GAP`.
+
 ### Symbolic composition pilot
 
 `symbolic/composition.py` machine-checks one root/derived claim against its **direct** DAG premises. For target `T` with direct premises `P1..Pn`, the Harness deterministically asks the solver whether:
@@ -160,6 +183,7 @@ The persisted symbolic layer has closed JSON Schemas separate from the canonical
 correctness.py formal-schema bridge
 correctness.py formal-schema assurance
 correctness.py formal-schema coverage
+correctness.py formal-schema design-obligations
 correctness.py formal-schema composition-artifact
 correctness.py formal-schema coverage-artifact
 ```
@@ -172,6 +196,8 @@ The public Harness entry point exposes the symbolic assurance layer without requ
 
 - `correctness.py symbolic-status` reports the trust frontier for every mapped contract and claim;
 - `correctness.py symbolic-check --kind contract|claim --subject ... --query bad-state.yaml` compares the candidate bad state with and without the selected mapping and, by default, refuses any mapping that is not currently `TRUSTED`;
+- `correctness.py symbolic-obligation-check <id>` checks `current-spec constraints AND NOT(design obligation)`; by default it fails closed on untrusted selected mappings, while `--allow-untrusted` is exploratory;
+- `correctness.py symbolic-obligation-status` evaluates the full obligation corpus and reports `GAP` / `COVERED`, trust status, and whether the result is canonically certified;
 - `correctness.py symbolic-compose <node>` checks trusted direct-premise entailment for one root/derived claim;
 - `correctness.py symbolic-report [node ...]` renders human-readable proof reports for canonical `machine_checked` compositions, including the target statement, direct-premise statements, translation trust, the SMT counterexample query, `SAT`/`UNSAT` meaning, mutation sensitivity, and persisted proof artifacts. With no node arguments it reports every currently machine-checked composition;
 - `--allow-untrusted` exists only for debug/research work and must not be treated as authoritative coverage evidence.

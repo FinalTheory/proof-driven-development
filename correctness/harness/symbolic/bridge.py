@@ -103,13 +103,13 @@ class SymbolicBridge:
                 not isinstance(semantic_anchors, list)
                 or not all(
                     isinstance(item, str)
-                    and re.fullmatch(r"(?:contract|claim):[A-Za-z0-9_]+", item)
+                    and re.fullmatch(r"(?:contract|claim|source):[A-Za-z0-9_]+", item)
                     for item in semantic_anchors
                 )
                 or len(semantic_anchors) != len(set(semantic_anchors))
             ):
                 raise SymbolicBridgeError(
-                    f"function {name}.semantic_anchors must be a unique list of contract:<id> or claim:<id> references"
+                    f"function {name}.semantic_anchors must be a unique list of contract:<id>, claim:<id>, or source:<id> references"
                 )
             if not symbols and not semantic_anchors:
                 raise SymbolicBridgeError(
@@ -306,6 +306,10 @@ class SymbolicBridge:
                     raise SymbolicBridgeError(
                         f"function {fn_name} references unknown semantic anchor {anchor}"
                     )
+                if kind == "source" and subject_id not in _catalog_namespace(graph, "sources"):
+                    raise SymbolicBridgeError(
+                        f"function {fn_name} references unknown semantic anchor {anchor}"
+                    )
 
             required_shapes = {
                 tuple(state_catalog[symbol]["symbolic_dimensions"])
@@ -354,7 +358,7 @@ class SymbolicBridge:
                         f"symbolic={mapping.observation_scope!r}"
                     )
             expected = _expected_contract_symbols(contract_id, contract)
-            if mapping.catalog_symbols != expected:
+            if canonical_class != "safety_contract" and mapping.catalog_symbols != expected:
                 missing = sorted(expected - mapping.catalog_symbols)
                 extra = sorted(mapping.catalog_symbols - expected)
                 raise SymbolicBridgeError(
@@ -529,6 +533,12 @@ def _expected_contract_symbols(contract_id: str, contract: dict[str, Any]) -> fr
                 f"{contract_id} provenance_binding lacks valid source/bound symbols"
             )
         return frozenset([*source, *bound])
+    if contract_class == "safety_contract":
+        # safety_contract is intentionally open over typed predicates rather than a
+        # canonical state/source symbol list. Its symbolic helper functions must be
+        # semantically anchored to this contract (or canonical vocabulary), which is
+        # validated independently above.
+        return frozenset()
     raise SymbolicBridgeError(
         f"{contract_id} class {contract_class!r} is not supported by the symbolic bridge"
     )

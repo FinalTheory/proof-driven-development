@@ -649,6 +649,7 @@ Persisted symbolic sidecars/artifacts have a separate closed schema surface:
     .venv/bin/python3 correctness.py formal-schema bridge --format yaml
     .venv/bin/python3 correctness.py formal-schema assurance --format yaml
     .venv/bin/python3 correctness.py formal-schema coverage --format yaml
+    .venv/bin/python3 correctness.py formal-schema design-obligations --format yaml
     .venv/bin/python3 correctness.py formal-schema composition-artifact --format yaml
     .venv/bin/python3 correctness.py formal-schema coverage-artifact --format yaml
 
@@ -903,6 +904,21 @@ accepts `multi_agent_audited` only after reconciling their results and challengi
 
 These certification prompts are analysis-only. They do not mutate the graph, and assurance metadata must
 never be used as a proof premise.
+
+## 7.3 Design-obligation entailment
+
+The symbolic layer may maintain `symbolic_models/design_obligations.yaml` as an independent,
+source-anchored regression oracle above the correctness DAG. A design obligation is not a proof
+node and must not be generated from the roots it is checking. It is translated independently from
+canonical design source sections, then checked by SMT as `current_spec AND NOT(obligation)`.
+`SAT` is a concrete admitted counterexample; `UNSAT` means the selected symbolic constraints entail
+the obligation inside the modeled abstraction. `all_roots` fails closed until every current root has
+a symbolic mapping; unmapped roots are never silently omitted.
+
+The v1 obligation formulas are source-anchored but do not yet have an independent obligation-specific
+NL-to-symbolic translation-assurance record. Therefore `symbolic-obligation-check/status` are a
+deterministic regression layer but must report `canonical_certified=false`; use their SAT/UNSAT results
+to drive and regression-test semantic discovery, not to replace final human/LLM semantic authority.
 
 ## 8. Applying graph refinements
 

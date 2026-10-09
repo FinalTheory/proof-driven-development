@@ -32,6 +32,7 @@ class FormalSchemaTests(unittest.TestCase):
             "bridge": ROOT / "symbolic_models" / "bridge.yaml",
             "assurance": ROOT / "symbolic_models" / "assurance.yaml",
             "coverage": ROOT / "symbolic_models" / "coverage.yaml",
+            "design-obligations": ROOT / "symbolic_models" / "design_obligations.yaml",
             "composition-artifact": ROOT
             / "symbolic_artifacts"
             / "C14_all_acceptance_paths_honor_idempotency_identity.composition.yaml",
@@ -172,7 +173,7 @@ class FormalSchemaTests(unittest.TestCase):
             correctness_root = repository_root / "correctness"
             models = correctness_root / "symbolic_models"
             models.mkdir(parents=True)
-            for name in ("assurance.yaml", "coverage.yaml"):
+            for name in ("assurance.yaml", "coverage.yaml", "design_obligations.yaml"):
                 (models / name).write_text(
                     (ROOT / "symbolic_models" / name).read_text(),
                     encoding="utf-8",

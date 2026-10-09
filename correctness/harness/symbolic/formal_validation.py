@@ -12,6 +12,7 @@ from .assurance_registry import SubjectTrustStatus, TranslationAssuranceRegistry
 from .bridge import SymbolicBridge
 from .composition import SymbolicCompositionVerifier
 from .coverage import CoverageSpec, SymbolicCoverageVerifier, build_coverage_artifact
+from .obligations import DesignObligationSpec, DesignObligationVerifier
 from .formal_schema import FORMAL_SCHEMAS
 from .translation_assurance import (
     build_claim_translation_subject,
@@ -253,7 +254,8 @@ def validate_formal_layer(graph: Graph) -> tuple[list[str], list[str]]:
     bridge_path = correctness_root / "symbolic_models" / "bridge.yaml"
     assurance_path = correctness_root / "symbolic_models" / "assurance.yaml"
     coverage_path = correctness_root / "symbolic_models" / "coverage.yaml"
-    paths = (bridge_path, assurance_path, coverage_path)
+    obligations_path = correctness_root / "symbolic_models" / "design_obligations.yaml"
+    paths = (bridge_path, assurance_path, coverage_path, obligations_path)
     present = [path.exists() for path in paths]
     if not any(present):
         return errors, warnings
@@ -269,10 +271,12 @@ def validate_formal_layer(graph: Graph) -> tuple[list[str], list[str]]:
         bridge_raw = _load_yaml_mapping(bridge_path, schema_name="bridge")
         assurance_raw = _load_yaml_mapping(assurance_path, schema_name="assurance")
         coverage_raw = _load_yaml_mapping(coverage_path, schema_name="coverage")
+        obligations_raw = _load_yaml_mapping(obligations_path, schema_name="design-obligations")
         bridge = SymbolicBridge.from_data(bridge_raw)
         bridge.validate_against_graph(graph)
         registry = TranslationAssuranceRegistry.from_data(assurance_raw)
         coverage = CoverageSpec.from_data(coverage_raw)
+        obligations = DesignObligationSpec.from_data(obligations_raw)
     except Exception as exc:
         return [f"formal symbolic sidecar validation failed: {exc}"], warnings
 
@@ -293,6 +297,17 @@ def validate_formal_layer(graph: Graph) -> tuple[list[str], list[str]]:
                 )
         except Exception as exc:
             errors.append(f"coverage case {case.case_id}: {exc}")
+
+    # Design obligations are source-anchored but their NL->formula oracle translation is
+    # deliberately not certified in v1. Preflight still compiles every obligation and
+    # replays its selected-constraint solver query in exploratory mode so sidecar/bridge
+    # drift fails closed without turning an intentionally discovered GAP into a repo error.
+    obligation_verifier = DesignObligationVerifier(graph, bridge, registry)
+    for obligation in obligations.obligations.values():
+        try:
+            obligation_verifier.check(obligation, require_trusted=False)
+        except Exception as exc:
+            errors.append(f"design obligation {obligation.obligation_id}: {exc}")
 
     composition = graph.doc.get("assurance", {}).get("composition", {})
     if isinstance(composition, dict):
