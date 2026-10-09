@@ -10,7 +10,7 @@ from harness.model import Graph, UniqueKeyLoader
 from harness.symbolic import SymbolicBridge, SymbolicBridgeError, SymbolicVerifier, check_program
 
 
-BRIDGE_PATH = Path(__file__).with_name("symbolic_models") / "bridge.yaml"
+BRIDGE_PATH = Path(__file__).resolve().parents[1] / "symbolic_models" / "bridge.yaml"
 
 
 def var(name: str):

@@ -162,6 +162,33 @@ def _validate_source_traceability(graph: Graph, errors: list[str]) -> None:
                 )
 
 
+def _validate_formalization_registry(graph: Graph, errors: list[str]) -> None:
+    formalization = graph.doc.get("formalization")
+    if not isinstance(formalization, dict):
+        return  # closed schema reports structural absence/type errors
+
+    expected = {
+        "claims": set(graph.claims),
+        "assumptions": set(graph.assumptions),
+        "semantic_contracts": set(_catalog_namespace(graph, "semantic_contracts")),
+    }
+    for namespace, expected_ids in expected.items():
+        entries = formalization.get(namespace)
+        if not isinstance(entries, dict):
+            continue
+        actual_ids = set(entries)
+        missing = sorted(expected_ids - actual_ids)
+        extra = sorted(actual_ids - expected_ids)
+        if missing:
+            errors.append(
+                f"formalization.{namespace} must classify every canonical subject; missing={missing}"
+            )
+        if extra:
+            errors.append(
+                f"formalization.{namespace} contains unknown subjects; extra={extra}"
+            )
+
+
 def validate(graph: Graph) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
@@ -175,6 +202,7 @@ def validate(graph: Graph) -> tuple[list[str], list[str]]:
         errors.append(f"schema {_format_schema_path(error)}: {error.message}")
 
     errors.extend(_schema_reference_contract_errors())
+    _validate_formalization_registry(graph, errors)
 
     required_top_level = {
         "schema_version",

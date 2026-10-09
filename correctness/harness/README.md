@@ -95,6 +95,12 @@ This means the bridge can reject a structurally incomplete or over-scoped transl
 
 
 
+### Explicit formalization routing
+
+Formalization routing is canonical control-plane state in `correctness.yaml`, not another symbolic sidecar. Every canonical claim, assumption, and semantic contract must be classified exactly once as `symbolic` or explicitly `non_symbolic`. `symbolic` means machine-readable semantics are required; a missing mapping or stale/unverified translation is an explicit blocker. The scheduler never treats that blocker as permission to fall back to LLM reasoning. `non_symbolic` is an exception that requires a structured reason and rationale, and retaining a symbolic mapping for a non-symbolic subject is invalid.
+
+`correctness.py formalization-status` reports the exhaustive frontier. Composition uses it as its routing oracle: ready symbolic targets run SMT; blocked symbolic targets stop at formalization debt; only explicitly non-symbolic targets enter clean multi-agent composition. This classification is verifier metadata and is not a proof premise.
+
 ### Design-obligation entailment pilot
 
 `symbolic/obligations.py` adds an independent, source-anchored property layer above the current correctness DAG. A design obligation is not another DAG root: it is a required semantic property translated independently from canonical design source sections and used as an external coverage oracle.
@@ -114,9 +120,9 @@ The first query must be `SAT`, proving the obligation is not a tautology/vacuous
 
 `../symbolic_models/design_obligations.yaml` is intentionally independent from the DAG topology. Each obligation names canonical `catalog.sources` sections, a structured formula, and either a selected constraint slice or `all_roots`. `all_roots` fails closed until every current root has a symbolic mapping; unmapped roots are never silently omitted. Helper predicates used only by an obligation must be grounded in canonical catalog vocabulary or by a `source:<source_ref>` semantic anchor.
 
-The v1 pilot deliberately separates **solver determinism** from **semantic trust**. Current obligation formulas are source-anchored but have not yet passed an independent obligation-specific NL↔symbolic translation-assurance workflow, so `canonical_certified` remains false even when the solver returns a definite `COVERED` or `GAP`. Likewise, selected current-spec mappings must be `TRUSTED` for the default check; `--allow-untrusted` is exploratory only. This prevents a formal-looking SAT/UNSAT result from being promoted to canonical authority before both sides of the entailment boundary have independent semantic assurance.
+Solver determinism and semantic trust remain separate. Design obligations use the same independent translation-assurance registry as claims/contracts, but their source context additionally includes the exact cited canonical design sections. Reviewers must check both formula fidelity and whether the extracted obligation itself is actually supported by those sections. `canonical_certified=true` therefore requires `all_roots`, current TRUSTED translations for every root and assumption, and a TRUSTED obligation oracle. `selected_constraints` remains diagnostic/regression-only even when its translations are trusted; `--allow-untrusted` is exploratory only.
 
-The initial regression corpus contains four previously observed failure patterns: ACCEPTED reconciliation that leaves pending lifecycle state active, stale speculative composition on a changed canonical base, definitive REJECTED lifecycle retirement, and same-session visible canonical-frontier non-regression. The first two currently reproduce `GAP`; the latter two reproduce `COVERED`, and unit mutation tests weaken the corresponding repaired contract and require the result to return to `SAT/GAP`.
+The initial regression corpus contains four previously observed failure patterns: ACCEPTED reconciliation that leaves pending lifecycle state active, stale speculative composition on a changed canonical base, definitive REJECTED lifecycle retirement, and same-session visible canonical-frontier non-regression. Solver results and oracle trust are reported separately: a candidate can reproduce a formal `GAP` while its obligation translation is `REJECTED` because canonical design does not actually commit to that stronger property. Historical repaired cases retain mutation tests that weaken the responsible contract and require the result to return to `SAT/GAP`.
 
 ### Symbolic composition pilot
 
@@ -130,7 +136,7 @@ is satisfiable.
 
 - `UNSAT` => `ENTAILED` within the current symbolic abstraction.
 - `SAT` => `COUNTEREXAMPLE`; the solver model witnesses a composition gap or an abstraction/mapping defect.
-- Trusted composition requires the target and every direct premise to have current `TRUSTED` translation-assurance records. Missing/unverified premises are never silently omitted.
+- Trusted composition requires the target and every direct claim/assumption premise to be declared `symbolic`, mapped, and current `TRUSTED`. Missing/unverified symbolic premises are explicit formalization blockers and never trigger an LLM fallback. Only a target explicitly declared `non_symbolic` may use the alternate clean multi-agent backend.
 
 The adversarial mutation-test path replaces one direct-premise formula with an intentionally weaker structured formula and verifies that a previously `UNSAT` composition becomes `SAT`. Persisted machine-check artifacts store the exact premise/formula override, and repository preflight replays that mutation against the current bridge rather than trusting the recorded `SAT` label or witness text. This checks that the entailment actually depends on the removed semantic condition rather than succeeding vacuously or because target/premise formulas were accidentally coupled.
 
@@ -194,7 +200,7 @@ correctness.py formal-schema coverage-artifact
 
 The public Harness entry point exposes the symbolic assurance layer without requiring agents to write Python:
 
-- `correctness.py symbolic-status` reports the trust frontier for every mapped contract and claim;
+- `correctness.py symbolic-status` reports the trust frontier for every mapped contract, assumption, and claim;
 - `correctness.py symbolic-check --kind contract|claim --subject ... --query bad-state.yaml` compares the candidate bad state with and without the selected mapping and, by default, refuses any mapping that is not currently `TRUSTED`;
 - `correctness.py symbolic-obligation-check <id>` checks `current-spec constraints AND NOT(design obligation)`; by default it fails closed on untrusted selected mappings, while `--allow-untrusted` is exploratory;
 - `correctness.py symbolic-obligation-status` evaluates the full obligation corpus and reports `GAP` / `COVERED`, trust status, and whether the result is canonically certified;

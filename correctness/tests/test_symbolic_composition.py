@@ -21,13 +21,13 @@ from harness.symbolic import (
 from harness.symbolic.cli import _cmd_symbolic_report
 
 
-BRIDGE_PATH = Path(__file__).with_name("symbolic_models") / "bridge.yaml"
-ASSURANCE_PATH = Path(__file__).with_name("symbolic_models") / "assurance.yaml"
+BRIDGE_PATH = Path(__file__).resolve().parents[1] / "symbolic_models" / "bridge.yaml"
+ASSURANCE_PATH = Path(__file__).resolve().parents[1] / "symbolic_models" / "assurance.yaml"
 
 C12_TARGET = "C12_live_delivery_contains_only_accepted_changes"
 C12_PREMISE = "L116_live_delivery_is_bound_to_committed_acceptance"
 C12_ARTIFACT_PATH = (
-    Path(__file__).with_name("symbolic_artifacts")
+    Path(__file__).resolve().parents[1] / "symbolic_artifacts"
     / "C12_live_delivery_contains_only_accepted_changes.composition.yaml"
 )
 
@@ -37,7 +37,7 @@ C14_PREMISES = (
     "L21_accepted_key_gate_rejects_new_acceptance",
 )
 C14_ARTIFACT_PATH = (
-    Path(__file__).with_name("symbolic_artifacts")
+    Path(__file__).resolve().parents[1] / "symbolic_artifacts"
     / "C14_all_acceptance_paths_honor_idempotency_identity.composition.yaml"
 )
 

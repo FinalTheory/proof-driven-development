@@ -9,7 +9,7 @@ SHA256: dict[str, Any] = {"type": "string", "pattern": "^[0-9a-f]{64}$"}
 SYMBOLIC_NAME: dict[str, Any] = {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$"}
 ANCHOR: dict[str, Any] = {
     "type": "string",
-    "pattern": "^(?:contract|claim|source):[A-Za-z0-9_]+$",
+    "pattern": "^(?:contract|claim|assumption|source):[A-Za-z0-9_]+$",
 }
 
 
@@ -118,6 +118,11 @@ FUNCTION_SCHEMA["anyOf"] = [
     {"required": ["semantic_anchors"]},
 ]
 
+ASSUMPTION_MAPPING_SCHEMA = _closed(
+    {"formula": {"$ref": "#/$defs/formula"}},
+    ("formula",),
+)
+
 CLAIM_MAPPING_SCHEMA = _closed(
     {
         "contracts": {
@@ -155,6 +160,14 @@ SAFETY_CONTRACT_MAPPING_SCHEMA = _closed(
     ("class", "formula"),
 )
 
+EQUIVALENCE_MAPPING_SCHEMA = _closed(
+    {
+        "class": {"const": "equivalence_relation"},
+        "formula": {"$ref": "#/$defs/formula"},
+    },
+    ("class", "formula"),
+)
+
 BRIDGE_SCHEMA: dict[str, Any] = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "urn:proof-driven-development:symbolic-bridge:v1",
@@ -171,6 +184,11 @@ BRIDGE_SCHEMA: dict[str, Any] = {
             "propertyNames": SYMBOLIC_NAME,
             "additionalProperties": {"$ref": "#/$defs/function"},
         },
+        "assumptions": {
+            "type": "object",
+            "propertyNames": NONEMPTY_STRING,
+            "additionalProperties": {"$ref": "#/$defs/assumption_mapping"},
+        },
         "claims": {
             "type": "object",
             "propertyNames": NONEMPTY_STRING,
@@ -184,19 +202,22 @@ BRIDGE_SCHEMA: dict[str, Any] = {
                     {"$ref": "#/$defs/state_invariant_mapping"},
                     {"$ref": "#/$defs/provenance_mapping"},
                     {"$ref": "#/$defs/safety_contract_mapping"},
+                    {"$ref": "#/$defs/equivalence_mapping"},
                 ]
             },
         },
     },
-    "required": ["version", "sorts", "functions", "claims", "contracts"],
+    "required": ["version", "sorts", "functions", "assumptions", "claims", "contracts"],
     "additionalProperties": False,
     "$defs": {
         "formula": FORMULA_SCHEMA,
         "function": FUNCTION_SCHEMA,
+        "assumption_mapping": ASSUMPTION_MAPPING_SCHEMA,
         "claim_mapping": CLAIM_MAPPING_SCHEMA,
         "state_invariant_mapping": STATE_INVARIANT_MAPPING_SCHEMA,
         "provenance_mapping": PROVENANCE_MAPPING_SCHEMA,
         "safety_contract_mapping": SAFETY_CONTRACT_MAPPING_SCHEMA,
+        "equivalence_mapping": EQUIVALENCE_MAPPING_SCHEMA,
     },
 }
 
@@ -244,7 +265,7 @@ REVIEW_SET_SCHEMA = _closed(
 
 ASSURANCE_RECORD_SCHEMA = _closed(
     {
-        "kind": {"enum": ["contract", "claim"]},
+        "kind": {"enum": ["contract", "claim", "assumption", "obligation"]},
         "subject_id": NONEMPTY_STRING,
         "subject_signature": SHA256,
         "roundtrip": {"$ref": "#/$defs/roundtrip"},
@@ -271,7 +292,7 @@ ASSURANCE_SCHEMA: dict[str, Any] = {
                 "type": "object",
                 "propertyNames": {
                     "type": "string",
-                    "pattern": "^(?:contract|claim):[A-Za-z0-9_]+$",
+                    "pattern": "^(?:contract|claim|assumption|obligation):[A-Za-z0-9_]+$",
                 },
                 "additionalProperties": {"$ref": "#/$defs/assurance_record"},
             },
@@ -356,6 +377,11 @@ DESIGN_OBLIGATION_CASE_SCHEMA = _closed(
             "items": NONEMPTY_STRING,
             "uniqueItems": True,
         },
+        "assumptions": {
+            "type": "array",
+            "items": NONEMPTY_STRING,
+            "uniqueItems": True,
+        },
         "contracts": {
             "type": "array",
             "items": SYMBOLIC_NAME,
@@ -369,6 +395,7 @@ DESIGN_OBLIGATION_CASE_SCHEMA = _closed(
         "source_refs",
         "coverage_scope",
         "claims",
+        "assumptions",
         "contracts",
         "formula",
     ),
@@ -382,6 +409,7 @@ DESIGN_OBLIGATION_CASE_SCHEMA["allOf"] = [
         "then": {
             "anyOf": [
                 {"properties": {"claims": {"minItems": 1}}},
+                {"properties": {"assumptions": {"minItems": 1}}},
                 {"properties": {"contracts": {"minItems": 1}}},
             ]
         },
@@ -394,6 +422,7 @@ DESIGN_OBLIGATION_CASE_SCHEMA["allOf"] = [
         "then": {
             "properties": {
                 "claims": {"maxItems": 0},
+                "assumptions": {"maxItems": 0},
                 "contracts": {"maxItems": 0},
             }
         },

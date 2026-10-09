@@ -1,5 +1,3 @@
+temp/
 __pycache__/
-*.pyc
-correctness.yaml.lock
-correctness/.venv/
-correctness/.translation-review/
+*.py[cod]

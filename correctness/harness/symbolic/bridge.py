@@ -33,11 +33,19 @@ class ClaimMapping:
 
 
 @dataclass(frozen=True)
+class AssumptionMapping:
+    assumption_id: str
+    formula: dict[str, Any]
+    catalog_symbols: frozenset[str]
+
+
+@dataclass(frozen=True)
 class SymbolicBridge:
     version: int
     sorts: tuple[str, ...]
     functions: dict[str, dict[str, Any]]
     contracts: dict[str, ContractMapping]
+    assumptions: dict[str, AssumptionMapping]
     claims: dict[str, ClaimMapping]
 
     @classmethod
@@ -54,7 +62,7 @@ class SymbolicBridge:
 
     @classmethod
     def from_data(cls, raw: dict[str, Any]) -> "SymbolicBridge":
-        allowed = {"version", "sorts", "functions", "contracts", "claims"}
+        allowed = {"version", "sorts", "functions", "contracts", "assumptions", "claims"}
         unknown = set(raw) - allowed
         if unknown:
             raise SymbolicBridgeError(f"unknown symbolic bridge fields: {sorted(unknown)}")
@@ -103,13 +111,13 @@ class SymbolicBridge:
                 not isinstance(semantic_anchors, list)
                 or not all(
                     isinstance(item, str)
-                    and re.fullmatch(r"(?:contract|claim|source):[A-Za-z0-9_]+", item)
+                    and re.fullmatch(r"(?:contract|claim|assumption|source):[A-Za-z0-9_]+", item)
                     for item in semantic_anchors
                 )
                 or len(semantic_anchors) != len(set(semantic_anchors))
             ):
                 raise SymbolicBridgeError(
-                    f"function {name}.semantic_anchors must be a unique list of contract:<id>, claim:<id>, or source:<id> references"
+                    f"function {name}.semantic_anchors must be a unique list of contract:<id>, claim:<id>, assumption:<id>, or source:<id> references"
                 )
             if not symbols and not semantic_anchors:
                 raise SymbolicBridgeError(
@@ -195,6 +203,38 @@ class SymbolicBridge:
                 observation_scope=observation_scope,
             )
 
+        raw_assumptions = raw.get("assumptions", {})
+        if not isinstance(raw_assumptions, dict):
+            raise SymbolicBridgeError("symbolic bridge assumptions must be a mapping")
+        normalized_assumptions: dict[str, AssumptionMapping] = {}
+        for assumption_id, mapping in raw_assumptions.items():
+            if not isinstance(assumption_id, str) or not assumption_id or not isinstance(mapping, dict):
+                raise SymbolicBridgeError("symbolic assumption mappings must be named mappings")
+            if set(mapping) != {"formula"} or not isinstance(mapping.get("formula"), dict):
+                raise SymbolicBridgeError(
+                    f"assumption mapping {assumption_id} must contain exactly formula"
+                )
+            formula = mapping["formula"]
+            used_functions = _formula_function_names(formula)
+            unknown_functions = used_functions - set(normalized_functions)
+            if unknown_functions:
+                raise SymbolicBridgeError(
+                    f"assumption mapping {assumption_id} uses unknown functions {sorted(unknown_functions)}"
+                )
+            catalog_symbols: set[str] = set()
+            for fn in used_functions:
+                catalog_symbols.update(normalized_functions[fn]["catalog_symbols"])
+                anchors = normalized_functions[fn].get("semantic_anchors", [])
+                if anchors and f"assumption:{assumption_id}" not in anchors:
+                    raise SymbolicBridgeError(
+                        f"assumption mapping {assumption_id} uses function {fn} outside its semantic_anchors {anchors}"
+                    )
+            normalized_assumptions[assumption_id] = AssumptionMapping(
+                assumption_id=assumption_id,
+                formula=formula,
+                catalog_symbols=frozenset(catalog_symbols),
+            )
+
         raw_claims = raw.get("claims", {})
         if not isinstance(raw_claims, dict):
             raise SymbolicBridgeError("symbolic bridge claims must be a mapping")
@@ -257,6 +297,7 @@ class SymbolicBridge:
             sorts=tuple(sorts),
             functions=normalized_functions,
             contracts=normalized_contracts,
+            assumptions=normalized_assumptions,
             claims=normalized_claims,
         )
 
@@ -267,6 +308,7 @@ class SymbolicBridge:
         }
         for label, formula in [
             *[(f"contract {cid}", mapping.formula) for cid, mapping in self.contracts.items()],
+            *[(f"assumption {aid}", mapping.formula) for aid, mapping in self.assumptions.items()],
             *[(f"claim {cid}", mapping.formula) for cid, mapping in self.claims.items()],
         ]:
             try:
@@ -303,6 +345,10 @@ class SymbolicBridge:
                         f"function {fn_name} references unknown semantic anchor {anchor}"
                     )
                 if kind == "claim" and subject_id not in graph.claims:
+                    raise SymbolicBridgeError(
+                        f"function {fn_name} references unknown semantic anchor {anchor}"
+                    )
+                if kind == "assumption" and subject_id not in graph.assumptions:
                     raise SymbolicBridgeError(
                         f"function {fn_name} references unknown semantic anchor {anchor}"
                     )
@@ -366,6 +412,23 @@ class SymbolicBridge:
                     f"missing={missing}, extra={extra}"
                 )
 
+        for assumption_id, mapping in self.assumptions.items():
+            assumption = graph.assumptions.get(assumption_id)
+            if not isinstance(assumption, dict):
+                raise SymbolicBridgeError(
+                    f"symbolic assumption mapping references unknown assumption {assumption_id}"
+                )
+            expected_symbols = _direct_assumption_catalog_symbols(
+                assumption, known_catalog_symbols
+            )
+            if mapping.catalog_symbols != expected_symbols:
+                missing = sorted(expected_symbols - set(mapping.catalog_symbols))
+                extra = sorted(set(mapping.catalog_symbols) - expected_symbols)
+                raise SymbolicBridgeError(
+                    f"{assumption_id} symbolic assumption catalog coverage mismatch: "
+                    f"missing={missing}, extra={extra}"
+                )
+
         for claim_id, mapping in self.claims.items():
             claim = graph.claims.get(claim_id)
             if not isinstance(claim, dict):
@@ -402,6 +465,7 @@ class SymbolicBridge:
         formula: dict[str, Any],
         *,
         claim_ids: list[str] | tuple[str, ...] = (),
+        assumption_ids: list[str] | tuple[str, ...] = (),
         contract_ids: list[str] | tuple[str, ...] = (),
         label: str = "symbolic formula",
     ) -> None:
@@ -411,9 +475,11 @@ class SymbolicBridge:
             mapping = self.claims.get(claim_id)
             if mapping is not None:
                 expanded_contracts.update(mapping.contract_ids)
-        allowed = {f"claim:{claim_id}" for claim_id in claim_ids} | {
-            f"contract:{contract_id}" for contract_id in expanded_contracts
-        }
+        allowed = (
+            {f"claim:{claim_id}" for claim_id in claim_ids}
+            | {f"assumption:{assumption_id}" for assumption_id in assumption_ids}
+            | {f"contract:{contract_id}" for contract_id in expanded_contracts}
+        )
         for fn in sorted(_formula_function_names(formula)):
             decl = self.functions.get(fn)
             if decl is None:
@@ -511,6 +577,17 @@ def _direct_claim_catalog_symbols(
 
 
 
+def _direct_assumption_catalog_symbols(
+    assumption: dict[str, Any], known_catalog_symbols: set[str]
+) -> frozenset[str]:
+    text_parts = [assumption.get("statement"), assumption.get("note")]
+    tokens: set[str] = set()
+    for value in text_parts:
+        if isinstance(value, str):
+            tokens.update(re.findall(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)+", value))
+    return frozenset(tokens & known_catalog_symbols)
+
+
 def _expected_contract_symbols(contract_id: str, contract: dict[str, Any]) -> frozenset[str]:
     contract_class = contract.get("class")
     if contract_class == "state_invariant":
@@ -533,11 +610,10 @@ def _expected_contract_symbols(contract_id: str, contract: dict[str, Any]) -> fr
                 f"{contract_id} provenance_binding lacks valid source/bound symbols"
             )
         return frozenset([*source, *bound])
-    if contract_class == "safety_contract":
-        # safety_contract is intentionally open over typed predicates rather than a
-        # canonical state/source symbol list. Its symbolic helper functions must be
-        # semantically anchored to this contract (or canonical vocabulary), which is
-        # validated independently above.
+    if contract_class in {"safety_contract", "equivalence_relation"}:
+        # These contract classes are intentionally open over typed predicates rather
+        # than a fixed canonical state/source symbol list. Helper functions must still
+        # be semantically anchored to the contract or canonical vocabulary.
         return frozenset()
     raise SymbolicBridgeError(
         f"{contract_id} class {contract_class!r} is not supported by the symbolic bridge"

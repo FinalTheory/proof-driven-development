@@ -12,6 +12,7 @@ from graph_schema import (
     COMPOSITION_ASSURANCE_STATUSES as SCHEMA_COMPOSITION_ASSURANCE_STATUSES,
     DECISION_STATUSES as SCHEMA_DECISION_STATUSES,
     EVIDENCE_ASSURANCE_STATUSES as SCHEMA_EVIDENCE_ASSURANCE_STATUSES,
+    FORMALIZATION_ENTRY_SCHEMA,
     MUTATION_ASSUMPTION_BODY_SCHEMA,
     MUTATION_CLAIM_BODY_SCHEMA,
     MUTATION_CLAIM_UPDATE_SCHEMA,
@@ -170,6 +171,7 @@ MUTATION_PLAN_SCHEMA: dict[str, Any] = {
                 {"$ref": "#/$defs/add_dependency"},
                 {"$ref": "#/$defs/remove_dependency"},
                 {"$ref": "#/$defs/remove_claim"},
+                {"$ref": "#/$defs/set_formalization"},
                 {"$ref": "#/$defs/set_refinement"},
                 {"$ref": "#/$defs/set_specification_coverage"},
                 {"$ref": "#/$defs/set_composition_assurance"},
@@ -187,13 +189,14 @@ MUTATION_PLAN_SCHEMA: dict[str, Any] = {
         },
         "add_claim": {
             "type": "object", "additionalProperties": False,
-            "required": ["op", "kind", "slug", "body"],
+            "required": ["op", "kind", "slug", "body", "formalization"],
             "properties": {
                 "op": {"const": "add_claim"},
                 "alias": {"$ref": "#/$defs/alias"},
                 "kind": {"enum": ["root", "derived", "leaf"]},
                 "slug": {"$ref": "#/$defs/slug"},
                 "body": {"$ref": "#/$defs/claim_body"},
+                "formalization": FORMALIZATION_ENTRY_SCHEMA,
             },
         },
         "reclassify_claim": {
@@ -243,6 +246,16 @@ MUTATION_PLAN_SCHEMA: dict[str, Any] = {
             "properties": {
                 "op": {"const": "remove_claim"},
                 "node": {"$ref": "#/$defs/ref"},
+            },
+        },
+        "set_formalization": {
+            "type": "object", "additionalProperties": False,
+            "required": ["op", "kind", "subject", "entry"],
+            "properties": {
+                "op": {"const": "set_formalization"},
+                "kind": {"enum": ["claim", "assumption", "semantic_contract"]},
+                "subject": {"$ref": "#/$defs/ref"},
+                "entry": FORMALIZATION_ENTRY_SCHEMA,
             },
         },
         "set_refinement": {
@@ -376,12 +389,13 @@ MUTATION_PLAN_SCHEMA: dict[str, Any] = {
         },
         "add_assumption": {
             "type": "object", "additionalProperties": False,
-            "required": ["op", "slug", "body"],
+            "required": ["op", "slug", "body", "formalization"],
             "properties": {
                 "op": {"const": "add_assumption"},
                 "alias": {"$ref": "#/$defs/alias"},
                 "slug": {"$ref": "#/$defs/slug"},
                 "body": MUTATION_ASSUMPTION_BODY_SCHEMA,
+                "formalization": FORMALIZATION_ENTRY_SCHEMA,
             },
         },
         "set_value": {
@@ -449,7 +463,7 @@ construct executions, but it must not invent guarantees absent from its generate
 
 For a runnable node NODE, the clean sub-agent should run:
 
-    .venv/bin/python3 correctness.py audit-prompt NODE
+    python3 -B correctness.py audit-prompt NODE
 
 and treat that output as its complete audit specification. The clean verifier must not read the
 full correctness.yaml, README, source article, prior audits, mutation history, or sibling-agent
@@ -460,8 +474,9 @@ long-lived orchestrator.
 
 Always start a round with:
 
-    .venv/bin/python3 correctness.py validate
-    .venv/bin/python3 correctness.py refinement-status --format compact-yaml
+    python3 -B correctness.py validate
+    python3 -B correctness.py formalization-status --format compact-yaml
+    python3 -B correctness.py refinement-status --format compact-yaml
 
 Interpret `state` mechanically:
 
@@ -641,29 +656,29 @@ details belong in verifier `intent`, not in newly invented verifier kinds.
 `correctness.yaml` is a closed typed document, not an extensible metadata bag. The canonical graph
 JSON Schema rejects unknown fields and constrains enums/types before graph-semantic validation runs:
 
-    .venv/bin/python3 correctness.py graph-schema --format yaml
-    .venv/bin/python3 correctness.py graph-schema --format json
+    python3 -B correctness.py graph-schema --format yaml
+    python3 -B correctness.py graph-schema --format json
 
 Persisted symbolic sidecars/artifacts have a separate closed schema surface:
 
-    .venv/bin/python3 correctness.py formal-schema bridge --format yaml
-    .venv/bin/python3 correctness.py formal-schema assurance --format yaml
-    .venv/bin/python3 correctness.py formal-schema coverage --format yaml
-    .venv/bin/python3 correctness.py formal-schema design-obligations --format yaml
-    .venv/bin/python3 correctness.py formal-schema composition-artifact --format yaml
-    .venv/bin/python3 correctness.py formal-schema coverage-artifact --format yaml
+    python3 -B correctness.py formal-schema bridge --format yaml
+    python3 -B correctness.py formal-schema assurance --format yaml
+    python3 -B correctness.py formal-schema coverage --format yaml
+    python3 -B correctness.py formal-schema design-obligations --format yaml
+    python3 -B correctness.py formal-schema composition-artifact --format yaml
+    python3 -B correctness.py formal-schema coverage-artifact --format yaml
 
 For a deduplicated human-readable inventory of every canonical YAML field path, including presence rules, structural constraints, and semantic descriptions:
 
-    .venv/bin/python3 correctness.py schema-fields --format text
+    python3 -B correctness.py schema-fields --format text
 
 Only system/proof semantics and mutable campaign state belong in the YAML. Tool-intrinsic rules such as bottom-up scheduling, stop-state names, node-prefix meanings, dependency direction, audit interpretation rules, and the signature algorithm are defined by this program and are intentionally not duplicated as editable YAML policy. `id_allocator.next_sequence` remains YAML state because the writer must persist allocation progress.
 
 Agents MUST NOT edit `correctness.yaml` directly. The canonical mutation-plan contract is also
 machine-readable JSON Schema and is available with:
 
-    .venv/bin/python3 correctness.py mutation-schema --format yaml
-    .venv/bin/python3 correctness.py mutation-schema --format json
+    python3 -B correctness.py mutation-schema --format yaml
+    python3 -B correctness.py mutation-schema --format json
 
 A long-lived orchestrator should load these schemas once per tooling revision/session and cache them.
 Do not re-read the full schema before every graph mutation; reload it only after correctness tooling
@@ -671,7 +686,7 @@ changes or when a schema mismatch indicates that the cached contract is stale.
 
 Every structured graph/refinement mutation must then enter through:
 
-    .venv/bin/python3 correctness.py mutate --plan PLAN.yaml
+    python3 -B correctness.py mutate --plan PLAN.yaml
 
 or stdin with `--plan -`. `mutate` validates the plan against the same in-process schema object before
 performing semantic/authority checks, so the displayed schema and the runtime structural contract
@@ -826,7 +841,7 @@ has known refinement work for the exact recursive proof semantics that were audi
 implementation-verification result and not an independent proof-composition certificate. After a
 successful refinement audit, record the current signature:
 
-    .venv/bin/python3 correctness.py refinement-signature NODE
+    python3 -B correctness.py refinement-signature NODE
 
 Then set:
 
@@ -840,6 +855,20 @@ If a descendant proposition or dependency changes, ancestors with old signatures
 `waived` is exceptional: use it only for a deliberately excluded refinement obligation,
 with a human-readable reason in workflow metadata. It is not evidence that the claim is
 true.
+
+## 7.0 Formalization routing
+
+`formalization` is canonical verifier-control metadata in `correctness.yaml`, orthogonal to proposition
+semantics, refinement, and assurance. It exhaustively classifies every claim, assumption, and semantic
+contract. `mode: symbolic` means a machine-readable lowering is required; missing mappings or non-TRUSTED
+translations are explicit formalization debt/blockers, not permission to use a different backend.
+`mode: non_symbolic` is an explicit exception and requires a structured reason plus rationale. Symbolic
+mappings for a subject declared non-symbolic are invalid. New claims/assumptions must declare formalization
+in the same mutation that creates them.
+
+Read the current routing/readiness frontier with:
+
+    python3 -B correctness.py formalization-status --format compact-yaml
 
 ## 7.1 Orthogonal assurance state
 
@@ -867,7 +896,7 @@ proof layers. Ordinary proposition changes do not erase assurance records; they 
 
 Read the current assurance envelope with:
 
-    .venv/bin/python3 correctness.py assurance-status --format compact-yaml
+    python3 -B correctness.py assurance-status --format compact-yaml
 
 The refinement scheduler ignores these assurance levels. A graph can correctly be `COMPLETE` while
 specification coverage is `unaudited`, composition assurance is `unaudited`, and leaf evidence is only
@@ -878,11 +907,11 @@ specification coverage is `unaudited`, composition assurance is `unaudited`, and
 Once refinement is `COMPLETE`, drive architecture-level specification coverage and node-level proof
 composition as separate frozen-DAG campaigns:
 
-    .venv/bin/python3 correctness.py coverage-audit-prompt
-    .venv/bin/python3 correctness.py composition-status --format compact-yaml
-    .venv/bin/python3 correctness.py composition-audit-prompt NODE --focus execution
-    .venv/bin/python3 correctness.py composition-audit-prompt NODE --focus quantifier
-    .venv/bin/python3 correctness.py composition-audit-prompt NODE --focus premise
+    python3 -B correctness.py coverage-audit-prompt
+    python3 -B correctness.py composition-status --format compact-yaml
+    python3 -B correctness.py composition-audit-prompt NODE --focus execution
+    python3 -B correctness.py composition-audit-prompt NODE --focus quantifier
+    python3 -B correctness.py composition-audit-prompt NODE --focus premise
 
 `coverage-audit-prompt` generates the canonical global root-coverage campaign and binds it to the current
 model signature. It asks whether an in-scope material failure can still occur assuming all claims,
@@ -890,17 +919,19 @@ assumptions, and dependency implications are true, and it includes a semantic-al
 canonical design. Record an accepted orchestrator result through `set_specification_coverage`; do not edit
 assurance YAML directly.
 
-`composition-status` is a certification scheduler, not the refinement scheduler. It runs only over a
-frozen (`COMPLETE`) refinement graph and targets at least `multi_agent_audited` (or `machine_checked`) for
-each root/derived node. `single_agent_audited` remains eligible for further certification. The status output
-recommends independent auditor counts and adversarial focus roles from the node role: roots receive
-three independent auditors and derived claims receive two.
+`composition-status` is a certification scheduler, not the refinement scheduler. Routing is explicit:
+`formalization` in the canonical model classifies every claim/assumption/semantic contract as `symbolic` or
+explicitly `non_symbolic`. A symbolic root/derived node is runnable only when the target and every direct
+claim/assumption premise have current TRUSTED symbolic translations; otherwise it is reported under
+`formalization_blocked` and MUST NOT fall back to LLM composition. A ready symbolic node runs
+`symbolic-compose` and targets `machine_checked`. Only an explicitly `non_symbolic` target—with structured
+reason/rationale—may use the clean multi-agent backend and target `multi_agent_audited`.
 
-`composition-audit-prompt NODE` exposes exactly the target proposition and its direct dependency
-propositions as opaque premises. It never recursively opens grandchildren and never asks whether those
-premises are themselves true. Independent auditors should use different `--focus` roles; the orchestrator
-accepts `multi_agent_audited` only after reconciling their results and challenging any surviving
-`deps=true, target=false` counterexample. Record the result through `set_composition_assurance`.
+For an explicitly non-symbolic node, `composition-audit-prompt NODE` exposes exactly the target proposition
+and its direct dependency propositions as opaque premises. It never recursively opens grandchildren and
+never asks whether those premises are themselves true. Independent auditors should use different `--focus`
+roles; the orchestrator accepts `multi_agent_audited` only after reconciling their results and challenging
+any surviving `deps=true, target=false` counterexample. Record the result through `set_composition_assurance`.
 
 These certification prompts are analysis-only. They do not mutate the graph, and assurance metadata must
 never be used as a proof premise.
@@ -915,10 +946,11 @@ canonical design source sections, then checked by SMT as `current_spec AND NOT(o
 the obligation inside the modeled abstraction. `all_roots` fails closed until every current root has
 a symbolic mapping; unmapped roots are never silently omitted.
 
-The v1 obligation formulas are source-anchored but do not yet have an independent obligation-specific
-NL-to-symbolic translation-assurance record. Therefore `symbolic-obligation-check/status` are a
-deterministic regression layer but must report `canonical_certified=false`; use their SAT/UNSAT results
-to drive and regression-test semantic discovery, not to replace final human/LLM semantic authority.
+Design-obligation formulas use the same independent translation-assurance registry as claims/contracts.
+A trusted obligation requires a blind symbolic round trip plus independent weakening/strengthening reviews
+against the cited canonical design sections. `canonical_certified=true` is possible only for `all_roots`
+checks whose obligation oracle and every root/assumption translation are current and TRUSTED; selected-constraint
+checks remain diagnostic/regression evidence even when their translations are trusted.
 
 ## 8. Applying graph refinements
 
@@ -931,7 +963,7 @@ After an accepted automated graph patch:
 5. run `refinement-status --format compact-yaml` again;
 6. continue all newly runnable branches.
 
-Do not run `test_correctness.py` merely because the production DAG changed. That suite is a
+Do not run the `tests/` tooling suite merely because the production DAG changed. That suite is a
 tooling regression suite and must use isolated synthetic fixtures rather than mutable campaign
 state. Run it when correctness tooling itself changes or after a tooling repair.
 
@@ -971,14 +1003,14 @@ or merge them as one leaf.
 
 After an ordinary DAG/workflow-state mutation that does not change correctness tooling, run:
 
-    .venv/bin/python3 correctness.py validate
-    .venv/bin/python3 correctness.py refinement-status --format compact-yaml
+    python3 -B correctness.py validate
+    python3 -B correctness.py refinement-status --format compact-yaml
 
 When correctness tooling itself changes, or after a tooling repair, run the stronger gate:
 
-    .venv/bin/python3 correctness.py validate
-    python3 -m unittest -v test_correctness.py
-    .venv/bin/python3 correctness.py refinement-status --format compact-yaml
+    python3 -B correctness.py validate
+    python3 -B -m unittest discover -s tests -t .
+    python3 -B correctness.py refinement-status --format compact-yaml
 
 Never mark planned verifier descriptions as passed evidence. The refinement campaign
 improves the proof DAG; it does not by itself verify production code.
@@ -992,28 +1024,28 @@ __HARNESS_FEEDBACK_CONTRACT__
 
 ## 11. Useful commands
 
-    .venv/bin/python3 correctness.py --help
-    .venv/bin/python3 correctness.py workflow-help
-    .venv/bin/python3 correctness.py catalog mechanisms
-    .venv/bin/python3 correctness.py catalog semantic_contracts
-    .venv/bin/python3 correctness.py catalog terms client_change_id
-    .venv/bin/python3 correctness.py graph-schema --format yaml
-    .venv/bin/python3 correctness.py schema-fields --format text
-    .venv/bin/python3 correctness.py mutation-schema --format yaml
-    .venv/bin/python3 correctness.py validate
-    .venv/bin/python3 correctness.py refinement-status --format compact-yaml
-    .venv/bin/python3 correctness.py refinement-status --format yaml   # full diagnostic view
-    .venv/bin/python3 correctness.py assurance-status --format compact-yaml
-    .venv/bin/python3 correctness.py assurance-status --format yaml    # full per-node assurance view
-    .venv/bin/python3 correctness.py audit-prompt NODE
-    .venv/bin/python3 correctness.py coverage-audit-prompt
-    .venv/bin/python3 correctness.py composition-status --format compact-yaml
-    .venv/bin/python3 correctness.py composition-audit-prompt NODE --focus execution
-    .venv/bin/python3 correctness.py mutate --plan PLAN.yaml
-    .venv/bin/python3 correctness.py slice NODE --format prompt
-    .venv/bin/python3 correctness.py refinement-signature NODE
-    .venv/bin/python3 correctness.py invalidate NODE
-    .venv/bin/python3 correctness.py render NODE
+    python3 -B correctness.py --help
+    python3 -B correctness.py workflow-help
+    python3 -B correctness.py catalog mechanisms
+    python3 -B correctness.py catalog semantic_contracts
+    python3 -B correctness.py catalog terms client_change_id
+    python3 -B correctness.py graph-schema --format yaml
+    python3 -B correctness.py schema-fields --format text
+    python3 -B correctness.py mutation-schema --format yaml
+    python3 -B correctness.py validate
+    python3 -B correctness.py refinement-status --format compact-yaml
+    python3 -B correctness.py refinement-status --format yaml   # full diagnostic view
+    python3 -B correctness.py assurance-status --format compact-yaml
+    python3 -B correctness.py assurance-status --format yaml    # full per-node assurance view
+    python3 -B correctness.py audit-prompt NODE
+    python3 -B correctness.py coverage-audit-prompt
+    python3 -B correctness.py composition-status --format compact-yaml
+    python3 -B correctness.py composition-audit-prompt NODE --focus execution
+    python3 -B correctness.py mutate --plan PLAN.yaml
+    python3 -B correctness.py slice NODE --format prompt
+    python3 -B correctness.py refinement-signature NODE
+    python3 -B correctness.py invalidate NODE
+    python3 -B correctness.py render NODE
 
 The scheduler, not an agent's intuition, decides whether the campaign should continue,
 complete, escalate to a human, or report a workflow stall.

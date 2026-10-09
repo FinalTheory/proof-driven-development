@@ -15,6 +15,8 @@ correctness propositions ── proof dependencies ── assumptions
         ↓
 semantic type system
         ↓
+formalization routing：哪些 proposition/contract 必须拥有 machine-readable semantics？
+        ↓
 refinement：proof decomposition 是否已经成熟？
         ↓
 assurance：coverage / composition / implementation evidence
@@ -25,12 +27,13 @@ semantic signatures + targeted invalidation
         ↺
 ```
 
-Harness 实际上只管理四个彼此不同的层次：
+Harness 实际上管理五个彼此不同的层次：
 
 | 层次 | 核心问题 |
 | --- | --- |
 | **Correctness model** | 系统必须满足哪些 proposition？它们依赖什么？ |
 | **Semantic type system** | 重要 state、mechanism 和可复用语义关系到底是什么意思？ |
+| **Formalization routing** | 每个 canonical proof subject 走 symbolic 还是显式 non-symbolic backend？symbolic translation 是否 ready？ |
 | **Refinement** | proposition 的边界和 dependency decomposition 是否合理？ |
 | **Assurance** | 我们对 specification 完整性、proof composition、implementation correctness 分别有多大把握？ |
 
@@ -110,6 +113,31 @@ downstream correctness != provenance correctness
 
 `provenance_binding` 也不能因为 downstream 使用正确，就反推 provenance 正确。它必须单独证明 producer、source、capture/binding point 以及最终关联到哪个 execution/state/identity。对于复合 identity / semantic tuple，还必须证明所有用于区分实体的坐标来自同一个 source/execution；分别正确的 field-level provenance 并不能证明 `(document_id, key)`、`(document_id, frontier)` 或 authoring-state/request tuple 指向同一个语义实体。
 
+## Formalization routing
+
+Formalization 是与 proposition semantics、refinement maturity、assurance confidence 正交的 verifier control plane。Canonical `correctness.yaml` 中的 `formalization` 必须穷举全部 claim、assumption 与 semantic contract；任何新增 subject 如果没有明确 backend 声明，model validation 直接失败。
+
+```text
+mode = symbolic
+    + mapping exists
+    + translation TRUSTED
+        => SYMBOLIC_READY
+
+mode = symbolic
+    + mapping missing / translation stale or unverified
+        => FORMALIZATION_BLOCKED
+
+mode = non_symbolic
+    + structured reason + rationale
+        => explicit alternate verifier backend
+```
+
+最重要的规则是 **禁止隐式 fallback**。一个声明为 symbolic 的 root/derived claim 如果 target 或任一 direct premise 尚未 formalize 到可用状态，composition scheduler 必须停在 formalization blocker；它不能因为 SMT 暂时跑不了就偷偷改用 LLM composition audit。只有显式声明 `non_symbolic` 的 subject 才能进入 non-symbolic backend。
+
+`symbolic` 也不等于“implementation 已由 SMT 证明”。对于 leaf，它只表示 proposition 本身有 machine-readable semantics；真实代码到 leaf 的 correspondence 仍然可以由 state-machine exploration、control-flow analysis、transaction checker、integration/fault-injection tests 等 implementation evidence 建立。
+
+Formalization metadata 不进入 proposition semantic signature，也不是 proof premise；它描述的是 verifier capability / routing，而不是产品 guarantee。
+
 ## Refinement 与 invalidation
 
 Refinement 回答的是：
@@ -156,7 +184,7 @@ composition certification
 implementation evidence
 ```
 
-Coverage 是全局、开放式的 adversarial search；Composition 只看一个 proposition 与它的 direct premises；Implementation evidence 则把 terminal proof obligation 连接到真实实现。Coverage 在自由搜索前还会强制做几类 semantic closure：跨 reachable transition 的 inductive state-invariant closure、source/execution/identity/authority 的 provenance-binding closure，以及同一 logical identity 上互斥 authoritative terminal outcomes 的 decision-coherence closure。这里特别区分“值相等”和“authority provenance 正确”：fencing epoch、lease/generation token 等即使数值等于 current，也不能因此推出提交者属于 current owner generation。
+Coverage 是全局、开放式的 adversarial search；Composition 只看一个 proposition 与它的 direct premises；Implementation evidence 则把 terminal proof obligation 连接到真实实现。Coverage 在自由搜索前还会强制做几类 semantic closure：跨 reachable transition 的 inductive state-invariant closure、source/execution/identity/authority 的 provenance-binding closure、同一 logical identity 上互斥 authoritative terminal outcomes 的 decision-coherence closure，以及 **cross-state transition-bridge closure**。最后一类专门攻击“子系统 A 已经发布更强事实，但子系统 B 仍停留在旧 classification/state”的漏边：例如 authoritative ACCEPTED reconciliation 已完成时 pending lifecycle 是否必须同步结束，或 canonical base 已切换时旧 representation 是否仍被允许暴露。它要求区分 transition safety 与 eventual progress，也要求区分 safety postcondition 与具体修复机制：`automatic rebase out of scope` 并不自动推出“暴露 incompatible overlay 也可以”。这里特别区分“值相等”和“authority provenance 正确”：fencing epoch、lease/generation token 等即使数值等于 current，也不能因此推出提交者属于 current owner generation。
 
 Provenance closure 进一步把 **semantic scope / namespace** 作为 typed coordinate。Catalog 中的 term/state 可以声明 `scope_dimensions`（例如 document、tenant）；当 `provenance_binding` 的 source/bound 两侧共享同一 scope dimension 时，contract 必须通过 `scope_bindings` 完整枚举该维度上的 source/bound symbols。Validator 会确定性地拒绝遗漏，因此一旦 scope 已被建模，“document-scoped 对象跨文档偷换但所有 payload/scalar 恰好相等”不再只是依赖 auditor 灵感。仍需要 semantic judgment 的部分是：哪些对象本来就应该属于哪个 scope；Harness 不能从字段名自动推断这一业务语义。
 
@@ -165,7 +193,17 @@ Provenance closure 进一步把 **semantic scope / namespace** 作为 typed coor
 Coverage challenger 还必须把“当前 claims 没有直接杀掉 witness”和“witness 真正通过 specification-gap gate”分开。每个 challenger 需要独立判断 current claims 是否仍可全部成立、failure 是否在 scope 内、canonical design 是否真的要求这个 property、bad outcome 是否 material，并给出最终 `coverage_gate_result`。只有 `SURVIVES_GATE` 才表示 structural finding；如果候选只是一个合理但更强的产品/UX guarantee，或落在当前 specification / failure-model scope 之外，应明确分类为 `DISQUALIFIED_STRONGER_OR_OUT_OF_SCOPE`，不能因为 `violated_current_claims: []` 就继续当成 gap。这避免把“model 没声明某性质”误推成“model 必须声明某性质”。
 
 
-对于可以机械化的 symbolic 子问题，Harness 把“语义翻译”和“solver 检查”分开管理。Canonical proposition 的 symbolic mapping 仍需 translation assurance；coverage bad-state 则作为独立 declarative case 保存。
+对于可以机械化的 symbolic 子问题，Harness 把“语义翻译”和“solver 检查”分开管理。Canonical proposition 的 symbolic mapping 仍需 translation assurance；Design Obligation 则作为独立于 DAG topology 的 formal test oracle 保存。它直接从 canonical design source sections 翻译，而不能从当前 roots 自动生成，否则 `Roots ⊨ Obligations` 会退化成自证循环。
+
+Design Obligation 使用与 claim/contract 相同的 independent translation assurance：blind symbolic→NL round trip，再由 weakening/strengthening reviewer 同时检查 formula fidelity 与“提取出的 obligation 是否真的被引用的 canonical design 支持”。因此一个 SMT `SAT` witness 可以是真实的形式反例，但如果 obligation 相对 source prose 是 `STRONGER`，它不能被升级成 canonical specification gap。正式 machine-certified coverage 的目标查询是：
+
+```text
+ALL current roots
+AND ALL current assumptions
+AND NOT(trusted design obligation)
+```
+
+只有所有 root/assumption symbolic translations 与 obligation oracle 本身都 `TRUSTED` 时，`UNSAT` 才有资格成为 canonical machine-certified coverage。`selected_constraints` 只用于局部诊断和 regression fixture。
 
 对于 canonical state，如果某个值的语义依赖必须保留的坐标（例如 document 与 observation），这些坐标可以通过 `catalog.state.*.symbolic_dimensions` 进入 canonical model。任何直接映射该 state symbol 的 symbolic function 都必须显式暴露完全相同的有序 dimensions；Harness 拒绝把 `[document, observation]` 降维成只依赖 `document` 的 timeless function。这个约束只解决结构性语义丢失；“这些 dimensions 是否是业务上正确的定义”仍属于 translation/refinement 的 semantic judgment。
 
@@ -179,6 +217,7 @@ Persisted formal layer 采用独立的 closed machine-readable schema：
 correctness.py formal-schema bridge
 correctness.py formal-schema assurance
 correctness.py formal-schema coverage
+correctness.py formal-schema design-obligations
 correctness.py formal-schema composition-artifact
 correctness.py formal-schema coverage-artifact
 ```
@@ -205,7 +244,7 @@ AND candidate bad state             → UNSAT
 | **Semantic validation** | 检查 reference、cycle、node role、catalog consistency 等 graph-level property |
 | **Semantic signatures** | 判断之前已经审过的 reasoning 是否因为语义变化而失效 |
 | **Slice + prompt compilation** | 给 auditor 只暴露当前 reasoning boundary 所需的 context |
-| **Scheduling** | 决定哪些 refinement / composition task 当前 runnable，以及何时被 human/tooling blocker 卡住 |
+| **Scheduling** | 根据 formalization backend、translation readiness、refinement/composition state 决定 task runnable 或显式 blocker；symbolic path 不允许静默降级 |
 | **Assurance bookkeeping** | 把 coverage、composition、implementation evidence 与 refinement maturity 分开记录 |
 | **Controlled mutation** | 在 schema validation、semantic precondition、lock 和 atomic write 约束下修改 model |
 
@@ -231,7 +270,7 @@ Automation 可以重新组织已经批准的 proof structure，但不能静默�
 | 当前 proposition、catalog 和 campaign state | `correctness.yaml` |
 | validation、signature、prompt、scheduler、mutation 如何执行 | `correctness.py` |
 | 当前建模的系统 architecture | `../design/google-docs.md` |
-| Symbolic proposition mapping 与 declarative coverage case | `symbolic_models/*.yaml` |
+| Symbolic proposition mapping、Design Obligation oracle 与 translation assurance | `symbolic_models/*.yaml` |
 | 可独立人工审阅的 symbolic machine-check artifact | `symbolic_artifacts/*.yaml` |
 | Agent 操作 repository 时必须遵守什么规则 | `../AGENTS.md` |
 | 当前 operational workflow | `correctness.py workflow-help` |

@@ -17,7 +17,7 @@ from harness.symbolic import (
 )
 
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
 BRIDGE = ROOT / "symbolic_models" / "bridge.yaml"
 ASSURANCE = ROOT / "symbolic_models" / "assurance.yaml"
 OBLIGATIONS = ROOT / "symbolic_models" / "design_obligations.yaml"

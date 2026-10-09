@@ -426,3 +426,281 @@ records:
           The listed transition examples and gate decision wording make the operational
           context explicit without adding a separate guarantee.
         differences: []
+  obligation:accepted_reconciliation_closes_pending_lifecycle:
+    kind: obligation
+    subject_id: accepted_reconciliation_closes_pending_lifecycle
+    subject_signature: fd8005d0d706455a484cee94ff0ea56b3c67be7c5319c053d3b83fef42ea1b25
+    roundtrip:
+      subject_signature: fd8005d0d706455a484cee94ff0ea56b3c67be7c5319c053d3b83fef42ea1b25
+      status: TRANSLATED
+      natural_language: For every client state s and every logical edit identity e,
+        if the user-visible state s is the result of authoritative reconnect/reconciliation
+        that classified that exact logical edit identity e as ACCEPTED within the
+        published response head, then that exact logical edit identity e does not
+        remain active in client_pending_edits in that same client state s.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: fd8005d0d706455a484cee94ff0ea56b3c67be7c5319c053d3b83fef42ea1b25
+        verdict: EQUIVALENT
+        reason: 'The formula preserves the proposition''s universal scope over published
+          reconnect/reconciliation client states and exact logical edit identities:
+          whenever authoritative reconciliation published ACCEPTED for that same identity
+          within the response head, the resulting state cannot retain that identity
+          as an active unresolved pending edit. The predicate meanings preserve the
+          exact-identity, publication, and client_pending_edits boundaries without
+          adding or dropping a guard.'
+        differences: []
+      strengthening:
+        subject_signature: fd8005d0d706455a484cee94ff0ea56b3c67be7c5319c053d3b83fef42ea1b25
+        verdict: EQUIVALENT
+        reason: The source explicitly requires that once authoritative reconnect/reconciliation
+          publishes exact same-identity ACCEPTED classification within the response
+          head, that logical edit no longer remain an active unresolved pending edit
+          in the resulting client state. The formula quantifies exactly over published
+          reconciliation result states and logical edit identities, preserves exact-identity
+          scope in the predicate meaning, and requires precisely the absence of the
+          matching active pending entry without adding lifecycle, overlay, progress,
+          or broader temporal guarantees.
+        differences: []
+    roundtrip_reviews:
+      weakening:
+        subject_signature: fd8005d0d706455a484cee94ff0ea56b3c67be7c5319c053d3b83fef42ea1b25
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal quantification over published
+          reconnect/reconciliation states and exact logical edit identities, the ACCEPTED-within-published-response-head
+          precondition, and the required same-state absence of that exact edit from
+          active unresolved pending state. The cited canonical section explicitly
+          requires same-identity accepted reconciliation to retire the pending lifecycle
+          before publication, so no extra guarantee is introduced.
+        differences: []
+      strengthening:
+        subject_signature: fd8005d0d706455a484cee94ff0ea56b3c67be7c5319c053d3b83fef42ea1b25
+        verdict: EQUIVALENT
+        reason: The rendering preserves the published reconnect/reconciliation boundary,
+          universal state-and-identity scope, exact logical-edit identity match, ACCEPTED
+          classification within the published response head, and the required resulting-state
+          absence of that identity as an active unresolved pending edit in client_pending_edits.
+          It adds no broader temporal, identity, or lifecycle guarantee.
+        differences: []
+  obligation:visible_speculative_representation_valid_on_current_base:
+    kind: obligation
+    subject_id: visible_speculative_representation_valid_on_current_base
+    subject_signature: 6075d99549ab102d2f765850e213e95abccf24ad2cb6972ea00eebefab0b0702
+    roundtrip:
+      subject_signature: 6075d99549ab102d2f765850e213e95abccf24ad2cb6972ea00eebefab0b0702
+      status: TRANSLATED
+      natural_language: For every client state s and every overlay o, if o is currently
+        exposed in s as a speculative user-visible overlay, with its document identity
+        retained, then composing o over the canonical base visible in that same client
+        state s still realizes the original logical edit operation represented by
+        o.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 6075d99549ab102d2f765850e213e95abccf24ad2cb6972ea00eebefab0b0702
+        verdict: STRONGER
+        reason: The symbolic formula faithfully states the extracted proposition,
+          but that proposition itself adds a compatibility invariant not committed
+          to by the cited canonical section. The source preserves operation provenance
+          and explicitly declines to guarantee automatic rebase for unresolved edits;
+          it permits unresolved state to remain in conflict/read-only handling and
+          does not require every still-visible speculative representation to compose
+          over the current canonical base as the original operation.
+        differences:
+        - The extracted/formal obligation requires suppression of any exposed speculative
+          representation that is no longer semantically valid on the current canonical
+          base, while the cited source only requires provenance preservation, accepted-identity
+          exclusion, lifecycle coherence, and blocking normal editing for unresolved
+          state; it does not impose this additional base-compatibility condition on
+          all exposed unresolved representations.
+      strengthening:
+        subject_signature: 6075d99549ab102d2f765850e213e95abccf24ad2cb6972ea00eebefab0b0702
+        verdict: STRONGER
+        reason: The formula faithfully encodes the extracted statement, but that statement
+          imposes a stronger observer invariant than the cited canonical section commits
+          to. The source requires speculative representation to preserve the original
+          logical edit's operation provenance, and for unresolved edits after catch-up
+          it explicitly declines to guarantee automatic rebase while requiring a non-normal
+          editing/conflict state. It does not state that every currently exposed unresolved
+          representation must be semantically composable over the newly visible canonical
+          base so as to realize the same logical operation, nor that an incompatible
+          representation must be suppressed. A conflict/error UI may retain user content
+          without the source defining that composition property.
+        differences:
+        - The extracted/formal contract requires base-relative semantic compatibility
+          for every user-visible speculative representation, adding a suppression-or-valid-representation
+          obligation that is not present in the cited source's provenance and unresolved-conflict
+          requirements.
+    roundtrip_reviews:
+      weakening:
+        subject_signature: 6075d99549ab102d2f765850e213e95abccf24ad2cb6972ea00eebefab0b0702
+        verdict: STRONGER
+        reason: The round-trip faithfully restates the extracted proposition, but
+          that proposition adds a current-base semantic-compatibility requirement
+          not committed to by the cited canonical section. The source requires operation
+          provenance for retained/exposed representations and explicitly declines
+          to define or guarantee client-side rebase of unresolved edits after canonical-base
+          changes; it does not require every exposed unresolved representation to
+          compose over the current base as the same logical operation, nor explicitly
+          require suppression whenever that cannot be shown.
+        differences:
+        - 'The extracted/rendered contract requires a cross-relation between each
+          exposed overlay and the currently visible canonical base: composition on
+          that base must preserve the original edit semantics. The cited source only
+          requires that the representation itself continue to encode the same logical
+          edit and states that safe transformation onto a newer base may be unavailable,
+          without imposing this additional exposure/suppression invariant.'
+      strengthening:
+        subject_signature: 6075d99549ab102d2f765850e213e95abccf24ad2cb6972ea00eebefab0b0702
+        verdict: STRONGER
+        reason: The rendering faithfully restates the extracted obligation, but that
+          obligation adds a current-base semantic-validity requirement not committed
+          to by the cited canonical section. The source requires identity/operation
+          provenance for speculative representations, exclusion of already accepted
+          overlays, and blocking normal editing while unresolved edits remain; it
+          explicitly declines to define or guarantee automatic rebase semantics for
+          unresolved edits after the canonical base changes.
+        differences:
+        - The extracted/rendered proposition requires every currently exposed speculative
+          representation to compose over the current visible canonical base so as
+          to realize the original logical edit operation. The cited source only requires
+          that the representation continue to encode the same originating logical
+          operation and, for unresolved edits after resync, permits conflict/read-only
+          handling without specifying a valid composition relation on the new base.
+          Thus the proposition imposes an additional semantic compatibility constraint.
+  obligation:externally_rejected_edit_closes_active_speculative_lifecycle:
+    kind: obligation
+    subject_id: externally_rejected_edit_closes_active_speculative_lifecycle
+    subject_signature: da60294fbeea4d46cca8d63203e4ae7668fe24e21dd626467f0d1dfc40d46b28
+    roundtrip:
+      subject_signature: da60294fbeea4d46cca8d63203e4ae7668fe24e21dd626467f0d1dfc40d46b28
+      status: TRANSLATED
+      natural_language: 'For every client state s and every logical edit identity
+        e, if the normally participating client has observed, before or atomically
+        with visible state s, an authoritative externally terminal definitive REJECTED
+        result for that exact logical edit identity e, then all of the following hold
+        in that same client state s for that same logical edit identity e: e is not
+        active in client_pending_edits; s does not retain a normal-lifecycle speculative
+        representation for e in client_speculative_overlays; s does not expose a normal-lifecycle
+        speculative representation for e in client_visible_speculative_overlays; and
+        e is classified in s as having a terminalized normal speculative lifecycle
+        in client_terminalized_speculative_lifecycles. This terminalized classification
+        is logical control state: an implementation may represent it by deletion or
+        non-reactivatable archival state rather than by a separately materialized
+        tombstone set.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: da60294fbeea4d46cca8d63203e4ae7668fe24e21dd626467f0d1dfc40d46b28
+        verdict: EQUIVALENT
+        reason: 'The formula matches the extracted rejection-retirement contract:
+          after a normally participating client has observed an authoritative definitive
+          REJECTED result for the exact logical edit identity, the resulting visible
+          state has no active pending, retained speculative, or visible speculative
+          representation for that identity and classifies its normal speculative lifecycle
+          as terminalized. The helper meanings preserve the authoritative-observation,
+          exact-identity, and resulting-state boundaries without adding a delivery
+          or UI requirement.'
+        differences: []
+      strengthening:
+        subject_signature: da60294fbeea4d46cca8d63203e4ae7668fe24e21dd626467f0d1dfc40d46b28
+        verdict: EQUIVALENT
+        reason: 'The canonical section explicitly states that after a normally participating
+          client observes an authoritative exact-identity definitive REJECTED result,
+          the resulting visible state must have ended that logical edit''s normal
+          speculative lifecycle: pending, retained speculative, and visible speculative
+          participation are gone, while archival/error information may remain only
+          in non-reactivatable form. The formula preserves the normal-client, authoritative-observation,
+          exact-identity, resulting-state, and terminalization boundaries and requires
+          exactly those four consequences.'
+        differences: []
+    roundtrip_reviews:
+      weakening:
+        subject_signature: da60294fbeea4d46cca8d63203e4ae7668fe24e21dd626467f0d1dfc40d46b28
+        verdict: EQUIVALENT
+        reason: The rendering preserves the normal-client applicability, exact logical-edit
+          identity, authoritative definitive REJECTED observation boundary, and the
+          required closure of pending, retained speculative, and visible speculative
+          participation together with terminalization. Its persistence across later
+          visible states follows from the cited source's explicit absorbing terminal-lifecycle
+          rule and prohibition on reactivation, so the formulation does not strengthen
+          the canonical contract.
+        differences: []
+      strengthening:
+        subject_signature: da60294fbeea4d46cca8d63203e4ae7668fe24e21dd626467f0d1dfc40d46b28
+        verdict: EQUIVALENT
+        reason: The rendering preserves the normally participating-client applicability
+          guard, authoritative definitive same-identity REJECTED observation, the
+          resulting-state removal of active pending, retained speculative, and visible
+          speculative participation for that lifecycle, and terminalization of that
+          same lifecycle. Its clarification that terminalization may be represented
+          by deletion or non-reactivatable archival state is explicitly supported
+          by the canonical source and does not strengthen the contract.
+        differences: []
+  obligation:visible_canonical_frontier_never_regresses:
+    kind: obligation
+    subject_id: visible_canonical_frontier_never_regresses
+    subject_signature: 2435dccd92bac34fa72ecd8130588a30c9fb3c85281e6bbb3968b2269a730032
+    roundtrip:
+      subject_signature: 2435dccd92bac34fa72ecd8130588a30c9fb3c85281e6bbb3968b2269a730032
+      status: TRANSLATED
+      natural_language: For every pair of ClientState values, earlier and later, if
+        both states are ordinary user-visible states in the same normal client/session,
+        later is later than earlier, the session continuously represents the same
+        document from earlier through later, and both earlier and later represent
+        that same document, then the later state's last_applied_revision for that
+        document is not strictly lower than the earlier state's visible frontier.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 2435dccd92bac34fa72ecd8130588a30c9fb3c85281e6bbb3968b2269a730032
+        verdict: EQUIVALENT
+        reason: 'The formula preserves the source scope and relation: it ranges over
+          ordinary user-visible earlier/later states in one normal client/session
+          with continuous representation of the same document, and forbids the later
+          frontier from being strictly below the earlier visible frontier. The additional
+          same-session/same-document predicate is redundant given the stronger continuous-same-document
+          predicate''s supplied meaning, so it does not change applicability. No quantifier,
+          identity boundary, observation scope, or exclusion is dropped or added.'
+        differences: []
+      strengthening:
+        subject_signature: 2435dccd92bac34fa72ecd8130588a30c9fb3c85281e6bbb3968b2269a730032
+        verdict: EQUIVALENT
+        reason: The source requires non-regression of last_applied_revision between
+          later ordinary user-visible states in the same normal client/session exactly
+          while that session continuously represents the same document, excluding
+          document switch-away-and-back and independent session boundaries. The formula
+          quantifies state pairs under that same continuous same-document/session
+          visibility boundary and forbids a strictly lower later frontier. The additional
+          same_session_later_visible_same_document conjunct is redundant because its
+          conditions are already entailed by same_session_later_visible_continuous_same_document,
+          so it does not narrow applicability or add a requirement.
+        differences: []
+    roundtrip_reviews:
+      weakening:
+        subject_signature: 2435dccd92bac34fa72ecd8130588a30c9fb3c85281e6bbb3968b2269a730032
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the same universal pairwise scope and guards:
+          two ordinary user-visible states in one normal client/session, temporal
+          ordering, continuous representation of the same document across the interval,
+          and non-regression of that document''s visible canonical frontier. In the
+          cited design, the visible canonical frontier is `last_applied_revision`,
+          so expressing the later frontier through that field does not change the
+          contract. The added endpoint statement that both states represent the same
+          document is redundant with continuous same-document representation and does
+          not strengthen the requirement.'
+        differences: []
+      strengthening:
+        subject_signature: 2435dccd92bac34fa72ecd8130588a30c9fb3c85281e6bbb3968b2269a730032
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the same scoped transition-safety contract:
+          for any earlier/later ordinary user-visible states within one normal client/session
+          that continuously represents the same document, the later canonical frontier
+          (last_applied_revision) cannot be below the earlier visible frontier. It
+          preserves the same-document continuity guard, normal-session and user-visible
+          observation boundaries, temporal ordering, and non-strict monotonicity,
+          without extending the guarantee across document switches, new sessions,
+          or other excluded boundaries. The cited design section explicitly states
+          this non-regression requirement.'
+        differences: []

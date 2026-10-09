@@ -25,13 +25,13 @@ For correctness-refinement work, use these sources in order:
 - Treat `refinement.nodes.*.status: stable` strictly as refinement maturity for the recorded semantic signature. It is not proof-composition certification and not implementation evidence. Read orthogonal confidence state through `correctness.py assurance-status`; never use assurance metadata itself as a proof premise.
 - A semantic contract is a reusable property specification / refinement type, not a theorem or proof premise. A claim that references `semantic_contracts` asserts that it itself fully realizes the property's truth condition across at least the contract's minimum semantic scope; do not propagate a contract upward merely because a dependency already realizes it. Such a claim must explicitly pass the generated contract-realization obligation before it can become stable. Compile stable refinement only through the live mutation schema and provide its required `contract_realizations` declaration.
 
-## Local history directory
+## Temporary workspace
 
-`history/` is local scratch space, not repository history and not a source of truth. Its contents other than `history/README.md` and `history/.gitignore` are intentionally ignored by Git.
+`temp/` is the single repository-local scratch/runtime area. It is fully ignored by Git and is never a source of truth.
 
 Mutation plans, temporary audit notes, or diagnostics may be placed there when useful. They may be stale and may be deleted at any time. Do not read or replay them by default. Durable project history belongs in Git commits; current correctness semantics belong in `correctness.yaml`.
 
-See `history/README.md` for the local layout convention.
+Keep disposable audits, mutation plans, translation-review work, local environments, locks, and generated scratch only under `temp/`.
 
 ## Validation boundary
 
@@ -43,11 +43,11 @@ When a substantial correctness-tooling change alters the Harness concepts or sem
 
 ## Correctness tooling environment
 
-The correctness tooling has a repository-local virtual environment at `correctness/.venv`.
+Correctness commands use the available Python 3 environment; run them with `-B` so bytecode caches are never emitted into the repository.
 
-- Bootstrap or refresh it with `cd correctness && python3 -m venv .venv && .venv/bin/python3 -m pip install -r requirements.txt`.
-- Run correctness commands with `correctness/.venv/bin/python3 correctness/correctness.py ...` from the repository root, or `.venv/bin/python3 correctness.py ...` from `correctness/`.
-- Do not rely on globally installed Python packages for correctness workflows.
+- Bootstrap or refresh it with `python3 -m pip install -r correctness/requirements.txt`.
+- Run correctness commands with `python3 -B correctness/correctness.py ...` from the repository root, or `python3 -B correctness.py ...` from `correctness/`.
+- Ensure `correctness/requirements.txt` is installed in the active Python environment before running correctness workflows; repository-local environments, when desired, belong under ignored `temp/`.
 
 ## Repository hygiene
 

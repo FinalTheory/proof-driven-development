@@ -125,11 +125,17 @@ class SymbolicCompositionVerifier:
         unsupported: list[str] = []
         for premise_id in premise_ids:
             premise = self.graph.require_node(premise_id)
-            if premise.node_type != "claim" or premise_id not in self.bridge.claims:
+            if premise.node_type == "claim":
+                mapped = premise_id in self.bridge.claims
+            elif premise.node_type == "assumption":
+                mapped = premise_id in self.bridge.assumptions
+            else:
+                mapped = False
+            if not mapped:
                 unsupported.append(premise_id)
         if unsupported:
             raise SymbolicCompositionError(
-                "all direct premises must currently be symbolically mapped claims; "
+                "all direct premises must be symbolically mapped claims or assumptions; "
                 f"unsupported={sorted(unsupported)}"
             )
         return mapping.formula, premise_ids
@@ -149,7 +155,7 @@ class SymbolicCompositionVerifier:
                 for name, decl in self.bridge.functions.items()
             },
             "constraints": [
-                overrides.get(premise_id, self.bridge.claims[premise_id].formula)
+                overrides.get(premise_id, self._premise_formula(premise_id))
                 for premise_id in premise_ids
             ],
             "query": {"not": target_formula},
@@ -161,22 +167,38 @@ class SymbolicCompositionVerifier:
                 f"failed to compile symbolic composition: {exc}"
             ) from exc
 
-    def _require_trusted_claims(self, claim_ids: list[str]) -> None:
+    def _premise_formula(self, premise_id: str) -> dict[str, Any]:
+        premise = self.graph.require_node(premise_id)
+        if premise.node_type == "claim":
+            return self.bridge.claims[premise_id].formula
+        if premise.node_type == "assumption":
+            return self.bridge.assumptions[premise_id].formula
+        raise SymbolicCompositionError(f"unsupported premise type for {premise_id}")
+
+    def _require_trusted_claims(self, subject_ids: list[str]) -> None:
         if self.assurance_registry is None:
             raise TranslationReviewError(
                 "trusted symbolic composition requires a translation assurance registry"
             )
         failures: list[str] = []
-        for claim_id in claim_ids:
+        for subject_id in subject_ids:
+            node = self.graph.require_node(subject_id)
+            if node.node_type == "claim":
+                kind = "claim"
+            elif node.node_type == "assumption":
+                kind = "assumption"
+            else:
+                failures.append(f"{subject_id}=UNSUPPORTED_NODE_TYPE")
+                continue
             result = self.assurance_registry.evaluate(
                 self.graph,
                 self.bridge,
-                kind="claim",
-                subject_id=claim_id,
+                kind=kind,
+                subject_id=subject_id,
             )
             if result.status != SubjectTrustStatus.TRUSTED:
                 failures.append(
-                    f"{claim_id}={result.status.value} ({result.reason})"
+                    f"{subject_id}={result.status.value} ({result.reason})"
                 )
         if failures:
             raise TranslationReviewError(

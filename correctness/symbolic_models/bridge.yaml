@@ -4,6 +4,7 @@ sorts:
 - Document
 - Revision
 - Overlay
+- LogicalEditIdentity
 - Request
 - CatchupResponse
 - AuthoritativeState
@@ -492,12 +493,44 @@ functions:
   accepted_reconciliation_published:
     args:
     - ClientState
-    - Overlay
+    - LogicalEditIdentity
     returns: Bool
     catalog_symbols: []
-    meaning: The user-visible state s is the result of authoritative reconnect/reconciliation that classified the exact logical identity represented by o as ACCEPTED within the published response head.
+    meaning: The user-visible state s is the result of authoritative reconnect/reconciliation that classified exact logical edit identity e as ACCEPTED within the published response head.
     semantic_anchors:
     - source:reconnect_revision_boundary
+  pending_identity_active:
+    args:
+    - ClientState
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - client_pending_edits
+    meaning: Exact logical edit identity e remains active in client_pending_edits in client state s.
+  retained_speculative_identity_active:
+    args:
+    - ClientState
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - client_speculative_overlays
+    meaning: Client state s retains a normal-lifecycle speculative representation for exact logical edit identity e.
+  visible_speculative_identity_active:
+    args:
+    - ClientState
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - client_visible_speculative_overlays
+    meaning: Client state s exposes a normal-lifecycle speculative representation for exact logical edit identity e.
+  terminalized_speculative_identity:
+    args:
+    - ClientState
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - client_terminalized_speculative_lifecycles
+    meaning: Exact logical edit identity e is classified as terminalized normal speculative lifecycle in client state s.
   overlay_compatible_with_visible_canonical_base:
     args:
     - ClientState
@@ -510,19 +543,28 @@ functions:
   definitive_rejection_observed:
     args:
     - ClientState
-    - Overlay
+    - LogicalEditIdentity
     returns: Bool
     catalog_symbols: []
-    meaning: The normally participating client has observed an authoritative externally terminal definitive REJECTED result for the exact logical identity represented by o before or atomically with visible state s.
+    meaning: The normally participating client has observed an authoritative externally terminal definitive REJECTED result for exact logical edit identity e before or atomically with visible state s.
     semantic_anchors:
     - contract:rejected_terminal_speculative_retirement
+  same_session_later_visible_continuous_same_document:
+    args:
+    - ClientState
+    - ClientState
+    returns: Bool
+    catalog_symbols: []
+    meaning: Both states are ordinary user-visible states in the same normal client/session; the second is later than the first, and the session continuously represents the same document from the first state through the second state.
+    semantic_anchors:
+    - source:reconnect_revision_boundary
   same_session_later_visible_same_document:
     args:
     - ClientState
     - ClientState
     returns: Bool
     catalog_symbols: []
-    meaning: The second state is a later ordinary user-visible state in the same normal client/session and represents the same document as the first state.
+    meaning: Both states are ordinary user-visible states in the same normal client/session; the second is later than the first and both represent the same document.
     semantic_anchors:
     - contract:visible_canonical_frontier_non_regression
   visible_frontier_regresses:
@@ -534,6 +576,8 @@ functions:
     meaning: The later state's last_applied_revision for the same document is strictly lower than the earlier state's visible frontier.
     semantic_anchors:
     - contract:visible_canonical_frontier_non_regression
+assumptions: {}
+
 claims:
   L20_acceptance_paths_are_authoritatively_mediated:
     contracts: []
@@ -1218,38 +1262,38 @@ contracts:
       forall:
         vars:
           s: ClientState
-          o: Overlay
+          e: LogicalEditIdentity
         body:
           implies:
           - call:
               fn: definitive_rejection_observed
               args:
               - var: s
-              - var: o
+              - var: e
           - and:
             - not:
                 call:
-                  fn: pending_edit
+                  fn: pending_identity_active
                   args:
                   - var: s
-                  - var: o
+                  - var: e
             - not:
                 call:
-                  fn: retained_overlay
+                  fn: retained_speculative_identity_active
                   args:
                   - var: s
-                  - var: o
+                  - var: e
             - not:
                 call:
-                  fn: visible_overlay
+                  fn: visible_speculative_identity_active
                   args:
                   - var: s
-                  - var: o
+                  - var: e
             - call:
-                fn: terminalized_speculative_edit
+                fn: terminalized_speculative_identity
                 args:
                 - var: s
-                - var: o
+                - var: e
   visible_canonical_frontier_non_regression:
     class: safety_contract
     formula:

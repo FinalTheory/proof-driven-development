@@ -13,6 +13,8 @@ from .bridge import SymbolicBridge
 from .translation_assurance import (
     AssuranceStatus,
     ClaimTranslationSubject,
+    AssumptionTranslationSubject,
+    ObligationTranslationSubject,
     ComparisonReview,
     RoundTripTranslation,
     TranslationReviewError,
@@ -20,6 +22,7 @@ from .translation_assurance import (
     TranslationSubject,
     aggregate_translation_assurance,
     build_claim_translation_subject,
+    build_assumption_translation_subject,
     build_translation_subject,
     parse_comparison_review,
     parse_roundtrip_translation,
@@ -117,9 +120,9 @@ class TranslationAssuranceRegistry:
             kind = item["kind"]
             subject_id = item["subject_id"]
             signature = item["subject_signature"]
-            if kind not in {"contract", "claim"}:
+            if kind not in {"contract", "claim", "assumption", "obligation"}:
                 raise TranslationReviewError(
-                    f"assurance record {key}.kind must be contract or claim"
+                    f"assurance record {key}.kind must be contract, claim, assumption, or obligation"
                 )
             if not isinstance(subject_id, str) or not subject_id:
                 raise TranslationReviewError(
@@ -193,7 +196,20 @@ class TranslationAssuranceRegistry:
         kind: str,
         subject_id: str,
     ) -> SubjectTrustResult:
+        if kind == "obligation":
+            raise TranslationReviewError(
+                "obligation trust evaluation requires an explicit obligation translation subject"
+            )
         subject = _build_subject(graph, bridge, kind=kind, subject_id=subject_id)
+        return self.evaluate_subject(kind=kind, subject_id=subject_id, subject=subject)
+
+    def evaluate_subject(
+        self,
+        *,
+        kind: str,
+        subject_id: str,
+        subject: TranslationSubject | ClaimTranslationSubject | AssumptionTranslationSubject | ObligationTranslationSubject,
+    ) -> SubjectTrustResult:
         current_signature = translation_subject_signature(subject)
         key = f"{kind}:{subject_id}"
         record = self.records.get(key)
@@ -260,7 +276,7 @@ class TranslationAssuranceRegistry:
 
 
 def assurance_record_payload(
-    subject: TranslationSubject | ClaimTranslationSubject,
+    subject: TranslationSubject | ClaimTranslationSubject | AssumptionTranslationSubject | ObligationTranslationSubject,
     *,
     roundtrip: RoundTripTranslation,
     direct_reviews: Mapping[str, ComparisonReview],
@@ -272,6 +288,12 @@ def assurance_record_payload(
     elif isinstance(subject, ClaimTranslationSubject):
         kind = "claim"
         subject_id = subject.claim_id
+    elif isinstance(subject, AssumptionTranslationSubject):
+        kind = "assumption"
+        subject_id = subject.assumption_id
+    elif isinstance(subject, ObligationTranslationSubject):
+        kind = "obligation"
+        subject_id = subject.obligation_id
     else:  # pragma: no cover - defensive
         raise TypeError(f"unsupported translation subject {type(subject).__name__}")
 
@@ -355,9 +377,11 @@ def _build_subject(
     *,
     kind: str,
     subject_id: str,
-) -> TranslationSubject | ClaimTranslationSubject:
+) -> TranslationSubject | ClaimTranslationSubject | AssumptionTranslationSubject:
     if kind == "contract":
         return build_translation_subject(graph, bridge, subject_id)
     if kind == "claim":
         return build_claim_translation_subject(graph, bridge, subject_id)
+    if kind == "assumption":
+        return build_assumption_translation_subject(graph, bridge, subject_id)
     raise TranslationReviewError(f"unknown translation subject kind {kind!r}")

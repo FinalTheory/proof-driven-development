@@ -5,6 +5,7 @@ from enum import Enum
 import hashlib
 import json
 import re
+from pathlib import Path
 from typing import Any, Iterable
 
 import yaml
@@ -148,6 +149,147 @@ class ClaimTranslationSubject:
         return yaml.safe_dump(selected, sort_keys=False, allow_unicode=True)
 
 
+
+@dataclass(frozen=True)
+class AssumptionTranslationSubject:
+    assumption_id: str
+    canonical_assumption: dict[str, Any]
+    formula: dict[str, Any]
+    functions: dict[str, dict[str, Any]]
+    catalog_symbols: dict[str, Any]
+
+    def symbolic_context(self) -> str:
+        payload = {
+            "assumption_mapping_semantics": (
+                "This formula is the explicit symbolic translation of one canonical proof assumption. "
+                "The assumption is accepted as a premise; translation assurance checks only semantic fidelity."
+            ),
+            "functions": self.functions,
+            "formula": self.formula,
+            "catalog_symbols": self.catalog_symbols,
+        }
+        return yaml.safe_dump(payload, sort_keys=False, allow_unicode=True)
+
+    def source_context(self) -> str:
+        payload = {
+            "canonical_assumption": {
+                "assumption_id": self.assumption_id,
+                "statement": self.canonical_assumption.get("statement"),
+                "status": self.canonical_assumption.get("status"),
+                "note": self.canonical_assumption.get("note"),
+            },
+            "canonical_vocabulary": self.catalog_symbols,
+            "interpretation": (
+                "The assumption statement is the authoritative proposition. Status/note explain its proof boundary "
+                "but must not silently strengthen or weaken the symbolic formula."
+            ),
+        }
+        return yaml.safe_dump(payload, sort_keys=False, allow_unicode=True)
+
+
+@dataclass(frozen=True)
+class ObligationTranslationSubject:
+    obligation_id: str
+    statement: str
+    description: str
+    source_refs: tuple[str, ...]
+    source_sections: dict[str, str]
+    formula: dict[str, Any]
+    functions: dict[str, dict[str, Any]]
+    catalog_symbols: dict[str, Any]
+
+    def symbolic_context(self) -> str:
+        payload = {
+            "design_obligation_mapping_semantics": (
+                "This formula is the explicit symbolic translation of an independently extracted required design property. "
+                "The formula is an oracle above the correctness DAG, not a proof premise generated from DAG roots."
+            ),
+            "functions": self.functions,
+            "formula": self.formula,
+            "catalog_symbols": self.catalog_symbols,
+        }
+        return yaml.safe_dump(payload, sort_keys=False, allow_unicode=True)
+
+    def source_context(self) -> str:
+        payload = {
+            "design_obligation": {
+                "obligation_id": self.obligation_id,
+                "statement": self.statement,
+                "description": self.description,
+                "source_refs": list(self.source_refs),
+            },
+            "canonical_source_sections": self.source_sections,
+            "canonical_vocabulary": self.catalog_symbols,
+            "interpretation": (
+                "The cited canonical design sections are semantic authority. The obligation statement is the extracted "
+                "required property under review. A faithful translation must neither invent a requirement unsupported by "
+                "those sections nor omit/strengthen the extracted property's applicability, quantifiers, identity, state, "
+                "or transition boundaries."
+            ),
+        }
+        return yaml.safe_dump(payload, sort_keys=False, allow_unicode=True)
+
+
+def build_assumption_translation_subject(
+    graph: Graph,
+    bridge: SymbolicBridge,
+    assumption_id: str,
+) -> AssumptionTranslationSubject:
+    bridge.validate_against_graph(graph)
+    mapping = bridge.assumptions.get(assumption_id)
+    if mapping is None:
+        raise TranslationReviewError(f"no symbolic assumption mapping for {assumption_id}")
+    assumption = graph.assumptions.get(assumption_id)
+    if not isinstance(assumption, dict):
+        raise TranslationReviewError(f"unknown canonical assumption {assumption_id}")
+    functions, symbols = _translation_function_and_catalog_context(
+        graph, bridge, mapping.formula, mapping.catalog_symbols
+    )
+    return AssumptionTranslationSubject(
+        assumption_id=assumption_id,
+        canonical_assumption=dict(assumption),
+        formula=mapping.formula,
+        functions=functions,
+        catalog_symbols=symbols,
+    )
+
+
+def build_obligation_translation_subject(
+    graph: Graph,
+    bridge: SymbolicBridge,
+    *,
+    obligation_id: str,
+    statement: str,
+    description: str,
+    source_refs: tuple[str, ...] | list[str],
+    formula: dict[str, Any],
+) -> ObligationTranslationSubject:
+    bridge.validate_against_graph(graph)
+    source_sections = _resolve_source_sections(graph, tuple(source_refs))
+    used_functions = _formula_function_names(formula)
+    unknown = sorted(used_functions - set(bridge.functions))
+    if unknown:
+        raise TranslationReviewError(
+            f"design obligation {obligation_id} uses unknown symbolic functions {unknown}"
+        )
+    symbol_names: set[str] = set()
+    for fn in used_functions:
+        symbol_names.update(bridge.functions[fn].get("catalog_symbols", []))
+    functions, symbols = _translation_function_and_catalog_context(
+        graph, bridge, formula, frozenset(symbol_names)
+    )
+    return ObligationTranslationSubject(
+        obligation_id=obligation_id,
+        statement=statement,
+        description=description,
+        source_refs=tuple(source_refs),
+        source_sections=source_sections,
+        formula=formula,
+        functions=functions,
+        catalog_symbols=symbols,
+    )
+
+
 def build_claim_translation_subject(
     graph: Graph,
     bridge: SymbolicBridge,
@@ -253,8 +395,73 @@ def build_translation_subject(
     )
 
 
+
+def _translation_function_and_catalog_context(
+    graph: Graph,
+    bridge: SymbolicBridge,
+    formula: dict[str, Any],
+    catalog_symbol_names: frozenset[str] | set[str],
+) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+    function_names = _formula_function_names(formula)
+    functions = {
+        name: {
+            key: value
+            for key, value in bridge.functions[name].items()
+            if key != "semantic_anchors"
+        }
+        for name in sorted(function_names)
+    }
+    terms = _catalog_namespace(graph, "terms")
+    state = _catalog_namespace(graph, "state")
+    symbol_defs: dict[str, Any] = {}
+    for symbol in sorted(catalog_symbol_names):
+        if symbol in terms:
+            symbol_defs[symbol] = {"namespace": "terms", "definition": terms[symbol]}
+        elif symbol in state:
+            symbol_defs[symbol] = {"namespace": "state", "definition": state[symbol]}
+        else:
+            raise TranslationReviewError(
+                f"symbolic mapping references undefined catalog symbol {symbol}"
+            )
+    return functions, symbol_defs
+
+
+def _resolve_source_sections(graph: Graph, source_refs: tuple[str, ...]) -> dict[str, str]:
+    if graph.repository_root is None:
+        raise TranslationReviewError("design-obligation translation assurance requires repository context")
+    source = graph.doc.get("source", {})
+    article_ref = source.get("article") if isinstance(source, dict) else None
+    if not isinstance(article_ref, str) or not article_ref:
+        raise TranslationReviewError("canonical source.article is unavailable")
+    article_path = graph.repository_root / article_ref
+    try:
+        text = article_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise TranslationReviewError(f"canonical source article unavailable: {exc}") from exc
+    matches = list(re.finditer(r"(?m)^##\s+(.+?)\s*$", text))
+    by_heading: dict[str, list[str]] = {}
+    for index, match in enumerate(matches):
+        raw = match.group(1).strip()
+        heading = re.sub(r"^[0-9]+\.\s+", "", raw).strip()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        by_heading.setdefault(heading, []).append(text[match.start():end].strip())
+    sources = _catalog_namespace(graph, "sources")
+    result: dict[str, str] = {}
+    for source_id in source_refs:
+        entry = sources.get(source_id)
+        if not isinstance(entry, dict) or not isinstance(entry.get("heading"), str):
+            raise TranslationReviewError(f"unknown canonical source ref {source_id}")
+        sections = by_heading.get(entry["heading"], [])
+        if len(sections) != 1:
+            raise TranslationReviewError(
+                f"canonical source ref {source_id} resolves to {len(sections)} sections"
+            )
+        result[source_id] = sections[0]
+    return result
+
+
 def translation_subject_signature(
-    subject: TranslationSubject | ClaimTranslationSubject,
+    subject: TranslationSubject | ClaimTranslationSubject | AssumptionTranslationSubject | ObligationTranslationSubject,
 ) -> str:
     """Digest the exact semantic source context and symbolic translation under review."""
 
@@ -272,7 +479,7 @@ def translation_subject_signature(
 
 
 def build_roundtrip_translation_prompt(
-    subject: TranslationSubject | ClaimTranslationSubject,
+    subject: TranslationSubject | ClaimTranslationSubject | AssumptionTranslationSubject | ObligationTranslationSubject,
 ) -> str:
     """Blind symbolic -> NL translation. Deliberately excludes the source contract text."""
 
@@ -309,13 +516,19 @@ Use INCOMPLETE rather than guessing if a predicate meaning or binding is insuffi
 
 
 def build_roundtrip_comparison_prompt(
-    subject: TranslationSubject | ClaimTranslationSubject,
+    subject: TranslationSubject | ClaimTranslationSubject | AssumptionTranslationSubject | ObligationTranslationSubject,
     roundtrip_natural_language: str,
     *,
     focus: str = "balanced",
 ) -> str:
     focus_instruction = _comparison_focus(focus)
     subject_signature = translation_subject_signature(subject)
+    obligation_instruction = (
+        "For a design obligation, also verify that the extracted required-property statement is actually supported "
+        "by the cited canonical design sections. If the statement adds a requirement not committed to by those "
+        "sections, classify it as STRONGER rather than treating the extracted statement as unquestioned authority."
+        if isinstance(subject, ObligationTranslationSubject) else ""
+    )
     return f"""You are independently auditing semantic equivalence between two natural-language propositions.
 
 SUBJECT SIGNATURE
@@ -331,6 +544,7 @@ Your only question is whether the round-trip rendering preserves the original co
 Check quantifiers, applicability/precondition boundaries, identity coordinates, provenance direction, cardinality, observation scope, exclusions, and whether either side makes a stronger guarantee.
 Also check semantic-dimensionality preservation: distinct entity/state/observation coordinates must not be collapsed, and helper predicate/function meanings must not silently supply a cross-claim temporal, identity, or provenance bridge absent from the canonical source.
 {focus_instruction}
+{obligation_instruction}
 
 Do not redesign the system and do not propose missing product requirements.
 Verdict semantics are strict:
@@ -356,12 +570,18 @@ Echo subject_signature exactly as supplied above.
 
 
 def build_direct_comparison_prompt(
-    subject: TranslationSubject | ClaimTranslationSubject,
+    subject: TranslationSubject | ClaimTranslationSubject | AssumptionTranslationSubject | ObligationTranslationSubject,
     *,
     focus: str = "balanced",
 ) -> str:
     focus_instruction = _comparison_focus(focus)
     subject_signature = translation_subject_signature(subject)
+    obligation_instruction = (
+        "For a design obligation, first verify that the extracted required-property statement is actually supported "
+        "by the cited canonical design sections. If the statement adds a requirement not committed to by those "
+        "sections, classify it as STRONGER rather than treating the extracted statement as unquestioned authority."
+        if isinstance(subject, ObligationTranslationSubject) else ""
+    )
     return f"""You are independently auditing whether a typed symbolic formula faithfully translates one canonical natural-language correctness proposition.
 
 SUBJECT SIGNATURE
@@ -377,6 +597,7 @@ Compare the original contract directly against the formula using the supplied ty
 Check quantifiers, applicability/precondition boundaries, identity coordinates, provenance direction, cardinality, observation scope, exclusions, and any silent strengthening or weakening.
 Also check semantic-dimensionality preservation: distinct entity/state/observation coordinates must not be collapsed, and helper predicate/function meanings must not silently supply a cross-claim temporal, identity, or provenance bridge absent from the canonical source.
 {focus_instruction}
+{obligation_instruction}
 
 Do not judge whether the original proposition is a good requirement. Judge only translation fidelity.
 Verdict semantics are strict:
@@ -619,6 +840,11 @@ def _contract_class_interpretation(
             "A safety_contract forbids the explicitly described bad transition/state pattern "
             "inside its applicability boundary. It does not imply progress or eventual delivery "
             "unless the canonical contract says so."
+        )
+    if contract_class == "equivalence_relation":
+        return (
+            "An equivalence_relation states the canonical semantic equality criterion between the modeled "
+            "representations/frontiers named by the contract. It does not imply reachability or liveness."
         )
     return (
         "No additional Harness-level semantic interpretation is defined for this contract class."

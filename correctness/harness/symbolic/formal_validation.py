@@ -16,6 +16,7 @@ from .obligations import DesignObligationSpec, DesignObligationVerifier
 from .formal_schema import FORMAL_SCHEMAS
 from .translation_assurance import (
     build_claim_translation_subject,
+    build_assumption_translation_subject,
     translation_subject_signature,
 )
 
@@ -159,12 +160,17 @@ def _composition_artifact_errors(
             errors.append(f"{artifact_ref}: premise translation assurance set is stale")
         else:
             for premise_id in result.premise_ids:
+                premise = graph.require_node(premise_id)
+                premise_kind = "claim" if premise.node_type == "claim" else "assumption"
                 trust = registry.evaluate(
-                    graph, bridge, kind="claim", subject_id=premise_id
+                    graph, bridge, kind=premise_kind, subject_id=premise_id
                 )
-                sig = translation_subject_signature(
+                premise_subject = (
                     build_claim_translation_subject(graph, bridge, premise_id)
+                    if premise_kind == "claim"
+                    else build_assumption_translation_subject(graph, bridge, premise_id)
                 )
+                sig = translation_subject_signature(premise_subject)
                 expected = {
                     "status": trust.status.value,
                     "subject_signature": sig,
@@ -243,6 +249,40 @@ def _composition_artifact_errors(
     return errors
 
 
+def _formalization_bridge_errors(graph: Graph, bridge: SymbolicBridge) -> list[str]:
+    errors: list[str] = []
+    formalization = graph.doc.get("formalization", {})
+    if not isinstance(formalization, dict):
+        return errors
+    namespaces = {
+        "claims": set(bridge.claims),
+        "assumptions": set(bridge.assumptions),
+        "semantic_contracts": set(bridge.contracts),
+    }
+    for namespace, mapped_ids in namespaces.items():
+        entries = formalization.get(namespace)
+        if not isinstance(entries, dict):
+            continue
+        for subject_id, entry in entries.items():
+            if not isinstance(entry, dict):
+                continue
+            if entry.get("mode") == "non_symbolic" and subject_id in mapped_ids:
+                errors.append(
+                    f"formalization.{namespace}.{subject_id} is non_symbolic but still has a symbolic mapping"
+                )
+        for subject_id in sorted(mapped_ids - set(entries)):
+            errors.append(
+                f"symbolic mapping {namespace}.{subject_id} has no canonical formalization declaration"
+            )
+        for subject_id in sorted(mapped_ids & set(entries)):
+            entry = entries.get(subject_id)
+            if isinstance(entry, dict) and entry.get("mode") != "symbolic":
+                errors.append(
+                    f"symbolic mapping {namespace}.{subject_id} requires mode=symbolic"
+                )
+    return errors
+
+
 def validate_formal_layer(graph: Graph) -> tuple[list[str], list[str]]:
     """Validate all persisted symbolic sidecars/artifacts as one formal assurance layer."""
     errors: list[str] = []
@@ -277,6 +317,7 @@ def validate_formal_layer(graph: Graph) -> tuple[list[str], list[str]]:
         registry = TranslationAssuranceRegistry.from_data(assurance_raw)
         coverage = CoverageSpec.from_data(coverage_raw)
         obligations = DesignObligationSpec.from_data(obligations_raw)
+        errors.extend(_formalization_bridge_errors(graph, bridge))
     except Exception as exc:
         return [f"formal symbolic sidecar validation failed: {exc}"], warnings
 

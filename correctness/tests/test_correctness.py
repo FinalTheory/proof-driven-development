@@ -29,7 +29,7 @@ def _leaf(statement: str):
 def make_fixture():
     """Immutable synthetic DAG used only for correctness.py tool regression tests."""
     return {
-        "schema_version": "0.15",
+        "schema_version": "0.16",
         "system": {
             "id": "synthetic_correctness_tool_fixture",
             "summary": "Synthetic system used only to test correctness.py algorithms.",
@@ -99,6 +99,23 @@ def make_fixture():
                 "L1_left_boundary": {"status": "pending", "blocked_by": []},
                 "L2_right_boundary": {"status": "pending", "blocked_by": []},
                 "L3_independent_boundary": {"status": "pending", "blocked_by": []},
+            },
+        },
+        "formalization": {
+            "claims": {
+                "G1_primary_goal": {"mode": "non_symbolic", "reason": "other", "rationale": "Synthetic fixture uses LLM composition routing."},
+                "G2_secondary_goal": {"mode": "non_symbolic", "reason": "other", "rationale": "Synthetic fixture uses LLM composition routing."},
+                "C1_composite_claim": {"mode": "non_symbolic", "reason": "other", "rationale": "Synthetic fixture uses LLM composition routing."},
+                "L1_left_boundary": {"mode": "non_symbolic", "reason": "implementation_correspondence_only", "rationale": "Synthetic leaf exists only to test implementation-evidence routing."},
+                "L2_right_boundary": {"mode": "non_symbolic", "reason": "implementation_correspondence_only", "rationale": "Synthetic leaf exists only to test implementation-evidence routing."},
+                "L3_independent_boundary": {"mode": "non_symbolic", "reason": "implementation_correspondence_only", "rationale": "Synthetic leaf exists only to test implementation-evidence routing."},
+            },
+            "assumptions": {
+                "A1_fixture_environment": {"mode": "non_symbolic", "reason": "external_semantics_only", "rationale": "Synthetic environment premise is not symbolically modeled in this fixture."},
+            },
+            "semantic_contracts": {
+                "synthetic_safety_contract": {"mode": "non_symbolic", "reason": "other", "rationale": "Synthetic contract is used only for graph-schema tests."},
+                "human_only_contract": {"mode": "non_symbolic", "reason": "human_semantic_judgment", "rationale": "Synthetic contract intentionally models a human-only boundary."},
             },
         },
         "assurance": {
@@ -468,6 +485,7 @@ class CorrectnessToolTests(unittest.TestCase):
                     "operations": [
                         {
                             "op": "add_claim", "alias": "child", "kind": "leaf", "slug": "synthetic_mutation_boundary",
+                            "formalization": {"mode": "non_symbolic", "reason": "other", "rationale": "Synthetic mutation test."},
                             "body": {
                                 key: value
                                 for key, value in _leaf("Synthetic mutation boundary.").items()
@@ -1104,6 +1122,7 @@ class CorrectnessToolTests(unittest.TestCase):
                     "op": "add_claim",
                     "kind": "leaf",
                     "slug": "reusable_contract_boundary",
+                    "formalization": {"mode": "non_symbolic", "reason": "other", "rationale": "Synthetic mutation test."},
                     "body": {
                         **_leaf("A reusable synthetic contract boundary holds."),
                         "semantic_contracts": ["synthetic_safety_contract"],
@@ -1165,6 +1184,9 @@ class CorrectnessToolTests(unittest.TestCase):
             "bound_symbols": ["scoped_bound"],
             "excludes": [],
             "automation_reusable": True,
+        }
+        doc["formalization"]["semantic_contracts"]["scoped_binding"] = {
+            "mode": "non_symbolic", "reason": "other", "rationale": "Synthetic scope-validation contract."
         }
         errors, _ = correctness.validate(correctness.Graph(doc))
         self.assertTrue(any("shared scope dimension 'document'" in error for error in errors))
@@ -1539,6 +1561,7 @@ class CorrectnessToolTests(unittest.TestCase):
                     "op": "add_claim",
                     "kind": "leaf",
                     "slug": "new_contract_boundary",
+                    "formalization": {"mode": "non_symbolic", "reason": "other", "rationale": "Synthetic mutation test."},
                     "body": {
                         **_leaf("A new synthetic contract boundary holds."),
                         "semantic_contracts": ["human_only_contract"],
@@ -1577,6 +1600,7 @@ class CorrectnessToolTests(unittest.TestCase):
                     "op": "add_claim",
                     "kind": "leaf",
                     "slug": "provisional_boundary",
+                    "formalization": {"mode": "non_symbolic", "reason": "other", "rationale": "Synthetic mutation test."},
                     "body": {
                         **_leaf("Synthetic provisional boundary."),
                         "mechanisms": ["provisional_mechanism"],
@@ -1626,7 +1650,7 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("TOOLING_BLOCKED", text)
         self.assertIn("refinement-status --format compact-yaml", text)
         self.assertIn("assurance-status --format compact-yaml", text)
-        self.assertIn(".venv/bin/python3 correctness.py", text)
+        self.assertIn("python3 -B correctness.py", text)
         self.assertIn("NON-NORMATIVE HARNESS FEEDBACK", text)
         self.assertIn("HARNESS FEEDBACK: none", text)
         self.assertIn("`stable` is a refinement-maturity state only", text)
@@ -1786,6 +1810,7 @@ class CorrectnessToolTests(unittest.TestCase):
                     "op": "add_claim",
                     "kind": "leaf",
                     "slug": "new_evidence_boundary",
+                    "formalization": {"mode": "non_symbolic", "reason": "other", "rationale": "Synthetic mutation test."},
                     "body": _leaf("A newly added evidence boundary holds."),
                     "alias": "new_leaf",
                 }
@@ -1911,7 +1936,7 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertNotIn("assurance_required", nodes["C1_composite_claim"])
         self.assertEqual(nodes["G1_primary_goal"]["recommended_auditors"], 3)
         self.assertEqual(nodes["G1_primary_goal"]["suggested_focuses"], ["execution", "quantifier", "premise"])
-        self.assertEqual(snapshot["target_assurance"], "multi_agent_audited_or_machine_checked")
+        self.assertEqual(snapshot["target_assurance"], "machine_checked_for_symbolic_or_multi_agent_for_non_symbolic")
         self.assertNotIn("L1_left_boundary", nodes)
 
     def test_single_agent_composition_remains_on_certification_frontier(self):
@@ -1989,7 +2014,7 @@ class CorrectnessToolTests(unittest.TestCase):
         self.assertIn("all-roots-true execution generator", text)
         self.assertIn("FINAL VERDICT: CLOSED", text)
         self.assertIn("semantic alignment", text)
-        self.assertIn(".venv/bin/python3 correctness.py validate", text)
+        self.assertIn("python3 -B correctness.py validate", text)
         self.assertIn("git -C .. status --short", text)
         self.assertIn("sha256sum correctness.yaml ../design/synthetic.md", text)
         self.assertIn("Record the exact initial Git-status output", text)

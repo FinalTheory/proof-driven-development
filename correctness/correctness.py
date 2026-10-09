@@ -16,6 +16,7 @@ import json
 import os
 import re
 import sys
+sys.dont_write_bytecode = True
 import tempfile
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -111,6 +112,7 @@ from harness.workflow import (
 )
 from harness.symbolic.cli import add_symbolic_subparsers, handle_symbolic_command
 from harness.symbolic.formal_schema import FORMAL_SCHEMAS
+from harness.formalization import formalization_snapshot, composition_formalization_route
 from harness.validation import (
     _canonical_field_inventory,
     _condition_summary,
@@ -649,7 +651,15 @@ def _composition_campaign_snapshot(graph: Graph) -> dict[str, Any]:
     waived = set(refinement.get("waived", []))
     eligible = stable | waived
 
-    items: list[dict[str, Any]] = []
+    from harness.symbolic.bridge import SymbolicBridge
+    from harness.symbolic.assurance_registry import TranslationAssuranceRegistry
+    from harness.symbolic.cli import DEFAULT_SYMBOLIC_MODEL, DEFAULT_ASSURANCE_REGISTRY
+
+    bridge = SymbolicBridge.load(DEFAULT_SYMBOLIC_MODEL)
+    registry = TranslationAssuranceRegistry.load(DEFAULT_ASSURANCE_REGISTRY)
+
+    runnable: list[dict[str, Any]] = []
+    blocked: list[dict[str, Any]] = []
     for node_id, claim in sorted(graph.claims.items()):
         if claim.get("kind") not in {"root", "derived"}:
             continue
@@ -659,41 +669,68 @@ def _composition_campaign_snapshot(graph: Graph) -> dict[str, Any]:
             continue
         if node_id not in eligible:
             continue
-        items.append(
-            {
-                "node": node_id,
-                "kind": claim.get("kind"),
-                "effective": effective,
-                "composition_signature": _composition_semantic_signature(graph, node_id),
-                "recommended_auditors": _recommended_composition_auditors(claim),
-                "suggested_focuses": (
-                    ["execution", "quantifier"]
-                    if _recommended_composition_auditors(claim) == 2
-                    else ["execution", "quantifier", "premise"]
-                    if _recommended_composition_auditors(claim) == 3
-                    else ["execution", "quantifier", "premise", "general"]
-                ),
-                "priority": 300 if claim.get("kind") == "root" else 200,
-            }
-        )
-    items.sort(key=lambda x: (x["priority"], x["node"]))
+
+        route = composition_formalization_route(graph, bridge, registry, node_id)
+        base = {
+            "node": node_id,
+            "kind": claim.get("kind"),
+            "effective": effective,
+            "composition_signature": _composition_semantic_signature(graph, node_id),
+            "backend": route["backend"],
+        }
+        if route["state"] == "BLOCKED":
+            blocked.append({**base, "blocking": route["blocking"]})
+            continue
+
+        if route["backend"] == "symbolic":
+            runnable.append(
+                {
+                    **base,
+                    "action": f"symbolic-compose {node_id}",
+                    "priority": 400 if claim.get("kind") == "root" else 300,
+                }
+            )
+        else:
+            recommended = _recommended_composition_auditors(claim)
+            runnable.append(
+                {
+                    **base,
+                    "action": "composition-audit-prompt",
+                    "recommended_auditors": recommended,
+                    "suggested_focuses": (
+                        ["execution", "quantifier"]
+                        if recommended == 2
+                        else ["execution", "quantifier", "premise"]
+                    ),
+                    "priority": 200 if claim.get("kind") == "root" else 100,
+                }
+            )
+
+    runnable.sort(key=lambda x: (-x["priority"], x["node"]))
+    blocked.sort(key=lambda x: x["node"])
 
     if refinement.get("state") == "TOOLING_BLOCKED":
         state = "TOOLING_BLOCKED"
     elif refinement.get("state") != "COMPLETE":
         state = "REFINEMENT_INCOMPLETE"
-    elif items:
+    elif runnable:
         state = "CONTINUE"
+    elif blocked:
+        state = "FORMALIZATION_BLOCKED"
     else:
         state = "COMPLETE"
     return {
         "state": state,
         "model_signature": assurance["model_signature"],
         "refinement_state": refinement.get("state"),
-        "target_assurance": "multi_agent_audited_or_machine_checked",
-        "runnable": items if state == "CONTINUE" else [],
+        "target_assurance": "machine_checked_for_symbolic_or_multi_agent_for_non_symbolic",
+        "runnable": runnable if state == "CONTINUE" else [],
+        "formalization_blocked": blocked,
         "counts": {
-            "runnable": len(items) if state == "CONTINUE" else 0,
+            "runnable": len(runnable) if state == "CONTINUE" else 0,
+            "formalization_blocked": len(blocked),
+            "symbolic_runnable": sum(1 for x in runnable if x["backend"] == "symbolic"),
+            "non_symbolic_runnable": sum(1 for x in runnable if x["backend"] == "non_symbolic"),
             "unaudited": sum(1 for x in assurance["composition"].values() if x.get("effective") == "unaudited"),
             "stale": sum(1 for x in assurance["composition"].values() if x.get("effective") == "stale"),
             "single_agent_audited": sum(1 for x in assurance["composition"].values() if x.get("effective") == "single_agent_audited"),
@@ -714,11 +751,25 @@ def _cmd_composition_status(graph: Graph, args: argparse.Namespace) -> int:
     if snapshot["runnable"]:
         print("\nComposition certification frontier:")
         for item in snapshot["runnable"]:
-            print(
-                f"- {item['node']} kind={item['kind']} "
-                f"effective={item['effective']} recommended_auditors={item['recommended_auditors']} "
-                f"focuses={','.join(item['suggested_focuses'])} signature={item['composition_signature']}"
+            if item["backend"] == "symbolic":
+                print(
+                    f"- {item['node']} kind={item['kind']} backend=symbolic "
+                    f"effective={item['effective']} action={item['action']} "
+                    f"signature={item['composition_signature']}"
+                )
+            else:
+                print(
+                    f"- {item['node']} kind={item['kind']} backend=non_symbolic "
+                    f"effective={item['effective']} recommended_auditors={item['recommended_auditors']} "
+                    f"focuses={','.join(item['suggested_focuses'])} signature={item['composition_signature']}"
+                )
+    if snapshot.get("formalization_blocked"):
+        print("\nFormalization blocked:")
+        for item in snapshot["formalization_blocked"]:
+            reasons = ", ".join(
+                f"{x['subject']}={x['state']}" for x in item["blocking"]
             )
+            print(f"- {item['node']}: {reasons}")
     return 0
 
 
@@ -794,6 +845,23 @@ def _cmd_composition_audit_prompt(graph: Graph, args: argparse.Namespace) -> int
     node = graph.require_node(args.node)
     if node.node_type != "claim" or node.data.get("kind") not in {"root", "derived"}:
         raise SystemExit("Composition certification applies only to root/derived claims")
+    from harness.symbolic.bridge import SymbolicBridge
+    from harness.symbolic.assurance_registry import TranslationAssuranceRegistry
+    from harness.symbolic.cli import DEFAULT_SYMBOLIC_MODEL, DEFAULT_ASSURANCE_REGISTRY
+    route = composition_formalization_route(
+        graph,
+        SymbolicBridge.load(DEFAULT_SYMBOLIC_MODEL),
+        TranslationAssuranceRegistry.load(DEFAULT_ASSURANCE_REGISTRY),
+        args.node,
+    )
+    if route["backend"] == "symbolic":
+        if route["state"] == "BLOCKED":
+            raise SystemExit(
+                f"Symbolic composition for {args.node} is formalization-blocked: {route['blocking']}"
+            )
+        raise SystemExit(
+            f"{args.node} is declared symbolic; use `symbolic-compose {args.node}` instead of an LLM composition audit"
+        )
     _emit_composition_audit_prompt(graph, args.node, args.focus)
     return 0
 
@@ -809,7 +877,7 @@ def _emit_coverage_audit_prompt(graph: Graph) -> None:
     print()
     print("You are the long-lived orchestrator for an architecture-level adversarial audit of the current model.")
     print("This is not proof refinement and not implementation verification. Make no repository modifications.")
-    print("Use only the current canonical repository state; do not read history/, prior audit outputs, old chat context, or Git history.")
+    print("Use only the current canonical repository state; do not read temp/, prior audit outputs, old chat context, or Git history.")
     print()
     print("## Central question")
     print()
@@ -837,9 +905,9 @@ def _emit_coverage_audit_prompt(graph: Graph) -> None:
     print(f"cd {correctness_dir}")
     print("git -C .. status --short")
     print(f"sha256sum correctness.yaml ../{source_article}")
-    print(".venv/bin/python3 correctness.py validate")
-    print(".venv/bin/python3 correctness.py refinement-status --format compact-yaml")
-    print(".venv/bin/python3 correctness.py assurance-status --format compact-yaml --omit-specification-coverage")
+    print("python3 -B correctness.py validate")
+    print("python3 -B correctness.py refinement-status --format compact-yaml")
+    print("python3 -B correctness.py assurance-status --format compact-yaml --omit-specification-coverage")
     print("```")
     print("Record the exact initial Git-status output and both canonical-input hashes before spawning any scout.")
     print("At campaign completion rerun those read-only checks and compare them with the bootstrap snapshot.")
@@ -848,7 +916,7 @@ def _emit_coverage_audit_prompt(graph: Graph) -> None:
     print("If only non-canonical working-tree status changed, report the before/after delta and do not attribute")
     print("it to the audit unless the captured baseline proves that attribution.")
     print(f"Read `../{source_article}` for canonical intended semantics. For a root-local check, use")
-    print("`.venv/bin/python3 correctness.py slice <ROOT_ID> --format prompt`; stable roots are intentionally inspected via slice,")
+    print("`python3 -B correctness.py slice <ROOT_ID> --format prompt`; stable roots are intentionally inspected via slice,")
     print("not refinement `audit-prompt`.")
     print()
     print("## Current roots")
@@ -863,7 +931,7 @@ def _emit_coverage_audit_prompt(graph: Graph) -> None:
     print()
     print("## Mandatory semantic-closure pass")
     print()
-    print("Before free-form scouting, perform three structured completeness passes against the canonical design and typed model.")
+    print("Before free-form scouting, perform four structured completeness passes against the canonical design and typed model.")
     print("These passes search for missing propositions/contracts; they do not assume that existing claim wording is complete.")
     print()
     print("1. **Inductive state-invariant closure**")
@@ -888,6 +956,13 @@ def _emit_coverage_audit_prompt(graph: Graph) -> None:
     print("   - For each pair of incompatible authoritative terminal outcomes, race overlapping attempts for the same logical identity in both orders. Once one terminal outcome becomes externally authoritative, no later transition may expose the incompatible terminal outcome for that same identity unless the canonical design explicitly defines revocation/versioning semantics.")
     print("   - Timeout, cancellation, crash-before-decision, or other uncertainty must not be silently treated as a durable terminal rejection unless the canonical design says so. Conversely, if a rejection is replayable/idempotent, require it to participate in the same per-identity arbitration/source of truth as success.")
     print("   - When the intended property is persistent mutual exclusion/single-valued terminal state, represent it as an inductive `state_invariant` (or an equivalent typed relation already supported by the Harness) rather than as one-directional retry wording.")
+    print()
+    print("4. **Cross-state transition-bridge closure**")
+    print("   - Inventory every semantically meaningful classification/publication boundary where one subsystem learns or publishes a stronger fact: ACCEPTED/REJECTED classification, authoritative reconciliation, canonical-base replacement, ownership/epoch handoff, checkpoint publication, terminalization, mode change, or similar state transition.")
+    print("   - For each boundary A, ask which other state sets, classifications, representations, or control modes must already have changed when A becomes externally authoritative. Search specifically for missing implications of the form `A happened => B must hold before or atomically with that publication`.")
+    print("   - Distinguish transition safety from progress. `Eventually B` may be out of scope, while `once A is published, stale contradictory state B_old must no longer remain active` can still be a required safety property.")
+    print("   - Distinguish mechanism from postcondition. If automatic rebase, repair, or conflict resolution is out of scope, still ask whether the system must suppress/withhold an incompatible representation rather than expose a semantically invalid state. Do not reject a safety obligation merely because one possible repair mechanism is excluded.")
+    print("   - Attack subsystem skew deliberately: make the authoritative/classification side advance while leaving pending/speculative/cache/control bookkeeping at the old state, and conversely mutate the local representation while leaving its semantic base/authority binding unchanged. A design is closed only if every material stale combination is forbidden by an explicit proposition or by a stronger existing invariant.")
     print()
     print("After these passes, perform a **semantic-neighborhood substitution attack** on each serious relation: hold the visible scalar predicates true while changing exactly one provenance coordinate, actor/generation, identity coordinate, lifecycle disposition source, or competing terminal outcome. A repair that blocks only the original concrete execution but admits an adjacent substitution/race is not closed.")
     print()
@@ -1201,7 +1276,10 @@ def _cmd_refinement_signature(graph: Graph, args: argparse.Namespace) -> int:
 @contextmanager
 def _exclusive_graph_lock():
     """Serialize all correctness.yaml writers across processes."""
-    lock_path = GRAPH_PATH.with_suffix(GRAPH_PATH.suffix + ".lock")
+    repository_root = _repository_root_for_graph_path(GRAPH_PATH)
+    temp_dir = repository_root / "temp"
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    lock_path = temp_dir / "correctness.yaml.lock"
     with lock_path.open("a+", encoding="utf-8") as lock_file:
         fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
         try:
@@ -1399,6 +1477,10 @@ def _apply_mutation_plan(
     specification_coverage = assurance.setdefault("specification_coverage", {"status": "unaudited"})
     composition_assurance = assurance.setdefault("composition", {})
     evidence_assurance = assurance.setdefault("implementation_evidence", {})
+    formalization = doc.setdefault("formalization", {})
+    formalization_claims = formalization.setdefault("claims", {})
+    formalization_assumptions = formalization.setdefault("assumptions", {})
+    formalization_contracts = formalization.setdefault("semantic_contracts", {})
 
     for index, raw_op in enumerate(operations):
         if not isinstance(raw_op, dict):
@@ -1427,6 +1509,7 @@ def _apply_mutation_plan(
                 )
             body["kind"] = kind
             claims[node_id] = body
+            formalization_claims[node_id] = _plain_data(raw_op["formalization"])
             if kind == "root":
                 roots.append(node_id)
             refinement_nodes[node_id] = _refinement_defaults(kind)
@@ -1563,11 +1646,30 @@ def _apply_mutation_plan(
             if authority == "automation" and claims[node_id].get("kind") == "root":
                 raise SystemExit("automation may not remove a root guarantee")
             claims.pop(node_id)
+            formalization_claims.pop(node_id, None)
             refinement_nodes.pop(node_id, None)
             composition_assurance.pop(node_id, None)
             evidence_assurance.pop(node_id, None)
             if node_id in roots:
                 roots.remove(node_id)
+
+        elif op == "set_formalization":
+            subject_kind = raw_op.get("kind")
+            subject = _resolve_ref(raw_op.get("subject"), aliases)
+            entry = raw_op.get("entry")
+            if not isinstance(entry, dict):
+                raise SystemExit(f"operation[{index}]: set_formalization.entry must be a mapping")
+            namespaces = {
+                "claim": (claims, formalization_claims),
+                "assumption": (doc.setdefault("assumptions", {}), formalization_assumptions),
+                "semantic_contract": (doc.setdefault("catalog", {}).setdefault("semantic_contracts", {}), formalization_contracts),
+            }
+            if subject_kind not in namespaces:
+                raise SystemExit(f"operation[{index}]: invalid formalization kind {subject_kind!r}")
+            canonical, registry = namespaces[subject_kind]
+            if subject not in canonical:
+                raise SystemExit(f"operation[{index}]: unknown {subject_kind} {subject}")
+            registry[subject] = _plain_data(entry)
 
         elif op == "set_refinement":
             node_id = _resolve_ref(raw_op.get("node"), aliases)
@@ -1724,6 +1826,7 @@ def _apply_mutation_plan(
                 raise SystemExit(f"operation[{index}]: add_assumption.body must be a mapping")
             node_id = _allocate_id(doc, "A", raw_op.get("slug"))
             doc.setdefault("assumptions", {})[node_id] = _resolve_ref(body, aliases)
+            formalization_assumptions[node_id] = _plain_data(raw_op["formalization"])
             alias = raw_op.get("alias")
             if alias is not None:
                 _validate_slug(alias)
@@ -1904,6 +2007,25 @@ def _cmd_mutate(_graph: Graph, args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_formalization_status(graph: Graph, args: argparse.Namespace) -> int:
+    from harness.symbolic.bridge import SymbolicBridge
+    from harness.symbolic.assurance_registry import TranslationAssuranceRegistry
+    from harness.symbolic.cli import DEFAULT_SYMBOLIC_MODEL, DEFAULT_ASSURANCE_REGISTRY
+
+    snapshot = formalization_snapshot(
+        graph,
+        SymbolicBridge.load(DEFAULT_SYMBOLIC_MODEL),
+        TranslationAssuranceRegistry.load(DEFAULT_ASSURANCE_REGISTRY),
+    )
+    if args.format in {"yaml", "compact-yaml"}:
+        payload = snapshot if args.format == "yaml" else {"counts": snapshot["counts"]}
+        print(yaml.safe_dump(payload, sort_keys=False, allow_unicode=True).rstrip())
+        return 0
+    for namespace, counts in snapshot["counts"].items():
+        print(f"{namespace}: " + " ".join(f"{k}={v}" for k, v in counts.items()))
+    return 0
+
+
 def _escape_mermaid(text: str) -> str:
     return text.replace('"', "'").replace("\n", " ")
 
@@ -1941,7 +2063,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Correctness DAG validator, proof slicer, and automated refinement control plane.",
         epilog=(
-            "Agents: run `.venv/bin/python3 correctness.py workflow-help` before participating in correctness work. "
+            "Agents: run `python3 -B correctness.py workflow-help` before participating in correctness work. "
             "Drive refinement from `refinement-status --format compact-yaml`; after refinement freezes, "
             "drive specification coverage via `coverage-audit-prompt` and proof composition via "
             "`composition-status` / `composition-audit-prompt`. Load `mutation-schema` once per tooling "
@@ -2094,6 +2216,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Reject a candidate that produces validator warnings as well as errors.",
     )
 
+    formalization_status_parser = sub.add_parser(
+        "formalization-status",
+        help="Report exhaustive symbolic/non-symbolic routing and translation readiness.",
+    )
+    formalization_status_parser.add_argument(
+        "--format", choices=["text", "yaml", "compact-yaml"], default="text"
+    )
+
     refinement_status_parser = sub.add_parser(
         "refinement-status",
         help="Compute the bottom-up automated audit frontier and global stop state.",
@@ -2158,6 +2288,8 @@ def main() -> int:
         return _cmd_catalog(graph, args)
     if args.command == "validate":
         return _print_validation(graph)
+    if args.command == "formalization-status":
+        return _cmd_formalization_status(graph, args)
     if args.command == "slice":
         return _cmd_slice(graph, args)
     if args.command == "invalidate":

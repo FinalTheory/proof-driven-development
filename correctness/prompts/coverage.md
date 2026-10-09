@@ -20,9 +20,14 @@ Read `AGENTS.md`, then run:
 
 ```bash
 cd /opt/workspace/proof-driven-development/correctness
-.venv/bin/python3 correctness.py coverage-audit-prompt
+python3 -B correctness.py formalization-status --format compact-yaml
+python3 -B correctness.py symbolic-obligation-status
+python3 -B correctness.py coverage-audit-prompt
 ```
 
 Treat the generated output as the complete canonical audit contract. Execute that campaign exactly as specified.
 
 Do not modify the repository during this audit. Return the final result requested by the generated contract, including the model signature and final verdict.
+
+
+Machine-certified obligation coverage is stronger than the LLM campaign and requires `all_roots`: every current root and assumption must be symbolically mapped with TRUSTED translation assurance, and the design-obligation oracle itself must be TRUSTED. `selected_constraints` is diagnostic/regression-only. Missing symbolic coverage is formalization debt, not permission to silently treat an LLM CLOSED campaign as an SMT proof.

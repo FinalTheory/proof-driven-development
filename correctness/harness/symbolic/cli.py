@@ -160,9 +160,8 @@ def add_symbolic_subparsers(sub: argparse._SubParsersAction) -> None:
         "--allow-untrusted",
         action="store_true",
         help=(
-            "Exploratory only: run even when selected claim/contract symbolic translations "
-            "are not TRUSTED. The design-obligation oracle itself is source-anchored but "
-            "unreviewed in v1, so no result is canonical-certified yet."
+            "Exploratory only: run even when selected symbolic translations or the "
+            "design-obligation oracle translation are not TRUSTED."
         ),
     )
     obligation.add_argument(
@@ -173,7 +172,7 @@ def add_symbolic_subparsers(sub: argparse._SubParsersAction) -> None:
 
     obligation_status = sub.add_parser(
         "symbolic-obligation-status",
-        help="Evaluate every design obligation and report solver/trust status without certifying the oracle translation.",
+        help="Evaluate every design obligation and report solver plus constraint/oracle translation trust.",
     )
     obligation_status.add_argument(
         "--obligations",
@@ -300,6 +299,7 @@ def _cmd_symbolic_status(graph: Graph, args: argparse.Namespace) -> int:
         "model": args.model,
         "assurance": args.assurance,
         "contracts": {},
+        "assumptions": {},
         "claims": {},
     }
     for contract_id in sorted(bridge.contracts):
@@ -310,6 +310,18 @@ def _cmd_symbolic_status(graph: Graph, args: argparse.Namespace) -> int:
             subject_id=contract_id,
         )
         payload["contracts"][contract_id] = {
+            "status": result.status.value,
+            "reason": result.reason,
+            "signature": result.current_signature,
+        }
+    for assumption_id in sorted(bridge.assumptions):
+        result = registry.evaluate(
+            graph,
+            bridge,
+            kind="assumption",
+            subject_id=assumption_id,
+        )
+        payload["assumptions"][assumption_id] = {
             "status": result.status.value,
             "reason": result.reason,
             "signature": result.current_signature,
@@ -331,7 +343,7 @@ def _cmd_symbolic_status(graph: Graph, args: argparse.Namespace) -> int:
         print(yaml.safe_dump(payload, sort_keys=False, allow_unicode=True).rstrip())
         return 0
 
-    for kind_key in ("contracts", "claims"):
+    for kind_key in ("contracts", "assumptions", "claims"):
         print(f"{kind_key}:")
         entries = payload[kind_key]
         if not entries:
@@ -450,10 +462,11 @@ def _obligation_payload(result: Any) -> dict[str, Any]:
         "obligation_signature": result.obligation_signature,
         "coverage_signature": result.coverage_signature,
         "claims": list(result.claim_ids),
+        "assumptions": list(result.assumption_ids),
         "contracts": list(result.contract_ids),
         "constraint_translation_trust": result.constraint_trust,
         "trusted_constraints_required": result.trusted_constraints_required,
-        "oracle_translation_assurance": "SOURCE_ANCHORED_UNREVIEWED",
+        "oracle_translation_assurance": result.oracle_trust,
         "baseline": {
             "query": "NOT(design_obligation)",
             "status": result.baseline.status,
@@ -486,7 +499,7 @@ def _cmd_symbolic_obligation_check(graph: Graph, args: argparse.Namespace) -> in
         f"obligation={result.obligation_id} verdict={result.verdict} "
         f"baseline={result.baseline.status} constrained={result.constrained.status} "
         f"scope={result.coverage_scope} all_constraints_trusted={str(result.all_constraints_trusted).lower()} "
-        "oracle_assurance=SOURCE_ANCHORED_UNREVIEWED canonical_certified=false"
+        f"oracle_assurance={result.oracle_trust} canonical_certified={str(result.canonical_certified).lower()}"
     )
     if result.constrained.status == "sat" and result.constrained.model:
         print("counterexample_model:")
@@ -524,7 +537,8 @@ def _cmd_symbolic_obligation_status(graph: Graph, args: argparse.Namespace) -> i
             f"({report['baseline']['status']} -> {report['constrained']['status']}) "
             f"scope={report['coverage_scope']} "
             f"constraints_trusted={str(report['all_constraints_trusted']).lower()} "
-            "oracle=SOURCE_ANCHORED_UNREVIEWED"
+            f"oracle={report['oracle_translation_assurance']} "
+            f"canonical_certified={str(report['canonical_certified']).lower()}"
         )
     return 0
 
@@ -632,10 +646,11 @@ def _cmd_symbolic_report(graph: Graph, args: argparse.Namespace) -> int:
         premise_reports = []
         for premise_id in result.premise_ids:
             premise = graph.require_node(premise_id)
+            premise_kind = "claim" if premise.node_type == "claim" else "assumption"
             premise_trust = registry.evaluate(
                 graph,
                 bridge,
-                kind="claim",
+                kind=premise_kind,
                 subject_id=premise_id,
             )
             premise_reports.append(

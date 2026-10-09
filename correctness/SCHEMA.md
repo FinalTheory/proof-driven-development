@@ -27,7 +27,7 @@ Harness 会校验文件末尾的 machine-checkable schema index。该索引来�
 
 | 字段 | 类型 / 可选值 | 必需性 | 含义 |
 | --- | --- | --- | --- |
-| `schema_version` | const `0.15` | required | canonical document schema 版本 |
+| `schema_version` | const `0.16` | required | canonical document schema 版本 |
 | `system` | closed object | required | 所有局部 proof audit 共享的全局系统语义 |
 | `source` | closed object | required | architecture narrative 的 traceability pointer |
 | `scope` | closed object | required | 明确哪些 product/protocol concern 被建模或排除 |
@@ -292,6 +292,15 @@ Dynamic key 必须是现有 `claim_id`。
 
 如果 schema 本身发生较大的概念变化，则同步更新对应表格即可。这里不要求 field-to-code anchor，也不要求 mechanically generated documentation；它首先服务于人工快速审阅和 mental-model recovery。
 
+## Formalization routing
+
+`formalization` 与 `refinement` / `assurance` 同级，是 verifier control-plane metadata，不是 proof premise，也不进入 proposition semantic signature。它必须穷举当前全部 `claims`、`assumptions` 与 `catalog.semantic_contracts`。
+
+- `mode: symbolic`：该 subject 必须走 symbolic-first 路径；缺 mapping 或 translation assurance 时形成显式 blocker，禁止静默降级为 LLM proof。
+- `mode: non_symbolic`：必须同时记录结构化 `reason` 与 `rationale`；symbolic bridge 不得再为该 subject 保留 mapping。
+
+新增 claim/assumption 时 mutation plan 必须同时声明 formalization mode。
+
 ## Machine-checkable schema index
 
 下面这段索引由 Harness 用于检测 schema/documentation drift；人工解释仍以上面的中文表格为主。
@@ -368,6 +377,19 @@ Dynamic key 必须是现有 `claim_id`。
 - `claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.verification.verifiers` => required; array, minItems=1, items=object
 - `claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.verification.verifiers.[].intent` => required; string, minLength=1
 - `claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.verification.verifiers.[].kind` => required; string, pattern=^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
+- `formalization` => required; closed object
+- `formalization.assumptions` => required; closed object; dynamic keys match ^A[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
+- `formalization.assumptions.<key:^A[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.mode` => required; enum=symbolic|non_symbolic
+- `formalization.assumptions.<key:^A[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.rationale` => required when mode=non_symbolic; string, minLength=1
+- `formalization.assumptions.<key:^A[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.reason` => required when mode=non_symbolic; enum=unsupported_logic|external_semantics_only|human_semantic_judgment|implementation_correspondence_only|other
+- `formalization.claims` => required; closed object; dynamic keys match ^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
+- `formalization.claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.mode` => required; enum=symbolic|non_symbolic
+- `formalization.claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.rationale` => required when mode=non_symbolic; string, minLength=1
+- `formalization.claims.<key:^[GCL][0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.reason` => required when mode=non_symbolic; enum=unsupported_logic|external_semantics_only|human_semantic_judgment|implementation_correspondence_only|other
+- `formalization.semantic_contracts` => required; closed object; dynamic keys match ^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
+- `formalization.semantic_contracts.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.mode` => required; enum=symbolic|non_symbolic
+- `formalization.semantic_contracts.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.rationale` => required when mode=non_symbolic; string, minLength=1
+- `formalization.semantic_contracts.<key:^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.reason` => required when mode=non_symbolic; enum=unsupported_logic|external_semantics_only|human_semantic_judgment|implementation_correspondence_only|other
 - `id_allocator` => required; closed object
 - `id_allocator.next_sequence` => required; closed object
 - `id_allocator.next_sequence.A` => required; integer, minimum=1
@@ -395,7 +417,7 @@ Dynamic key 必须是现有 `claim_id`。
 - `refinement.tooling_blockers.<key:^T[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.status` => required; enum=open|resolved
 - `refinement.tooling_blockers.<key:^T[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$>.suggested_change` => optional; string, minLength=1
 - `roots` => required; array, minItems=1, uniqueItems=true, items=string, itemPattern=^G[0-9]+_[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
-- `schema_version` => required; const='0.15'
+- `schema_version` => required; const='0.16'
 - `scope` => required; closed object
 - `scope.excludes` => required; array, minItems=1, uniqueItems=true, items=string
 - `scope.includes` => required; array, minItems=1, uniqueItems=true, items=string

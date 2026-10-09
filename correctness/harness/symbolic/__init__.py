@@ -1,6 +1,6 @@
 """Generic typed symbolic IR, translation assurance, and SMT backend for PDD."""
 
-from .bridge import ClaimMapping, ContractMapping, SymbolicBridge, SymbolicBridgeError
+from .bridge import AssumptionMapping, ClaimMapping, ContractMapping, SymbolicBridge, SymbolicBridgeError
 from .assurance_registry import (
     SubjectTrustResult,
     SubjectTrustStatus,
@@ -50,6 +50,8 @@ from .translation_assurance import (
     AssuranceStatus,
     ComparisonReview,
     ClaimTranslationSubject,
+    AssumptionTranslationSubject,
+    ObligationTranslationSubject,
     ComparisonVerdict,
     RoundTripTranslation,
     TranslationReviewError,
@@ -57,6 +59,8 @@ from .translation_assurance import (
     TranslationStatus,
     aggregate_translation_assurance,
     build_claim_translation_subject,
+    build_assumption_translation_subject,
+    build_obligation_translation_subject,
     build_direct_comparison_prompt,
     build_roundtrip_comparison_prompt,
     build_roundtrip_translation_prompt,
@@ -73,6 +77,8 @@ from .z3_backend import CheckResult, Z3_AVAILABLE, check_program
 __all__ = [
     "BOOL",
     "And",
+    "AssumptionMapping",
+    "AssumptionTranslationSubject",
     "BoolConst",
     "Call",
     "CheckResult",
@@ -97,6 +103,7 @@ __all__ = [
     "Implies",
     "Neq",
     "Not",
+    "ObligationTranslationSubject",
     "Or",
     "ParsedProgram",
     "RoundTripTranslation",
@@ -122,6 +129,8 @@ __all__ = [
     "aggregate_translation_assurance",
     "assurance_record_payload",
     "build_claim_translation_subject",
+    "build_assumption_translation_subject",
+    "build_obligation_translation_subject",
     "build_coverage_artifact",
     "build_direct_comparison_prompt",
     "build_roundtrip_comparison_prompt",

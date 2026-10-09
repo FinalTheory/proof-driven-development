@@ -1,19 +1,18 @@
 version: 1
 obligations:
   accepted_reconciliation_closes_pending_lifecycle:
-    description: >-
-      Regression for the ACCEPTED-side lifecycle bridge: an exact same-identity
+    description: 'Regression for the ACCEPTED-side lifecycle bridge: an exact same-identity
       authoritative reconciliation that is published as accepted must not leave the
-      logical edit active in client_pending_edits as unresolved.
-    statement: >-
-      For every published reconnect/reconciliation state and logical edit identity,
-      if authoritative reconciliation classified that exact identity as ACCEPTED within
-      the published response head, the resulting client state does not retain that edit
-      as an active pending unresolved edit.
+      logical edit active in client_pending_edits as unresolved.'
+    statement: For every published reconnect/reconciliation state and logical edit
+      identity, if authoritative reconciliation classified that exact identity as
+      ACCEPTED within the published response head, the resulting client state does
+      not retain that edit as an active pending unresolved edit.
     source_refs:
     - reconnect_revision_boundary
     coverage_scope: selected_constraints
     claims: []
+    assumptions: []
     contracts:
     - visible_canonical_speculative_exclusion
     - pending_speculative_lifecycle_coverage
@@ -23,36 +22,34 @@ obligations:
       forall:
         vars:
           s: ClientState
-          o: Overlay
+          e: LogicalEditIdentity
         body:
           implies:
           - call:
               fn: accepted_reconciliation_published
               args:
               - var: s
-              - var: o
+              - var: e
           - not:
               call:
-                fn: pending_edit
+                fn: pending_identity_active
                 args:
                 - var: s
-                - var: o
-
+                - var: e
   visible_speculative_representation_valid_on_current_base:
-    description: >-
-      Regression for stale speculative composition: provenance-correct unresolved state
-      must not be exposed when its representation no longer preserves the original logical
-      operation on the currently visible canonical base.
-    statement: >-
-      Every speculative representation exposed in a user-visible client state is
-      semantically compatible with that state's visible canonical base: composing the
-      representation over that base still realizes the same original logical edit operation.
-      The system may satisfy this by suppressing an incompatible representation rather than
-      automatically rebasing it.
+    description: 'Regression for stale speculative composition: provenance-correct
+      unresolved state must not be exposed when its representation no longer preserves
+      the original logical operation on the currently visible canonical base.'
+    statement: 'Every speculative representation exposed in a user-visible client
+      state is semantically compatible with that state''s visible canonical base:
+      composing the representation over that base still realizes the same original
+      logical edit operation. The system may satisfy this by suppressing an incompatible
+      representation rather than automatically rebasing it.'
     source_refs:
     - reconnect_revision_boundary
     coverage_scope: selected_constraints
     claims: []
+    assumptions: []
     contracts:
     - speculative_overlay_identity_provenance
     - speculative_overlay_operation_provenance
@@ -76,70 +73,68 @@ obligations:
               args:
               - var: s
               - var: o
-
   externally_rejected_edit_closes_active_speculative_lifecycle:
-    description: >-
-      Historical regression for the previously repaired REJECTED-side lifecycle gap.
-    statement: >-
-      Once a normally participating client observes an authoritative definitive REJECTED
-      result for the exact logical edit identity, the resulting client state has no active
-      pending, retained speculative, or visible speculative representation of that lifecycle,
-      and the lifecycle is terminalized.
+    description: Historical regression for the previously repaired REJECTED-side lifecycle
+      gap.
+    statement: Once a normally participating client observes an authoritative definitive
+      REJECTED result for the exact logical edit identity, the resulting client state
+      has no active pending, retained speculative, or visible speculative representation
+      of that lifecycle, and the lifecycle is terminalized.
     source_refs:
     - reconnect_revision_boundary
     coverage_scope: selected_constraints
     claims: []
+    assumptions: []
     contracts:
     - rejected_terminal_speculative_retirement
     formula:
       forall:
         vars:
           s: ClientState
-          o: Overlay
+          e: LogicalEditIdentity
         body:
           implies:
           - call:
               fn: definitive_rejection_observed
               args:
               - var: s
-              - var: o
+              - var: e
           - and:
             - not:
                 call:
-                  fn: pending_edit
+                  fn: pending_identity_active
                   args:
                   - var: s
-                  - var: o
+                  - var: e
             - not:
                 call:
-                  fn: retained_overlay
+                  fn: retained_speculative_identity_active
                   args:
                   - var: s
-                  - var: o
+                  - var: e
             - not:
                 call:
-                  fn: visible_overlay
+                  fn: visible_speculative_identity_active
                   args:
                   - var: s
-                  - var: o
+                  - var: e
             - call:
-                fn: terminalized_speculative_edit
+                fn: terminalized_speculative_identity
                 args:
                 - var: s
-                - var: o
-
+                - var: e
   visible_canonical_frontier_never_regresses:
-    description: >-
-      Historical regression for the previously repaired same-session same-document
-      visible canonical frontier rollback gap.
-    statement: >-
-      Within one normal client/session, when a later ordinary user-visible state again
-      represents the same document as an earlier visible state, its canonical frontier
+    description: Regression property for the canonical design’s explicitly scoped
+      same-document continuous-session non-regression requirement; it does not assert
+      monotonicity across a document switch away and back.
+    statement: Within one normal client/session that continuously represents the same
+      document between two ordinary user-visible states, the later canonical frontier
       cannot be lower than the earlier visible frontier.
     source_refs:
     - reconnect_revision_boundary
     coverage_scope: selected_constraints
     claims: []
+    assumptions: []
     contracts:
     - visible_canonical_frontier_non_regression
     formula:
@@ -149,11 +144,17 @@ obligations:
           later: ClientState
         body:
           implies:
-          - call:
-              fn: same_session_later_visible_same_document
-              args:
-              - var: earlier
-              - var: later
+          - and:
+            - call:
+                fn: same_session_later_visible_continuous_same_document
+                args:
+                - var: earlier
+                - var: later
+            - call:
+                fn: same_session_later_visible_same_document
+                args:
+                - var: earlier
+                - var: later
           - not:
               call:
                 fn: visible_frontier_regresses

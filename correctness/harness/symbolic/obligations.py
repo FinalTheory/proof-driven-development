@@ -13,7 +13,10 @@ from ..model import Graph, UniqueKeyLoader, _catalog_namespace
 from .assurance_registry import SubjectTrustStatus, TranslationAssuranceRegistry
 from .bridge import SymbolicBridge, SymbolicBridgeError, _formula_function_names
 from .dsl import ParsedProgram, parse_program
-from .translation_assurance import TranslationReviewError
+from .translation_assurance import (
+    TranslationReviewError,
+    build_obligation_translation_subject,
+)
 from .z3_backend import CheckResult, check_program
 
 
@@ -32,6 +35,7 @@ class DesignObligation:
     source_refs: tuple[str, ...]
     coverage_scope: str
     claim_ids: tuple[str, ...]
+    assumption_ids: tuple[str, ...]
     contract_ids: tuple[str, ...]
     formula: dict[str, Any]
 
@@ -74,6 +78,7 @@ class DesignObligationSpec:
             "source_refs",
             "coverage_scope",
             "claims",
+            "assumptions",
             "contracts",
             "formula",
         }
@@ -92,6 +97,7 @@ class DesignObligationSpec:
             source_refs = raw_obligation["source_refs"]
             coverage_scope = raw_obligation["coverage_scope"]
             claims = raw_obligation["claims"]
+            assumptions = raw_obligation["assumptions"]
             contracts = raw_obligation["contracts"]
             formula = raw_obligation["formula"]
 
@@ -103,6 +109,7 @@ class DesignObligationSpec:
             for field_name, values in (
                 ("source_refs", source_refs),
                 ("claims", claims),
+                ("assumptions", assumptions),
                 ("contracts", contracts),
             ):
                 if (
@@ -121,11 +128,11 @@ class DesignObligationSpec:
                 raise DesignObligationError(
                     f"obligation {obligation_id}.coverage_scope must be selected_constraints or all_roots"
                 )
-            if coverage_scope == "selected_constraints" and not claims and not contracts:
+            if coverage_scope == "selected_constraints" and not claims and not assumptions and not contracts:
                 raise DesignObligationError(
                     f"obligation {obligation_id} selected_constraints requires claims or contracts"
                 )
-            if coverage_scope == "all_roots" and (claims or contracts):
+            if coverage_scope == "all_roots" and (claims or assumptions or contracts):
                 raise DesignObligationError(
                     f"obligation {obligation_id} all_roots must not manually list claims/contracts"
                 )
@@ -141,6 +148,7 @@ class DesignObligationSpec:
                 source_refs=tuple(source_refs),
                 coverage_scope=coverage_scope,
                 claim_ids=tuple(claims),
+                assumption_ids=tuple(assumptions),
                 contract_ids=tuple(contracts),
                 formula=formula,
             )
@@ -162,11 +170,13 @@ class DesignObligationResult:
     coverage_signature: str
     coverage_scope: str
     claim_ids: tuple[str, ...]
+    assumption_ids: tuple[str, ...]
     contract_ids: tuple[str, ...]
     baseline: CheckResult
     constrained: CheckResult
     constraint_trust: dict[str, str]
     trusted_constraints_required: bool
+    oracle_trust: str
 
     @property
     def verdict(self) -> str:
@@ -190,9 +200,12 @@ class DesignObligationResult:
 
     @property
     def canonical_certified(self) -> bool:
-        # v1 deliberately does not claim canonical certification for the oracle itself:
-        # design-obligation NL -> symbolic translation has not yet been independently assured.
-        return False
+        return (
+            self.coverage_scope == "all_roots"
+            and self.solver_checked
+            and self.all_constraints_trusted
+            and self.oracle_trust == SubjectTrustStatus.TRUSTED.value
+        )
 
 
 class DesignObligationVerifier:
@@ -215,9 +228,27 @@ class DesignObligationVerifier:
         *,
         require_trusted: bool = True,
     ) -> DesignObligationResult:
-        claim_ids, contract_ids = self._resolve_constraints(obligation)
-        self._validate_obligation(obligation, claim_ids, contract_ids)
-        trust = self._constraint_trust(claim_ids, contract_ids)
+        claim_ids, assumption_ids, contract_ids = self._resolve_constraints(obligation)
+        self._validate_obligation(obligation, claim_ids, assumption_ids, contract_ids)
+        trust = self._constraint_trust(claim_ids, assumption_ids, contract_ids)
+        obligation_subject = build_obligation_translation_subject(
+            self.graph,
+            self.bridge,
+            obligation_id=obligation.obligation_id,
+            statement=obligation.statement,
+            description=obligation.description,
+            source_refs=obligation.source_refs,
+            formula=obligation.formula,
+        )
+        oracle_trust = (
+            self.assurance_registry.evaluate_subject(
+                kind="obligation",
+                subject_id=obligation.obligation_id,
+                subject=obligation_subject,
+            ).status.value
+            if self.assurance_registry is not None
+            else SubjectTrustStatus.UNVERIFIED.value
+        )
         if require_trusted:
             failures = [f"{key}={status}" for key, status in trust.items() if status != SubjectTrustStatus.TRUSTED.value]
             if failures:
@@ -225,12 +256,18 @@ class DesignObligationVerifier:
                     "design-obligation check requires TRUSTED selected constraints: "
                     + "; ".join(failures)
                 )
+            if oracle_trust != SubjectTrustStatus.TRUSTED.value:
+                raise TranslationReviewError(
+                    f"design obligation {obligation.obligation_id} oracle translation is not TRUSTED: {oracle_trust}"
+                )
 
         negated_obligation = {"not": obligation.formula}
         baseline_program = self._compile(negated_obligation, constraints=[])
-        selected_formulas = [self.bridge.contracts[cid].formula for cid in contract_ids] + [
-            self.bridge.claims[cid].formula for cid in claim_ids
-        ]
+        selected_formulas = (
+            [self.bridge.contracts[cid].formula for cid in contract_ids]
+            + [self.bridge.assumptions[aid].formula for aid in assumption_ids]
+            + [self.bridge.claims[cid].formula for cid in claim_ids]
+        )
         constrained_program = self._compile(
             negated_obligation,
             constraints=selected_formulas,
@@ -243,6 +280,7 @@ class DesignObligationVerifier:
             self.bridge,
             obligation,
             claim_ids=claim_ids,
+            assumption_ids=assumption_ids,
             contract_ids=contract_ids,
             obligation_signature=obligation_sig,
         )
@@ -252,11 +290,13 @@ class DesignObligationVerifier:
             coverage_signature=coverage_sig,
             coverage_scope=obligation.coverage_scope,
             claim_ids=tuple(claim_ids),
+            assumption_ids=tuple(assumption_ids),
             contract_ids=tuple(contract_ids),
             baseline=baseline,
             constrained=constrained,
             constraint_trust=trust,
             trusted_constraints_required=require_trusted,
+            oracle_trust=oracle_trust,
         )
 
     def check_with_overrides(
@@ -267,8 +307,8 @@ class DesignObligationVerifier:
         contract_formula_overrides: dict[str, dict[str, Any]] | None = None,
     ) -> DesignObligationResult:
         """Adversarial regression path: replay a weakened current specification."""
-        claim_ids, contract_ids = self._resolve_constraints(obligation)
-        self._validate_obligation(obligation, claim_ids, contract_ids)
+        claim_ids, assumption_ids, contract_ids = self._resolve_constraints(obligation)
+        self._validate_obligation(obligation, claim_ids, assumption_ids, contract_ids)
         claim_overrides = claim_formula_overrides or {}
         contract_overrides = contract_formula_overrides or {}
         unknown_claims = set(claim_overrides) - set(claim_ids)
@@ -280,13 +320,17 @@ class DesignObligationVerifier:
             )
         negated_obligation = {"not": obligation.formula}
         baseline = check_program(self._compile(negated_obligation, constraints=[]))
-        selected_formulas = [
-            contract_overrides.get(cid, self.bridge.contracts[cid].formula)
-            for cid in contract_ids
-        ] + [
-            claim_overrides.get(cid, self.bridge.claims[cid].formula)
-            for cid in claim_ids
-        ]
+        selected_formulas = (
+            [
+                contract_overrides.get(cid, self.bridge.contracts[cid].formula)
+                for cid in contract_ids
+            ]
+            + [self.bridge.assumptions[aid].formula for aid in assumption_ids]
+            + [
+                claim_overrides.get(cid, self.bridge.claims[cid].formula)
+                for cid in claim_ids
+            ]
+        )
         constrained = check_program(
             self._compile(negated_obligation, constraints=selected_formulas)
         )
@@ -296,6 +340,7 @@ class DesignObligationVerifier:
             self.bridge,
             obligation,
             claim_ids=claim_ids,
+            assumption_ids=assumption_ids,
             contract_ids=contract_ids,
             obligation_signature=obligation_sig,
         )
@@ -305,41 +350,67 @@ class DesignObligationVerifier:
             coverage_signature=coverage_sig,
             coverage_scope=obligation.coverage_scope,
             claim_ids=tuple(claim_ids),
+            assumption_ids=tuple(assumption_ids),
             contract_ids=tuple(contract_ids),
             baseline=baseline,
             constrained=constrained,
-            constraint_trust=self._constraint_trust(claim_ids, contract_ids),
+            constraint_trust=self._constraint_trust(claim_ids, assumption_ids, contract_ids),
             trusted_constraints_required=False,
+            oracle_trust=(
+                self.assurance_registry.evaluate_subject(
+                    kind="obligation",
+                    subject_id=obligation.obligation_id,
+                    subject=build_obligation_translation_subject(
+                        self.graph, self.bridge, obligation_id=obligation.obligation_id,
+                        statement=obligation.statement, description=obligation.description,
+                        source_refs=obligation.source_refs, formula=obligation.formula
+                    ),
+                ).status.value
+                if self.assurance_registry is not None
+                else SubjectTrustStatus.UNVERIFIED.value
+            ),
         )
 
-    def _resolve_constraints(self, obligation: DesignObligation) -> tuple[list[str], list[str]]:
+    def _resolve_constraints(
+        self, obligation: DesignObligation
+    ) -> tuple[list[str], list[str], list[str]]:
         if obligation.coverage_scope == "selected_constraints":
-            return list(obligation.claim_ids), list(obligation.contract_ids)
+            return (
+                list(obligation.claim_ids),
+                list(obligation.assumption_ids),
+                list(obligation.contract_ids),
+            )
         roots = sorted(
             node_id
             for node_id, claim in self.graph.claims.items()
             if claim.get("kind") == "root"
         )
-        missing = [node_id for node_id in roots if node_id not in self.bridge.claims]
-        if missing:
+        assumptions = sorted(self.graph.assumptions)
+        missing_roots = [node_id for node_id in roots if node_id not in self.bridge.claims]
+        missing_assumptions = [
+            node_id for node_id in assumptions if node_id not in self.bridge.assumptions
+        ]
+        if missing_roots or missing_assumptions:
             raise DesignObligationError(
-                "all_roots coverage requires every current root to have a symbolic mapping; "
-                f"missing={missing}"
+                "all_roots coverage requires every current root and assumption to have a symbolic mapping; "
+                f"missing_roots={missing_roots} missing_assumptions={missing_assumptions}"
             )
-        return roots, []
+        return roots, assumptions, []
 
     def _validate_obligation(
         self,
         obligation: DesignObligation,
         claim_ids: list[str],
+        assumption_ids: list[str],
         contract_ids: list[str],
     ) -> None:
         unknown_claims = sorted(set(claim_ids) - set(self.bridge.claims))
+        unknown_assumptions = sorted(set(assumption_ids) - set(self.bridge.assumptions))
         unknown_contracts = sorted(set(contract_ids) - set(self.bridge.contracts))
-        if unknown_claims or unknown_contracts:
+        if unknown_claims or unknown_assumptions or unknown_contracts:
             raise DesignObligationError(
                 f"obligation {obligation.obligation_id} references unmapped constraints: "
-                f"claims={unknown_claims} contracts={unknown_contracts}"
+                f"claims={unknown_claims} assumptions={unknown_assumptions} contracts={unknown_contracts}"
             )
         known_sources = _catalog_namespace(self.graph, "sources")
         unknown_sources = sorted(set(obligation.source_refs) - set(known_sources))
@@ -354,9 +425,11 @@ class DesignObligationVerifier:
             raise DesignObligationError(
                 f"obligation {obligation.obligation_id} uses unknown functions {unknown_functions}"
             )
-        selected_anchors = {f"claim:{cid}" for cid in claim_ids} | {
-            f"contract:{cid}" for cid in contract_ids
-        }
+        selected_anchors = (
+            {f"claim:{cid}" for cid in claim_ids}
+            | {f"assumption:{aid}" for aid in assumption_ids}
+            | {f"contract:{cid}" for cid in contract_ids}
+        )
         for fn in sorted(used_functions):
             decl = self.bridge.functions[fn]
             if decl.get("catalog_symbols"):
@@ -383,12 +456,15 @@ class DesignObligationVerifier:
     def _constraint_trust(
         self,
         claim_ids: list[str],
+        assumption_ids: list[str],
         contract_ids: list[str],
     ) -> dict[str, str]:
         result: dict[str, str] = {}
         if self.assurance_registry is None:
             for cid in contract_ids:
                 result[f"contract:{cid}"] = SubjectTrustStatus.UNVERIFIED.value
+            for aid in assumption_ids:
+                result[f"assumption:{aid}"] = SubjectTrustStatus.UNVERIFIED.value
             for cid in claim_ids:
                 result[f"claim:{cid}"] = SubjectTrustStatus.UNVERIFIED.value
             return result
@@ -397,6 +473,11 @@ class DesignObligationVerifier:
                 self.graph, self.bridge, kind="contract", subject_id=cid
             )
             result[f"contract:{cid}"] = trust.status.value
+        for aid in assumption_ids:
+            trust = self.assurance_registry.evaluate(
+                self.graph, self.bridge, kind="assumption", subject_id=aid
+            )
+            result[f"assumption:{aid}"] = trust.status.value
         for cid in claim_ids:
             trust = self.assurance_registry.evaluate(
                 self.graph, self.bridge, kind="claim", subject_id=cid
@@ -455,6 +536,7 @@ def design_obligation_coverage_signature(
     obligation: DesignObligation,
     *,
     claim_ids: list[str],
+    assumption_ids: list[str],
     contract_ids: list[str],
     obligation_signature: str,
 ) -> str:
@@ -464,6 +546,9 @@ def design_obligation_coverage_signature(
         "coverage_scope": obligation.coverage_scope,
         "claims": {
             cid: bridge.claims[cid].formula for cid in sorted(claim_ids)
+        },
+        "assumptions": {
+            aid: bridge.assumptions[aid].formula for aid in sorted(assumption_ids)
         },
         "contracts": {
             cid: bridge.contracts[cid].formula for cid in sorted(contract_ids)

@@ -32,8 +32,8 @@ from harness.symbolic import (
 )
 
 
-BRIDGE_PATH = Path(__file__).with_name("symbolic_models") / "bridge.yaml"
-ASSURANCE_PATH = Path(__file__).with_name("symbolic_models") / "assurance.yaml"
+BRIDGE_PATH = Path(__file__).resolve().parents[1] / "symbolic_models" / "bridge.yaml"
+ASSURANCE_PATH = Path(__file__).resolve().parents[1] / "symbolic_models" / "assurance.yaml"
 
 class TranslationAssuranceTests(unittest.TestCase):
     def setUp(self):

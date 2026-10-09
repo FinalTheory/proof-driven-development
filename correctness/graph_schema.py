@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-SCHEMA_VERSION = "0.15"
+SCHEMA_VERSION = "0.16"
 PROOF_SEMANTICS_VERSION = "1"
 ASSUMPTION_STATUSES = (
     "external_assumption",
@@ -18,6 +18,14 @@ COMPOSITION_ASSURANCE_STATUSES = (
     "machine_checked",
 )
 EVIDENCE_ASSURANCE_STATUSES = ("planned", "implemented", "passing", "failing")
+FORMALIZATION_MODES = ("symbolic", "non_symbolic")
+NON_SYMBOLIC_REASONS = (
+    "unsupported_logic",
+    "external_semantics_only",
+    "human_semantic_judgment",
+    "implementation_correspondence_only",
+    "other",
+)
 DECISION_STATUSES = ("open", "resolved")
 TOOLING_BLOCKER_STATUSES = ("open", "resolved")
 
@@ -823,6 +831,63 @@ SCOPE_SCHEMA = _closed_object(
     required=("includes", "excludes"),
 )
 
+FORMALIZATION_ENTRY_SCHEMA = _closed_object(
+    {
+        "mode": {
+            "enum": list(FORMALIZATION_MODES),
+            "description": "Declared verification representation backend for this canonical semantic subject.",
+        },
+        "reason": {
+            "enum": list(NON_SYMBOLIC_REASONS),
+            "description": "Required reason when a subject is explicitly excluded from symbolic lowering.",
+        },
+        "rationale": {
+            **NONEMPTY_STRING,
+            "description": "Concrete explanation of why symbolic lowering is inappropriate for this subject.",
+        },
+    },
+    required=("mode",),
+    extra={
+        "allOf": [
+            {
+                "if": {"properties": {"mode": {"const": "non_symbolic"}}, "required": ["mode"]},
+                "then": {"required": ["reason", "rationale"]},
+            },
+            {
+                "if": {"properties": {"mode": {"const": "symbolic"}}, "required": ["mode"]},
+                "then": {
+                    "not": {"anyOf": [{"required": ["reason"]}, {"required": ["rationale"]}]}
+                },
+            },
+        ]
+    },
+)
+
+FORMALIZATION_SCHEMA = _closed_object(
+    {
+        "claims": {
+            "type": "object",
+            "patternProperties": {CLAIM_ID: FORMALIZATION_ENTRY_SCHEMA},
+            "additionalProperties": False,
+            "description": "Exhaustive backend declaration for every correctness claim.",
+        },
+        "assumptions": {
+            "type": "object",
+            "patternProperties": {ASSUMPTION_ID: FORMALIZATION_ENTRY_SCHEMA},
+            "additionalProperties": False,
+            "description": "Exhaustive backend declaration for every proof assumption.",
+        },
+        "semantic_contracts": {
+            "type": "object",
+            "patternProperties": {LOWER_SNAKE: FORMALIZATION_ENTRY_SCHEMA},
+            "additionalProperties": False,
+            "description": "Exhaustive backend declaration for every reusable semantic contract.",
+        },
+    },
+    required=("claims", "assumptions", "semantic_contracts"),
+)
+
+
 CANONICAL_GRAPH_SCHEMA: dict[str, Any] = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "urn:proof-driven-development:correctness-graph:v0.14",
@@ -845,6 +910,7 @@ CANONICAL_GRAPH_SCHEMA: dict[str, Any] = {
         "roots",
         "claims",
         "refinement",
+        "formalization",
         "assurance",
     ],
     "properties": {
@@ -901,6 +967,10 @@ CANONICAL_GRAPH_SCHEMA: dict[str, Any] = {
         "refinement": {
             **REFINEMENT_SCHEMA,
             "description": "Execution state of the adversarial refinement campaign. Scheduler policy itself is defined by correctness.py, not configurable here.",
+        },
+        "formalization": {
+            **FORMALIZATION_SCHEMA,
+            "description": "Exhaustive control-plane declaration of whether each canonical proof subject is symbolic-first or explicitly non-symbolic. This metadata is not a proof premise.",
         },
         "assurance": {
             **ASSURANCE_SCHEMA,
