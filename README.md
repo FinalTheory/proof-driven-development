@@ -1,4 +1,6 @@
-# You Can Draw a Google Docs Design in 10 Minutes. Can You Prove It?
+# Proof-Driven Development
+
+**You Can Draw a Google Docs Design in 10 Minutes. Can You Prove It?**
 
 > **Boxes and arrows on diagram are cheap. System that actually correctly built is expensive.**
 
@@ -21,6 +23,49 @@ That is enough to explain where data flows. It is not enough to explain why the 
 This repository is an experiment in **Proof-Driven Development**: make a small set of high-impact architectural guarantees explicit, decompose them into independently reviewable proof obligations, and preserve that correctness reasoning as the system evolves.
 
 The goal is not to formally prove every line of application code. The goal is to turn correctness reasoning that senior engineers normally reconstruct from memory into a reusable engineering asset.
+
+---
+
+## Why Proof-Driven Development now?
+
+AI makes implementation cheaper. It does not automatically make trustworthy implementation cheaper.
+
+As code-generation throughput rises, a new bottleneck becomes visible: humans still have to decide whether the generated system preserves the right semantics.
+
+If every code review requires a senior engineer to reconstruct distributed invariants from scratch, that process does not scale. The higher-leverage alternative is to amortize the reasoning cost:
+
+```text
+senior / staff reasoning once
+        ↓
+explicit guarantee / proof obligation
+        ↓
+reusable verification boundary
+        ↓
+future humans and agents reuse it
+```
+
+Human judgment remains essential, but its role changes. Engineers decide what the system actually promises, which assumptions are acceptable, which failure models must be covered, and what evidence is strong enough to trust. Automation helps preserve those decisions instead of rediscovering them every time.
+
+> **Senior engineers find correctness bugs. Staff engineers try to make the entire class of bugs harder to reintroduce.**
+
+---
+
+## What this project is actually testing
+
+This repository is an experiment, not a claim that the methodology already works universally.
+
+The hard questions are economic and operational:
+
+1. Can a non-trivial distributed system be decomposed into proof obligations that remain understandable over time?
+2. Can local proof obligations become precise enough that multiple independent AI auditors are sufficiently reliable on them?
+3. Can specification gaps and bad decompositions be discovered without repeatedly reopening the entire system context?
+4. Can implementation changes be mapped to affected proof obligations with sufficiently high recall?
+5. Can enough leaf obligations ultimately be discharged by mechanical evidence that the model reduces, rather than increases, human review cost?
+6. Can invalidation propagation remain local enough for the methodology to survive real system evolution?
+
+If the answers are mostly no, Proof-Driven Development becomes specification bureaucracy.
+
+If the answers are mostly yes, correctness reasoning can become a reusable and maintainable engineering asset instead of something that existed briefly in the previous reviewer’s head.
 
 ---
 
@@ -185,6 +230,34 @@ This is the practical value of the proof graph: the reviewer no longer has to re
 
 ---
 
+## Deterministic checking is not the same as specification completeness
+
+As the Harness evolved, one distinction became central: there are several different ways a correctness model can be wrong, and they require different assurance layers.
+
+```text
+refinement
+    Is this proposition/decomposition well formed?
+
+specification coverage
+    Did we forget an important proposition or relation entirely?
+
+composition
+    Do these direct premises actually imply this target?
+
+implementation evidence
+    Does the real system satisfy the leaf proposition?
+```
+
+The first, third, and fourth questions can become increasingly mechanical once the relevant property has been stated. The second is fundamentally more open-ended. A solver cannot prove that a missing variable, provenance relation, terminal outcome, or namespace coordinate should have existed if nobody represented it in the model.
+
+The practical strategy is therefore to use semantic audits to **discover** missing correctness relations, then convert those discoveries into typed structure that future tooling can enforce. For example, provenance-sensitive state may declare a resource scope such as `document`; once that semantic choice is explicit, the Harness can mechanically reject a provenance contract that binds the value fields but forgets the document namespace. Likewise, an invariant can be forced to expose both its establishment boundary and the transitions that must preserve it.
+
+This is the boundary the project is trying to push:
+
+> **Human/LLM judgment discovers what relation matters. Typed contracts, validators, signatures, and mechanical evidence make it progressively harder to forget or silently break that relation again.**
+
+---
+
 ## The Harness is not trying to make LLMs authoritative
 
 The initial decomposition is not assumed to be correct. It must be attacked continuously and adversarially.
@@ -226,34 +299,6 @@ This is where the methodology tries to improve reliability without paying the fu
 
 ---
 
-## Deterministic checking is not the same as specification completeness
-
-As the Harness evolved, one distinction became central: there are several different ways a correctness model can be wrong, and they require different assurance layers.
-
-```text
-refinement
-    Is this proposition/decomposition well formed?
-
-specification coverage
-    Did we forget an important proposition or relation entirely?
-
-composition
-    Do these direct premises actually imply this target?
-
-implementation evidence
-    Does the real system satisfy the leaf proposition?
-```
-
-The first, third, and fourth questions can become increasingly mechanical once the relevant property has been stated. The second is fundamentally more open-ended. A solver cannot prove that a missing variable, provenance relation, terminal outcome, or namespace coordinate should have existed if nobody represented it in the model.
-
-The practical strategy is therefore to use semantic audits to **discover** missing correctness relations, then convert those discoveries into typed structure that future tooling can enforce. For example, provenance-sensitive state may declare a resource scope such as `document`; once that semantic choice is explicit, the Harness can mechanically reject a provenance contract that binds the value fields but forgets the document namespace. Likewise, an invariant can be forced to expose both its establishment boundary and the transitions that must preserve it.
-
-This is the boundary the project is trying to push:
-
-> **Human/LLM judgment discovers what relation matters. Typed contracts, validators, signatures, and mechanical evidence make it progressively harder to forget or silently break that relation again.**
-
----
-
 ## Proof obligations eventually have to touch the real implementation
 
 A beautifully decomposed DAG is still only a specification artifact if its leaves are not connected to implementation evidence.
@@ -280,7 +325,7 @@ That distinction matters. A database uniqueness property should not require an L
 
 ---
 
-## This project deliberately does not model everything
+## Make correctness assurance scale with blast radius
 
 Production systems contain enormous amounts of feature-specific behavior. Many bugs matter to users without belonging in an architectural correctness DAG.
 
@@ -304,9 +349,7 @@ The useful boundary is not “important bug versus unimportant bug.” It is clo
 
 If not, ordinary tests and code review may be cheaper.
 
----
-
-## Correctness cost should follow blast radius
+Scope control is only half of the cost model. The other half is keeping invalidation local.
 
 A proof system that reruns expensive whole-system reasoning for every one-line change is economically useless.
 
@@ -331,49 +374,6 @@ Most code changes should never trigger deep correctness work.
 Maintenance cost should scale with **blast radius**, not repository size or diff size.
 
 That locality is one of the central hypotheses this project is testing. If every change eventually invalidates the entire graph, the methodology has failed operationally even if the model is theoretically correct.
-
----
-
-## Why this matters more when AI writes the code
-
-AI makes implementation cheaper. It does not automatically make trustworthy implementation cheaper.
-
-As code-generation throughput rises, a new bottleneck becomes visible: humans still have to decide whether the generated system preserves the right semantics.
-
-If every code review requires a senior engineer to reconstruct distributed invariants from scratch, that process does not scale. The higher-leverage alternative is to amortize the reasoning cost:
-
-```text
-senior / staff reasoning once
-        ↓
-explicit guarantee / proof obligation
-        ↓
-reusable verification boundary
-        ↓
-future humans and agents reuse it
-```
-
-Human judgment remains essential, but its role changes. Engineers decide what the system actually promises, which assumptions are acceptable, which failure models must be covered, and what evidence is strong enough to trust. Automation helps preserve those decisions instead of rediscovering them every time.
-
-> **Senior engineers find correctness bugs. Staff engineers try to make the entire class of bugs harder to reintroduce.**
-
----
-
-## What this project is actually testing
-
-This repository is an experiment, not a claim that the methodology already works universally.
-
-The hard questions are economic and operational:
-
-1. Can a non-trivial distributed system be decomposed into proof obligations that remain understandable over time?
-2. Can local proof obligations become precise enough that multiple independent AI auditors are sufficiently reliable on them?
-3. Can specification gaps and bad decompositions be discovered without repeatedly reopening the entire system context?
-4. Can implementation changes be mapped to affected proof obligations with sufficiently high recall?
-5. Can enough leaf obligations ultimately be discharged by mechanical evidence that the model reduces, rather than increases, human review cost?
-6. Can invalidation propagation remain local enough for the methodology to survive real system evolution?
-
-If the answers are mostly no, Proof-Driven Development becomes specification bureaucracy.
-
-If the answers are mostly yes, correctness reasoning can become a reusable and maintainable engineering asset instead of something that existed briefly in the previous reviewer’s head.
 
 ---
 
