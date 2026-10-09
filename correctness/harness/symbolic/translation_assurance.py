@@ -805,7 +805,7 @@ def _parse_yaml_object(text: str, what: str) -> dict[str, Any]:
 
 
 
-_WRITER_COMPLETION_RE = re.compile(r"^WRITERSUBAGENTCOMPLETE[A-Z0-9]+$")
+_WRITER_COMPLETION_RE = re.compile(r"^(?:WRITERSUBAGENTCOMPLETE|OVERGPTSUBAGENTCOMPLETE)[A-Z0-9]+$")
 
 
 def _strip_writer_completion_sentinel(text: str) -> str:

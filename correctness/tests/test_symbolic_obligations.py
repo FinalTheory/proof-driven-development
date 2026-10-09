@@ -38,12 +38,21 @@ class SymbolicDesignObligationTests(unittest.TestCase):
             self.spec.require(obligation_id), require_trusted=False
         )
 
-    def test_accepted_reconciliation_pending_bridge_gap_is_sat(self) -> None:
-        result = self.check("accepted_reconciliation_closes_pending_lifecycle")
+    def test_accepted_reconciliation_pending_bridge_is_now_covered(self) -> None:
+        obligation = self.spec.require("accepted_reconciliation_closes_pending_lifecycle")
+        result = self.verifier.check(obligation, require_trusted=False)
         self.assertEqual(result.baseline.status, "sat")
-        self.assertEqual(result.constrained.status, "sat")
-        self.assertEqual(result.verdict, "GAP")
-        self.assertIsNotNone(result.constrained.model)
+        self.assertEqual(result.constrained.status, "unsat")
+        self.assertEqual(result.verdict, "COVERED")
+
+        weakened = self.verifier.check_with_overrides(
+            obligation,
+            contract_formula_overrides={
+                "accepted_terminal_speculative_retirement": {"bool": True}
+            },
+        )
+        self.assertEqual(weakened.constrained.status, "sat")
+        self.assertEqual(weakened.verdict, "GAP")
 
     def test_stale_base_speculative_composition_gap_is_sat(self) -> None:
         result = self.check(

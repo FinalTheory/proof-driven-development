@@ -496,9 +496,10 @@ functions:
     - LogicalEditIdentity
     returns: Bool
     catalog_symbols: []
-    meaning: The user-visible state s is the result of authoritative reconnect/reconciliation that classified exact logical edit identity e as ACCEPTED within the published response head.
+    meaning: Client state s is exactly the user-visible state atomically exposed by a normal foreground reconnect/reconciliation publication through response head H after the authoritative reconciliation result classified exact logical edit identity e as ACCEPTED at some canonical revision r with r <= H; predicates over s therefore hold at that publication boundary, not only after a later cleanup transition.
     semantic_anchors:
     - source:reconnect_revision_boundary
+    - contract:accepted_terminal_speculative_retirement
   pending_identity_active:
     args:
     - ClientState
@@ -1256,6 +1257,44 @@ contracts:
               args:
               - var: s
               - var: o
+  accepted_terminal_speculative_retirement:
+    class: safety_contract
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          e: LogicalEditIdentity
+        body:
+          implies:
+          - call:
+              fn: accepted_reconciliation_published
+              args:
+              - var: s
+              - var: e
+          - and:
+            - not:
+                call:
+                  fn: pending_identity_active
+                  args:
+                  - var: s
+                  - var: e
+            - not:
+                call:
+                  fn: retained_speculative_identity_active
+                  args:
+                  - var: s
+                  - var: e
+            - not:
+                call:
+                  fn: visible_speculative_identity_active
+                  args:
+                  - var: s
+                  - var: e
+            - call:
+                fn: terminalized_speculative_identity
+                args:
+                - var: s
+                - var: e
   rejected_terminal_speculative_retirement:
     class: safety_contract
     formula:

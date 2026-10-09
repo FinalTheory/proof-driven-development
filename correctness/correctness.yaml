@@ -580,7 +580,7 @@ refinement:
     G12_client_pending_state_tracks_unresolved_edits:
       status: stable
       blocked_by: []
-      signature: bedbe6375e805d3a1bfede45bd0795086351e9441f84cf53132533a2009493c6
+      signature: 2144b30775a97c33119deb3d5d98594811a54efa5935f47c35dd43733d34358d
     L156_owner_handoff_installs_fresh_epoch:
       status: stable
       blocked_by: []
@@ -785,6 +785,10 @@ refinement:
       status: stable
       blocked_by: []
       signature: 47047f56050a3f58f778034a588c05a0f76d8a336d6d9f30d3aaa877013ed2de
+    L209_accepted_reconciliation_terminalizes_speculative_lifecycle:
+      status: stable
+      blocked_by: []
+      signature: a515b8608cd4d777655ecdc8e5797130b9a08d76bc77327912339e28af467a12
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -3340,23 +3344,28 @@ claims:
     kind: leaf
   G12_client_pending_state_tracks_unresolved_edits:
     statement: "In every reachable client protocol state, pending_edit_identity_provenance, pending_speculative_lifecycle_coverage,
-      pending_retirement_acceptance_binding, non_acceptance_terminal_disposition_binding, terminal_speculative_lifecycle_closure,
-      and rejected_terminal_speculative_retirement hold for the normal speculative lifecycle. For every
-      logical client edit created for document D with client_change_id k that remains unresolved, acceptance-eligible,
-      within the normal retry/reconnect eligibility horizon, and represented in retained speculative state,
-      client_pending_edits contains a matching pending representation bound to the same creation identity
-      (D,k). That binding is preserved across restore, tab/view switching, ACK/retry bookkeeping, reconnect
-      capture, and reconciliation until authoritative reconciliation or an explicit terminal disposition
-      ends the lifecycle. Mere bookkeeping deletion or relabeling cannot resolve the edit. If the edit
-      is retired with authoritative accepted/reconciled semantics, that retirement must derive from canonical
-      acceptance or equivalent authoritative accepted evidence for the exact same full identity (D,k);
-      an acceptance for another document or another client_change_id cannot retire it merely because one
-      identity coordinate matches. If the client observes an externally_terminal_result = REJECTED carrying
-      a definitive rejection reason for exact identity (D,k), that observation must before or atomically
-      with the resulting user-visible state terminate the same edit's normal speculative lifecycle through
-      a same-identity non_acceptance_terminal_disposition or equivalent terminal transition, so the edit
-      no longer remains active in pending, retained speculative, or visible speculative state. If the
-      edit is instead retired by expiry, abandonment, conflict/manual resolution, or another explicit
+      pending_retirement_acceptance_binding, accepted_terminal_speculative_retirement, non_acceptance_terminal_disposition_binding,
+      terminal_speculative_lifecycle_closure, and rejected_terminal_speculative_retirement hold for the
+      normal speculative lifecycle. For every logical client edit created for document D with client_change_id
+      k that remains unresolved, acceptance-eligible, within the normal retry/reconnect eligibility horizon,
+      and represented in retained speculative state, client_pending_edits contains a matching pending
+      representation bound to the same creation identity (D,k). That binding is preserved across restore,
+      tab/view switching, ACK/retry bookkeeping, reconnect capture, and reconciliation until authoritative
+      reconciliation or an explicit terminal disposition ends the lifecycle. Mere bookkeeping deletion
+      or relabeling cannot resolve the edit. If the edit is retired with authoritative accepted/reconciled
+      semantics, that retirement must derive from canonical acceptance or equivalent authoritative accepted
+      evidence for the exact same full identity (D,k); an acceptance for another document or another client_change_id
+      cannot retire it merely because one identity coordinate matches. When authoritative reconnect/reconciliation
+      for exact identity (D,k) classifies that edit as ACCEPTED at revision r within the published response
+      head H and publishes a reconciled canonical state through H containing that acceptance, accepted_terminal_speculative_retirement
+      requires the same normal speculative lifecycle to end before or atomically with that publication:
+      (D,k) is no longer active in pending, retained speculative, or visible speculative state and is
+      terminalized for terminal_speculative_lifecycle_closure. If the client observes an externally_terminal_result
+      = REJECTED carrying a definitive rejection reason for exact identity (D,k), that observation must
+      before or atomically with the resulting user-visible state terminate the same edit's normal speculative
+      lifecycle through a same-identity non_acceptance_terminal_disposition or equivalent terminal transition,
+      so the edit no longer remains active in pending, retained speculative, or visible speculative state.
+      If the edit is instead retired by expiry, abandonment, conflict/manual resolution, or another explicit
       non-acceptance terminal disposition, that disposition must itself have been produced for the same
       logical edit and preserve the exact full identity (D,k) through the destructive retirement path;
       a disposition for another edit cannot retire this one. Once authoritative reconciliation or an explicit/equivalent
@@ -3369,12 +3378,14 @@ claims:
       - reconnect_revision_boundary
       - final_architecture
     formal_intent: pending_edit_identity_provenance; pending_speculative_lifecycle_coverage;
-      pending_retirement_acceptance_binding; non_acceptance_terminal_disposition_binding;
-      terminal_speculative_lifecycle_closure; rejected_terminal_speculative_retirement
+      pending_retirement_acceptance_binding; accepted_terminal_speculative_retirement;
+      non_acceptance_terminal_disposition_binding; terminal_speculative_lifecycle_closure;
+      rejected_terminal_speculative_retirement
     semantic_contracts:
       - pending_edit_identity_provenance
       - pending_speculative_lifecycle_coverage
       - pending_retirement_acceptance_binding
+      - accepted_terminal_speculative_retirement
       - non_acceptance_terminal_disposition_binding
       - terminal_speculative_lifecycle_closure
       - rejected_terminal_speculative_retirement
@@ -3385,6 +3396,7 @@ claims:
       - L203_non_acceptance_terminal_disposition_preserves_edit_provenance
       - L206_terminal_speculative_lifecycle_is_absorbing
       - L208_externally_rejected_edit_terminalizes_speculative_lifecycle
+      - L209_accepted_reconciliation_terminalizes_speculative_lifecycle
     kind: root
   L156_owner_handoff_installs_fresh_epoch:
     statement: For every authoritative transition from one document-owner generation to a distinct
@@ -4649,6 +4661,39 @@ claims:
             speculative representation. Explore restore, view switching, retry bookkeeping, and
             wrong-identity rejections to ensure only exact-key terminal rejection triggers this
             retirement and the lifecycle cannot reactivate afterward.
+    kind: leaf
+  L209_accepted_reconciliation_terminalizes_speculative_lifecycle:
+    statement: 'accepted_terminal_speculative_retirement holds for every normal foreground reconnect/reconciliation
+      publication: if authoritative reconciliation for exact logical-edit identity (document_id=D, client_change_id=k)
+      classifies that edit as ACCEPTED at revision r <= response head H and the client publishes the reconciled
+      canonical state through H containing that acceptance, the same normal speculative lifecycle is terminalized
+      before or atomically with publication. In the resulting user-visible state, (D,k) is no longer active
+      in client_pending_edits, client_speculative_overlays, or client_visible_speculative_overlays. This
+      is a transition-safety requirement after authoritative ACCEPTED classification, not an eventual-reconciliation,
+      automatic-rebase, eventual-editability, or future-state absorbing guarantee.'
+    source_refs:
+      - reconnect_revision_boundary
+    mechanisms:
+      - catchup_protocol
+      - client_document_scoped_speculative_state
+    formal_intent: accepted_terminal_speculative_retirement
+    semantic_contracts:
+      - accepted_terminal_speculative_retirement
+    verification:
+      verifiers:
+        - kind: state_machine
+          intent: Generate normal foreground reconnect publication states where exact identity (D,k)
+            is authoritatively classified ACCEPTED at r <= H, including cases with pending-only,
+            retained-only, and visible speculative remnants. At publication through H containing
+            that acceptance, require the same identity to be absent from all active
+            pending/retained/visible speculative sets and classified terminalized in the resulting
+            state.
+        - kind: control_flow
+          intent: Trace every normal foreground reconnect/reconciliation publication path that
+            consumes same-identity ACCEPTED resolution. Require lifecycle terminalization/removal of
+            client_pending_edits and speculative representations to dominate or be atomically
+            coupled to publication of the reconciled canonical state; later reactivation is checked
+            by the separate absorbing-lifecycle leaf.
     kind: leaf
 catalog:
   terms:
@@ -5956,6 +6001,26 @@ catalog:
         - Does not prove that the authoritative REJECTED was correctly produced or published;
           request/context provenance and terminal-response binding are separate obligations.
       automation_reusable: true
+    accepted_terminal_speculative_retirement:
+      class: safety_contract
+      definition: When a client performs a normal foreground reconnect/reconciliation and publishes
+        a reconciled user-visible state through response head H after authoritative reconciliation
+        has classified full identity (document_id=D, client_change_id=k) as ACCEPTED at revision r
+        <= H, that same logical edit must leave the normal speculative lifecycle before or
+        atomically with publication. The exact identity (D,k) no longer remains active in
+        client_pending_edits, client_speculative_overlays, or client_visible_speculative_overlays,
+        and its normal speculative lifecycle is classified terminalized in the resulting
+        user-visible state.
+      excludes:
+        - Does not require authoritative reconciliation or ACCEPTED classification to eventually
+          occur or be delivered.
+        - Does not require automatic client-side OT/rebase, conflict resolution, or eventual
+          editability.
+        - Does not prove that the authoritative ACCEPTED classification was correctly produced;
+          acceptance identity/provenance and response-head binding are separate obligations.
+        - Does not itself prove that a terminalized lifecycle can never reactivate;
+          terminal_speculative_lifecycle_closure is the separate absorbing invariant.
+      automation_reusable: true
   scope_dimensions:
     document:
       description: Collaborative document/resource namespace; document-scoped authority, history,
@@ -5966,7 +6031,7 @@ id_allocator:
     A: 7
     G: 13
     C: 48
-    L: 209
+    L: 210
     D: 15
     T: 3
 assurance:
@@ -6291,6 +6356,8 @@ assurance:
       status: planned
     L208_externally_rejected_edit_terminalizes_speculative_lifecycle:
       status: planned
+    L209_accepted_reconciliation_terminalizes_speculative_lifecycle:
+      status: planned
 formalization:
   claims:
     G0_acked_edit_survives_failover:
@@ -6597,6 +6664,8 @@ formalization:
       mode: symbolic
     L208_externally_rejected_edit_terminalizes_speculative_lifecycle:
       mode: symbolic
+    L209_accepted_reconciliation_terminalizes_speculative_lifecycle:
+      mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:
       mode: symbolic
@@ -6684,4 +6753,6 @@ formalization:
     visible_canonical_frontier_non_regression:
       mode: symbolic
     rejected_terminal_speculative_retirement:
+      mode: symbolic
+    accepted_terminal_speculative_retirement:
       mode: symbolic

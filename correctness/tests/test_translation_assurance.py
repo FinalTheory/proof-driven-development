@@ -147,16 +147,21 @@ ambiguities: []
         self.assertEqual(parsed.status, TranslationStatus.TRANSLATED)
 
     def test_roundtrip_parser_strips_writer_completion_sentinel(self):
-        parsed = parse_roundtrip_translation(
-            f"""
+        for sentinel in (
+            "WRITERSUBAGENTCOMPLETE7D3A9F6C",
+            "OVERGPTSUBAGENTCOMPLETE7D3A9F6C",
+        ):
+            with self.subTest(sentinel=sentinel):
+                parsed = parse_roundtrip_translation(
+                    f"""
 subject_signature: {self.signature}
 status: TRANSLATED
 natural_language: Equivalent proposition.
 ambiguities: []
-WRITERSUBAGENTCOMPLETE7D3A9F6C
+{sentinel}
 """
-        )
-        self.assertEqual(parsed.status, TranslationStatus.TRANSLATED)
+                )
+                self.assertEqual(parsed.status, TranslationStatus.TRANSLATED)
 
     def test_invalid_agent_artifact_becomes_incomplete(self):
         comparison = parse_comparison_review_or_incomplete("not: expected")

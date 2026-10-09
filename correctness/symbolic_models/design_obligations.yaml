@@ -4,10 +4,10 @@ obligations:
     description: 'Regression for the ACCEPTED-side lifecycle bridge: an exact same-identity
       authoritative reconciliation that is published as accepted must not leave the
       logical edit active in client_pending_edits as unresolved.'
-    statement: For every published reconnect/reconciliation state and logical edit
-      identity, if authoritative reconciliation classified that exact identity as
-      ACCEPTED within the published response head, the resulting client state does
-      not retain that edit as an active pending unresolved edit.
+    statement: For every normal foreground published reconnect/reconciliation state
+      and logical edit identity, if authoritative reconciliation classified that exact
+      identity as ACCEPTED within the published response head, the resulting client
+      state does not retain that edit as an active pending unresolved edit.
     source_refs:
     - reconnect_revision_boundary
     coverage_scope: selected_constraints
@@ -17,6 +17,7 @@ obligations:
     - visible_canonical_speculative_exclusion
     - pending_speculative_lifecycle_coverage
     - pending_retirement_acceptance_binding
+    - accepted_terminal_speculative_retirement
     - terminal_speculative_lifecycle_closure
     formula:
       forall:
