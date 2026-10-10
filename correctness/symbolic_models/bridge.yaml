@@ -498,7 +498,7 @@ functions:
     - accepted_idempotency_evidence
     - document_id
     - client_change_id
-    meaning: The acceptance-based retirement of pending edit o in state s is sourced from canonical acceptance or equivalent authoritative accepted evidence for the exact same full identity.
+    meaning: The acceptance-based retirement of pending edit o in state s is derived from canonical acceptance or equivalent authoritative accepted evidence for the exact same full identity; mere co-presence of matching evidence is insufficient if some unrelated source actually caused the retirement.
     semantic_anchors:
     - contract:pending_retirement_acceptance_binding
   speculative_identity_provenance_ok:
@@ -641,6 +641,29 @@ functions:
     meaning: Composing exposed speculative representation o over the canonical base visible in state s still realizes the original logical edit operation represented by o.
     semantic_anchors:
     - source:reconnect_revision_boundary
+  unresolved_eligible_normal_lifecycle_active:
+    args:
+    - ClientState
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - logical_client_edit
+    - client_pending_edits
+    - client_speculative_overlays
+    meaning: In reachable client state s, exact logical edit identity e remains in its unresolved, acceptance-eligible normal speculative lifecycle within the normal retry/reconnect eligibility horizon, and no authoritative reconciliation or explicit terminal disposition has ended that lifecycle; this remains true even if buggy bookkeeping has dropped a pending or retained physical representation.
+    semantic_anchors:
+    - claim:G12_client_pending_state_tracks_unresolved_edits
+  rejection_observation_terminalizes_same_identity:
+    args:
+    - ClientState
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - non_acceptance_terminal_disposition
+    meaning: The definitive REJECTED observation represented by visible state s causes or atomically applies a same-identity non_acceptance_terminal_disposition, or an equivalent terminal lifecycle transition, for exact logical edit identity e; a lifecycle that happened to be terminalized earlier for an unrelated reason does not satisfy this predicate.
+    semantic_anchors:
+    - contract:rejected_terminal_speculative_retirement
+
   definitive_rejection_observed:
     args:
     - ClientState
@@ -702,6 +725,40 @@ functions:
     semantic_anchors:
     - contract:non_acceptance_terminal_disposition_binding
     - claim:G12_client_pending_state_tracks_unresolved_edits
+  bookkeeping_only_speculative_removal_transition:
+    args:
+    - ProtocolTransition
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - client_pending_edits
+    - client_speculative_overlays
+    meaning: Transition t performs bookkeeping deletion, relabeling, or loss of pending/retained speculative representation for exact logical edit identity e without authoritative reconciliation and without an explicit/equivalent terminal disposition that ends e's normal speculative lifecycle.
+    semantic_anchors:
+    - claim:G12_client_pending_state_tracks_unresolved_edits
+  bookkeeping_removal_does_not_resolve_lifecycle:
+    args:
+    - ProtocolTransition
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: Bookkeeping-only transition t does not classify, justify, or semantically treat exact logical edit identity e as resolved or terminalized; the edit remains unresolved in protocol semantics even if buggy physical bookkeeping representations were dropped.
+    semantic_anchors:
+    - claim:G12_client_pending_state_tracks_unresolved_edits
+  non_acceptance_retirement_establishes_terminalized_lifecycle:
+    args:
+    - ProtocolTransition
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - client_terminalized_speculative_lifecycles
+    - client_pending_edits
+    - client_speculative_overlays
+    - client_visible_speculative_overlays
+    meaning: Explicit non-acceptance retirement transition t establishes, before or atomically with the destructive retirement, that exact identity e's normal speculative lifecycle is terminalized in the resulting reachable client state and no longer active in pending, retained speculative, or visible speculative state, so terminal_speculative_lifecycle_closure applies to every later reachable state.
+    semantic_anchors:
+    - claim:G12_client_pending_state_tracks_unresolved_edits
+
   non_acceptance_retirement_transition:
     args:
     - ProtocolTransition
@@ -1050,7 +1107,7 @@ functions:
     catalog_symbols:
     - terminal_result
     - canonical_accepted_change
-    meaning: Accepted terminal result t stores the canonical result produced by the same acceptance execution that produced canonical acceptance a; an extensionally equal result from another producer is not sufficient.
+    meaning: Accepted terminal result t stores the canonical result produced by the same acceptance execution that both produced and committed canonical acceptance a into authoritative accepted history; an extensionally equal result from another producer or an acceptance committed by a different execution is not sufficient.
     semantic_anchors:
     - contract:accepted_terminal_result_binding
   accepted_terminal_lifecycle_rewrite:
@@ -1073,6 +1130,15 @@ functions:
     catalog_symbols:
     - terminal_result
     meaning: Terminal result t is an authoritative REJECTED(definitive rejection reason) outcome.
+    semantic_anchors:
+    - contract:definitive_rejection_request_binding
+    - contract:state_dependent_rejection_context_binding
+  rejected_terminal_result_within_retry_horizon:
+    args:
+    - TerminalResultRecord
+    returns: Bool
+    catalog_symbols: []
+    meaning: Authoritative REJECTED terminal result t belongs to a logical identity still within the 30-day normal retry eligibility horizon in which definitive-rejection request and authoritative-context provenance are guaranteed; post-expiry re-submission is outside this predicate.
     semantic_anchors:
     - contract:definitive_rejection_request_binding
     - contract:state_dependent_rejection_context_binding
@@ -1176,7 +1242,7 @@ functions:
     catalog_symbols:
     - idempotency_key
     - terminal_result
-    meaning: Transition t is an acceptance attempt or definitive-rejection attempt for exact full idempotency key k within the authoritative terminal-result protocol and within the 30-day normal retry eligibility horizon; post-expiry re-submission is outside this predicate.
+    meaning: Transition t is any acceptance attempt or definitive-rejection attempt for exact full idempotency key k while that logical identity remains within the 30-day normal retry eligibility horizon; no acceptance or definitive-rejection path is excluded by being classified outside some narrower terminal-result subprotocol, while post-expiry re-submission is outside this predicate.
     semantic_anchors:
     - claim:G5_retry_resolves_idempotently
   terminal_attempt_uses_shared_key_arbitration:
@@ -1278,6 +1344,14 @@ functions:
     catalog_symbols:
     - externally_terminal_result
     meaning: x is a definitive externally_terminal_result exposed to a client.
+    semantic_anchors:
+    - contract:terminal_response_outcome_binding
+  external_terminal_result_within_retry_horizon:
+    args:
+    - ExternalTerminalResult
+    returns: Bool
+    catalog_symbols: []
+    meaning: Externally terminal result x belongs to the 30-day normal retry eligibility horizon for its logical edit, whether x is returned by the initial normal submission or by an in-horizon retry/reprocessing attempt; a post-expiry re-submission is outside this predicate and outside terminal_response_outcome_binding.
     semantic_anchors:
     - contract:terminal_response_outcome_binding
   external_terminal_result_key:
@@ -1979,9 +2053,51 @@ claims:
                   - var: e
       - forall:
           vars:
+            t: ProtocolTransition
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_client_protocol_transition
+                  args:
+                  - var: t
+              - call:
+                  fn: bookkeeping_only_speculative_removal_transition
+                  args:
+                  - var: t
+                  - var: e
+            - call:
+                fn: bookkeeping_removal_does_not_resolve_lifecycle
+                args:
+                - var: t
+                - var: e
+      - forall:
+          vars:
+            t: ProtocolTransition
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_client_protocol_transition
+                  args:
+                  - var: t
+              - call:
+                  fn: non_acceptance_retirement_transition
+                  args:
+                  - var: t
+                  - var: e
+            - call:
+                fn: non_acceptance_retirement_establishes_terminalized_lifecycle
+                args:
+                - var: t
+                - var: e
+      - forall:
+          vars:
             s: ClientState
-            first: LogicalEdit
-            second: LogicalEdit
+            old: LogicalEditIdentity
+            new: LogicalEdit
           body:
             implies:
             - and:
@@ -1990,32 +2106,20 @@ claims:
                   args:
                   - var: s
               - call:
-                  fn: logical_edit_in_reachable_client_history
+                  fn: new_user_edit_after_terminalized_lifecycle
                   args:
                   - var: s
-                  - var: first
-              - call:
-                  fn: logical_edit_in_reachable_client_history
-                  args:
-                  - var: s
-                  - var: second
-              - neq:
-                - var: first
-                - var: second
-              - call:
-                  fn: same_document_logical_edits
-                  args:
-                  - var: first
-                  - var: second
+                  - var: old
+                  - var: new
             - neq:
               - call:
                   fn: logical_edit_change_id
                   args:
-                  - var: first
+                  - var: new
               - call:
-                  fn: logical_edit_change_id
+                  fn: logical_identity_change_id
                   args:
-                  - var: second
+                  - var: old
   G1_retry_is_logically_exactly_once:
     contracts: []
     capability: relational
@@ -3051,6 +3155,11 @@ contracts:
                 args:
                 - var: s
                 - var: e
+            - call:
+                fn: rejection_observation_terminalizes_same_identity
+                args:
+                - var: s
+                - var: e
   visible_canonical_frontier_non_regression:
     class: safety_contract
     formula:
@@ -3211,10 +3320,15 @@ contracts:
           t: TerminalResultRecord
         body:
           implies:
-          - call:
-              fn: rejected_terminal_result_record
-              args:
-              - var: t
+          - and:
+            - call:
+                fn: rejected_terminal_result_record
+                args:
+                - var: t
+            - call:
+                fn: rejected_terminal_result_within_retry_horizon
+                args:
+                - var: t
           - and:
             - call:
                 fn: rejected_terminal_identity_matches_request
@@ -3412,10 +3526,15 @@ contracts:
           t: TerminalResultRecord
         body:
           implies:
-          - call:
-              fn: state_dependent_rejected_terminal_result
-              args:
-              - var: t
+          - and:
+            - call:
+                fn: state_dependent_rejected_terminal_result
+                args:
+                - var: t
+            - call:
+                fn: rejected_terminal_result_within_retry_horizon
+                args:
+                - var: t
           - and:
             - call:
                 fn: rejection_decision_has_authoritative_context
@@ -3441,10 +3560,15 @@ contracts:
           x: ExternalTerminalResult
         body:
           implies:
-          - call:
-              fn: externally_terminal_result_record
-              args:
-              - var: x
+          - and:
+            - call:
+                fn: externally_terminal_result_record
+                args:
+                - var: x
+            - call:
+                fn: external_terminal_result_within_retry_horizon
+                args:
+                - var: x
           - call:
               fn: external_result_reproduces_authoritative_outcome
               args:

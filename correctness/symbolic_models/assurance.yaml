@@ -1221,168 +1221,190 @@ records:
   claim:G5_retry_resolves_idempotently:
     kind: claim
     subject_id: G5_retry_resolves_idempotently
-    subject_signature: 4de2f993f8f17bed2c4ca4f1f34ea779b9742c617c58679585552ebc8ce7573e
+    subject_signature: 9bc61bf96942eb019efebf9eac3a16732377fe4653bbe6ebe91bd6251f37e539
     roundtrip:
-      subject_signature: 4de2f993f8f17bed2c4ca4f1f34ea779b9742c617c58679585552ebc8ce7573e
+      subject_signature: 9bc61bf96942eb019efebf9eac3a16732377fe4653bbe6ebe91bd6251f37e539
       status: TRANSLATED
-      natural_language: 'All of the following requirements hold conjunctively. The full idempotency key is the pair (document_id,
-        client_change_id). References to semantic contracts supply vocabulary and relations; their entire formulas are not
-        additional conjuncts of this proposition. For every authoritative state s and every idempotency key k, if s is reachable
-        under the canonical server protocol and failure model and k is within the 30-day normal retry eligibility horizon
-        in s, then s contains at most one durable terminal result for k; if k has an ACCEPTED terminal outcome in s, canonical
-        accepted history contains the matching acceptance for k and no incompatible REJECTED outcome exists; if k has a REJECTED
-        terminal outcome in s, canonical accepted history contains no canonical acceptance for k; and, once a terminal outcome
-        for k has linearized, later acceptance or definitive-rejection attempts preserve that same single-valued outcome.
-        For every terminal-result record t, if t is an authoritative ACCEPTED(canonical result) outcome and is still within
-        the 30-day normal retry eligibility horizon in which producer provenance must be retained, there exists a canonical
-        acceptance a that is committed in authoritative accepted history, whose authoritative idempotency key equals the full
-        key carried by t, and such that t stores the canonical result produced by the same acceptance execution that produced
-        a. An extensionally equal result from another producer does not satisfy this binding. For every protocol transition
+      natural_language: 'The following requirements all hold conjunctively. A full idempotency key is the pair (document_id,
+        client_change_id). The normal retry eligibility horizon is 30 days. References to semantic contracts supply vocabulary
+        and relations; their complete formulas are not additional conjuncts of this proposition. For every authoritative state
+        s and every full idempotency key k, if s is reachable under the canonical server protocol and failure model and k is
+        within the normal retry eligibility horizon in s, then s contains at most one durable terminal result for k; if k has
+        an ACCEPTED terminal outcome in s, canonical accepted history contains the matching acceptance for k and no incompatible
+        REJECTED outcome exists; if k has a REJECTED terminal outcome in s, canonical accepted history contains no canonical
+        acceptance for k; and once a terminal outcome for k has linearized, later acceptance or definitive-rejection attempts
+        preserve that same single-valued outcome. For every terminal-result record t, if t is an authoritative ACCEPTED canonical-result
+        outcome and is still within the normal retry eligibility horizon in which producer provenance must be retained, there
+        exists a canonical acceptance a that is committed in authoritative accepted history, whose full idempotency key equals
+        t''s full idempotency key, and such that t stores the canonical result produced by the same acceptance execution that
+        both produced a and committed a into authoritative accepted history. An extensionally equal result from another producer,
+        or an acceptance committed by a different execution, does not satisfy that execution binding. For every protocol transition
         x and every pair of terminal-result records before and after, if x is an authoritative lifecycle representation change
         within the normal retry eligibility horizon that preserves one already-linearized ACCEPTED logical terminal outcome
-        from before to after, with the same full idempotency identity in both representations and with possible changes to
-        the durable physical representation, then there exists a canonical acceptance a committed in authoritative accepted
-        history such that the full key of before equals the authoritative key of a, the full key of after equals that same
-        key of a, and both before and after store the canonical result produced by the same acceptance execution that produced
-        that same a. Extensionally equal results from another producer are insufficient. For every terminal-result record
-        t, if t is an authoritative REJECTED(definitive rejection reason) outcome, let d be the definitive rejection decision
-        from which t derives and let r be the exact submitted request for which d was produced. Then t and r carry exactly
-        the same full (document_id, client_change_id) identity, and whenever the definitive rejection reason depends on raw_edit
-        or base_revision, d uses those exact values from r. Here raw_edit is the submitted edit before server-side transformation
-        or rebase, and base_revision is the canonical authoring frontier declared by that request. For every terminal-result
-        record t, if t is a rejected terminal result whose definitive rejection reason depends on document or history state,
-        then the rejection decision d from which t derives is bound to authoritative rejection context for the same document
-        rather than unvalidated stale owner-local state. That authoritative context or evidence for d remains sufficient when
-        t linearizes, either because it is current or because a reason-specific guard, monotonicity argument, or revalidation
-        preserves the rejection truth. For every external terminal result x, if x is a definitive terminal result exposed
-        to a client after the corresponding authoritative terminal outcome has linearized, then x exactly reproduces the already-linearized
-        authoritative terminal outcome for the full idempotency key associated with x; attempt-local transient computations
-        cannot substitute a conflicting result. For every request r, if r is a normal submitted request representing one logical
-        edit within the 30-day normal retry eligibility horizon, then r preserves the same full request identity, raw_edit
-        semantics, and canonical authoring frontier for its logical operation, without cross-binding those coordinates from
-        another operation. For every protocol transition t and every idempotency key k, if t is an acceptance attempt or definitive-rejection
-        attempt for that exact full key k within the authoritative terminal-result protocol and the 30-day normal retry eligibility
-        horizon, then t arbitrates through the same single authoritative per-key terminal state used by every competing acceptance
-        and definitive-rejection attempt for k; no independent arbitration domain may decide a second terminal outcome. Post-expiry
-        resubmission is outside this implication''s attempt predicate. For every protocol transition t and every pair of terminal-result
-        records before and after, if t is an authoritative lifecycle representation rewrite within the 30-day normal retry
-        eligibility horizon from before to after for the same already-linearized logical terminal outcome and the same full
-        idempotency key, then t preserves that exact logical terminal outcome: for ACCEPTED, the exact canonical result is
-        preserved, and for REJECTED, the same definitive rejection reason is preserved. The durable physical representation
-        may change. For REJECTED, this preservation does not require retaining the same rejection-decision object or producer
-        when the exact request binding and required authoritative-context justification remain valid.'
+        from before to after, with before and after carrying the same full idempotency identity while their durable physical
+        representation may change, then there exists one canonical acceptance a committed in authoritative accepted history
+        such that the full idempotency keys of before and after each equal a''s full idempotency key, and both before and after
+        store the canonical result produced by the same acceptance execution that both produced and committed a. For every terminal-result
+        record t, if t is an authoritative REJECTED definitive-reason outcome and its logical identity remains within the normal
+        retry eligibility horizon in which definitive-rejection request and authoritative-context provenance are guaranteed,
+        let d be the definitive rejection decision from which t derives and let r be the exact submitted request for which d
+        was produced. Then t and r carry exactly the same full (document_id, client_change_id) identity, and, when the definitive
+        rejection reason depends on raw_edit or base_revision, d uses those exact values from r. For every terminal-result record
+        t, if t is a rejected terminal result whose definitive rejection reason depends on document or history state and its
+        logical identity remains within that same normal retry eligibility horizon, then the definitive rejection decision d
+        from which t derives is bound to authoritative rejection context for the same document, rather than unvalidated stale
+        owner-local state, and the authoritative context or evidence for d remains sufficient when t linearizes, either because
+        it is current or because a reason-specific guard, monotonicity argument, or revalidation preserves the rejection truth.
+        Such authoritative context may be a canonical committed prefix or frontier, authoritative metadata, or a proof or guard
+        derived from authoritative state; owner-local runtime state does not qualify merely because it was once valid. For every
+        external terminal result x, if x is a definitive result exposed to a client and belongs to its logical edit''s normal
+        retry eligibility horizon, whether returned by the initial normal submission or an in-horizon retry or reprocessing
+        attempt, then x exactly reproduces the already-linearized authoritative terminal outcome for the full idempotency key
+        associated with x. Attempt-local transient computations cannot substitute a conflicting result. For every request r,
+        if r is a normal submitted request representing one logical edit within the normal retry eligibility horizon, then r
+        preserves the same full request identity, raw_edit semantics, and canonical authoring frontier for its logical operation;
+        these coordinates are not cross-bound from another operation. For every protocol transition t and full idempotency key
+        k, if t is any acceptance attempt or definitive-rejection attempt for exactly k while that logical identity remains
+        within the normal retry eligibility horizon, then t arbitrates through the same single authoritative per-key terminal
+        state used by every competing acceptance and definitive-rejection attempt for k. No independent arbitration domain may
+        decide a second terminal outcome, and no acceptance or definitive-rejection path is excluded from this requirement merely
+        by classification outside a narrower terminal-result subprotocol. For every protocol transition t and every pair of
+        terminal-result records before and after, if t is an authoritative lifecycle representation rewrite within the normal
+        retry eligibility horizon from before to after for the same already-linearized logical terminal outcome and the same
+        full idempotency key, then t preserves that exact logical outcome: an ACCEPTED outcome retains the exact canonical result,
+        and a REJECTED outcome retains the same definitive rejection reason. The durable physical representation may change.
+        For REJECTED outcomes, this preservation does not require the same rejection-decision object or producer to be retained
+        when the exact request binding and required authoritative-context justification remain valid. Post-expiry re-submissions
+        are outside the in-horizon predicates and the corresponding guarded requirements stated here. Definitive rejection decisions
+        do not include timeout, cancellation, transport loss, or crash-before-decision.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 4de2f993f8f17bed2c4ca4f1f34ea779b9742c617c58679585552ebc8ce7573e
+        subject_signature: 9bc61bf96942eb019efebf9eac3a16732377fe4653bbe6ebe91bd6251f37e539
         verdict: EQUIVALENT
-        reason: Under the supplied predicate meanings and catalog definitions, the formula preserves retry identity, payload
-          and frontier coherence; reachable-state terminal uniqueness, exclusion and immutability; shared per-key arbitration;
-          acceptance producer binding across lifecycle rewrites; exact rejection-request binding and sufficient authoritative
-          context for state-dependent reasons; and faithful external terminal responses. Horizon boundaries and non-terminal
-          uncertainty are preserved without adding eventual observation or current-owner authorization requirements.
+        reason: Under the supplied predicate meanings and catalog definitions, the formula preserves the normal retry horizon,
+          request identity/payload/frontier coherence, reachable-state terminal uniqueness and immutability, shared per-key
+          arbitration, acceptance producer binding across lifecycle rewrites, exact rejection-request binding, sufficient same-document
+          authoritative evidence for state-dependent rejection, and faithful external terminal responses. Terminal vocabulary
+          excludes uncertain attempt outcomes; no eventual terminal observation or post-expiry guarantee is imposed.
         differences: []
       strengthening:
-        subject_signature: 4de2f993f8f17bed2c4ca4f1f34ea779b9742c617c58679585552ebc8ce7573e
+        subject_signature: 9bc61bf96942eb019efebf9eac3a16732377fe4653bbe6ebe91bd6251f37e539
         verdict: EQUIVALENT
-        reason: Under the supplied predicate meanings and catalog definitions, the formula preserves retry-horizon applicability,
-          full request identity and semantics, reachable-state terminal coherence, shared arbitration, acceptance-producer
-          preservation, rejection request and authoritative-context binding, immutable outcomes across lifecycle rewrites,
-          and faithful external terminal results. It imposes neither eventual observation nor current-owner authorization,
-          and adds no rejection-producer preservation requirement.
+        reason: With the supplied predicate meanings, the formula preserves the retry-horizon boundaries, full request identity
+          and context, reachable-state coherence, shared per-key arbitration, acceptance producer binding across lifecycle rewrites,
+          rejection provenance and conditional authoritative-context justification, immutable terminal outcomes, and exact external
+          replay. It adds neither eventual observation nor post-expiry guarantees; uncertainty remains non-terminal under the
+          supplied definitions.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 4de2f993f8f17bed2c4ca4f1f34ea779b9742c617c58679585552ebc8ce7573e
+        subject_signature: 9bc61bf96942eb019efebf9eac3a16732377fe4653bbe6ebe91bd6251f37e539
         verdict: EQUIVALENT
-        reason: The rendering preserves full request identity, retry-horizon boundaries, single-valued terminal arbitration,
-          outcome immutability, acceptance producer binding, rejection request and authoritative-context binding, and faithful
-          external replay. Its lifecycle clauses preserve logical outcomes without adding rejection-producer retention. Under
-          the supplied vocabulary, uncertain attempts remain non-terminal, and neither proposition requires eventual terminal
-          observation.
+        reason: The rendering preserves the in-horizon request coordinates, single immutable terminal outcome, shared arbitration,
+          acceptance-execution provenance, request-bound rejection and sufficient authoritative context, and exact external
+          replay. Representation changes preserve the logical outcome; rejection-producer continuity is not an additional source
+          requirement. Neither proposition requires eventual terminal observation, and uncertain attempts cannot independently
+          supply an authoritative terminal result.
         differences: []
   claim:G12_client_pending_state_tracks_unresolved_edits:
     kind: claim
     subject_id: G12_client_pending_state_tracks_unresolved_edits
-    subject_signature: be4a66d1f809d5762ba2a0c93da6a07a355cba8840a71d1f75338919d4107c3f
+    subject_signature: bbaa22d52c6bf853c72ee4b04a260c2d54d0a3add976e36f006abecbf05aaf9f
     roundtrip:
-      subject_signature: be4a66d1f809d5762ba2a0c93da6a07a355cba8840a71d1f75338919d4107c3f
+      subject_signature: bbaa22d52c6bf853c72ee4b04a260c2d54d0a3add976e36f006abecbf05aaf9f
       status: TRANSLATED
-      natural_language: The following requirements hold conjunctively. An exact logical-edit identity comprises both document_id
-        and client_change_id. Reachability refers to the normal client protocol, including restore, view switching, bookkeeping,
-        reconnect/resync, publication, and explicit terminal disposition; impossible states and transitions outside that lifecycle
-        are excluded where reachability is required. Terminalization means that the normal speculative lifecycle of the exact
-        identity has ended, and may be implemented by deletion or non-reactivatable archival state without a separately materialized
-        tombstone. For every client state s and exact logical-edit identity e, if s is reachable and e is active in client_pending_edits
-        in s, the pending representation in s remains bound to that edit's creation identity, preserving both document_id
-        and client_change_id without relabeling or cross-binding. For every client state s and overlay token o, if s is reachable
-        and o represents a retained unresolved acceptance-eligible logical edit within the normal retry/reconnect horizon
-        in s, the logical-edit identity represented by o remains active in client_pending_edits in s. For every client state
-        s and overlay token o, if s is reachable and s reflects retirement of pending edit o with authoritative accepted/reconciled
-        semantics, that retirement is sourced from canonical acceptance or equivalent authoritative accepted evidence for
-        the exact same full identity. For every client state s and exact logical-edit identity e, if s is exactly the user-visible
-        state atomically exposed by a normal foreground reconnect/reconciliation publication through response head H after
-        the authoritative reconciliation result classified e as ACCEPTED at canonical revision r with r <= H, and the reconciled
-        canonical state published through H contains that acceptance, then at that publication boundary e is absent from active
-        pending edits, has no retained normal-lifecycle speculative representation, has no exposed normal-lifecycle speculative
-        representation, and is classified as terminalized in s. These consequences hold at that boundary, not merely after
-        a later cleanup transition. For every protocol transition t and exact logical-edit identity e, if t occurs on a reachable
-        execution of the normal client speculative lifecycle and uses a non-acceptance terminal disposition to terminally
-        retire e's normal speculative lifecycle, the disposition consumed by t was produced for that same logical edit and
-        preserves its full document_id and client_change_id identity through routing and the destructive retirement sink.
-        A non-acceptance terminal disposition is an explicit lifecycle decision that ends an edit without claiming authoritative
-        acceptance, including expiry, abandonment, conflict resolution, manual resolution, or an equivalent path. For every
-        client state s and exact logical-edit identity e, if s is reachable and e is classified as terminalized in s, e is
-        not active in pending edits in s and has neither a retained nor an exposed normal-lifecycle speculative representation
-        in s. Also, for every pair of client states earlier and later and every exact logical-edit identity e, if both states
-        are reachable, later is reachable from earlier by one or more client-protocol transitions in the continuing client
-        lifecycle/history, and e is classified as terminalized in earlier, then e remains classified as terminalized in later
-        and is neither active in pending edits nor represented by any retained or exposed normal-lifecycle speculative representation
-        in later. Such later transitions include restore/reactivation, view switching, bookkeeping, reconnect/resync, and
-        publication. For every client state s and exact logical-edit identity e, if the normally participating client has
-        observed an authoritative externally terminal definitive REJECTED result for e before or atomically with visible state
-        s, then in s e is not active in pending edits, has neither a retained nor an exposed normal-lifecycle speculative
-        representation, and is classified as terminalized. An externally terminal result is exposed after its corresponding
-        authoritative terminal result has linearized. For every client state s and exact logical-edit identity e, if s is
-        a reachable client state exactly equal to the user-visible state published by a qualifying authoritative reconnect/reconciliation
-        through response head H after e was classified ACCEPTED at canonical revision r with r <= H, and the reconciled canonical
-        state published through H contains that acceptance, then at that publication state e is not active in pending edits,
-        has neither a retained nor an exposed normal-lifecycle speculative representation, and is classified as terminalized.
-        This implication does not require the publication to be foreground. Finally, for every client state s and every pair
-        of logical edits first and second, if s is reachable, both edits have been created as genuine logical client edits
-        in the continuing normal client protocol history represented by s, first and second are distinct logical edits, and
-        they belong to the same document namespace in which client_change_id uniqueness is required, then the client_change_id
-        assigned to first differs from the client_change_id assigned to second. Membership in that history includes edits
-        that are currently active, terminalized, or retained only in non-reactivatable archival/history state; retransmissions
-        of the same logical operation are retries of that edit rather than distinct logical edits. The referenced semantic
-        contracts supply vocabulary and relations; their entire formulas are not additionally conjoined to these requirements.
+      natural_language: All of the following conditions hold jointly. An exact logical edit identity is the full pair (document_id,
+        client_change_id). Pending, retained speculative, and visible speculative activity refer to that exact identity in the
+        specified client state; retained speculative representations need not be visible. Reachable client states are those
+        reachable under the normal client protocol, including restore, view switching, bookkeeping, reconnect/resync, publication,
+        and explicit terminal disposition. Reachable client protocol transitions are transitions occurring in a reachable execution
+        of the normal client speculative lifecycle, excluding impossible transitions and transitions outside that lifecycle.
+        Terminalization denotes the logical classification that an identity's normal speculative lifecycle has ended; it need
+        not be implemented as a separately materialized tombstone set and may be realized by deletion or non-reactivatable archival
+        state. For every client state s and exact logical edit identity e, if s is reachable and e is active in pending edits
+        in s, its active pending representation remains bound to its logical edit creation identity, preserving both document_id
+        and client_change_id rather than being relabeled or cross-bound. For every client state s and overlay token o, if s
+        is reachable and o represents an unresolved, acceptance-eligible logical edit within the normal retry/reconnect horizon
+        that remains retained in s, the logical edit identity represented by o remains active in pending edits in s. For every
+        client state s and overlay token o, if s is reachable and reflects acceptance-based retirement of pending edit o with
+        authoritative accepted/reconciled semantics, that retirement is derived from canonical acceptance or equivalent authoritative
+        accepted evidence for the exact same full logical edit identity. Mere co-presence of matching evidence does not suffice
+        when an unrelated source actually caused the retirement. For every client state s and exact logical edit identity e,
+        if s is exactly the user-visible state atomically exposed by a normal foreground reconnect/reconciliation publication
+        through response head H after the authoritative reconciliation result classified e as ACCEPTED at canonical revision
+        r with r less than or equal to H, and the reconciled canonical state published through H contains that acceptance, then
+        at that publication boundary e is absent from active pending edits, retained normal-lifecycle speculative representations,
+        and visible normal-lifecycle speculative representations in s, and e is classified as terminalized in s. Satisfaction
+        only after a later cleanup transition is insufficient. For every protocol transition t and exact logical edit identity
+        e, if t is a reachable client protocol transition and uses a non-acceptance terminal disposition to terminally retire
+        e's normal speculative lifecycle, the disposition consumed by t was produced for that same logical edit e and preserves
+        e's full document_id and client_change_id identity through routing and the destructive retirement sink. Such a disposition
+        is an explicit lifecycle decision that terminates the edit without claiming authoritative acceptance, including expiry,
+        abandonment, conflict resolution, manual resolution, or an equivalent non-acceptance terminal path. For every client
+        state s and exact logical edit identity e, if s is reachable and e is classified as terminalized in s, e is absent from
+        active pending edits, retained normal-lifecycle speculative representations, and visible normal-lifecycle speculative
+        representations in s. For every pair of client states earlier and later and every exact logical edit identity e, if
+        both states are reachable, later is reachable from earlier through one or more client-protocol transitions in the continuing
+        client lifecycle/history, and e is terminalized in earlier, then e remains terminalized in later and is absent from
+        active pending edits, retained normal-lifecycle speculative representations, and visible normal-lifecycle speculative
+        representations in later. The transitions relating these states include restore/reactivation, view switching, bookkeeping,
+        reconnect/resync, and publication. For every client state s and exact logical edit identity e, if the normally participating
+        client has observed an authoritative externally terminal definitive REJECTED result for e before or atomically with
+        visible state s, then e is absent from active pending edits, retained normal-lifecycle speculative representations,
+        and visible normal-lifecycle speculative representations in s, and e is terminalized in s. In addition, that rejection
+        observation causes or atomically applies a same-identity non-acceptance terminal disposition, or an equivalent terminal
+        lifecycle transition, for e; a lifecycle that happened to have been terminalized earlier for an unrelated reason does
+        not satisfy this requirement. An externally terminal result is exposed after its corresponding authoritative terminal
+        result has linearized. For every client state s and exact logical edit identity e, if s is a reachable client state
+        exactly equal to the user-visible state published by a qualifying authoritative reconnect/reconciliation through response
+        head H after e was classified ACCEPTED at canonical revision r with r less than or equal to H, and the reconciled canonical
+        state published through H contains that acceptance, then e is absent from active pending edits, retained normal-lifecycle
+        speculative representations, and visible normal-lifecycle speculative representations in s, and e is terminalized in
+        s. This condition does not require the publication to be foreground and applies at that publication state. For every
+        protocol transition t and exact logical edit identity e, if t is a reachable client protocol transition that performs
+        bookkeeping deletion, relabeling, or loss of pending or retained speculative representation for e without authoritative
+        reconciliation and without an explicit or equivalent terminal disposition ending e's normal speculative lifecycle, then
+        t does not classify, justify, or semantically treat e as resolved or terminalized. The edit remains unresolved in protocol
+        semantics even if buggy physical bookkeeping representations were dropped. For every protocol transition t and exact
+        logical edit identity e, if t is a reachable client protocol transition and uses a non-acceptance terminal disposition
+        to terminally retire e's normal speculative lifecycle, then before or atomically with destructive retirement t establishes
+        that e's normal speculative lifecycle is terminalized in the resulting reachable client state and that e is no longer
+        active in pending, retained speculative, or visible speculative state. The terminalization persistence and inactivity
+        conditions above therefore apply to every later reachable state of that continuing lifecycle/history. For every client
+        state s, old exact logical edit identity old, and logical edit new, if s is reachable, old denotes a terminalized logical
+        edit for document D in s, and new is a genuinely new user logical edit for that same document D rather than a continuation,
+        retry, restore, or reactivation of old, then the client_change_id assigned to new is unequal to the client_change_id
+        coordinate of old. The referenced semantic contracts supply vocabulary and relations; their entire formulas are not
+        additional conjuncts of this proposition.
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: be4a66d1f809d5762ba2a0c93da6a07a355cba8840a71d1f75338919d4107c3f
+        subject_signature: bbaa22d52c6bf853c72ee4b04a260c2d54d0a3add976e36f006abecbf05aaf9f
         verdict: EQUIVALENT
-        reason: The formula preserves reachable-state coverage, full creation-identity binding, exact-identity acceptance
-          and non-acceptance retirement provenance, publication-boundary retirement for authoritative acceptance and definitive
-          rejection, and absorbing terminal closure. The additional authoritative-publication clause covers non-foreground
-          reconciliation, and same-document change-ID uniqueness expresses the source requirement that genuinely new edits
-          receive new identifiers.
+        reason: The formula preserves reachable-state coverage, creation-identity binding, exact-identity acceptance and disposition
+          provenance, retirement at accepted publication and definitive rejection boundaries, and absorbing terminal closure.
+          Its additional conjuncts explicitly preserve the source's non-foreground reconciliation scope, prohibition on bookkeeping-only
+          resolution, terminalization upon non-acceptance retirement, and fresh client_change_id for a genuinely new edit. No
+          additional cardinality, eventuality, or global identifier-uniqueness requirement is imposed.
         differences: []
       strengthening:
-        subject_signature: be4a66d1f809d5762ba2a0c93da6a07a355cba8840a71d1f75338919d4107c3f
+        subject_signature: bbaa22d52c6bf853c72ee4b04a260c2d54d0a3add976e36f006abecbf05aaf9f
         verdict: EQUIVALENT
-        reason: The formula preserves reachable-state coverage, creation-identity binding, exact-identity retirement provenance,
-          accepted and rejected publication-boundary retirement, and absorbing terminal closure. The authoritative publication
-          clause captures the statement's scope beyond foreground reconciliation. Same-document identifier uniqueness expresses
-          the requirement that genuinely new edits receive new identifiers without imposing uniqueness across documents. No
-          additional cardinality or eventual-progress requirement is introduced.
+        reason: 'The formula preserves eligible retained-edit coverage, creation-identity binding, exact-identity retirement
+          provenance, publication-time accepted and rejected terminalization, and absorbing lifecycle closure. Its additional
+          conjuncts express explicit source requirements: acceptance publication without a foreground restriction, bookkeeping
+          deletion not resolving an edit, non-acceptance retirement establishing terminalization, and fresh change identifiers
+          for subsequent edits in the same document. No extra cardinality, cross-document uniqueness, or eventual-progress requirement
+          is imposed.'
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: be4a66d1f809d5762ba2a0c93da6a07a355cba8840a71d1f75338919d4107c3f
+        subject_signature: bbaa22d52c6bf853c72ee4b04a260c2d54d0a3add976e36f006abecbf05aaf9f
         verdict: EQUIVALENT
-        reason: The rendering preserves full-identity provenance, eligible retained-edit pending coverage, same-edit retirement
-          sources, publication-boundary acceptance and rejection terminalization, and absorbing lifecycle closure. Its additional
-          acceptance clause preserves non-foreground applicability, while historical identifier freshness expresses the source's
-          new-edit requirement within each document namespace. Archival retention and the absence of eventual-progress guarantees
-          remain preserved.
+        reason: The rendering preserves full-identity provenance, pending coverage, acceptance and non-acceptance retirement
+          binding, publication-boundary terminalization, rejection-triggered retirement, and absorbing lifecycle closure. Its
+          additional clauses explicitly preserve non-foreground reconciliation coverage, the insufficiency of bookkeeping deletion,
+          and new-edit identity separation. Quantifiers, eligibility boundaries, observation scopes, and archival allowances
+          introduce no substantive strengthening or weakening.
         differences: []
