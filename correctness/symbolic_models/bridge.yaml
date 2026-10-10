@@ -34,6 +34,39 @@ functions:
     semantic_anchors:
     - contract:client_canonical_frontier_coherence
     - claim:G10_user_visible_client_state_matches_document
+  reachable_authoritative_state:
+    args:
+    - AuthoritativeState
+    returns: Bool
+    catalog_symbols: []
+    meaning: Authoritative state s is reachable under the canonical server protocol and failure model; impossible or purely hypothetical authoritative states are outside this predicate.
+    semantic_anchors:
+    - contract:idempotency_terminal_outcome_coherence
+    - claim:G5_retry_resolves_idempotently
+  reachable_client_state:
+    args:
+    - ClientState
+    returns: Bool
+    catalog_symbols: []
+    meaning: Client state s is reachable under the normal client protocol, including states reached through restore, view switching, bookkeeping, reconnect/resync, publication, and explicit terminal disposition; impossible client states are outside this predicate.
+    semantic_anchors:
+    - contract:pending_edit_identity_provenance
+    - contract:pending_speculative_lifecycle_coverage
+    - contract:pending_retirement_acceptance_binding
+    - contract:accepted_terminal_speculative_retirement
+    - contract:terminal_speculative_lifecycle_closure
+    - contract:rejected_terminal_speculative_retirement
+    - claim:G12_client_pending_state_tracks_unresolved_edits
+  later_reachable_client_state:
+    args:
+    - ClientState
+    - ClientState
+    returns: Bool
+    catalog_symbols: []
+    meaning: Later state l is reachable after earlier state e by one or more client-protocol transitions for the continuing client lifecycle/history, including restore/reactivation, view switching, bookkeeping, reconnect/resync, or publication transitions.
+    semantic_anchors:
+    - contract:terminal_speculative_lifecycle_closure
+    - claim:G12_client_pending_state_tracks_unresolved_edits
   visible_document:
     args:
     - ClientState
@@ -415,6 +448,18 @@ functions:
     catalog_symbols:
     - client_speculative_overlays
     meaning: Logical edit/overlay token o remains in retained client_speculative_overlays in client state s.
+  matching_retained_representation_for_visible_overlay:
+    args:
+    - ClientState
+    - Overlay
+    returns: Bool
+    catalog_symbols:
+    - client_speculative_overlays
+    - client_visible_speculative_overlays
+    meaning: In user-visible client state s, visible overlay o has at least one retained speculative representation of the same logical edit and the same full (document_id, client_change_id); the retained representation need not be the same physical overlay object as o.
+    semantic_anchors:
+    - contract:visible_speculative_retention_coherence
+    - claim:G11_visible_speculative_overlays_match_document
   terminalized_speculative_edit:
     args:
     - ClientState
@@ -510,10 +555,51 @@ functions:
     - LogicalEditIdentity
     returns: Bool
     catalog_symbols: []
-    meaning: Client state s is exactly the user-visible state atomically exposed by a normal foreground reconnect/reconciliation publication through response head H after the authoritative reconciliation result classified exact logical edit identity e as ACCEPTED at some canonical revision r with r <= H; predicates over s therefore hold at that publication boundary, not only after a later cleanup transition.
+    meaning: Client state s is exactly the user-visible state atomically exposed by a normal foreground reconnect/reconciliation publication through response head H after the authoritative reconciliation result classified exact logical edit identity e as ACCEPTED at canonical revision r with r <= H, and the reconciled canonical state published through H contains that acceptance; predicates over s therefore hold at that publication boundary, not only after a later cleanup transition.
     semantic_anchors:
     - source:reconnect_revision_boundary
     - contract:accepted_terminal_speculative_retirement
+  authoritative_accepted_reconciliation_published:
+    args:
+    - ClientState
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: Reachable client state s is exactly the user-visible state published by a qualifying authoritative reconnect/reconciliation through response head H after exact logical edit identity e=(D,k) was classified ACCEPTED at canonical revision r with r <= H, and the reconciled canonical state published through H contains that acceptance; this predicate does not require the publication to be foreground.
+    semantic_anchors:
+    - claim:G12_client_pending_state_tracks_unresolved_edits
+  new_user_edit_after_terminalized_lifecycle:
+    args:
+    - ClientState
+    - LogicalEditIdentity
+    - LogicalEdit
+    returns: Bool
+    catalog_symbols:
+    - logical_client_edit
+    - document_id
+    - client_change_id
+    meaning: In reachable client state s, old identity e denotes a terminalized logical edit for document D and n is a genuinely new user logical edit for that same document D rather than a continuation, retry, restore, or reactivation of e.
+    semantic_anchors:
+    - claim:G12_client_pending_state_tracks_unresolved_edits
+  logical_identity_change_id:
+    args:
+    - LogicalEditIdentity
+    returns: ClientChangeId
+    catalog_symbols:
+    - client_change_id
+    meaning: The client_change_id coordinate carried by exact full logical edit identity e=(document_id, client_change_id).
+    semantic_anchors:
+    - claim:G12_client_pending_state_tracks_unresolved_edits
+  logical_edit_in_reachable_client_history:
+    args:
+    - ClientState
+    - LogicalEdit
+    returns: Bool
+    catalog_symbols:
+    - logical_client_edit
+    meaning: In reachable client state s, logical edit e has been created as a genuine logical client edit in the continuing normal client protocol history represented by s; e remains part of that history whether currently active, terminalized, or retained only in non-reactivatable archival/history state.
+    semantic_anchors:
+    - claim:G12_client_pending_state_tracks_unresolved_edits
   pending_identity_active:
     args:
     - ClientState
@@ -607,6 +693,15 @@ functions:
     meaning: The pending representation active for exact logical edit identity e in client state s remains bound to that logical edit creation identity, preserving both document_id and client_change_id rather than being relabeled or cross-bound.
     semantic_anchors:
     - contract:pending_edit_identity_provenance
+  reachable_client_protocol_transition:
+    args:
+    - ProtocolTransition
+    returns: Bool
+    catalog_symbols: []
+    meaning: Protocol transition t occurs on a reachable execution of the normal client speculative lifecycle; impossible transitions and transitions outside that lifecycle are excluded.
+    semantic_anchors:
+    - contract:non_acceptance_terminal_disposition_binding
+    - claim:G12_client_pending_state_tracks_unresolved_edits
   non_acceptance_retirement_transition:
     args:
     - ProtocolTransition
@@ -758,6 +853,7 @@ functions:
     meaning: Logical edits e1 and e2 belong to the same document namespace in which client_change_id uniqueness is required.
     semantic_anchors:
     - assumption:A3_client_change_id_identifies_logical_edit
+    - claim:G12_client_pending_state_tracks_unresolved_edits
   distinct_logical_edits_use_distinct_change_ids:
     args:
     - LogicalEdit
@@ -768,6 +864,7 @@ functions:
     meaning: The two distinct logical edits carry different client_change_id values.
     semantic_anchors:
     - assumption:A3_client_change_id_identifies_logical_edit
+    - claim:G12_client_pending_state_tracks_unresolved_edits
   accepted_sequence_application_result:
     args:
     - DocumentState
@@ -942,7 +1039,7 @@ functions:
     - TerminalResultRecord
     returns: Bool
     catalog_symbols: []
-    meaning: Accepted terminal result t is still within the normal retry eligibility horizon in which producer provenance must be retained.
+    meaning: Accepted terminal result t is still within the 30-day normal retry eligibility horizon in which producer provenance must be retained.
     semantic_anchors:
     - contract:accepted_terminal_result_binding
   terminal_result_bound_to_acceptance_execution:
@@ -956,6 +1053,19 @@ functions:
     meaning: Accepted terminal result t stores the canonical result produced by the same acceptance execution that produced canonical acceptance a; an extensionally equal result from another producer is not sufficient.
     semantic_anchors:
     - contract:accepted_terminal_result_binding
+  accepted_terminal_lifecycle_rewrite:
+    args:
+    - ProtocolTransition
+    - TerminalResultRecord
+    - TerminalResultRecord
+    returns: Bool
+    catalog_symbols:
+    - terminal_result
+    - idempotency_key
+    meaning: Protocol transition x is an authoritative lifecycle representation change, within the normal retry eligibility horizon, that preserves one already-linearized ACCEPTED logical terminal outcome from representation before to representation after while possibly rewriting its durable physical representation; before and after carry the same full idempotency identity.
+    semantic_anchors:
+    - contract:accepted_terminal_result_binding
+    - claim:G5_retry_resolves_idempotently
   rejected_terminal_result_record:
     args:
     - TerminalResultRecord
@@ -1013,7 +1123,7 @@ functions:
     - IdempotencyKey
     returns: Bool
     catalog_symbols: []
-    meaning: Idempotency key k is within the normal retry eligibility horizon in authoritative state s.
+    meaning: Idempotency key k is within the 30-day normal retry eligibility horizon in authoritative state s.
     semantic_anchors:
     - contract:idempotency_terminal_outcome_coherence
   at_most_one_terminal_outcome_for_key:
@@ -1058,13 +1168,58 @@ functions:
     meaning: Once a terminal outcome for key k has linearized, later acceptance or definitive-rejection attempts preserve that same single-valued outcome.
     semantic_anchors:
     - contract:idempotency_terminal_outcome_coherence
+  terminal_attempt_for_key:
+    args:
+    - ProtocolTransition
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols:
+    - idempotency_key
+    - terminal_result
+    meaning: Transition t is an acceptance attempt or definitive-rejection attempt for exact full idempotency key k within the authoritative terminal-result protocol and within the 30-day normal retry eligibility horizon; post-expiry re-submission is outside this predicate.
+    semantic_anchors:
+    - claim:G5_retry_resolves_idempotently
+  terminal_attempt_uses_shared_key_arbitration:
+    args:
+    - ProtocolTransition
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols:
+    - idempotency_terminal_outcomes
+    meaning: Acceptance or definitive-rejection attempt t for exact key k arbitrates through the same single authoritative per-key terminal state used by every competing acceptance and definitive-rejection attempt for k; no independent arbitration domain may decide a second terminal outcome.
+    semantic_anchors:
+    - claim:G5_retry_resolves_idempotently
+  authoritative_terminal_lifecycle_rewrite:
+    args:
+    - ProtocolTransition
+    - TerminalResultRecord
+    - TerminalResultRecord
+    returns: Bool
+    catalog_symbols:
+    - terminal_result
+    - idempotency_key
+    meaning: Transition t is an authoritative lifecycle representation rewrite, within the 30-day normal retry eligibility horizon, from terminal-result representation before to representation after for the same already-linearized logical terminal outcome and the same full idempotency key; the durable physical representation may change.
+    semantic_anchors:
+    - claim:G5_retry_resolves_idempotently
+  terminal_lifecycle_rewrite_preserves_exact_outcome:
+    args:
+    - ProtocolTransition
+    - TerminalResultRecord
+    - TerminalResultRecord
+    returns: Bool
+    catalog_symbols:
+    - terminal_result
+    meaning: >-
+      Lifecycle rewrite t preserves the same already-linearized logical terminal outcome from before to after: an ACCEPTED outcome preserves the exact canonical result, and a REJECTED outcome preserves the same definitive rejection reason. Physical representation may change; for REJECTED this predicate does not require preserving the same rejection-decision object or producer when the exact request binding and required authoritative-context justification remain valid.
+    semantic_anchors:
+    - claim:G5_retry_resolves_idempotently
   canonical_acceptance_payload_record:
     args:
     - CanonicalAcceptance
     returns: Bool
     catalog_symbols:
     - canonical_accepted_change
-    meaning: a is a canonical_accepted_change whose payload requires successful OT provenance.
+    meaning: a is a canonical_accepted_change in authoritative accepted history; every such canonical acceptance requires successful OT provenance for its accepted payload.
     semantic_anchors:
     - contract:ot_success_acceptance_binding
   acceptance_exact_ot_success_result:
@@ -1148,7 +1303,7 @@ functions:
     returns: Bool
     catalog_symbols:
     - submitted_request
-    meaning: Request r is a normal submitted_request representing one logical edit within the normal retry eligibility horizon.
+    meaning: Request r is a normal submitted_request representing one logical edit within the 30-day normal retry eligibility horizon.
     semantic_anchors:
     - claim:G5_retry_resolves_idempotently
   retry_request_identity_payload_frontier_coherent:
@@ -1171,7 +1326,11 @@ functions:
     catalog_symbols:
     - submitted_request
     - logical_client_edit
-    meaning: Submitted request r represents logical client edit e rather than a different logical operation.
+    - document_id
+    - client_change_id
+    - raw_edit
+    - base_revision
+    meaning: Submitted request r represents logical client edit e rather than a different logical operation, and r's submitted document_id, client_change_id, server-visible raw_edit, and base_revision=F remain bound to that same logical operation and its canonical authoring state D@F.
     semantic_anchors:
     - claim:G6_accepted_change_preserves_ot_semantics
   accepted_ot_context_is_preceding_canonical_prefix:
@@ -1274,12 +1433,12 @@ functions:
     meaning: If the user-visible document switches away before publication, c permanently loses foreground publication eligibility and cannot later publish merely because the user switches back.
     semantic_anchors:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
-  foreground_resync_attempt:
+  normal_client_resync_attempt:
     args:
     - CatchupResponse
     returns: Bool
     catalog_symbols: []
-    meaning: c is a normal foreground reconnect/resync attempt for one visible document.
+    meaning: c is one reconnect/resync attempt for document D by a normally participating client; this predicate does not require the attempt to be foreground or D to be currently visible.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
   resync_freezes_new_speculative_edits:
@@ -1287,7 +1446,7 @@ functions:
     - CatchupResponse
     returns: Bool
     catalog_symbols: []
-    meaning: While resync c is in progress, the client creates or applies no new acceptance-eligible speculative local edits for that document.
+    meaning: While resync c is in progress, the client creates or applies no new speculative local edit for document D, regardless of whether that new edit would currently be acceptance-eligible.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
   pending_identity_at_resync_start:
@@ -1296,7 +1455,16 @@ functions:
     - LogicalEditIdentity
     returns: Bool
     catalog_symbols: []
-    meaning: Exact logical edit identity e is pending at the start of resync c.
+    meaning: Exact logical edit identity e=(D,k) is pending at the start of resync c for that same resync document D; a pending identity for another document does not satisfy this predicate.
+    semantic_anchors:
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+  resync_identity_matches_document:
+    args:
+    - CatchupResponse
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: Exact logical edit identity e=(D,k) has the same document coordinate D as the document being reconnected/resynchronized by c.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
   resync_identity_within_normal_horizon:
@@ -1306,6 +1474,15 @@ functions:
     returns: Bool
     catalog_symbols: []
     meaning: Pending identity e is within the normal 30-day reconnect eligibility horizon for resync c.
+    semantic_anchors:
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+  resync_identity_age_exceeds_normal_horizon:
+    args:
+    - CatchupResponse
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: Pending identity e at the start of resync c has a defined pending/retry age greater than the 30-day normal reconnect eligibility horizon.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
   resync_request_reconciles_identity_through_head:
@@ -1332,7 +1509,16 @@ functions:
     - LogicalEditIdentity
     returns: Bool
     catalog_symbols: []
-    meaning: No intermediate or published user-visible state for c exposes both the canonical acceptance for e and a speculative overlay for e; matching overlay removal/suppression occurs before or atomically with canonical publication.
+    meaning: Once canonical acceptance for e is included through c's response head H_D, any user-visible publication through H_D removes or suppresses the matching speculative overlay before or atomically with that publication, so no published user-visible state exposes both representations.
+    semantic_anchors:
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+  resync_intermediate_candidate_excludes_canonical_speculative_duplicate:
+    args:
+    - CatchupResponse
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: No intermediate resync candidate for c may expose a candidate state whose canonical prefix already contains acceptance for exact identity e together with a speculative overlay for e; purely internal unexposed candidate representation is not constrained by this predicate, and the rule is independent of whether c's response head itself is classified as containing that acceptance.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
   stale_resync_cannot_restore_retired_overlay:
@@ -1359,7 +1545,7 @@ functions:
     - LogicalEditIdentity
     returns: Bool
     catalog_symbols: []
-    meaning: After reconciled publication or conflict entry for c, identity e remains protocol-eligible and unresolved.
+    meaning: After reconciled publication or conflict entry for c, exact identity e for the same resync document D remains protocol-eligible and unresolved.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
   unresolved_identity_blocks_normal_editing:
@@ -1754,6 +1940,82 @@ claims:
     - rejected_terminal_speculative_retirement
     capability: relational
     formula_from_contracts: true
+    residual_formula:
+      and:
+      - forall:
+          vars:
+            s: ClientState
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - call:
+                fn: authoritative_accepted_reconciliation_published
+                args:
+                - var: s
+                - var: e
+            - and:
+              - not:
+                  call:
+                    fn: pending_identity_active
+                    args:
+                    - var: s
+                    - var: e
+              - not:
+                  call:
+                    fn: retained_speculative_identity_active
+                    args:
+                    - var: s
+                    - var: e
+              - not:
+                  call:
+                    fn: visible_speculative_identity_active
+                    args:
+                    - var: s
+                    - var: e
+              - call:
+                  fn: terminalized_speculative_identity
+                  args:
+                  - var: s
+                  - var: e
+      - forall:
+          vars:
+            s: ClientState
+            first: LogicalEdit
+            second: LogicalEdit
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_client_state
+                  args:
+                  - var: s
+              - call:
+                  fn: logical_edit_in_reachable_client_history
+                  args:
+                  - var: s
+                  - var: first
+              - call:
+                  fn: logical_edit_in_reachable_client_history
+                  args:
+                  - var: s
+                  - var: second
+              - neq:
+                - var: first
+                - var: second
+              - call:
+                  fn: same_document_logical_edits
+                  args:
+                  - var: first
+                  - var: second
+            - neq:
+              - call:
+                  fn: logical_edit_change_id
+                  args:
+                  - var: first
+              - call:
+                  fn: logical_edit_change_id
+                  args:
+                  - var: second
   G1_retry_is_logically_exactly_once:
     contracts: []
     capability: relational
@@ -1893,19 +2155,55 @@ claims:
     - terminal_response_outcome_binding
     formula_from_contracts: true
     residual_formula:
-      forall:
-        vars:
-          r: Request
-        body:
-          implies:
-          - call:
-              fn: normal_retry_submitted_request
-              args:
-              - var: r
-          - call:
-              fn: retry_request_identity_payload_frontier_coherent
-              args:
-              - var: r
+      and:
+      - forall:
+          vars:
+            r: Request
+          body:
+            implies:
+            - call:
+                fn: normal_retry_submitted_request
+                args:
+                - var: r
+            - call:
+                fn: retry_request_identity_payload_frontier_coherent
+                args:
+                - var: r
+      - forall:
+          vars:
+            t: ProtocolTransition
+            k: IdempotencyKey
+          body:
+            implies:
+            - call:
+                fn: terminal_attempt_for_key
+                args:
+                - var: t
+                - var: k
+            - call:
+                fn: terminal_attempt_uses_shared_key_arbitration
+                args:
+                - var: t
+                - var: k
+      - forall:
+          vars:
+            t: ProtocolTransition
+            before: TerminalResultRecord
+            after: TerminalResultRecord
+          body:
+            implies:
+            - call:
+                fn: authoritative_terminal_lifecycle_rewrite
+                args:
+                - var: t
+                - var: before
+                - var: after
+            - call:
+                fn: terminal_lifecycle_rewrite_preserves_exact_outcome
+                args:
+                - var: t
+                - var: before
+                - var: after
     capability: relational
   G6_accepted_change_preserves_ot_semantics:
     contracts:
@@ -1976,7 +2274,7 @@ claims:
         body:
           implies:
           - call:
-              fn: foreground_resync_attempt
+              fn: normal_client_resync_attempt
               args:
               - var: c
           - and:
@@ -2002,22 +2300,27 @@ claims:
                   - var: c
                   - var: e
             - implies:
+              - and:
+                - call:
+                    fn: pending_identity_at_resync_start
+                    args:
+                    - var: c
+                    - var: e
+                - call:
+                    fn: resync_identity_within_normal_horizon
+                    args:
+                    - var: c
+                    - var: e
+                - call:
+                    fn: response_contains_same_identity_acceptance
+                    args:
+                    - var: c
+                    - var: e
               - call:
-                  fn: response_contains_same_identity_acceptance
+                  fn: resync_publication_excludes_canonical_speculative_duplicate
                   args:
                   - var: c
                   - var: e
-              - and:
-                - call:
-                    fn: resync_publication_excludes_canonical_speculative_duplicate
-                    args:
-                    - var: c
-                    - var: e
-                - call:
-                    fn: stale_resync_cannot_restore_retired_overlay
-                    args:
-                    - var: c
-                    - var: e
             - implies:
               - and:
                 - call:
@@ -2025,12 +2328,39 @@ claims:
                     args:
                     - var: c
                     - var: e
-                - not:
-                    call:
-                      fn: resync_identity_within_normal_horizon
-                      args:
-                      - var: c
-                      - var: e
+                - call:
+                    fn: resync_identity_within_normal_horizon
+                    args:
+                    - var: c
+                    - var: e
+              - call:
+                  fn: resync_intermediate_candidate_excludes_canonical_speculative_duplicate
+                  args:
+                  - var: c
+                  - var: e
+            - implies:
+              - call:
+                  fn: resync_identity_matches_document
+                  args:
+                  - var: c
+                  - var: e
+              - call:
+                  fn: stale_resync_cannot_restore_retired_overlay
+                  args:
+                  - var: c
+                  - var: e
+            - implies:
+              - and:
+                - call:
+                    fn: pending_identity_at_resync_start
+                    args:
+                    - var: c
+                    - var: e
+                - call:
+                    fn: resync_identity_age_exceeds_normal_horizon
+                    args:
+                    - var: c
+                    - var: e
               - call:
                   fn: expired_identity_uses_non_normal_resolution_path
                   args:
@@ -2406,11 +2736,16 @@ contracts:
           o: Overlay
         body:
           implies:
-          - call:
-              fn: unresolved_eligible_retained_edit
-              args:
-              - var: s
-              - var: o
+          - and:
+            - call:
+                fn: reachable_client_state
+                args:
+                - var: s
+            - call:
+                fn: unresolved_eligible_retained_edit
+                args:
+                - var: s
+                - var: o
           - call:
               fn: pending_edit
               args:
@@ -2425,11 +2760,16 @@ contracts:
           o: Overlay
         body:
           implies:
-          - call:
-              fn: acceptance_based_pending_retirement
-              args:
-              - var: s
-              - var: o
+          - and:
+            - call:
+                fn: reachable_client_state
+                args:
+                - var: s
+            - call:
+                fn: acceptance_based_pending_retirement
+                args:
+                - var: s
+                - var: o
           - call:
               fn: pending_retirement_has_matching_acceptance_source
               args:
@@ -2439,36 +2779,92 @@ contracts:
     class: state_invariant
     observation_scope: all_reachable_states
     formula:
-      forall:
-        vars:
-          s: ClientState
-          o: Overlay
-        body:
-          implies:
-          - call:
-              fn: terminalized_speculative_edit
-              args:
-              - var: s
-              - var: o
-          - and:
-            - not:
-                call:
-                  fn: pending_edit
+      and:
+      - forall:
+          vars:
+            s: ClientState
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_client_state
                   args:
                   - var: s
-                  - var: o
-            - not:
-                call:
-                  fn: retained_overlay
+              - call:
+                  fn: terminalized_speculative_identity
                   args:
                   - var: s
-                  - var: o
-            - not:
-                call:
-                  fn: visible_overlay
+                  - var: e
+            - and:
+              - not:
+                  call:
+                    fn: pending_identity_active
+                    args:
+                    - var: s
+                    - var: e
+              - not:
+                  call:
+                    fn: retained_speculative_identity_active
+                    args:
+                    - var: s
+                    - var: e
+              - not:
+                  call:
+                    fn: visible_speculative_identity_active
+                    args:
+                    - var: s
+                    - var: e
+      - forall:
+          vars:
+            earlier: ClientState
+            later: ClientState
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_client_state
                   args:
-                  - var: s
-                  - var: o
+                  - var: earlier
+              - call:
+                  fn: reachable_client_state
+                  args:
+                  - var: later
+              - call:
+                  fn: later_reachable_client_state
+                  args:
+                  - var: earlier
+                  - var: later
+              - call:
+                  fn: terminalized_speculative_identity
+                  args:
+                  - var: earlier
+                  - var: e
+            - and:
+              - call:
+                  fn: terminalized_speculative_identity
+                  args:
+                  - var: later
+                  - var: e
+              - not:
+                  call:
+                    fn: pending_identity_active
+                    args:
+                    - var: later
+                    - var: e
+              - not:
+                  call:
+                    fn: retained_speculative_identity_active
+                    args:
+                    - var: later
+                    - var: e
+              - not:
+                  call:
+                    fn: visible_speculative_identity_active
+                    args:
+                    - var: later
+                    - var: e
   speculative_overlay_identity_provenance:
     class: provenance_binding
     formula:
@@ -2555,7 +2951,7 @@ contracts:
               - var: s
               - var: o
           - call:
-              fn: retained_overlay
+              fn: matching_retained_representation_for_visible_overlay
               args:
               - var: s
               - var: o
@@ -2679,43 +3075,94 @@ contracts:
     class: provenance_binding
     capability: relational
     formula:
-      forall:
-        vars:
-          t: TerminalResultRecord
-        body:
-          implies:
-          - and:
-            - call:
-                fn: accepted_terminal_result_record
-                args:
-                - var: t
-            - call:
-                fn: accepted_terminal_result_within_retry_horizon
-                args:
-                - var: t
-          - exists:
-              vars:
-                a: CanonicalAcceptance
-              body:
-                and:
-                - call:
-                    fn: committed_canonical_acceptance
-                    args:
-                    - var: a
-                - eq:
+      and:
+      - forall:
+          vars:
+            t: TerminalResultRecord
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: accepted_terminal_result_record
+                  args:
+                  - var: t
+              - call:
+                  fn: accepted_terminal_result_within_retry_horizon
+                  args:
+                  - var: t
+            - exists:
+                vars:
+                  a: CanonicalAcceptance
+                body:
+                  and:
                   - call:
-                      fn: terminal_result_idempotency_key
-                      args:
-                      - var: t
-                  - call:
-                      fn: acceptance_key
+                      fn: committed_canonical_acceptance
                       args:
                       - var: a
-                - call:
-                    fn: terminal_result_bound_to_acceptance_execution
-                    args:
-                    - var: t
-                    - var: a
+                  - eq:
+                    - call:
+                        fn: terminal_result_idempotency_key
+                        args:
+                        - var: t
+                    - call:
+                        fn: acceptance_key
+                        args:
+                        - var: a
+                  - call:
+                      fn: terminal_result_bound_to_acceptance_execution
+                      args:
+                      - var: t
+                      - var: a
+      - forall:
+          vars:
+            x: ProtocolTransition
+            before: TerminalResultRecord
+            after: TerminalResultRecord
+          body:
+            implies:
+            - call:
+                fn: accepted_terminal_lifecycle_rewrite
+                args:
+                - var: x
+                - var: before
+                - var: after
+            - exists:
+                vars:
+                  a: CanonicalAcceptance
+                body:
+                  and:
+                  - call:
+                      fn: committed_canonical_acceptance
+                      args:
+                      - var: a
+                  - eq:
+                    - call:
+                        fn: terminal_result_idempotency_key
+                        args:
+                        - var: before
+                    - call:
+                        fn: acceptance_key
+                        args:
+                        - var: a
+                  - eq:
+                    - call:
+                        fn: terminal_result_idempotency_key
+                        args:
+                        - var: after
+                    - call:
+                        fn: acceptance_key
+                        args:
+                        - var: a
+                  - call:
+                      fn: terminal_result_bound_to_acceptance_execution
+                      args:
+                      - var: before
+                      - var: a
+                  - call:
+                      fn: terminal_result_bound_to_acceptance_execution
+                      args:
+                      - var: after
+                      - var: a
   acked_edit_failover_survival:
     class: safety_contract
     capability: relational
@@ -2805,11 +3252,16 @@ contracts:
           k: IdempotencyKey
         body:
           implies:
-          - call:
-              fn: terminal_key_within_retry_horizon
-              args:
-              - var: s
-              - var: k
+          - and:
+            - call:
+                fn: reachable_authoritative_state
+                args:
+                - var: s
+            - call:
+                fn: terminal_key_within_retry_horizon
+                args:
+                - var: s
+                - var: k
           - and:
             - call:
                 fn: at_most_one_terminal_outcome_for_key
@@ -2883,11 +3335,16 @@ contracts:
           e: LogicalEditIdentity
         body:
           implies:
-          - call:
-              fn: non_acceptance_retirement_transition
-              args:
-              - var: t
-              - var: e
+          - and:
+            - call:
+                fn: reachable_client_protocol_transition
+                args:
+                - var: t
+            - call:
+                fn: non_acceptance_retirement_transition
+                args:
+                - var: t
+                - var: e
           - call:
               fn: non_acceptance_disposition_preserves_edit_identity
               args:
@@ -2931,11 +3388,16 @@ contracts:
           e: LogicalEditIdentity
         body:
           implies:
-          - call:
-              fn: pending_identity_active
-              args:
-              - var: s
-              - var: e
+          - and:
+            - call:
+                fn: reachable_client_state
+                args:
+                - var: s
+            - call:
+                fn: pending_identity_active
+                args:
+                - var: s
+                - var: e
           - call:
               fn: pending_representation_bound_to_creation_identity
               args:

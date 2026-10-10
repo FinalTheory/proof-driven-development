@@ -110,14 +110,27 @@ class SymbolicDesignObligationTests(unittest.TestCase):
         self.assertEqual(set(result.assumption_ids), expected_assumptions)
         self.assertEqual(result.contract_ids, ())
 
+    def _verifier_without_root_assurance(self, root_id: str) -> DesignObligationVerifier:
+        records = dict(self.registry.records)
+        records.pop(f"claim:{root_id}")
+        registry = TranslationAssuranceRegistry(
+            version=self.registry.version,
+            records=records,
+        )
+        return DesignObligationVerifier(self.graph, self.bridge, registry)
+
     def test_all_roots_unreviewed_constraints_cannot_be_canonically_certified(self) -> None:
         obligation = self.spec.require(
             "accepted_reconciliation_closes_pending_lifecycle"
         )
-        result = self.verifier.check(obligation, require_trusted=False)
+        verifier = self._verifier_without_root_assurance(
+            "G12_client_pending_state_tracks_unresolved_edits"
+        )
+        result = verifier.check(obligation, require_trusted=False)
         self.assertNotIn("OPAQUE", set(result.constraint_trust.values()))
-        self.assertTrue(
-            any(status in {"UNVERIFIED", "STALE"} for status in result.constraint_trust.values())
+        self.assertEqual(
+            result.constraint_trust["claim:G12_client_pending_state_tracks_unresolved_edits"],
+            "UNVERIFIED",
         )
         self.assertFalse(result.all_constraints_trusted)
         self.assertFalse(result.canonical_certified)
@@ -126,8 +139,11 @@ class SymbolicDesignObligationTests(unittest.TestCase):
         obligation = self.spec.require(
             "accepted_reconciliation_closes_pending_lifecycle"
         )
+        verifier = self._verifier_without_root_assurance(
+            "G12_client_pending_state_tracks_unresolved_edits"
+        )
         with self.assertRaisesRegex(Exception, "requires TRUSTED constraints"):
-            self.verifier.check(obligation, require_trusted=True)
+            verifier.check(obligation, require_trusted=True)
 
 
 if __name__ == "__main__":

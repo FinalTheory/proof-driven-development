@@ -7,46 +7,43 @@ records:
     roundtrip:
       subject_signature: 109acabd77450b243070b130d03bbedb2768aa4a80cdb198eb026cae8aa2a0dd
       status: TRANSLATED
-      natural_language: 'For every authoritative state s and every idempotency key k, if the composite
-        authoritative idempotency identity k = (document_id, client_change_id) is within the 30-day normal
-        retry/reconnect eligibility horizon in authoritative state s, then the following two implications
-        must hold: if authoritative accepted_idempotency_evidence exists in state s for the same composite
-        idempotency key k, then accepted_change_log in authoritative state s contains exactly one committed
-        canonical acceptance whose authoritative idempotency_key is the same composite identity k; and
-        if accepted_change_log in authoritative state s contains exactly one committed canonical acceptance
-        whose authoritative idempotency_key is the same composite identity k, then authoritative accepted_idempotency_evidence
-        exists in state s for the same composite idempotency key k.'
+      natural_language: 'For every authoritative state s and every idempotency key k, if the composite authoritative idempotency
+        identity k = (document_id, client_change_id) is within the 30-day normal retry/reconnect eligibility horizon in authoritative
+        state s, then the following two implications must hold: if authoritative accepted_idempotency_evidence exists in state
+        s for the same composite idempotency key k, then accepted_change_log in authoritative state s contains exactly one
+        committed canonical acceptance whose authoritative idempotency_key is the same composite identity k; and if accepted_change_log
+        in authoritative state s contains exactly one committed canonical acceptance whose authoritative idempotency_key is
+        the same composite identity k, then authoritative accepted_idempotency_evidence exists in state s for the same composite
+        idempotency key k.'
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: 109acabd77450b243070b130d03bbedb2768aa4a80cdb198eb026cae8aa2a0dd
         verdict: EQUIVALENT
-        reason: The formula preserves the original iff correspondence between accepted_idempotency_evidence
-          and exactly one committed canonical acceptance within the 30-day eligibility scope, with the
-          same idempotency identity and authoritative-state observation boundary.
+        reason: The formula preserves the original iff correspondence between accepted_idempotency_evidence and exactly one
+          committed canonical acceptance within the 30-day eligibility scope, with the same idempotency identity and authoritative-state
+          observation boundary.
         differences: []
       strengthening:
         subject_signature: 109acabd77450b243070b130d03bbedb2768aa4a80cdb198eb026cae8aa2a0dd
         verdict: EQUIVALENT
-        reason: The formula preserves the source contract's applicability boundary, identity coordinates,
-          bidirectional correspondence, cardinality requirement, and authoritative-state observation scope.
-          The lifecycle preservation statement is represented by the state invariant semantics rather
-          than an additional predicate.
+        reason: The formula preserves the source contract's applicability boundary, identity coordinates, bidirectional correspondence,
+          cardinality requirement, and authoritative-state observation scope. The lifecycle preservation statement is represented
+          by the state invariant semantics rather than an additional predicate.
         differences: []
     roundtrip_reviews:
       weakening:
         subject_signature: 109acabd77450b243070b130d03bbedb2768aa4a80cdb198eb026cae8aa2a0dd
         verdict: EQUIVALENT
-        reason: The round-trip rendering preserves the bidirectional correspondence, identity coordinates,
-          30-day eligibility boundary, authoritative state scope, and exactly-one committed canonical
-          acceptance cardinality of the source invariant.
+        reason: The round-trip rendering preserves the bidirectional correspondence, identity coordinates, 30-day eligibility
+          boundary, authoritative state scope, and exactly-one committed canonical acceptance cardinality of the source invariant.
         differences: []
       strengthening:
         subject_signature: 109acabd77450b243070b130d03bbedb2768aa4a80cdb198eb026cae8aa2a0dd
         verdict: EQUIVALENT
-        reason: The rendering preserves the original state invariant, applicability horizon, authoritative
-          observation scope, identity coordinates, bidirectional correspondence, and exactly-one cardinality
-          requirement without adding guarantees outside the contract boundary.
+        reason: The rendering preserves the original state invariant, applicability horizon, authoritative observation scope,
+          identity coordinates, bidirectional correspondence, and exactly-one cardinality requirement without adding guarantees
+          outside the contract boundary.
         differences: []
   claim:L92_captured_recovery_head_equals_authoritative_frontier:
     kind: claim
@@ -55,41 +52,39 @@ records:
     roundtrip:
       subject_signature: af9ce92ddced7847779f198c4cd75dada8cf26f0f598c7d14812f41870bbd6b5
       status: TRANSLATED
-      natural_language: For every recovery attempt r, if r has reached the new-owner recovery-head capture
-        event after epoch handoff, then the recovery_head value bound to r is equal to the authoritative
-        document_latest_revision value read when r captures its recovery frontier.
+      natural_language: For every recovery attempt r, if r has reached the new-owner recovery-head capture event after epoch
+        handoff, then the recovery_head value bound to r is equal to the authoritative document_latest_revision value read
+        when r captures its recovery frontier.
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: af9ce92ddced7847779f198c4cd75dada8cf26f0f598c7d14812f41870bbd6b5
         verdict: EQUIVALENT
-        reason: 'The formula exactly captures the source proposition: for every recovery attempt, after
-          the recovery-head capture event, recovery_head_value equals the authoritative document_latest_revision
-          value captured at that event. No additional guarantees from the contextual semantic contract
-          are introduced.'
+        reason: 'The formula exactly captures the source proposition: for every recovery attempt, after the recovery-head
+          capture event, recovery_head_value equals the authoritative document_latest_revision value captured at that event.
+          No additional guarantees from the contextual semantic contract are introduced.'
         differences: []
       strengthening:
         subject_signature: af9ce92ddced7847779f198c4cd75dada8cf26f0f598c7d14812f41870bbd6b5
         verdict: EQUIVALENT
-        reason: 'The symbolic formula matches the canonical proposition: after the capture event, the
-          recovery_head value equals the authoritative revision value captured at that event. No additional
-          guarantees or missing requirements are introduced.'
+        reason: 'The symbolic formula matches the canonical proposition: after the capture event, the recovery_head value
+          equals the authoritative revision value captured at that event. No additional guarantees or missing requirements
+          are introduced.'
         differences: []
     roundtrip_reviews:
       weakening:
         subject_signature: af9ce92ddced7847779f198c4cd75dada8cf26f0f598c7d14812f41870bbd6b5
         verdict: EQUIVALENT
-        reason: The rendering preserves the original contract's applicability boundary after epoch handoff,
-          the capture-event condition, the equality relation, the authoritative source of document_latest_revision,
-          and the binding of recovery_head to that captured value. No quantifier, provenance direction,
-          identity component, or guarantee scope is changed.
+        reason: The rendering preserves the original contract's applicability boundary after epoch handoff, the capture-event
+          condition, the equality relation, the authoritative source of document_latest_revision, and the binding of recovery_head
+          to that captured value. No quantifier, provenance direction, identity component, or guarantee scope is changed.
         differences: []
       strengthening:
         subject_signature: af9ce92ddced7847779f198c4cd75dada8cf26f0f598c7d14812f41870bbd6b5
         verdict: EQUIVALENT
-        reason: The rendering preserves the original applicability boundary, epoch handoff precondition,
-          provenance direction, and equality relation between recovery_head and the authoritative document_latest_revision
-          value observed at the capture event. It does not add guarantees beyond the source proposition.
+        reason: The rendering preserves the original applicability boundary, epoch handoff precondition, provenance direction,
+          and equality relation between recovery_head and the authoritative document_latest_revision value observed at the
+          capture event. It does not add guarantees beyond the source proposition.
         differences: []
   claim:L108_acceptance_preserves_request_identity:
     kind: claim
@@ -98,55 +93,51 @@ records:
     roundtrip:
       subject_signature: 1971e5b39c849f13dbbf57e833af1968d7809dd5453c6a74976b4a20aad02e48
       status: TRANSLATED
-      natural_language: 'For every canonical acceptance a and every request r, if canonical acceptance
-        a was produced from submitted request r, then all of the following hold: the document identity
-        preserved on canonical acceptance a is equal to the document identity carried by request r; the
-        client change identity preserved on canonical acceptance a is equal to the client-supplied logical
-        edit identity carried by request r; the authoritative idempotency identity associated with acceptance
-        a exactly matches the request''s (document_id, client_change_id) identity; and from request admission
-        through OT dispatch, idempotency arbitration, retry handling, and canonical commit, neither document_id
-        nor client_change_id is dropped, regenerated, substituted, or cross-bound, such that every identity
-        handoff for acceptance a remains the originating request r identity. In addition, for every durable
-        idempotency evidence e, if durable idempotency evidence e is associated with canonical acceptance
-        a, then e identifies exactly the same (document_id, client_change_id) carried by originating request
-        r.'
+      natural_language: 'For every canonical acceptance a and every request r, if canonical acceptance a was produced from
+        submitted request r, then all of the following hold: the document identity preserved on canonical acceptance a is
+        equal to the document identity carried by request r; the client change identity preserved on canonical acceptance
+        a is equal to the client-supplied logical edit identity carried by request r; the authoritative idempotency identity
+        associated with acceptance a exactly matches the request''s (document_id, client_change_id) identity; and from request
+        admission through OT dispatch, idempotency arbitration, retry handling, and canonical commit, neither document_id
+        nor client_change_id is dropped, regenerated, substituted, or cross-bound, such that every identity handoff for acceptance
+        a remains the originating request r identity. In addition, for every durable idempotency evidence e, if durable idempotency
+        evidence e is associated with canonical acceptance a, then e identifies exactly the same (document_id, client_change_id)
+        carried by originating request r.'
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: 1971e5b39c849f13dbbf57e833af1968d7809dd5453c6a74976b4a20aad02e48
         verdict: EQUIVALENT
-        reason: The formula preserves the source proposition's applicability boundary, requiring the guarantees
-          only for canonical acceptances produced from submitted requests. It retains both identity coordinates
-          (document_id and client_change_id), the end-to-end preservation requirement, and the durable
-          idempotency evidence association requirement. No additional cardinality, uniqueness, temporal,
-          or provenance obligation is introduced beyond the canonical claim.
+        reason: The formula preserves the source proposition's applicability boundary, requiring the guarantees only for canonical
+          acceptances produced from submitted requests. It retains both identity coordinates (document_id and client_change_id),
+          the end-to-end preservation requirement, and the durable idempotency evidence association requirement. No additional
+          cardinality, uniqueness, temporal, or provenance obligation is introduced beyond the canonical claim.
         differences: []
       strengthening:
         subject_signature: 1971e5b39c849f13dbbf57e833af1968d7809dd5453c6a74976b4a20aad02e48
         verdict: EQUIVALENT
-        reason: The formula preserves the source applicability boundary by conditioning on an acceptance
-          produced from a request, and it encodes the same document_id/client_change_id identity preservation,
-          end-to-end provenance binding, and durable idempotency evidence identity requirements stated
-          in the canonical claim. No additional cardinality, uniqueness, or out-of-scope guarantee is
-          introduced.
+        reason: The formula preserves the source applicability boundary by conditioning on an acceptance produced from a request,
+          and it encodes the same document_id/client_change_id identity preservation, end-to-end provenance binding, and durable
+          idempotency evidence identity requirements stated in the canonical claim. No additional cardinality, uniqueness,
+          or out-of-scope guarantee is introduced.
         differences: []
     roundtrip_reviews:
       weakening:
         subject_signature: 1971e5b39c849f13dbbf57e833af1968d7809dd5453c6a74976b4a20aad02e48
         verdict: EQUIVALENT
-        reason: The round-trip rendering preserves the original contract's quantification, provenance
-          direction, identity components, and observation scope. It states that accepted changes retain
-          the originating request's document_id and client_change_id and that associated idempotency evidence
-          uses the same identity. The additional wording about specific pipeline stages is an expansion
-          of the acceptance path covered by the original claim, not a new semantic requirement.
+        reason: The round-trip rendering preserves the original contract's quantification, provenance direction, identity
+          components, and observation scope. It states that accepted changes retain the originating request's document_id
+          and client_change_id and that associated idempotency evidence uses the same identity. The additional wording about
+          specific pipeline stages is an expansion of the acceptance path covered by the original claim, not a new semantic
+          requirement.
         differences: []
       strengthening:
         subject_signature: 1971e5b39c849f13dbbf57e833af1968d7809dd5453c6a74976b4a20aad02e48
         verdict: EQUIVALENT
-        reason: The rendering preserves the original contract's applicability boundary, identity coordinates,
-          provenance direction, and observation scope. It restates preservation of document_id and client_change_id
-          through the acceptance path and durable idempotency evidence without introducing uniqueness,
-          cardinality, or guarantees beyond the canonical acceptance identity-binding requirement.
+        reason: The rendering preserves the original contract's applicability boundary, identity coordinates, provenance direction,
+          and observation scope. It restates preservation of document_id and client_change_id through the acceptance path
+          and durable idempotency evidence without introducing uniqueness, cardinality, or guarantees beyond the canonical
+          acceptance identity-binding requirement.
         differences: []
   claim:L116_live_delivery_is_bound_to_committed_acceptance:
     kind: claim
@@ -155,48 +146,44 @@ records:
     roundtrip:
       subject_signature: 304dce79d40b4efee56ca83ff8810a13e3608856d587f246769e569a9da185bf
       status: TRANSLATED
-      natural_language: For every live delivery d such that d is a delivery actually exposed through the
-        websocket live stream, there exists a CanonicalAcceptance record a such that a is a committed
-        record in the authoritative accepted_change_log, d originates from a as its accepted-history source,
-        and d preserves a's canonical payload and revision provenance exactly. The existence of such a
-        committed acceptance record and the two stated relations must hold separately for each live delivery;
-        the formula does not assert that the delivery is canonical merely from being a live delivery,
+      natural_language: For every live delivery d such that d is a delivery actually exposed through the websocket live stream,
+        there exists a CanonicalAcceptance record a such that a is a committed record in the authoritative accepted_change_log,
+        d originates from a as its accepted-history source, and d preserves a's canonical payload and revision provenance
+        exactly. The existence of such a committed acceptance record and the two stated relations must hold separately for
+        each live delivery; the formula does not assert that the delivery is canonical merely from being a live delivery,
         and it does not treat origin alone as implying commitment or exact payload/revision preservation.
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: 304dce79d40b4efee56ca83ff8810a13e3608856d587f246769e569a9da185bf
         verdict: EQUIVALENT
-        reason: The formula requires every exposed live delivery to have a committed accepted-history
-          witness, an origin relation to that witness, and preservation of canonical payload and revision
-          provenance. These correspond directly to the source requirements that live changes are bound
-          to committed canonical records and preserve their payload and provenance, while the formula
-          adds no guarantees about ordering, duplication, timing, or delivery success.
+        reason: The formula requires every exposed live delivery to have a committed accepted-history witness, an origin relation
+          to that witness, and preservation of canonical payload and revision provenance. These correspond directly to the
+          source requirements that live changes are bound to committed canonical records and preserve their payload and provenance,
+          while the formula adds no guarantees about ordering, duplication, timing, or delivery success.
         differences: []
       strengthening:
         subject_signature: 304dce79d40b4efee56ca83ff8810a13e3608856d587f246769e569a9da185bf
         verdict: EQUIVALENT
-        reason: The formula preserves the original proposition's observation scope over every live stream
-          delivery and requires a committed accepted-history source plus preservation of canonical payload
-          and revision provenance. The exclusion of provisional, rejected, aborted, or never-committed
-          changes follows from the universal source obligation without adding guarantees such as ordering
-          or exactly-once delivery.
+        reason: The formula preserves the original proposition's observation scope over every live stream delivery and requires
+          a committed accepted-history source plus preservation of canonical payload and revision provenance. The exclusion
+          of provisional, rejected, aborted, or never-committed changes follows from the universal source obligation without
+          adding guarantees such as ordering or exactly-once delivery.
         differences: []
     roundtrip_reviews:
       weakening:
         subject_signature: 304dce79d40b4efee56ca83ff8810a13e3608856d587f246769e569a9da185bf
         verdict: EQUIVALENT
-        reason: The rendering preserves the original quantification boundary, provenance direction, commitment
-          requirement, payload and revision provenance preservation, and exclusion of non-committed changes.
-          It does not add delivery guarantees or collapse identity dimensions beyond the canonical contract.
+        reason: The rendering preserves the original quantification boundary, provenance direction, commitment requirement,
+          payload and revision provenance preservation, and exclusion of non-committed changes. It does not add delivery guarantees
+          or collapse identity dimensions beyond the canonical contract.
         differences: []
       strengthening:
         subject_signature: 304dce79d40b4efee56ca83ff8810a13e3608856d587f246769e569a9da185bf
         verdict: EQUIVALENT
-        reason: The rendering preserves the universal scope over exposed websocket live deliveries, the
-          existential binding to a committed accepted-history record, the provenance direction, canonical
-          payload and revision provenance preservation, and does not add guarantees beyond the canonical
-          contract.
+        reason: The rendering preserves the universal scope over exposed websocket live deliveries, the existential binding
+          to a committed accepted-history record, the provenance direction, canonical payload and revision provenance preservation,
+          and does not add guarantees beyond the canonical contract.
         differences: []
   claim:C12_live_delivery_contains_only_accepted_changes:
     kind: claim
@@ -205,48 +192,44 @@ records:
     roundtrip:
       subject_signature: 45bf7508462ebbe46adb3f9a45040fa3a5ab0cb3a71876ac549fdd6b4f511df3
       status: TRANSLATED
-      natural_language: For every live delivery d, if d is a change actually exposed through the websocket
-        live stream, then there exists a CanonicalAcceptance record a such that a is a committed record
-        in the authoritative accepted_change_log and d originates from that acceptance record a as its
-        accepted-history source. The proposition only requires that each exposed live delivery has some
-        committed canonical acceptance record as its origin; the origin relation itself does not assert
-        that every payload or revision field is preserved exactly, and the proposition does not additionally
+      natural_language: For every live delivery d, if d is a change actually exposed through the websocket live stream, then
+        there exists a CanonicalAcceptance record a such that a is a committed record in the authoritative accepted_change_log
+        and d originates from that acceptance record a as its accepted-history source. The proposition only requires that
+        each exposed live delivery has some committed canonical acceptance record as its origin; the origin relation itself
+        does not assert that every payload or revision field is preserved exactly, and the proposition does not additionally
         assert that all committed acceptance records are delivered.
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: 45bf7508462ebbe46adb3f9a45040fa3a5ab0cb3a71876ac549fdd6b4f511df3
         verdict: EQUIVALENT
-        reason: The formula requires every observed live delivery to have a committed accepted-history
-          witness and an origin relation from that witness, which matches the source claim that live delivery
-          is derived from committed accepted history and never exposes an unaccepted change. The source's
-          duplicate and reorder allowances are exclusions of stronger delivery guarantees rather than
-          additional obligations, so their absence from the formula does not weaken the translation.
+        reason: The formula requires every observed live delivery to have a committed accepted-history witness and an origin
+          relation from that witness, which matches the source claim that live delivery is derived from committed accepted
+          history and never exposes an unaccepted change. The source's duplicate and reorder allowances are exclusions of
+          stronger delivery guarantees rather than additional obligations, so their absence from the formula does not weaken
+          the translation.
         differences: []
       strengthening:
         subject_signature: 45bf7508462ebbe46adb3f9a45040fa3a5ab0cb3a71876ac549fdd6b4f511df3
         verdict: EQUIVALENT
-        reason: 'The formula preserves the canonical provenance requirement: every observed live delivery
-          must originate from some committed accepted history record. It does not add exactly-once, ordering,
-          timing, or completeness guarantees, and the origin relation matches the source''s accepted-history
-          derivation boundary.'
+        reason: 'The formula preserves the canonical provenance requirement: every observed live delivery must originate from
+          some committed accepted history record. It does not add exactly-once, ordering, timing, or completeness guarantees,
+          and the origin relation matches the source''s accepted-history derivation boundary.'
         differences: []
     roundtrip_reviews:
       weakening:
         subject_signature: 45bf7508462ebbe46adb3f9a45040fa3a5ab0cb3a71876ac549fdd6b4f511df3
         verdict: EQUIVALENT
-        reason: 'The rendering preserves the core provenance binding: every exposed live delivery must
-          originate from a committed accepted-change record. It retains the existential acceptance witness,
-          the direction from canonical acceptance to live delivery, and does not add delivery guarantees
-          such as completeness, ordering, or exactly-once.'
+        reason: 'The rendering preserves the core provenance binding: every exposed live delivery must originate from a committed
+          accepted-change record. It retains the existential acceptance witness, the direction from canonical acceptance to
+          live delivery, and does not add delivery guarantees such as completeness, ordering, or exactly-once.'
         differences: []
       strengthening:
         subject_signature: 45bf7508462ebbe46adb3f9a45040fa3a5ab0cb3a71876ac549fdd6b4f511df3
         verdict: EQUIVALENT
-        reason: 'The rendering preserves the original provenance guarantee: every exposed live delivery
-          must originate from a committed accepted history record, while it does not add delivery completeness,
-          ordering, exactly-once, timing, or other guarantees. It also preserves the one-way non-invention
-          boundary.'
+        reason: 'The rendering preserves the original provenance guarantee: every exposed live delivery must originate from
+          a committed accepted history record, while it does not add delivery completeness, ordering, exactly-once, timing,
+          or other guarantees. It also preserves the one-way non-invention boundary.'
         differences: []
   claim:L20_acceptance_paths_are_authoritatively_mediated:
     kind: claim
@@ -255,43 +238,39 @@ records:
     roundtrip:
       subject_signature: 0e9d01680298f60fa3c59dd7065ba08c52c76ee292a84bf8a2c49d7454be4bf4
       status: TRANSLATED
-      natural_language: For every protocol transition t, if t is any normal submission, retry, delayed
-        execution, owner-recovery, resumed-owner, or other protocol transition capable of creating a canonical
-        accepted change, then t routes its acceptance decision through the authoritative accepted-key
-        identity gate before any acceptance sink and cannot bypass that gate.
+      natural_language: For every protocol transition t, if t is any normal submission, retry, delayed execution, owner-recovery,
+        resumed-owner, or other protocol transition capable of creating a canonical accepted change, then t routes its acceptance
+        decision through the authoritative accepted-key identity gate before any acceptance sink and cannot bypass that gate.
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: 0e9d01680298f60fa3c59dd7065ba08c52c76ee292a84bf8a2c49d7454be4bf4
         verdict: EQUIVALENT
-        reason: The formula preserves the universal applicability condition and the required mediated
-          acceptance relation. The predicate meaning includes all transition classes named by the canonical
-          claim and the gate predicate includes both routing through the authoritative accepted-key identity
-          gate and prohibition of bypass before acceptance.
+        reason: The formula preserves the universal applicability condition and the required mediated acceptance relation.
+          The predicate meaning includes all transition classes named by the canonical claim and the gate predicate includes
+          both routing through the authoritative accepted-key identity gate and prohibition of bypass before acceptance.
         differences: []
       strengthening:
         subject_signature: 0e9d01680298f60fa3c59dd7065ba08c52c76ee292a84bf8a2c49d7454be4bf4
         verdict: EQUIVALENT
-        reason: 'The formula exactly captures the source requirement: all transitions capable of creating
-          a canonical accepted change are constrained to route acceptance through the authoritative gate,
-          with no additional scope, identity, cardinality, or observation requirements introduced.'
+        reason: 'The formula exactly captures the source requirement: all transitions capable of creating a canonical accepted
+          change are constrained to route acceptance through the authoritative gate, with no additional scope, identity, cardinality,
+          or observation requirements introduced.'
         differences: []
     roundtrip_reviews:
       weakening:
         subject_signature: 0e9d01680298f60fa3c59dd7065ba08c52c76ee292a84bf8a2c49d7454be4bf4
         verdict: EQUIVALENT
-        reason: The round-trip rendering preserves the original quantification, applicability boundary,
-          gate mediation requirement, and explicit bypass exclusions. The added acceptance-sink ordering
-          is implied by routing the acceptance decision through the authoritative gate and does not introduce
-          a separate guarantee.
+        reason: The round-trip rendering preserves the original quantification, applicability boundary, gate mediation requirement,
+          and explicit bypass exclusions. The added acceptance-sink ordering is implied by routing the acceptance decision
+          through the authoritative gate and does not introduce a separate guarantee.
         differences: []
       strengthening:
         subject_signature: 0e9d01680298f60fa3c59dd7065ba08c52c76ee292a84bf8a2c49d7454be4bf4
         verdict: EQUIVALENT
-        reason: The rendering preserves the original quantifier, applicability boundary, transition scope,
-          and gate mediation requirement. The added wording about routing before any acceptance sink is
-          an explicit expression of the acceptance decision ordering already implied by the original claim
-          and does not add a stronger guarantee.
+        reason: The rendering preserves the original quantifier, applicability boundary, transition scope, and gate mediation
+          requirement. The added wording about routing before any acceptance sink is an explicit expression of the acceptance
+          decision ordering already implied by the original claim and does not add a stronger guarantee.
         differences: []
   claim:L21_accepted_key_gate_rejects_new_acceptance:
     kind: claim
@@ -300,44 +279,42 @@ records:
     roundtrip:
       subject_signature: 658c7d8f87ecfc57bdac00c6a92a9458222940ddf3695182af79768e6eee5622
       status: TRANSLATED
-      natural_language: For every protocol transition t, if t is authoritatively gate mediated, meaning
-        t routes its acceptance decision through the authoritative accepted-key identity gate before any
-        acceptance sink and cannot bypass that gate, and the gate's authoritative decision for t observes
-        that t's idempotency key is already accepted, then t does not create a new acceptance event for
-        its idempotency key.
+      natural_language: For every protocol transition t, if t is authoritatively gate mediated, meaning t routes its acceptance
+        decision through the authoritative accepted-key identity gate before any acceptance sink and cannot bypass that gate,
+        and the gate's authoritative decision for t observes that t's idempotency key is already accepted, then t does not
+        create a new acceptance event for its idempotency key.
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: 658c7d8f87ecfc57bdac00c6a92a9458222940ddf3695182af79768e6eee5622
         verdict: EQUIVALENT
-        reason: 'The formula preserves the source proposition''s applicability conditions and prohibition:
-          for an authoritative gate-mediated transition where the gate observes the key as already accepted,
-          the transition cannot create an acceptance event. The added predicate meaning only makes explicit
-          the source phrase "mediated by the authoritative accepted-key identity gate".'
+        reason: 'The formula preserves the source proposition''s applicability conditions and prohibition: for an authoritative
+          gate-mediated transition where the gate observes the key as already accepted, the transition cannot create an acceptance
+          event. The added predicate meaning only makes explicit the source phrase "mediated by the authoritative accepted-key
+          identity gate".'
         differences: []
       strengthening:
         subject_signature: 658c7d8f87ecfc57bdac00c6a92a9458222940ddf3695182af79768e6eee5622
         verdict: EQUIVALENT
-        reason: 'The formula preserves the original applicability boundary and guarantee: for transitions
-          mediated by the authoritative accepted-key identity gate, observing an already accepted key
-          at the acceptance decision prevents creation of another acceptance event for that key.'
+        reason: 'The formula preserves the original applicability boundary and guarantee: for transitions mediated by the
+          authoritative accepted-key identity gate, observing an already accepted key at the acceptance decision prevents
+          creation of another acceptance event for that key.'
         differences: []
     roundtrip_reviews:
       weakening:
         subject_signature: 658c7d8f87ecfc57bdac00c6a92a9458222940ddf3695182af79768e6eee5622
         verdict: EQUIVALENT
-        reason: 'The rendering preserves the original precondition and guarantee: a gate-mediated transition
-          whose authoritative accepted-key state already contains the key cannot create another acceptance
-          event for that key. The added gate mediation wording only makes the existing applicability condition
-          explicit.'
+        reason: 'The rendering preserves the original precondition and guarantee: a gate-mediated transition whose authoritative
+          accepted-key state already contains the key cannot create another acceptance event for that key. The added gate
+          mediation wording only makes the existing applicability condition explicit.'
         differences: []
       strengthening:
         subject_signature: 658c7d8f87ecfc57bdac00c6a92a9458222940ddf3695182af79768e6eee5622
         verdict: EQUIVALENT
-        reason: The round-trip rendering preserves the original precondition that the authoritative accepted-key
-          identity gate observes an already accepted key and preserves the resulting guarantee that no
-          additional acceptance event is created for that key. The added wording clarifies gate mediation
-          boundaries without changing the claim's semantic scope.
+        reason: The round-trip rendering preserves the original precondition that the authoritative accepted-key identity
+          gate observes an already accepted key and preserves the resulting guarantee that no additional acceptance event
+          is created for that key. The added wording clarifies gate mediation boundaries without changing the claim's semantic
+          scope.
         differences: []
   claim:C14_all_acceptance_paths_honor_idempotency_identity:
     kind: claim
@@ -346,289 +323,223 @@ records:
     roundtrip:
       subject_signature: 63dfc634214e902c8098d68ab1e15137ac7578efde2a0c20e686a1a7a854ed07
       status: TRANSLATED
-      natural_language: For every protocol transition t, if t is any transition capable of creating a
-        canonical accepted change, including a normal submission, retry, delayed execution, owner-recovery,
-        resumed-owner, or other such transition, and at t's authoritative accepted-key gate decision the
-        authoritative state records t's idempotency key as already accepted, then t does not create a
-        new acceptance event for its idempotency key.
+      natural_language: For every protocol transition t, if t is any transition capable of creating a canonical accepted change,
+        including a normal submission, retry, delayed execution, owner-recovery, resumed-owner, or other such transition,
+        and at t's authoritative accepted-key gate decision the authoritative state records t's idempotency key as already
+        accepted, then t does not create a new acceptance event for its idempotency key.
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: 63dfc634214e902c8098d68ab1e15137ac7578efde2a0c20e686a1a7a854ed07
         verdict: EQUIVALENT
-        reason: 'The formula preserves the source proposition''s universal scope over all acceptance-capable
-          transitions and directly encodes the required implication: when the authoritative accepted-key
-          gate observes that the idempotency key is already accepted, the transition cannot create another
-          acceptance event for that key.'
+        reason: 'The formula preserves the source proposition''s universal scope over all acceptance-capable transitions and
+          directly encodes the required implication: when the authoritative accepted-key gate observes that the idempotency
+          key is already accepted, the transition cannot create another acceptance event for that key.'
         differences: []
       strengthening:
         subject_signature: 63dfc634214e902c8098d68ab1e15137ac7578efde2a0c20e686a1a7a854ed07
         verdict: EQUIVALENT
-        reason: The formula quantifies over all acceptance-capable transitions and exactly captures the
-          source condition that an already accepted idempotency key prevents another acceptance event.
-          It preserves the same applicability boundary, identity scope, and prohibition without adding
-          extra requirements.
+        reason: The formula quantifies over all acceptance-capable transitions and exactly captures the source condition that
+          an already accepted idempotency key prevents another acceptance event. It preserves the same applicability boundary,
+          identity scope, and prohibition without adding extra requirements.
         differences: []
     roundtrip_reviews:
       weakening:
         subject_signature: 63dfc634214e902c8098d68ab1e15137ac7578efde2a0c20e686a1a7a854ed07
         verdict: EQUIVALENT
-        reason: The round-trip rendering preserves the original quantification over transitions capable
-          of creating canonical accepted changes, the authoritative accepted-key identity guard, and the
-          prohibition on producing another acceptance event for an already accepted idempotency key. The
-          added examples and gate-decision phrasing do not alter the contract boundary.
+        reason: The round-trip rendering preserves the original quantification over transitions capable of creating canonical
+          accepted changes, the authoritative accepted-key identity guard, and the prohibition on producing another acceptance
+          event for an already accepted idempotency key. The added examples and gate-decision phrasing do not alter the contract
+          boundary.
         differences: []
       strengthening:
         subject_signature: 63dfc634214e902c8098d68ab1e15137ac7578efde2a0c20e686a1a7a854ed07
         verdict: EQUIVALENT
-        reason: The rendering preserves the original quantification over transitions capable of creating
-          a canonical accepted change and preserves the accepted-key identity condition and prohibition
-          on producing another acceptance event. The listed transition examples and gate decision wording
-          make the operational context explicit without adding a separate guarantee.
+        reason: The rendering preserves the original quantification over transitions capable of creating a canonical accepted
+          change and preserves the accepted-key identity condition and prohibition on producing another acceptance event.
+          The listed transition examples and gate decision wording make the operational context explicit without adding a
+          separate guarantee.
         differences: []
   obligation:accepted_reconciliation_closes_pending_lifecycle:
     kind: obligation
     subject_id: accepted_reconciliation_closes_pending_lifecycle
-    subject_signature: fd8005d0d706455a484cee94ff0ea56b3c67be7c5319c053d3b83fef42ea1b25
+    subject_signature: f488e0e181ecf67c9185ecb66256f9755d2196efc359cf0ab329ff9181ad0de9
     roundtrip:
-      subject_signature: fd8005d0d706455a484cee94ff0ea56b3c67be7c5319c053d3b83fef42ea1b25
+      subject_signature: f488e0e181ecf67c9185ecb66256f9755d2196efc359cf0ab329ff9181ad0de9
       status: TRANSLATED
-      natural_language: For every client state s and every logical edit identity e, if the user-visible
-        state s is the result of authoritative reconnect/reconciliation that classified that exact logical
-        edit identity e as ACCEPTED within the published response head, then that exact logical edit identity
-        e does not remain active in client_pending_edits in that same client state s.
+      natural_language: For every client state s and every exact logical edit identity e, if s is exactly the user-visible
+        state atomically exposed by a normal foreground reconnect or reconciliation publication through response head H, after
+        the authoritative reconciliation result classified e as ACCEPTED at canonical revision r with r <= H, and the reconciled
+        canonical state published through H contains that acceptance, then e is not active in client_pending_edits in that
+        same state s at that publication boundary, rather than only after a later cleanup transition. Here client_pending_edits
+        is the speculative collection of unresolved logical client edits retained by client_change_id while their canonical
+        acceptance outcome or conflict disposition is not yet known.
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: fd8005d0d706455a484cee94ff0ea56b3c67be7c5319c053d3b83fef42ea1b25
+        subject_signature: f488e0e181ecf67c9185ecb66256f9755d2196efc359cf0ab329ff9181ad0de9
         verdict: EQUIVALENT
-        reason: 'The formula preserves the proposition''s universal scope over published reconnect/reconciliation
-          client states and exact logical edit identities: whenever authoritative reconciliation published
-          ACCEPTED for that same identity within the response head, the resulting state cannot retain
-          that identity as an active unresolved pending edit. The predicate meanings preserve the exact-identity,
-          publication, and client_pending_edits boundaries without adding or dropping a guard.'
+        reason: The canonical sections explicitly require same-identity ACCEPTED reconciliation within response head H to
+          remove active unresolved pending participation by atomic publication. The formula universally quantifies client
+          states and logical edit identities, preserves normal foreground publication scope and exact identity, and requires
+          pending inactivity at that publication boundary. It faithfully captures the extracted pending-lifecycle obligation
+          without importing the broader retained-overlay or subsequent lifecycle-closure requirements.
         differences: []
       strengthening:
-        subject_signature: fd8005d0d706455a484cee94ff0ea56b3c67be7c5319c053d3b83fef42ea1b25
+        subject_signature: f488e0e181ecf67c9185ecb66256f9755d2196efc359cf0ab329ff9181ad0de9
         verdict: EQUIVALENT
-        reason: The source explicitly requires that once authoritative reconnect/reconciliation publishes
-          exact same-identity ACCEPTED classification within the response head, that logical edit no longer
-          remain an active unresolved pending edit in the resulting client state. The formula quantifies
-          exactly over published reconciliation result states and logical edit identities, preserves exact-identity
-          scope in the predicate meaning, and requires precisely the absence of the matching active pending
-          entry without adding lifecycle, overlay, progress, or broader temporal guarantees.
+        reason: The canonical source explicitly requires same-identity ACCEPTED reconciliation within response head H to remove
+          active unresolved pending participation before or atomically with publication. The formula preserves universal quantification
+          over states and logical edit identities, normal foreground publication scope, authoritative exact-identity acceptance
+          within H, and the resulting publication boundary. The catalog defines pending edits as unresolved, so negating active
+          pending membership expresses precisely the extracted obligation without adding subsequent-state or broader lifecycle
+          guarantees.
         differences: []
     roundtrip_reviews:
-      weakening:
-        subject_signature: fd8005d0d706455a484cee94ff0ea56b3c67be7c5319c053d3b83fef42ea1b25
+      balanced:
+        subject_signature: f488e0e181ecf67c9185ecb66256f9755d2196efc359cf0ab329ff9181ad0de9
         verdict: EQUIVALENT
-        reason: The rendering preserves the universal quantification over published reconnect/reconciliation
-          states and exact logical edit identities, the ACCEPTED-within-published-response-head precondition,
-          and the required same-state absence of that exact edit from active unresolved pending state.
-          The cited canonical section explicitly requires same-identity accepted reconciliation to retire
-          the pending lifecycle before publication, so no extra guarantee is introduced.
-        differences: []
-      strengthening:
-        subject_signature: fd8005d0d706455a484cee94ff0ea56b3c67be7c5319c053d3b83fef42ea1b25
-        verdict: EQUIVALENT
-        reason: The rendering preserves the published reconnect/reconciliation boundary, universal state-and-identity
-          scope, exact logical-edit identity match, ACCEPTED classification within the published response
-          head, and the required resulting-state absence of that identity as an active unresolved pending
-          edit in client_pending_edits. It adds no broader temporal, identity, or lifecycle guarantee.
+        reason: Both require that authoritative ACCEPTED reconciliation of an exact logical edit identity within the published
+          response head leaves that identity absent as an active unresolved pending edit in the resulting normal foreground
+          publication. The canonical sections expressly support retirement before or atomically with publication; the rendering
+          preserves this boundary and adds no eventual-progress or broader lifecycle guarantee.
         differences: []
   obligation:visible_speculative_representation_valid_on_current_base:
     kind: obligation
     subject_id: visible_speculative_representation_valid_on_current_base
-    subject_signature: 6075d99549ab102d2f765850e213e95abccf24ad2cb6972ea00eebefab0b0702
+    subject_signature: c56d0eb4638be8c86c9d1e5d2947ee499d3e4c7f6ce8c41d41b84ba9989e3d94
     roundtrip:
-      subject_signature: 6075d99549ab102d2f765850e213e95abccf24ad2cb6972ea00eebefab0b0702
+      subject_signature: c56d0eb4638be8c86c9d1e5d2947ee499d3e4c7f6ce8c41d41b84ba9989e3d94
       status: TRANSLATED
-      natural_language: For every client state s and every overlay o, if o is currently exposed in s as
-        a speculative user-visible overlay, with its document identity retained, then composing o over
-        the canonical base visible in that same client state s still realizes the original logical edit
-        operation represented by o.
+      natural_language: For every client state s and every overlay o, if o is a retained speculative overlay currently exposed
+        in the user-visible client state s, retaining its document identity, then composing o over the canonical base visible
+        in that same state s still realizes the original logical edit operation represented by o.
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 6075d99549ab102d2f765850e213e95abccf24ad2cb6972ea00eebefab0b0702
+        subject_signature: c56d0eb4638be8c86c9d1e5d2947ee499d3e4c7f6ce8c41d41b84ba9989e3d94
         verdict: STRONGER
-        reason: The symbolic formula faithfully states the extracted proposition, but that proposition
-          itself adds a compatibility invariant not committed to by the cited canonical section. The source
-          preserves operation provenance and explicitly declines to guarantee automatic rebase for unresolved
-          edits; it permits unresolved state to remain in conflict/read-only handling and does not require
-          every still-visible speculative representation to compose over the current canonical base as
-          the original operation.
+        reason: The formula faithfully expresses the extracted statement, but that statement adds a current-base compatibility
+          requirement not committed to by the cited canonical sections. Preserving an overlay's original operation provenance
+          does not establish that composing it over a changed canonical base preserves the original edit's semantics.
         differences:
-        - The extracted/formal obligation requires suppression of any exposed speculative representation
-          that is no longer semantically valid on the current canonical base, while the cited source only
-          requires provenance preservation, accepted-identity exclusion, lifecycle coherence, and blocking
-          normal editing for unresolved state; it does not impose this additional base-compatibility condition
-          on all exposed unresolved representations.
+        - The formula requires every exposed overlay to remain semantically compatible with the currently visible canonical
+          base, thereby requiring suppression or correction of incompatible unresolved overlays. The source requires operation
+          provenance and blocks normal editing while pending edits remain unresolved, but does not require such overlays to
+          be suppressed or corrected for compatibility with a changed base.
       strengthening:
-        subject_signature: 6075d99549ab102d2f765850e213e95abccf24ad2cb6972ea00eebefab0b0702
+        subject_signature: c56d0eb4638be8c86c9d1e5d2947ee499d3e4c7f6ce8c41d41b84ba9989e3d94
         verdict: STRONGER
-        reason: The formula faithfully encodes the extracted statement, but that statement imposes a stronger
-          observer invariant than the cited canonical section commits to. The source requires speculative
-          representation to preserve the original logical edit's operation provenance, and for unresolved
-          edits after catch-up it explicitly declines to guarantee automatic rebase while requiring a
-          non-normal editing/conflict state. It does not state that every currently exposed unresolved
-          representation must be semantically composable over the newly visible canonical base so as to
-          realize the same logical operation, nor that an incompatible representation must be suppressed.
-          A conflict/error UI may retain user content without the source defining that composition property.
+        reason: The formula faithfully expresses the extracted statement, but that statement adds a current-base semantic
+          compatibility requirement absent from the cited sections. Those sections require preservation of the original encoded
+          logical operation, but do not require its composition over every currently visible canonical base to realize that
+          operation.
         differences:
-        - The extracted/formal contract requires base-relative semantic compatibility for every user-visible
-          speculative representation, adding a suppression-or-valid-representation obligation that is
-          not present in the cited source's provenance and unresolved-conflict requirements.
+        - The formula forbids exposing any representation incompatible with the current canonical base, effectively requiring
+          adaptation or suppression. The source requires operation provenance and blocks normal editing while pending edits
+          remain unresolved, but does not mandate suppression of provenance-correct stale representations in a non-editable
+          conflict or reconciliation state.
     roundtrip_reviews:
-      weakening:
-        subject_signature: 6075d99549ab102d2f765850e213e95abccf24ad2cb6972ea00eebefab0b0702
+      balanced:
+        subject_signature: c56d0eb4638be8c86c9d1e5d2947ee499d3e4c7f6ce8c41d41b84ba9989e3d94
         verdict: STRONGER
-        reason: The round-trip faithfully restates the extracted proposition, but that proposition adds
-          a current-base semantic-compatibility requirement not committed to by the cited canonical section.
-          The source requires operation provenance for retained/exposed representations and explicitly
-          declines to define or guarantee client-side rebase of unresolved edits after canonical-base
-          changes; it does not require every exposed unresolved representation to compose over the current
-          base as the same logical operation, nor explicitly require suppression whenever that cannot
-          be shown.
+        reason: The rendering preserves the extracted obligation, including allowing suppression, but that obligation adds
+          a current-base composition guarantee unsupported by the cited sections. Preserving an overlay's original operation
+          provenance does not establish that applying it to a changed canonical base preserves that operation's semantics.
         differences:
-        - 'The extracted/rendered contract requires a cross-relation between each exposed overlay and
-          the currently visible canonical base: composition on that base must preserve the original edit
-          semantics. The cited source only requires that the representation itself continue to encode
-          the same logical edit and states that safe transformation onto a newer base may be unavailable,
-          without imposing this additional exposure/suppression invariant.'
-      strengthening:
-        subject_signature: 6075d99549ab102d2f765850e213e95abccf24ad2cb6972ea00eebefab0b0702
-        verdict: STRONGER
-        reason: The rendering faithfully restates the extracted obligation, but that obligation adds a
-          current-base semantic-validity requirement not committed to by the cited canonical section.
-          The source requires identity/operation provenance for speculative representations, exclusion
-          of already accepted overlays, and blocking normal editing while unresolved edits remain; it
-          explicitly declines to define or guarantee automatic rebase semantics for unresolved edits after
-          the canonical base changes.
-        differences:
-        - The extracted/rendered proposition requires every currently exposed speculative representation
-          to compose over the current visible canonical base so as to realize the original logical edit
-          operation. The cited source only requires that the representation continue to encode the same
-          originating logical operation and, for unresolved edits after resync, permits conflict/read-only
-          handling without specifying a valid composition relation on the new base. Thus the proposition
-          imposes an additional semantic compatibility constraint.
+        - The cited sections require representations to continue encoding the original logical operation and require unresolved
+          pending edits to block normal editing, while disclaiming automatic rebase. They do not require every exposed unresolved
+          representation to be semantically valid on the current canonical base or to be suppressed when incompatible. The
+          extracted obligation and rendering impose that additional observer invariant.
   obligation:externally_rejected_edit_closes_active_speculative_lifecycle:
     kind: obligation
     subject_id: externally_rejected_edit_closes_active_speculative_lifecycle
-    subject_signature: da60294fbeea4d46cca8d63203e4ae7668fe24e21dd626467f0d1dfc40d46b28
+    subject_signature: ef8b001b3cc0812554c55117d8b3899270a33effce59fbab44a712165821697c
     roundtrip:
-      subject_signature: da60294fbeea4d46cca8d63203e4ae7668fe24e21dd626467f0d1dfc40d46b28
+      subject_signature: ef8b001b3cc0812554c55117d8b3899270a33effce59fbab44a712165821697c
       status: TRANSLATED
-      natural_language: 'For every client state s and every logical edit identity e, if the normally participating
-        client has observed, before or atomically with visible state s, an authoritative externally terminal
-        definitive REJECTED result for that exact logical edit identity e, then all of the following hold
-        in that same client state s for that same logical edit identity e: e is not active in client_pending_edits;
-        s does not retain a normal-lifecycle speculative representation for e in client_speculative_overlays;
-        s does not expose a normal-lifecycle speculative representation for e in client_visible_speculative_overlays;
-        and e is classified in s as having a terminalized normal speculative lifecycle in client_terminalized_speculative_lifecycles.
-        This terminalized classification is logical control state: an implementation may represent it
-        by deletion or non-reactivatable archival state rather than by a separately materialized tombstone
+      natural_language: 'For every client state s and every logical edit identity e, if the normally participating client
+        has observed an authoritative, externally terminal, definitive REJECTED result for that exact logical edit identity
+        e before or atomically with visible state s, after the corresponding authoritative terminal_result has linearized,
+        then all of the following hold in that same state s: e is not active in client_pending_edits; no normal-lifecycle
+        speculative representation for that exact identity e remains retained in client_speculative_overlays, including representations
+        not currently exposed to the user; no normal-lifecycle speculative representation for that exact identity e is exposed
+        in client_visible_speculative_overlays; and e is classified as having a terminalized normal speculative lifecycle
+        in client_terminalized_speculative_lifecycles. The retained and visible representations and the terminalized classification
+        preserve their document scope and refer to the same full logical edit identity e. Terminalized classification may
+        be realized through deletion or non-reactivatable archival state and does not require a separately materialized tombstone
         set.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: da60294fbeea4d46cca8d63203e4ae7668fe24e21dd626467f0d1dfc40d46b28
+        subject_signature: ef8b001b3cc0812554c55117d8b3899270a33effce59fbab44a712165821697c
         verdict: EQUIVALENT
-        reason: 'The formula matches the extracted rejection-retirement contract: after a normally participating
-          client has observed an authoritative definitive REJECTED result for the exact logical edit identity,
-          the resulting visible state has no active pending, retained speculative, or visible speculative
-          representation for that identity and classifies its normal speculative lifecycle as terminalized.
-          The helper meanings preserve the authoritative-observation, exact-identity, and resulting-state
-          boundaries without adding a delivery or UI requirement.'
+        reason: The canonical source explicitly requires observed authoritative definitive rejection to terminalize the exact
+          logical edit lifecycle before or atomically with the resulting visible state, removing active pending, retained,
+          and visible speculative participation and preventing subsequent reactivation. The formula preserves these requirements,
+          normal-client applicability, full identity, and observation timing through the supplied predicate meanings. Terminalization
+          is a logical classification, so it does not require a materialized tombstone or prohibit non-reactivatable archives.
         differences: []
       strengthening:
-        subject_signature: da60294fbeea4d46cca8d63203e4ae7668fe24e21dd626467f0d1dfc40d46b28
+        subject_signature: ef8b001b3cc0812554c55117d8b3899270a33effce59fbab44a712165821697c
         verdict: EQUIVALENT
-        reason: 'The canonical section explicitly states that after a normally participating client observes
-          an authoritative exact-identity definitive REJECTED result, the resulting visible state must
-          have ended that logical edit''s normal speculative lifecycle: pending, retained speculative,
-          and visible speculative participation are gone, while archival/error information may remain
-          only in non-reactivatable form. The formula preserves the normal-client, authoritative-observation,
-          exact-identity, resulting-state, and terminalization boundaries and requires exactly those four
-          consequences.'
+        reason: The canonical source explicitly requires observed authoritative definitive rejection of the exact identity
+          to terminalize its lifecycle and remove active pending, retained, and visible speculative participation before or
+          atomically with the resulting visible state. The predicate meanings preserve normal-client applicability, authoritative
+          observation, full identity, and the visible-state boundary. Application to subsequent states is supported by the
+          source's explicit prohibition on lifecycle reactivation; terminalization requires no physical tombstone.
         differences: []
     roundtrip_reviews:
-      weakening:
-        subject_signature: da60294fbeea4d46cca8d63203e4ae7668fe24e21dd626467f0d1dfc40d46b28
+      balanced:
+        subject_signature: ef8b001b3cc0812554c55117d8b3899270a33effce59fbab44a712165821697c
         verdict: EQUIVALENT
-        reason: The rendering preserves the normal-client applicability, exact logical-edit identity,
-          authoritative definitive REJECTED observation boundary, and the required closure of pending,
-          retained speculative, and visible speculative participation together with terminalization. Its
-          persistence across later visible states follows from the cited source's explicit absorbing terminal-lifecycle
-          rule and prohibition on reactivation, so the formulation does not strengthen the canonical contract.
-        differences: []
-      strengthening:
-        subject_signature: da60294fbeea4d46cca8d63203e4ae7668fe24e21dd626467f0d1dfc40d46b28
-        verdict: EQUIVALENT
-        reason: The rendering preserves the normally participating-client applicability guard, authoritative
-          definitive same-identity REJECTED observation, the resulting-state removal of active pending,
-          retained speculative, and visible speculative participation for that lifecycle, and terminalization
-          of that same lifecycle. Its clarification that terminalization may be represented by deletion
-          or non-reactivatable archival state is explicitly supported by the canonical source and does
-          not strengthen the contract.
+        reason: The rendering preserves the authoritative same-identity rejection trigger, removal of pending, retained, and
+          visible speculative participation by the resulting visible state, and terminalization. Its continuing-state requirement
+          is supported by the source's absorbing lifecycle closure. Full document-scoped identity and implementation flexibility
+          for terminalized classification are preserved without adding delivery or progress guarantees.
         differences: []
   obligation:visible_canonical_frontier_never_regresses:
     kind: obligation
     subject_id: visible_canonical_frontier_never_regresses
-    subject_signature: 2435dccd92bac34fa72ecd8130588a30c9fb3c85281e6bbb3968b2269a730032
+    subject_signature: 6df3d4d1f64cfb0ae7264dd825dbf6bab786571cf81dee35fb9fe0609b4bd5c5
     roundtrip:
-      subject_signature: 2435dccd92bac34fa72ecd8130588a30c9fb3c85281e6bbb3968b2269a730032
+      subject_signature: 6df3d4d1f64cfb0ae7264dd825dbf6bab786571cf81dee35fb9fe0609b4bd5c5
       status: TRANSLATED
-      natural_language: For every pair of ClientState values, earlier and later, if both states are ordinary
-        user-visible states in the same normal client/session, later is later than earlier, the session
-        continuously represents the same document from earlier through later, and both earlier and later
-        represent that same document, then the later state's last_applied_revision for that document is
-        not strictly lower than the earlier state's visible frontier.
+      natural_language: 'For every pair of ClientState values, earlier and later, if both of the following conditions hold:
+        (1) both are ordinary user-visible states in the same normal client/session, later occurs after earlier, and the session
+        continuously represents the same document from earlier through later; and (2) earlier is a user-visible exposure of
+        that document in the session''s normal current-document protocol and later is a later ordinary user-visible state
+        in that same session that again represents that document, excluding separately modeled historical-version or rollback
+        mode; then later''s last_applied_revision for that document is not strictly lower than earlier''s visible frontier.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 2435dccd92bac34fa72ecd8130588a30c9fb3c85281e6bbb3968b2269a730032
+        subject_signature: 6df3d4d1f64cfb0ae7264dd825dbf6bab786571cf81dee35fb9fe0609b4bd5c5
         verdict: EQUIVALENT
-        reason: 'The formula preserves the source scope and relation: it ranges over ordinary user-visible
-          earlier/later states in one normal client/session with continuous representation of the same
-          document, and forbids the later frontier from being strictly below the earlier visible frontier.
-          The additional same-session/same-document predicate is redundant given the stronger continuous-same-document
-          predicate''s supplied meaning, so it does not change applicability. No quantifier, identity
-          boundary, observation scope, or exclusion is dropped or added.'
+        reason: The cited source explicitly requires non-regression between ordinary visible states within one normal session
+          continuously representing the same document. The formula universally enforces exactly this requirement. Continuous
+          same-document representation entails the additional same-session, later-visible-same-document predicate, so that
+          conjunct does not narrow applicability. Document switches away and back, new sessions, and separately modeled historical
+          or rollback modes remain outside the required comparison.
         differences: []
       strengthening:
-        subject_signature: 2435dccd92bac34fa72ecd8130588a30c9fb3c85281e6bbb3968b2269a730032
+        subject_signature: 6df3d4d1f64cfb0ae7264dd825dbf6bab786571cf81dee35fb9fe0609b4bd5c5
         verdict: EQUIVALENT
-        reason: The source requires non-regression of last_applied_revision between later ordinary user-visible
-          states in the same normal client/session exactly while that session continuously represents
-          the same document, excluding document switch-away-and-back and independent session boundaries.
-          The formula quantifies state pairs under that same continuous same-document/session visibility
-          boundary and forbids a strictly lower later frontier. The additional same_session_later_visible_same_document
-          conjunct is redundant because its conditions are already entailed by same_session_later_visible_continuous_same_document,
-          so it does not narrow applicability or add a requirement.
+        reason: The cited design explicitly requires frontier non-regression between ordinary visible states in one normal
+          session continuously representing the same document. The formula universally prohibits exactly such regressions.
+          Under the supplied meanings, continuous same-document representation implies the second same-session, same-document
+          predicate, making that conjunct redundant. Document switches away and back, new sessions, and historical or rollback
+          modes remain outside the requirement.
         differences: []
     roundtrip_reviews:
-      weakening:
-        subject_signature: 2435dccd92bac34fa72ecd8130588a30c9fb3c85281e6bbb3968b2269a730032
+      balanced:
+        subject_signature: 6df3d4d1f64cfb0ae7264dd825dbf6bab786571cf81dee35fb9fe0609b4bd5c5
         verdict: EQUIVALENT
-        reason: 'The rendering preserves the same universal pairwise scope and guards: two ordinary user-visible
-          states in one normal client/session, temporal ordering, continuous representation of the same
-          document across the interval, and non-regression of that document''s visible canonical frontier.
-          In the cited design, the visible canonical frontier is `last_applied_revision`, so expressing
-          the later frontier through that field does not change the contract. The added endpoint statement
-          that both states represent the same document is redundant with continuous same-document representation
-          and does not strengthen the requirement.'
-        differences: []
-      strengthening:
-        subject_signature: 2435dccd92bac34fa72ecd8130588a30c9fb3c85281e6bbb3968b2269a730032
-        verdict: EQUIVALENT
-        reason: 'The rendering preserves the same scoped transition-safety contract: for any earlier/later
-          ordinary user-visible states within one normal client/session that continuously represents the
-          same document, the later canonical frontier (last_applied_revision) cannot be below the earlier
-          visible frontier. It preserves the same-document continuity guard, normal-session and user-visible
-          observation boundaries, temporal ordering, and non-strict monotonicity, without extending the
-          guarantee across document switches, new sessions, or other excluded boundaries. The cited design
-          section explicitly states this non-regression requirement.'
+        reason: The cited design explicitly supports non-regression between ordinary visible states within one normal session
+          continuously representing the same document. The rendering preserves those quantifiers, document and session boundaries,
+          and frontier comparison. Its additional condition restates the normal current-document scope and historical/rollback
+          exclusion; it does not extend the guarantee across a document switch away and back or require reaching the latest
+          head.
         differences: []
   claim:G4_reconnect_converges_without_gap_or_duplicate:
     kind: claim
@@ -637,66 +548,59 @@ records:
     roundtrip:
       subject_signature: 4e352efdfea7709e0db1401984366a705b7e1bac074a23706700094a5ee6f068
       status: TRANSLATED
-      natural_language: For every catch-up response c, if c is a normal foreground, visible-document-bound
-        reconnect/catch-up attempt for the current document starting from the client's last_applied_revision
-        L, where L is the highest contiguous canonical revision already applied by that client, then all
-        of the following hold. If the user-visible document switches away before publication, c permanently
-        loses foreground publication eligibility and cannot later publish merely because the user switches
-        back. Any user-visible publication effect of c is one atomic publication transition, with no intermediate
-        candidate prefix exposed; additionally, any response of c whose head H is below the already-visible
-        canonical frontier cannot regress or otherwise mutate that visible canonical/frontier state. If
-        c is eligible for completion or foreground publication under the reconnect/catch-up protocol,
-        then c binds one response-specific head H captured from the same document's authoritative document_latest_revision,
-        its persisted canonical revision frontier, at one authoritative-store read/linearization point;
-        that captured head remains unchanged through response selection, reconciliation, completion, and
-        any publication; and acceptances occurring after that head was captured are outside c's response
-        rather than partially mixed into it. Under that same eligibility condition, if c completes and
-        publishes its reconciled result to the user-visible canonical state, then c's visible-document
-        binding remains uninterrupted from start through publication eligibility, and the published user-visible
-        canonical state equals canonical replay of that same document through c's captured response head
-        H, with no accepted revision through H omitted or applied twice.
+      natural_language: For every catch-up response c, if c is a normal foreground, visible-document-bound reconnect/catch-up
+        attempt for the current document starting from the client's last_applied_revision L, where L is the highest contiguous
+        canonical revision already applied by that client, then all of the following hold. If the user-visible document switches
+        away before publication, c permanently loses foreground publication eligibility and cannot later publish merely because
+        the user switches back. Any user-visible publication effect of c is one atomic publication transition, with no intermediate
+        candidate prefix exposed; additionally, any response of c whose head H is below the already-visible canonical frontier
+        cannot regress or otherwise mutate that visible canonical/frontier state. If c is eligible for completion or foreground
+        publication under the reconnect/catch-up protocol, then c binds one response-specific head H captured from the same
+        document's authoritative document_latest_revision, its persisted canonical revision frontier, at one authoritative-store
+        read/linearization point; that captured head remains unchanged through response selection, reconciliation, completion,
+        and any publication; and acceptances occurring after that head was captured are outside c's response rather than partially
+        mixed into it. Under that same eligibility condition, if c completes and publishes its reconciled result to the user-visible
+        canonical state, then c's visible-document binding remains uninterrupted from start through publication eligibility,
+        and the published user-visible canonical state equals canonical replay of that same document through c's captured
+        response head H, with no accepted revision through H omitted or applied twice.
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: 4e352efdfea7709e0db1401984366a705b7e1bac074a23706700094a5ee6f068
         verdict: EQUIVALENT
-        reason: The formula preserves the foreground-attempt scope, eligibility guard, authoritative response-specific
-          head capture and preservation, exclusion of later acceptances, and exact replay upon eligible
-          publication. Its unconditional predicates preserve permanent loss of publication eligibility
-          after a document switch and atomic, non-regressing publication across overlapping or retried
-          attempts. The supplied predicate meanings retain the source's document, head, temporal, and
-          visible-state coordinates without adding requirements.
+        reason: The formula preserves the foreground-attempt scope, eligibility guard, authoritative response-specific head
+          capture and preservation, exclusion of later acceptances, and exact replay upon eligible publication. Its unconditional
+          predicates preserve permanent loss of publication eligibility after a document switch and atomic, non-regressing
+          publication across overlapping or retried attempts. The supplied predicate meanings retain the source's document,
+          head, temporal, and visible-state coordinates without adding requirements.
         differences: []
       strengthening:
         subject_signature: 4e352efdfea7709e0db1401984366a705b7e1bac074a23706700094a5ee6f068
         verdict: EQUIVALENT
-        reason: The supplied predicate meanings preserve the foreground-attempt scope, eligibility guards,
-          same-document authoritative head capture and preservation, permanent publication disqualification
-          after a binding break, exact replay upon eligible publication, and atomic non-regressing publication
-          across attempts. Post-capture acceptances remain excluded without requiring convergence to an
-          advancing live head. No additional identity, temporal, provenance, or cardinality requirement
+        reason: The supplied predicate meanings preserve the foreground-attempt scope, eligibility guards, same-document authoritative
+          head capture and preservation, permanent publication disqualification after a binding break, exact replay upon eligible
+          publication, and atomic non-regressing publication across attempts. Post-capture acceptances remain excluded without
+          requiring convergence to an advancing live head. No additional identity, temporal, provenance, or cardinality requirement
           is introduced.
         differences: []
     roundtrip_reviews:
       weakening:
         subject_signature: 4e352efdfea7709e0db1401984366a705b7e1bac074a23706700094a5ee6f068
         verdict: EQUIVALENT
-        reason: The rendering preserves the eligible-attempt scope, document identity, single authoritative
-          head capture and its preservation, permanent publication disqualification after switching away,
-          exact canonical replay through H, atomic publication, and protection against stale responses
-          mutating visible state across overlapping or retried attempts. Excluding post-capture acceptances
-          preserves the bounded response scope without requiring convergence to a continuously advancing
-          live head.
+        reason: The rendering preserves the eligible-attempt scope, document identity, single authoritative head capture and
+          its preservation, permanent publication disqualification after switching away, exact canonical replay through H,
+          atomic publication, and protection against stale responses mutating visible state across overlapping or retried
+          attempts. Excluding post-capture acceptances preserves the bounded response scope without requiring convergence
+          to a continuously advancing live head.
         differences: []
       strengthening:
         subject_signature: 4e352efdfea7709e0db1401984366a705b7e1bac074a23706700094a5ee6f068
         verdict: EQUIVALENT
-        reason: The rendering preserves the foreground applicability boundary, eligibility guards, document
-          identity, authoritative capture of one response-specific H, and preservation of H throughout
-          processing. It also preserves permanent publication disqualification on switching away, uninterrupted
-          binding for publication, exact canonical replay through H, atomic publication, protection against
-          stale-head mutation, and exclusion of acceptances after capture without requiring convergence
-          to an advancing live head.
+        reason: The rendering preserves the foreground applicability boundary, eligibility guards, document identity, authoritative
+          capture of one response-specific H, and preservation of H throughout processing. It also preserves permanent publication
+          disqualification on switching away, uninterrupted binding for publication, exact canonical replay through H, atomic
+          publication, protection against stale-head mutation, and exclusion of acceptances after capture without requiring
+          convergence to an advancing live head.
         differences: []
   assumption:A5_apply_accepted_change_is_deterministic:
     kind: assumption
@@ -705,32 +609,30 @@ records:
     roundtrip:
       subject_signature: 4976bc7f74d129189fb28223df354be39f009ff685ea703ac707bebcc6731957
       status: TRANSLATED
-      natural_language: For any starting document state and canonical accepted-change sequence, if applying
-        that sequence to that starting state may yield two result document states, those result document
-        states are equal.
+      natural_language: For any starting document state and canonical accepted-change sequence, if applying that sequence
+        to that starting state may yield two result document states, those result document states are equal.
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: 4976bc7f74d129189fb28223df354be39f009ff685ea703ac707bebcc6731957
         verdict: EQUIVALENT
-        reason: 'The source expresses determinism: applying the same canonical accepted-change sequence
-          to the same starting state cannot produce different document states. The formula enforces precisely
-          this by requiring any two application results for identical s and q to be equal, without assuming
-          uniqueness in application_result itself.'
+        reason: 'The source expresses determinism: applying the same canonical accepted-change sequence to the same starting
+          state cannot produce different document states. The formula enforces precisely this by requiring any two application
+          results for identical s and q to be equal, without assuming uniqueness in application_result itself.'
         differences: []
       strengthening:
         subject_signature: 4976bc7f74d129189fb28223df354be39f009ff685ea703ac707bebcc6731957
         verdict: EQUIVALENT
-        reason: 'The formula captures the stated determinism: any two results of applying the same canonical
-          accepted-change sequence q to the same starting state s must be equal. It does not assume uniqueness
-          in application_result or impose additional requirements such as termination or result existence.'
+        reason: 'The formula captures the stated determinism: any two results of applying the same canonical accepted-change
+          sequence q to the same starting state s must be equal. It does not assume uniqueness in application_result or impose
+          additional requirements such as termination or result existence.'
         differences: []
     roundtrip_reviews:
       balanced:
         subject_signature: 4976bc7f74d129189fb28223df354be39f009ff685ea703ac707bebcc6731957
         verdict: EQUIVALENT
-        reason: 'Both express determinism: the same starting state and canonical accepted-change sequence
-          cannot produce distinct resulting document states.'
+        reason: 'Both express determinism: the same starting state and canonical accepted-change sequence cannot produce distinct
+          resulting document states.'
         differences: []
   assumption:A2_ot_engine_is_correct:
     kind: assumption
@@ -739,38 +641,35 @@ records:
     roundtrip:
       subject_signature: 6709c252810d013ca253fba2bd4b3b820fd4648d4072746d63e3736f398fde4b
       status: TRANSLATED
-      natural_language: 'For every invocation that supplies one raw edit, a canonical committed prefix,
-        and a submitted client base revision to the OT engine, exactly one of the following occurs: the
-        engine returns a canonical transformed change whose success satisfies the declared convergence
-        contract for that raw edit, base, and prefix; or the engine rejects the invocation as invalid
-        or rebase-required instead of returning success.'
+      natural_language: 'For every invocation that supplies one raw edit, a canonical committed prefix, and a submitted client
+        base revision to the OT engine, exactly one of the following occurs: the engine returns a canonical transformed change
+        whose success satisfies the declared convergence contract for that raw edit, base, and prefix; or the engine rejects
+        the invocation as invalid or rebase-required instead of returning success.'
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: 6709c252810d013ca253fba2bd4b3b820fd4648d4072746d63e3736f398fde4b
         verdict: EQUIVALENT
-        reason: 'The formula preserves the exhaustive alternatives: success satisfying the declared convergence
-          contract for the invocation''s raw edit, submitted base, and canonical prefix, or rejection
-          as invalid/rebase-required. Exactly one excludes both out-of-contract success and simultaneous
-          success and rejection. No weakening is introduced.'
+        reason: 'The formula preserves the exhaustive alternatives: success satisfying the declared convergence contract for
+          the invocation''s raw edit, submitted base, and canonical prefix, or rejection as invalid/rebase-required. Exactly
+          one excludes both out-of-contract success and simultaneous success and rejection. No weakening is introduced.'
         differences: []
       strengthening:
         subject_signature: 6709c252810d013ca253fba2bd4b3b820fd4648d4072746d63e3736f398fde4b
         verdict: EQUIVALENT
-        reason: Within the stated canonical-prefix setting, both require each OT invocation to either
-          return a transformed change satisfying its contract for the submitted raw edit, base, and prefix,
-          or reject as invalid/rebase-required. The formula's exactly-one condition reflects the mutually
-          exclusive success and rejection outcomes and adds no stronger guarantee.
+        reason: Within the stated canonical-prefix setting, both require each OT invocation to either return a transformed
+          change satisfying its contract for the submitted raw edit, base, and prefix, or reject as invalid/rebase-required.
+          The formula's exactly-one condition reflects the mutually exclusive success and rejection outcomes and adds no stronger
+          guarantee.
         differences: []
     roundtrip_reviews:
       balanced:
         subject_signature: 6709c252810d013ca253fba2bd4b3b820fd4648d4072746d63e3736f398fde4b
         verdict: EQUIVALENT
-        reason: Both statements require every invocation, for any submitted base and supplied raw edit
-          and canonical prefix, to return either a transformed success satisfying the applicable convergence
-          contract or an invalid/rebase-required rejection. Each excludes successful results outside that
-          contract. 'Exactly one outcome' expresses the same exclusive alternatives without requiring
-          a unique transformed value.
+        reason: Both statements require every invocation, for any submitted base and supplied raw edit and canonical prefix,
+          to return either a transformed success satisfying the applicable convergence contract or an invalid/rebase-required
+          rejection. Each excludes successful results outside that contract. 'Exactly one outcome' expresses the same exclusive
+          alternatives without requiring a unique transformed value.
         differences: []
   assumption:A3_client_change_id_identifies_logical_edit:
     kind: assumption
@@ -779,33 +678,30 @@ records:
     roundtrip:
       subject_signature: cb4f4b9f24ea854f7a6b0cb8807fbc8d0db54cda11bdf266459254e736d34fc6
       status: TRANSLATED
-      natural_language: Every retry or retransmission of a logical client edit carries the client_change_id
-        assigned to that logical edit. Distinct logical edits within the same document namespace carry
-        different client_change_id values.
+      natural_language: Every retry or retransmission of a logical client edit carries the client_change_id assigned to that
+        logical edit. Distinct logical edits within the same document namespace carry different client_change_id values.
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: cb4f4b9f24ea854f7a6b0cb8807fbc8d0db54cda11bdf266459254e736d34fc6
         verdict: EQUIVALENT
-        reason: The formula preserves one change ID per logical edit through logical_edit_change_id(e),
-          requires every retry to reuse that ID, and requires distinct logical edits within the same document
-          namespace to have distinct IDs.
+        reason: The formula preserves one change ID per logical edit through logical_edit_change_id(e), requires every retry
+          to reuse that ID, and requires distinct logical edits within the same document namespace to have distinct IDs.
         differences: []
       strengthening:
         subject_signature: cb4f4b9f24ea854f7a6b0cb8807fbc8d0db54cda11bdf266459254e736d34fc6
         verdict: EQUIVALENT
-        reason: The formula preserves one change ID per logical edit, requires every retry to reuse that
-          ID, and requires distinct logical edits within the same document namespace to have distinct
-          IDs. It introduces no stronger cross-document uniqueness requirement.
+        reason: The formula preserves one change ID per logical edit, requires every retry to reuse that ID, and requires
+          distinct logical edits within the same document namespace to have distinct IDs. It introduces no stronger cross-document
+          uniqueness requirement.
         differences: []
     roundtrip_reviews:
       balanced:
         subject_signature: cb4f4b9f24ea854f7a6b0cb8807fbc8d0db54cda11bdf266459254e736d34fc6
         verdict: EQUIVALENT
-        reason: Both statements give each logical edit a single assigned client_change_id, require all
-          retries to reuse it, and require distinct logical edits within the same document to have distinct
-          ids. The round-trip preserves assignment through 'that edit’s assigned client_change_id' and
-          expresses document scope as the document namespace.
+        reason: "Both statements give each logical edit a single assigned client_change_id, require all retries to reuse it,\
+          \ and require distinct logical edits within the same document to have distinct ids. The round-trip preserves assignment\
+          \ through 'that edit\u2019s assigned client_change_id' and expresses document scope as the document namespace."
         differences: []
   assumption:A6_normal_retry_reconnect_identity_is_eligible_for_30_days:
     kind: assumption
@@ -814,45 +710,42 @@ records:
     roundtrip:
       subject_signature: 0a52491277f193f44ee6973ffdeb86db462d99452e561ca0fb7baf0e56823c8e
       status: TRANSLATED
-      natural_language: For every state s and exact identity e, if e is a pending logical edit of a normally
-        participating client to which this age-boundary assumption applies, both of the following hold.
-        If the client submits e through normal retry or authoritative reconnect-reconciliation, e has
-        a defined pending/retry age of at most 30 days. If e has a defined pending/retry age exceeding
-        30 days, the client does not submit e through either of those normal paths and, because e is outside
-        the normal 30-day horizon, discards e or routes it through explicit expired, conflict, or manual-resolution
-        handling. Being in scope does not itself assert submission or eligibility, and having a defined
-        pending/retry age of at most 30 days does not itself assert retention, eligibility, or submission.
-        These requirements are conditional on e being in scope; the assumption imposes no requirements
-        on identities outside that scope. This is an accepted proof assumption. Any execution or state
-        that violates it is outside any correctness guarantee whose proof depends on it.
+      natural_language: For every state s and exact identity e, if e is a pending logical edit of a normally participating
+        client to which this age-boundary assumption applies, both of the following hold. If the client submits e through
+        normal retry or authoritative reconnect-reconciliation, e has a defined pending/retry age of at most 30 days. If e
+        has a defined pending/retry age exceeding 30 days, the client does not submit e through either of those normal paths
+        and, because e is outside the normal 30-day horizon, discards e or routes it through explicit expired, conflict, or
+        manual-resolution handling. Being in scope does not itself assert submission or eligibility, and having a defined
+        pending/retry age of at most 30 days does not itself assert retention, eligibility, or submission. These requirements
+        are conditional on e being in scope; the assumption imposes no requirements on identities outside that scope. This
+        is an accepted proof assumption. Any execution or state that violates it is outside any correctness guarantee whose
+        proof depends on it.
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: 0a52491277f193f44ee6973ffdeb86db462d99452e561ca0fb7baf0e56823c8e
         verdict: EQUIVALENT
-        reason: The formula preserves the age restriction on normal retry/reconnect submissions and requires
-          both non-submission and discard or explicit resolution handling after 30 days. Its scope restricts
-          these obligations to applicable normally participating clients, leaving boundary-violating submissions
-          outside the normal-path guarantees. It does not turn age at most 30 days into a sufficient condition
-          for retention, eligibility, or submission.
+        reason: The formula preserves the age restriction on normal retry/reconnect submissions and requires both non-submission
+          and discard or explicit resolution handling after 30 days. Its scope restricts these obligations to applicable normally
+          participating clients, leaving boundary-violating submissions outside the normal-path guarantees. It does not turn
+          age at most 30 days into a sufficient condition for retention, eligibility, or submission.
         differences: []
       strengthening:
         subject_signature: 0a52491277f193f44ee6973ffdeb86db462d99452e561ca0fb7baf0e56823c8e
         verdict: EQUIVALENT
-        reason: The formula preserves the restriction on normal retry/reconnect submissions and the required
-          discard or explicit expired/conflict/manual handling after 30 days. Its scope does not require
-          submission, retention, or eligibility within 30 days. It introduces no stronger obligations
-          and preserves the exclusion of boundary-violating submissions from normal-path guarantees.
+        reason: The formula preserves the restriction on normal retry/reconnect submissions and the required discard or explicit
+          expired/conflict/manual handling after 30 days. Its scope does not require submission, retention, or eligibility
+          within 30 days. It introduces no stronger obligations and preserves the exclusion of boundary-violating submissions
+          from normal-path guarantees.
         differences: []
     roundtrip_reviews:
       balanced:
         subject_signature: 0a52491277f193f44ee6973ffdeb86db462d99452e561ca0fb7baf0e56823c8e
         verdict: EQUIVALENT
-        reason: Both make age <=30 days a necessary, not sufficient, condition for normal retry/reconnect
-          submission of the same logical edit identity. Both prohibit normal submission after 30 days
-          and require discard or explicit expired/conflict/manual handling. The roundtrip makes explicit
-          the absence of converse obligations and limits its guarantee exclusion to guarantees whose proofs
-          depend on the premise; it does not independently withdraw unrelated guarantees.
+        reason: Both make age <=30 days a necessary, not sufficient, condition for normal retry/reconnect submission of the
+          same logical edit identity. Both prohibit normal submission after 30 days and require discard or explicit expired/conflict/manual
+          handling. The roundtrip makes explicit the absence of converse obligations and limits its guarantee exclusion to
+          guarantees whose proofs depend on the premise; it does not independently withdraw unrelated guarantees.
         differences: []
   claim:G0_acked_edit_survives_failover:
     kind: claim
@@ -861,40 +754,37 @@ records:
     roundtrip:
       subject_signature: 6252565652c3d245131f2b003abfd7162ad5423be6718002b8afe4516d134282
       status: TRANSLATED
-      natural_language: For every canonical acceptance a, if a success acknowledgment was exposed for
-        the logical edit represented by a, then a is a committed canonical accepted-change record in the
-        authoritative accepted history. For every recovery r and every acceptance a, if a success acknowledgment
-        was exposed for the logical edit represented by a and r completed through an authoritative frontier
-        H with a's revision less than or equal to H, then r's recovered logical state equals the state
-        produced by canonical replay through H, including a. Thus a is not omitted from that replay even
-        if later edits alter its visible effect.
+      natural_language: For every canonical acceptance a, if a success acknowledgment was exposed for the logical edit represented
+        by a, then a is a committed canonical accepted-change record in the authoritative accepted history. For every recovery
+        r and every acceptance a, if a success acknowledgment was exposed for the logical edit represented by a and r completed
+        through an authoritative frontier H with a's revision less than or equal to H, then r's recovered logical state equals
+        the state produced by canonical replay through H, including a. Thus a is not omitted from that replay even if later
+        edits alter its visible effect.
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: 6252565652c3d245131f2b003abfd7162ad5423be6718002b8afe4516d134282
         verdict: EQUIVALENT
-        reason: The formula preserves durable canonical acceptance before success ACK and requires completed
-          recovery at an authoritative H covering the edit to equal canonical replay through H, including
-          that edit. Allowing later visible overwrite does not permit omission from replay. No source
-          guarantee is weakened or omitted.
+        reason: The formula preserves durable canonical acceptance before success ACK and requires completed recovery at an
+          authoritative H covering the edit to equal canonical replay through H, including that edit. Allowing later visible
+          overwrite does not permit omission from replay. No source guarantee is weakened or omitted.
         differences: []
       strengthening:
         subject_signature: 6252565652c3d245131f2b003abfd7162ad5423be6718002b8afe4516d134282
         verdict: EQUIVALENT
-        reason: 'The formula adds no obligations beyond the source contract: success ACK requires committed
-          canonical acceptance, and completed recovery at an authoritative H covering the edit must equal
-          canonical replay through H. Later edits may overwrite its visible effect. No liveness, RTO,
-          client-observation, or physical-row-retention guarantee is introduced.'
+        reason: 'The formula adds no obligations beyond the source contract: success ACK requires committed canonical acceptance,
+          and completed recovery at an authoritative H covering the edit must equal canonical replay through H. Later edits
+          may overwrite its visible effect. No liveness, RTO, client-observation, or physical-row-retention guarantee is introduced.'
         differences: []
     roundtrip_reviews:
       balanced:
         subject_signature: 6252565652c3d245131f2b003abfd7162ad5423be6718002b8afe4516d134282
         verdict: EQUIVALENT
-        reason: Both require successful acknowledgment to certify durable commitment in authoritative
-          accepted history. Both require completed recovery at an authoritative frontier covering the
-          acknowledged edit to produce the logical state of canonical replay through that frontier. Later
-          accepted edits may overwrite or reverse its visible effect without violating either statement.
-          Neither guarantees recovery completion, recovery time, client observation, or physical row retention.
+        reason: Both require successful acknowledgment to certify durable commitment in authoritative accepted history. Both
+          require completed recovery at an authoritative frontier covering the acknowledged edit to produce the logical state
+          of canonical replay through that frontier. Later accepted edits may overwrite or reverse its visible effect without
+          violating either statement. Neither guarantees recovery completion, recovery time, client observation, or physical
+          row retention.
         differences: []
   claim:G8_user_visible_state_does_not_double_render_accepted_optimistic_edit:
     kind: claim
@@ -903,56 +793,44 @@ records:
     roundtrip:
       subject_signature: 1dec9096242e6972fa4754c219475a05735be1965453b40cabf549a87d7172e1
       status: TRANSLATED
-      natural_language: Both of the following hold. For every client state s and every
-        overlay o, if the canonical prefix visible in s already contains the accepted
-        logical edit represented by o, then o is not currently exposed as a speculative
-        user-visible overlay in that same state s. For every protocol transition t and
-        every overlay o, if t creates speculative overlay o for a genuinely new logical
-        client edit, rather than a retry or continued representation of an existing
-        logical edit, then the new logical edit represented by o uses a client_change_id
-        distinct from the client_change_id of every other distinct logical client edit
-        in the same document.
+      natural_language: Both of the following hold. For every client state s and every overlay o, if the canonical prefix
+        visible in s already contains the accepted logical edit represented by o, then o is not currently exposed as a speculative
+        user-visible overlay in that same state s. For every protocol transition t and every overlay o, if t creates speculative
+        overlay o for a genuinely new logical client edit, rather than a retry or continued representation of an existing
+        logical edit, then the new logical edit represented by o uses a client_change_id distinct from the client_change_id
+        of every other distinct logical client edit in the same document.
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: 1dec9096242e6972fa4754c219475a05735be1965453b40cabf549a87d7172e1
         verdict: EQUIVALENT
-        reason: Quantification over every client state and overlay prohibits any visible
-          speculative representation of an accepted logical edit in that same state.
-          The defined same-edit predicate preserves the document and client-change identity.
-          Because the invariant is unconditional on transition type or frontier advancement,
-          it covers first publication and all later visible states, including bookkeeping,
-          live delivery, buffered delivery, and reconnect/resync publication. The second
-          formula preserves the distinct client-change-ID requirement for genuinely
-          new edits within a document. Neither formula imposes rebase or progress obligations
-          on unresolved edits.
+        reason: Quantification over every client state and overlay prohibits any visible speculative representation of an
+          accepted logical edit in that same state. The defined same-edit predicate preserves the document and client-change
+          identity. Because the invariant is unconditional on transition type or frontier advancement, it covers first publication
+          and all later visible states, including bookkeeping, live delivery, buffered delivery, and reconnect/resync publication.
+          The second formula preserves the distinct client-change-ID requirement for genuinely new edits within a document.
+          Neither formula imposes rebase or progress obligations on unresolved edits.
         differences: []
       strengthening:
         subject_signature: 1dec9096242e6972fa4754c219475a05735be1965453b40cabf549a87d7172e1
         verdict: EQUIVALENT
-        reason: The first universal condition prohibits a speculative overlay whenever
-          the same logical edit's acceptance is in the visible canonical prefix. Because
-          it applies at every state, it covers publication and subsequent transitions
-          regardless of delivery mode or canonical-frontier advancement. Its predicates
-          concern user-visible content, so it adds no constraint on hidden bookkeeping.
-          The second condition expresses the source's requirement that a genuinely new
-          logical edit use its own distinct client_change_id within the document; it
-          does not require overlay creation or constrain retries as new edits. Neither
-          condition adds a rebase or progress guarantee for unresolved edits.
+        reason: The first universal condition prohibits a speculative overlay whenever the same logical edit's acceptance
+          is in the visible canonical prefix. Because it applies at every state, it covers publication and subsequent transitions
+          regardless of delivery mode or canonical-frontier advancement. Its predicates concern user-visible content, so it
+          adds no constraint on hidden bookkeeping. The second condition expresses the source's requirement that a genuinely
+          new logical edit use its own distinct client_change_id within the document; it does not require overlay creation
+          or constrain retries as new edits. Neither condition adds a rebase or progress guarantee for unresolved edits.
         differences: []
     roundtrip_reviews:
       balanced:
         subject_signature: 1dec9096242e6972fa4754c219475a05735be1965453b40cabf549a87d7172e1
         verdict: EQUIVALENT
-        reason: 'In the specified typed context, quantification over every client state
-          covers every user-visible publication and subsequent transition, including
-          delivery, catch-up, reconnect/resync, and bookkeeping transitions that leave
-          the canonical frontier unchanged. Both propositions prohibit a speculative
-          overlay for the same logical edit whenever its acceptance is in the visible
-          canonical prefix. The distinct-ID condition preserves document-scoped logical
-          edit identity: retries cannot qualify as genuinely new edits, while genuinely
-          new edits use distinct client_change_ids. Neither proposition requires local
-          rebasing or progress for unresolved edits.'
+        reason: 'In the specified typed context, quantification over every client state covers every user-visible publication
+          and subsequent transition, including delivery, catch-up, reconnect/resync, and bookkeeping transitions that leave
+          the canonical frontier unchanged. Both propositions prohibit a speculative overlay for the same logical edit whenever
+          its acceptance is in the visible canonical prefix. The distinct-ID condition preserves document-scoped logical edit
+          identity: retries cannot qualify as genuinely new edits, while genuinely new edits use distinct client_change_ids.
+          Neither proposition requires local rebasing or progress for unresolved edits.'
         differences: []
   claim:G9_accepted_idempotency_evidence_matches_committed_acceptance:
     kind: claim
@@ -961,61 +839,48 @@ records:
     roundtrip:
       subject_signature: ec4586c5e70cd419434f89de05c8f57526873c9ff18b8b480f99e419d0775405
       status: TRANSLATED
-      natural_language: 'For every authoritative state s and every composite idempotency
-        key k = (document_id, client_change_id), if k is within the 30-day normal retry/reconnect
-        eligibility horizon in s, authoritative durable accepted idempotency evidence
-        exists in s for that exact composite key if and only if the authoritative accepted_change_log
-        in s contains exactly one committed canonical acceptance whose authoritative
-        idempotency key is that same composite key. For every such state and key, if
-        k is within that horizon and authoritative durable accepted evidence exists
-        for k, any authoritative accepted evidence counted for k must be established
-        only by a valid committed-acceptance mechanism: the committed accepted row or
-        unique identity itself; a separate hot-path accepted-key success record that
-        commits and aborts atomically with the same canonical acceptance in the same
-        acceptance transaction; or lifecycle or compaction replacement evidence that
-        is equivalent accepted evidence derived from a previously committed canonical
-        acceptance. Reservation, in-progress arbitration, timeout, cancellation, and
-        other non-committed attempts do not qualify as accepted evidence under this
-        guarded requirement. No requirement is imposed for keys outside the 30-day eligibility
-        horizon.'
+      natural_language: 'For every authoritative state s and every composite idempotency key k = (document_id, client_change_id),
+        if k is within the 30-day normal retry/reconnect eligibility horizon in s, authoritative durable accepted idempotency
+        evidence exists in s for that exact composite key if and only if the authoritative accepted_change_log in s contains
+        exactly one committed canonical acceptance whose authoritative idempotency key is that same composite key. For every
+        such state and key, if k is within that horizon and authoritative durable accepted evidence exists for k, any authoritative
+        accepted evidence counted for k must be established only by a valid committed-acceptance mechanism: the committed
+        accepted row or unique identity itself; a separate hot-path accepted-key success record that commits and aborts atomically
+        with the same canonical acceptance in the same acceptance transaction; or lifecycle or compaction replacement evidence
+        that is equivalent accepted evidence derived from a previously committed canonical acceptance. Reservation, in-progress
+        arbitration, timeout, cancellation, and other non-committed attempts do not qualify as accepted evidence under this
+        guarded requirement. No requirement is imposed for keys outside the 30-day eligibility horizon.'
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: ec4586c5e70cd419434f89de05c8f57526873c9ff18b8b480f99e419d0775405
         verdict: EQUIVALENT
-        reason: The translation preserves universal scope over authoritative states
-          and exact composite keys within the 30-day eligibility horizon, durable authoritative
-          evidence, and the biconditional with exactly one committed canonical acceptance
-          of the same key. It preserves both permitted hot-path evidence mechanisms,
-          same-transaction commit/abort atomicity, and compaction replacement equivalence
-          and provenance from a previously committed acceptance. It explicitly excludes
-          non-committed attempts as accepted evidence and imposes no obligation outside
-          the eligibility horizon, matching the source.
+        reason: The translation preserves universal scope over authoritative states and exact composite keys within the 30-day
+          eligibility horizon, durable authoritative evidence, and the biconditional with exactly one committed canonical
+          acceptance of the same key. It preserves both permitted hot-path evidence mechanisms, same-transaction commit/abort
+          atomicity, and compaction replacement equivalence and provenance from a previously committed acceptance. It explicitly
+          excludes non-committed attempts as accepted evidence and imposes no obligation outside the eligibility horizon,
+          matching the source.
         differences: []
       strengthening:
         subject_signature: ec4586c5e70cd419434f89de05c8f57526873c9ff18b8b480f99e419d0775405
         verdict: EQUIVALENT
-        reason: The translation preserves the eligibility guard, quantification over
-          every authoritative state and exact composite identity, and the biconditional
-          with exactly one committed canonical acceptance. Its permitted evidence mechanisms
-          restate the source's hot-path alternatives and equivalent lifecycle replacement
-          derived from a previously committed acceptance. Exclusion of non-committed
-          attempts is explicit in the source. It adds no mechanism, provenance, cardinality,
+        reason: The translation preserves the eligibility guard, quantification over every authoritative state and exact composite
+          identity, and the biconditional with exactly one committed canonical acceptance. Its permitted evidence mechanisms
+          restate the source's hot-path alternatives and equivalent lifecycle replacement derived from a previously committed
+          acceptance. Exclusion of non-committed attempts is explicit in the source. It adds no mechanism, provenance, cardinality,
           or post-horizon obligation.
         differences: []
     roundtrip_reviews:
       balanced:
         subject_signature: ec4586c5e70cd419434f89de05c8f57526873c9ff18b8b480f99e419d0775405
         verdict: EQUIVALENT
-        reason: Both propositions require authoritative durable accepted evidence for
-          the exact composite key iff history contains exactly one committed canonical
-          acceptance for that key within the 30-day eligibility horizon. Both preserve
-          committed row/identity evidence, same-transaction atomic commitment and abortion
-          of separate hot-path success records, and equivalent lifecycle replacement
-          evidence derived from a previously committed acceptance. Both exclude non-committed
-          attempts as accepted evidence. The explicit quantification over authoritative
-          states adds no substantive constraint. Read as instructed, the outside-horizon
-          statement removes only this claim's normal retry/reconnect classification
+        reason: Both propositions require authoritative durable accepted evidence for the exact composite key iff history
+          contains exactly one committed canonical acceptance for that key within the 30-day eligibility horizon. Both preserve
+          committed row/identity evidence, same-transaction atomic commitment and abortion of separate hot-path success records,
+          and equivalent lifecycle replacement evidence derived from a previously committed acceptance. Both exclude non-committed
+          attempts as accepted evidence. The explicit quantification over authoritative states adds no substantive constraint.
+          Read as instructed, the outside-horizon statement removes only this claim's normal retry/reconnect classification
           requirement and does not withdraw unrelated guarantees.
         differences: []
   claim:G3_snapshot_and_recovery_preserve_state:
@@ -1025,48 +890,39 @@ records:
     roundtrip:
       subject_signature: feefd1118d918e260b3216e9546a4936f8e0b1275dc93b7b979317bd57e194e7
       status: TRANSLATED
-      natural_language: For every authoritative state representation s and every revision
-        h, if s is an optimized authoritative lifecycle representation (a snapshot,
-        checkpoint, cleanup, or compaction result) at frontier h, or s is the result
-        of a completed owner recovery at frontier h, or both, then the logical document
-        state denoted by s equals deterministic canonical replay of accepted revisions
-        through frontier h, and s preserves its authoritative latest_revision exactly
-        equal to h. Under the same condition, if s is used to resume owner service,
-        then s reconstructs the acceptance-relevant state required to continue accepting
-        from frontier h without changing canonical semantics.
+      natural_language: For every authoritative state representation s and every revision h, if s is an optimized authoritative
+        lifecycle representation (a snapshot, checkpoint, cleanup, or compaction result) at frontier h, or s is the result
+        of a completed owner recovery at frontier h, or both, then the logical document state denoted by s equals deterministic
+        canonical replay of accepted revisions through frontier h, and s preserves its authoritative latest_revision exactly
+        equal to h. Under the same condition, if s is used to resume owner service, then s reconstructs the acceptance-relevant
+        state required to continue accepting from frontier h without changing canonical semantics.
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: feefd1118d918e260b3216e9546a4936f8e0b1275dc93b7b979317bd57e194e7
         verdict: EQUIVALENT
-        reason: The formula universally covers optimized authoritative lifecycle representations
-          and completed owner recoveries at the same frontier h. It requires logical
-          document state equal to canonical replay through h, preserves latest_revision
-          = h, and requires reconstruction of acceptance-relevant state exactly when
-          the representation resumes owner service. The predicate meanings preserve
-          the source's state and frontier coordinates without adding temporal or provenance
+        reason: The formula universally covers optimized authoritative lifecycle representations and completed owner recoveries
+          at the same frontier h. It requires logical document state equal to canonical replay through h, preserves latest_revision
+          = h, and requires reconstruction of acceptance-relevant state exactly when the representation resumes owner service.
+          The predicate meanings preserve the source's state and frontier coordinates without adding temporal or provenance
           bridges or requirements for excluded observations.
         differences: []
       strengthening:
         subject_signature: feefd1118d918e260b3216e9546a4936f8e0b1275dc93b7b979317bd57e194e7
         verdict: EQUIVALENT
-        reason: The formula universally covers optimized authoritative lifecycle representations
-          and completed owner recoveries at their frontier, requiring canonical replay
-          equivalence and latest_revision equal to that same frontier. Acceptance-relevant
-          reconstruction is required only when the representation resumes owner service.
-          The supplied predicate meanings preserve the source's observation scope and
-          exclusions without adding identity, provenance, cardinality, or temporal requirements.
+        reason: The formula universally covers optimized authoritative lifecycle representations and completed owner recoveries
+          at their frontier, requiring canonical replay equivalence and latest_revision equal to that same frontier. Acceptance-relevant
+          reconstruction is required only when the representation resumes owner service. The supplied predicate meanings preserve
+          the source's observation scope and exclusions without adding identity, provenance, cardinality, or temporal requirements.
         differences: []
     roundtrip_reviews:
       balanced:
         subject_signature: feefd1118d918e260b3216e9546a4936f8e0b1275dc93b7b979317bd57e194e7
         verdict: EQUIVALENT
-        reason: The rendering preserves universal applicability to optimized authoritative
-          lifecycle representations and completed owner recoveries at a common frontier,
-          equality with deterministic replay of accepted revisions, and latest_revision
-          equal to that frontier. It also preserves the conditional reconstruction requirement
-          when resuming owner service, without adding guarantees about excluded physical,
-          audit-query, or performance observations.
+        reason: The rendering preserves universal applicability to optimized authoritative lifecycle representations and completed
+          owner recoveries at a common frontier, equality with deterministic replay of accepted revisions, and latest_revision
+          equal to that frontier. It also preserves the conditional reconstruction requirement when resuming owner service,
+          without adding guarantees about excluded physical, audit-query, or performance observations.
         differences: []
   claim:G10_user_visible_client_state_matches_document:
     kind: claim
@@ -1075,55 +931,45 @@ records:
     roundtrip:
       subject_signature: ba8075563343d6603c1753b1b9189f5ebd7ed75363bff43960c8d1283fbf3661
       status: TRANSLATED
-      natural_language: Both of the following hold. For every client state s, if s is
-        a published user-visible state, then its canonical content is exactly the deterministic
-        replay of the document identified by visible_document(s) through visible_frontier(s),
-        the highest contiguous canonical revision already applied by that state. This
-        requirement includes published user-visible states in historical-version or
-        rollback mode and excludes private or intermediate resynchronization candidates
-        that have not been published. For every pair of client states earlier and later,
-        if earlier is a user-visible exposure of a document in a client/session's normal
-        current-document protocol and later is a later ordinary user-visible state in
-        that same session that again represents the same document, then later's last
-        applied canonical revision for that document is not strictly lower than earlier's
-        visible frontier. Separately modeled historical-version or rollback mode is
-        outside this second implication's guard.
+      natural_language: Both of the following hold. For every client state s, if s is a published user-visible state, then
+        its canonical content is exactly the deterministic replay of the document identified by visible_document(s) through
+        visible_frontier(s), the highest contiguous canonical revision already applied by that state. This requirement includes
+        published user-visible states in historical-version or rollback mode and excludes private or intermediate resynchronization
+        candidates that have not been published. For every pair of client states earlier and later, if earlier is a user-visible
+        exposure of a document in a client/session's normal current-document protocol and later is a later ordinary user-visible
+        state in that same session that again represents the same document, then later's last applied canonical revision for
+        that document is not strictly lower than earlier's visible frontier. Separately modeled historical-version or rollback
+        mode is outside this second implication's guard.
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: ba8075563343d6603c1753b1b9189f5ebd7ed75363bff43960c8d1283fbf3661
         verdict: EQUIVALENT
-        reason: The first conjunct requires every user-visible canonical state to match
-          deterministic replay of its represented document at its visible frontier,
-          preserving all tuple coordinates across visible replacements, including unchanged-frontier
-          transitions. The second forbids regression between every qualifying earlier
-          and later same-document observation within one normal session, including observations
-          separated by document switches. The supplied meanings preserve the exclusions
-          for private candidates, different documents, new sessions, and separately
-          modeled historical or rollback observations without imposing freshness.
+        reason: The first conjunct requires every user-visible canonical state to match deterministic replay of its represented
+          document at its visible frontier, preserving all tuple coordinates across visible replacements, including unchanged-frontier
+          transitions. The second forbids regression between every qualifying earlier and later same-document observation
+          within one normal session, including observations separated by document switches. The supplied meanings preserve
+          the exclusions for private candidates, different documents, new sessions, and separately modeled historical or rollback
+          observations without imposing freshness.
         differences: []
       strengthening:
         subject_signature: ba8075563343d6603c1753b1b9189f5ebd7ed75363bff43960c8d1283fbf3661
         verdict: EQUIVALENT
-        reason: The first conjunct requires canonical replay coherence with the visible
-          document identity and frontier at every user-visible state, including historical-mode
-          states. The second prohibits frontier regression across all later ordinary
-          same-document observations within one normal client/session, including intervening
-          document switches. Its supplied predicate meanings preserve the exclusions
-          for separate sessions and historical/rollback observations without requiring
-          authoritative freshness or comparing different documents.
+        reason: The first conjunct requires canonical replay coherence with the visible document identity and frontier at
+          every user-visible state, including historical-mode states. The second prohibits frontier regression across all
+          later ordinary same-document observations within one normal client/session, including intervening document switches.
+          Its supplied predicate meanings preserve the exclusions for separate sessions and historical/rollback observations
+          without requiring authoritative freshness or comparing different documents.
         differences: []
     roundtrip_reviews:
       balanced:
         subject_signature: ba8075563343d6603c1753b1b9189f5ebd7ed75363bff43960c8d1283fbf3661
         verdict: EQUIVALENT
-        reason: The rendering preserves canonical content, document identity, and frontier
-          coherence at every published user-visible state, including historical or rollback
-          observations. It also preserves per-document frontier non-regression across
-          ordinary observations within the same normal session, without requiring authoritative
-          freshness or comparing different documents. Unpublished resynchronization
-          candidates remain outside the visible boundary, and the historical-mode exception
-          applies only to non-regression.
+        reason: The rendering preserves canonical content, document identity, and frontier coherence at every published user-visible
+          state, including historical or rollback observations. It also preserves per-document frontier non-regression across
+          ordinary observations within the same normal session, without requiring authoritative freshness or comparing different
+          documents. Unpublished resynchronization candidates remain outside the visible boundary, and the historical-mode
+          exception applies only to non-regression.
         differences: []
   claim:G1_retry_is_logically_exactly_once:
     kind: claim
@@ -1132,49 +978,411 @@ records:
     roundtrip:
       subject_signature: 99aeafd7510e12db257758a66f587187ace5b2fa4bcdb0901c1fe5f67e47fa17
       status: TRANSLATED
-      natural_language: 'For every protocol transition t and every logical client edit
-        e, if t is acceptance-capable processing caused by ACK loss, reconnect, or retry
-        of e for a normally participating client while e''s (document_id, client_change_id)
-        remains within the 30-day normal retry/reconnect eligibility horizon, then t
-        does not cause e to have more than one committed canonical acceptance: t neither
-        commits another acceptance for e when one already existed nor creates multiple
-        accepted records for e within t itself. Here, document_id is the stable identifier
-        of one collaborative document, and client_change_id is a client-supplied protocol
-        identifier for a logical client edit; this proposition does not assert that
-        client_change_id is stable across retries or unique across distinct logical
-        edits.'
+      natural_language: 'For every protocol transition t and every logical client edit e, if t is acceptance-capable processing
+        caused by ACK loss, reconnect, or retry of e for a normally participating client while e''s (document_id, client_change_id)
+        remains within the 30-day normal retry/reconnect eligibility horizon, then t does not cause e to have more than one
+        committed canonical acceptance: t neither commits another acceptance for e when one already existed nor creates multiple
+        accepted records for e within t itself. Here, document_id is the stable identifier of one collaborative document,
+        and client_change_id is a client-supplied protocol identifier for a logical client edit; this proposition does not
+        assert that client_change_id is stable across retries or unique across distinct logical edits.'
       ambiguities: []
     direct_reviews:
       weakening:
         subject_signature: 99aeafd7510e12db257758a66f587187ace5b2fa4bcdb0901c1fe5f67e47fa17
         verdict: EQUIVALENT
-        reason: The universal implication preserves the normally participating client
-          guard, ACK-loss/reconnect/retry causation, and the 30-day eligibility boundary
-          for the full (document_id, client_change_id) identity. Its consequent prohibits
-          creating more than one canonical acceptance for the same logical edit, including
-          duplicates created within one transition or across transitions. Expired identities
-          remain outside the guarantee, and no eventual acceptance requirement or additional
-          identity assumption is introduced.
+        reason: The universal implication preserves the normally participating client guard, ACK-loss/reconnect/retry causation,
+          and the 30-day eligibility boundary for the full (document_id, client_change_id) identity. Its consequent prohibits
+          creating more than one canonical acceptance for the same logical edit, including duplicates created within one transition
+          or across transitions. Expired identities remain outside the guarantee, and no eventual acceptance requirement or
+          additional identity assumption is introduced.
         differences: []
       strengthening:
         subject_signature: 99aeafd7510e12db257758a66f587187ace5b2fa4bcdb0901c1fe5f67e47fa17
         verdict: EQUIVALENT
-        reason: The antecedent preserves normal client participation, ACK-loss/reconnect/retry
-          causation, and the 30-day eligibility boundary for the document/client-change
-          identity. The consequent prohibits creating more than one canonical acceptance
-          for the same logical edit, covering both prior acceptance and multiple acceptances
-          within one transition. Universal quantification adds no guarantee outside
-          that guarded scope, and expired-identity resubmissions remain excluded.
+        reason: The antecedent preserves normal client participation, ACK-loss/reconnect/retry causation, and the 30-day eligibility
+          boundary for the document/client-change identity. The consequent prohibits creating more than one canonical acceptance
+          for the same logical edit, covering both prior acceptance and multiple acceptances within one transition. Universal
+          quantification adds no guarantee outside that guarded scope, and expired-identity resubmissions remain excluded.
         differences: []
     roundtrip_reviews:
       balanced:
         subject_signature: 99aeafd7510e12db257758a66f587187ace5b2fa4bcdb0901c1fe5f67e47fa17
         verdict: EQUIVALENT
-        reason: The rendering preserves the per-logical-edit at-most-one canonical acceptance
-          guarantee, its causal restriction to ACK loss, reconnect, or retry, the normally
-          participating client condition, and the same identity coordinates and 30-day
-          eligibility horizon. Its transition-level formulation covers both repeated
-          acceptance across transitions and multiple acceptances within one transition.
-          Expired identities remain outside the guarantee, and identifier stability
-          and uniqueness are not added as guarantees.
+        reason: The rendering preserves the per-logical-edit at-most-one canonical acceptance guarantee, its causal restriction
+          to ACK loss, reconnect, or retry, the normally participating client condition, and the same identity coordinates
+          and 30-day eligibility horizon. Its transition-level formulation covers both repeated acceptance across transitions
+          and multiple acceptances within one transition. Expired identities remain outside the guarantee, and identifier
+          stability and uniqueness are not added as guarantees.
+        differences: []
+  claim:G2_canonical_history_is_linear_and_fenced:
+    kind: claim
+    subject_id: G2_canonical_history_is_linear_and_fenced
+    subject_signature: c3082e0c1f3dc1993c40c27e7517c934ce8a2ddfc03105b4e5bf607d76641ba6
+    roundtrip:
+      subject_signature: c3082e0c1f3dc1993c40c27e7517c934ce8a2ddfc03105b4e5bf607d76641ba6
+      status: TRANSLATED
+      natural_language: 'For every authoritative state s and every document d, the accepted canonical history for d in s is
+        one gap-free revision sequence, and no superseded epoch/generation for d has become authoritative again in s. Furthermore,
+        for every protocol transition t and every document d, both of the following hold: if t is an authoritative ownership
+        handoff for d, then t installs a strictly greater epoch and a fresh immutable generation identity before or atomically
+        with the new generation becoming acceptance-eligible; and if t performs a canonical accepted-history append for d,
+        then that append is authorized by the exact current document-scoped generation identity for d, including its epoch
+        and generation-bound server append identity, with neither copied scalar values nor another document tuple authorizing
+        the append.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: c3082e0c1f3dc1993c40c27e7517c934ce8a2ddfc03105b4e5bf607d76641ba6
+        verdict: EQUIVALENT
+        reason: The universally quantified predicates preserve the single gap-free history for each document, prohibit superseded
+          authority, and require every authoritative handoff to install a strictly greater epoch and fresh immutable generation
+          before or atomically with acceptance eligibility. Every canonical append requires the exact current document-scoped
+          generation authorization, including epoch and generation-bound server append identity, explicitly excluding authorization
+          by copied scalars or another document's ownership tuple.
+        differences: []
+      strengthening:
+        subject_signature: c3082e0c1f3dc1993c40c27e7517c934ce8a2ddfc03105b4e5bf607d76641ba6
+        verdict: EQUIVALENT
+        reason: The formula preserves the per-document history invariant and prohibition on superseded authority. Its guarded
+          transition requirements exactly capture handoff epoch growth, fresh immutable generation identity, eligibility timing,
+          and append authorization by the current document-scoped generation. The supplied predicate meanings preserve server-side
+          append identity and exclude authorization through copied scalars or cross-document tuple collisions, without adding
+          scope or requirements beyond the source.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: c3082e0c1f3dc1993c40c27e7517c934ce8a2ddfc03105b4e5bf607d76641ba6
+        verdict: EQUIVALENT
+        reason: The rendering preserves the per-document gap-free sequence, strictly increasing handoff epochs, fresh immutable
+          generation identities installed before acceptance eligibility, and permanent exclusion of superseded ownership.
+          Append authorization retains the exact current document, epoch, and generation-bound server identity, excluding
+          authorization based merely on copied scalars or another document's tuple. Explicit state and transition quantification
+          adds no substantive requirement.
+        differences: []
+  claim:G6_accepted_change_preserves_ot_semantics:
+    kind: claim
+    subject_id: G6_accepted_change_preserves_ot_semantics
+    subject_signature: 54b3c0dd6400d13f8abe2eeddb684a884da6f6b7738a8472cbd0065fbf4f8646
+    roundtrip:
+      subject_signature: 54b3c0dd6400d13f8abe2eeddb684a884da6f6b7738a8472cbd0065fbf4f8646
+      status: TRANSLATED
+      natural_language: 'Both of the following requirements hold. First, for every CanonicalAcceptance a, if a is a canonical
+        accepted-change payload record in authoritative accepted history, then there exists an OTSuccessResult s such that
+        a is bound to the exact successful OT result s that produced its accepted payload, with no synthesized or substituted
+        result qualifying, and s was produced for the corresponding submitted raw edit and base revision. Second, for every
+        CanonicalAcceptance a, if a is a canonical accepted-change payload record in authoritative accepted history, then
+        there exist a Request q and a LogicalEdit e such that all of the following hold: a was produced from submitted request
+        q; q represents the document-scoped logical client edit e rather than a different logical operation, and q''s submitted
+        document identifier, client change identifier, server-visible raw edit, and base revision F remain bound to that same
+        logical operation and its canonical authoring state D@F; the document identity preserved on a equals the document
+        identity carried by q; the client change identifier preserved on a equals the client change identifier carried by
+        q; the successful OT result committed as a was computed for q against the canonical committed prefix immediately preceding
+        a''s accepted revision; and the successful OT result bound to a satisfies the OT engine''s algorithmic convergence
+        contract for the submitted raw edit, base revision, and preceding canonical prefix.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 54b3c0dd6400d13f8abe2eeddb684a884da6f6b7738a8472cbd0065fbf4f8646
+        verdict: EQUIVALENT
+        reason: Every authoritative acceptance requires exact successful OT-result provenance for its submitted input, a corresponding
+          request bound to the same logical edit and canonical authoring state, preserved document and change identities,
+          the immediately preceding canonical prefix, and the algorithmic convergence contract. The supplied predicate meanings
+          connect these obligations through the acceptance and its corresponding request, excluding substituted payloads,
+          cross-bound edits, and acceptance from unsuccessful OT outcomes. The source imposes no additional uniqueness requirement
+          on request witnesses.
+        differences: []
+      strengthening:
+        subject_signature: 54b3c0dd6400d13f8abe2eeddb684a884da6f6b7738a8472cbd0065fbf4f8646
+        verdict: EQUIVALENT
+        reason: Both require every authoritative canonical acceptance to originate from a submitted request bound to the same
+          logical edit and canonical authoring state, preserve its document and change identities, and commit the exact successful
+          OT result for its submitted input against the immediately preceding canonical prefix. The supplied predicate meanings
+          preserve these provenance links and the algorithmic convergence requirement, excluding substituted payloads and
+          reject/rebase-required outcomes. No additional scope or cardinality constraint is imposed.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 54b3c0dd6400d13f8abe2eeddb684a884da6f6b7738a8472cbd0065fbf4f8646
+        verdict: EQUIVALENT
+        reason: Both require every authoritative acceptance to originate from a submitted request bound to the same document-scoped
+          logical edit and canonical authoring state, preserve the submitted document and client-change identities, and commit
+          exactly its successful OT result computed against the immediately preceding canonical prefix and satisfying the
+          convergence contract. Requiring that exact successful result excludes acceptance from missing, substituted, rejected,
+          or rebase-required results. Neither formulation adds uniqueness across requests or acceptances.
+        differences: []
+  claim:G11_visible_speculative_overlays_match_document:
+    kind: claim
+    subject_id: G11_visible_speculative_overlays_match_document
+    subject_signature: c09e6fd28df8cb5c23daaca7c0b8409f39a0d74ecbea91ad82e22e1e7ab31e39
+    roundtrip:
+      subject_signature: c09e6fd28df8cb5c23daaca7c0b8409f39a0d74ecbea91ad82e22e1e7ab31e39
+      status: TRANSLATED
+      natural_language: For every client state s and every overlay o, all of the following conditions hold together. If o
+        is currently exposed as a speculative user-visible overlay in s, then o belongs to the same document represented by
+        the user-visible client state s. If o remains retained in client_speculative_overlays in s or is currently exposed
+        as a speculative user-visible overlay in s, then its representation in s preserves the same logical edit's complete
+        creation identity, including both document_id and client_change_id. Under that same disjunctive guard, its representation
+        in s also remains semantically derived from that logical edit's operation rather than another edit's operation. If
+        o is currently exposed as a speculative user-visible overlay in s, then the logical identity represented by o contributes
+        at most one effective speculative operation to the rendered state s. If o is currently exposed as a speculative user-visible
+        overlay in s, then there exists at least one speculative representation retained in s of the same logical edit and
+        with the same full pair (document_id, client_change_id) as o; this retained representation need not be the same physical
+        overlay object as o.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: c09e6fd28df8cb5c23daaca7c0b8409f39a0d74ecbea91ad82e22e1e7ab31e39
+        verdict: EQUIVALENT
+        reason: The five conjuncts preserve all five source requirements. Every retained or exposed representation preserves
+          its logical edit's complete creation identity and operation provenance. Every exposed overlay matches the visible
+          document, has a retained counterpart with the same logical edit and full identity, and contributes at most once
+          per full identity. Universal state quantification preserves these requirements across transitions, including removal,
+          without requiring retained overlays to be visible or physically unique.
+        differences: []
+      strengthening:
+        subject_signature: c09e6fd28df8cb5c23daaca7c0b8409f39a0d74ecbea91ad82e22e1e7ab31e39
+        verdict: EQUIVALENT
+        reason: The five conjuncts preserve the source requirements under the supplied predicate meanings. Identity and operation
+          provenance cover every retained or exposed representation and refer to the same edit's creation identity and original
+          operation. The visible-overlay guard restricts document binding, effective contribution uniqueness, and retention
+          coherence to user-visible exposure. Uniqueness concerns effects per full identity, not physical object counts; matching
+          retention permits distinct physical representations. Coherence excludes visible orphans after terminal removal.
+          No additional visibility, progress, global identifier uniqueness, or representation equality is required.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: c09e6fd28df8cb5c23daaca7c0b8409f39a0d74ecbea91ad82e22e1e7ab31e39
+        verdict: EQUIVALENT
+        reason: The rendering preserves creation-identity and operation provenance for every retained or exposed representation
+          across states. Its exposure guards preserve user-visible document binding, effective-operation uniqueness per full
+          identity, and matching retained-state coherence, including exclusion of visible orphans. Neither formulation requires
+          physical-object uniqueness, visibility of all retained edits, or eventual reconciliation.
+        differences: []
+  claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit:
+    kind: claim
+    subject_id: G7_reconnect_does_not_double_render_accepted_optimistic_edit
+    subject_signature: 2c2263e2776f0e20ae63f195360a07960abefe28218f2380516fdf6ab63d4f8d
+    roundtrip:
+      subject_signature: 2c2263e2776f0e20ae63f195360a07960abefe28218f2380516fdf6ab63d4f8d
+      status: TRANSLATED
+      natural_language: For every catch-up response c and every logical edit identity e, if c is a reconnect/resync attempt
+        for document D by a normally participating client, then all of the following requirements hold, whether or not the
+        attempt is foreground or D is currently visible. While c is in progress, the client creates or applies no new speculative
+        local edit for D, regardless of whether such a new edit would currently be acceptance-eligible. If the exact logical
+        edit identity e=(D,k) is pending at the start of c for that same document D and is within the normal 30-day reconnect
+        eligibility horizon for c, then the catch-up request for c includes e for authoritative reconciliation of that exact
+        full identity through c's response head. If those same pending and within-horizon conditions hold and canonical acceptance
+        for the exact same full identity e is included through c's response head H_D, then any user-visible publication through
+        H_D removes or suppresses the matching speculative overlay before or atomically with that publication, so no published
+        user-visible state exposes both representations. If e is pending at the start of c for that same document D and is
+        within the normal 30-day reconnect eligibility horizon, then no intermediate resync candidate for c may expose a candidate
+        state whose canonical prefix already contains acceptance for e together with a speculative overlay for e; purely internal,
+        unexposed candidate representations are not constrained by this requirement, and this requirement applies independently
+        of whether c's response head itself is classified as containing that acceptance. If e has the same document coordinate
+        D as the document being reconnected/resynchronized by c, then a stale response for c cannot restore a speculative
+        overlay for e that a newer published reconciliation already removed; this requirement does not depend on e being pending
+        at c's start or being within the normal horizon. If e is pending at the start of c for that same document D and has
+        a defined pending/retry age greater than the 30-day normal reconnect eligibility horizon, then c does not submit e
+        through normal authoritative reconciliation, and the client discards e or uses an explicit expired, conflict, or manual-resolution
+        path. If, after reconciled publication or conflict entry for c, the exact identity e for that same resync document
+        D remains protocol-eligible and unresolved, then while e remains unresolved the client stays read-only or in an explicit
+        conflict/reconciliation state and creates no new acceptance-eligible speculative edit. This last requirement does
+        not additionally require e to have been pending at the start of c or to satisfy the within-horizon predicate.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 2c2263e2776f0e20ae63f195360a07960abefe28218f2380516fdf6ab63d4f8d
+        verdict: EQUIVALENT
+        reason: The formula preserves the resync-wide speculative-edit freeze, reconciliation of every eligible pending full
+          identity through the response head, and acceptance-conditioned publication suppression. Intermediate exposure is
+          prohibited independently of response-head acceptance, stale restoration is prohibited for same-document identities,
+          expired identities use non-normal resolution, and unresolved eligible identities block normal editing. The supplied
+          predicate meanings preserve document identity, temporal scope, and user-visible observation boundaries without adding
+          progress or rebase guarantees.
+        differences: []
+      strengthening:
+        subject_signature: 2c2263e2776f0e20ae63f195360a07960abefe28218f2380516fdf6ab63d4f8d
+        verdict: EQUIVALENT
+        reason: The formula preserves the normal-client applicability boundary, resync edit freeze, eligible pending-identity
+          reconciliation, exact document/edit identity, and acceptance-conditioned publication suppression. Intermediate exposure
+          is constrained independently of response-head acceptance, stale responses cannot restore retired overlays for the
+          resync document, expired identities use non-normal resolution, and unresolved eligible identities block normal editing.
+          No automatic rebase, conflict-resolution, or progress guarantee is added.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 2c2263e2776f0e20ae63f195360a07960abefe28218f2380516fdf6ab63d4f8d
+        verdict: EQUIVALENT
+        reason: The rendering preserves the resync edit freeze, eligible pending-identity reconciliation, exact document-and-edit
+          identity matching, atomic overlay suppression at visible publication, intermediate exposure prohibition, stale response
+          protection, expired-edit handling, and continued editing restriction while eligible edits remain unresolved. Its
+          explicit scope clarifications add no progress, automatic rebase, or conflict-resolution guarantee.
+        differences: []
+  claim:G5_retry_resolves_idempotently:
+    kind: claim
+    subject_id: G5_retry_resolves_idempotently
+    subject_signature: 4de2f993f8f17bed2c4ca4f1f34ea779b9742c617c58679585552ebc8ce7573e
+    roundtrip:
+      subject_signature: 4de2f993f8f17bed2c4ca4f1f34ea779b9742c617c58679585552ebc8ce7573e
+      status: TRANSLATED
+      natural_language: 'All of the following requirements hold conjunctively. The full idempotency key is the pair (document_id,
+        client_change_id). References to semantic contracts supply vocabulary and relations; their entire formulas are not
+        additional conjuncts of this proposition. For every authoritative state s and every idempotency key k, if s is reachable
+        under the canonical server protocol and failure model and k is within the 30-day normal retry eligibility horizon
+        in s, then s contains at most one durable terminal result for k; if k has an ACCEPTED terminal outcome in s, canonical
+        accepted history contains the matching acceptance for k and no incompatible REJECTED outcome exists; if k has a REJECTED
+        terminal outcome in s, canonical accepted history contains no canonical acceptance for k; and, once a terminal outcome
+        for k has linearized, later acceptance or definitive-rejection attempts preserve that same single-valued outcome.
+        For every terminal-result record t, if t is an authoritative ACCEPTED(canonical result) outcome and is still within
+        the 30-day normal retry eligibility horizon in which producer provenance must be retained, there exists a canonical
+        acceptance a that is committed in authoritative accepted history, whose authoritative idempotency key equals the full
+        key carried by t, and such that t stores the canonical result produced by the same acceptance execution that produced
+        a. An extensionally equal result from another producer does not satisfy this binding. For every protocol transition
+        x and every pair of terminal-result records before and after, if x is an authoritative lifecycle representation change
+        within the normal retry eligibility horizon that preserves one already-linearized ACCEPTED logical terminal outcome
+        from before to after, with the same full idempotency identity in both representations and with possible changes to
+        the durable physical representation, then there exists a canonical acceptance a committed in authoritative accepted
+        history such that the full key of before equals the authoritative key of a, the full key of after equals that same
+        key of a, and both before and after store the canonical result produced by the same acceptance execution that produced
+        that same a. Extensionally equal results from another producer are insufficient. For every terminal-result record
+        t, if t is an authoritative REJECTED(definitive rejection reason) outcome, let d be the definitive rejection decision
+        from which t derives and let r be the exact submitted request for which d was produced. Then t and r carry exactly
+        the same full (document_id, client_change_id) identity, and whenever the definitive rejection reason depends on raw_edit
+        or base_revision, d uses those exact values from r. Here raw_edit is the submitted edit before server-side transformation
+        or rebase, and base_revision is the canonical authoring frontier declared by that request. For every terminal-result
+        record t, if t is a rejected terminal result whose definitive rejection reason depends on document or history state,
+        then the rejection decision d from which t derives is bound to authoritative rejection context for the same document
+        rather than unvalidated stale owner-local state. That authoritative context or evidence for d remains sufficient when
+        t linearizes, either because it is current or because a reason-specific guard, monotonicity argument, or revalidation
+        preserves the rejection truth. For every external terminal result x, if x is a definitive terminal result exposed
+        to a client after the corresponding authoritative terminal outcome has linearized, then x exactly reproduces the already-linearized
+        authoritative terminal outcome for the full idempotency key associated with x; attempt-local transient computations
+        cannot substitute a conflicting result. For every request r, if r is a normal submitted request representing one logical
+        edit within the 30-day normal retry eligibility horizon, then r preserves the same full request identity, raw_edit
+        semantics, and canonical authoring frontier for its logical operation, without cross-binding those coordinates from
+        another operation. For every protocol transition t and every idempotency key k, if t is an acceptance attempt or definitive-rejection
+        attempt for that exact full key k within the authoritative terminal-result protocol and the 30-day normal retry eligibility
+        horizon, then t arbitrates through the same single authoritative per-key terminal state used by every competing acceptance
+        and definitive-rejection attempt for k; no independent arbitration domain may decide a second terminal outcome. Post-expiry
+        resubmission is outside this implication''s attempt predicate. For every protocol transition t and every pair of terminal-result
+        records before and after, if t is an authoritative lifecycle representation rewrite within the 30-day normal retry
+        eligibility horizon from before to after for the same already-linearized logical terminal outcome and the same full
+        idempotency key, then t preserves that exact logical terminal outcome: for ACCEPTED, the exact canonical result is
+        preserved, and for REJECTED, the same definitive rejection reason is preserved. The durable physical representation
+        may change. For REJECTED, this preservation does not require retaining the same rejection-decision object or producer
+        when the exact request binding and required authoritative-context justification remain valid.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 4de2f993f8f17bed2c4ca4f1f34ea779b9742c617c58679585552ebc8ce7573e
+        verdict: EQUIVALENT
+        reason: Under the supplied predicate meanings and catalog definitions, the formula preserves retry identity, payload
+          and frontier coherence; reachable-state terminal uniqueness, exclusion and immutability; shared per-key arbitration;
+          acceptance producer binding across lifecycle rewrites; exact rejection-request binding and sufficient authoritative
+          context for state-dependent reasons; and faithful external terminal responses. Horizon boundaries and non-terminal
+          uncertainty are preserved without adding eventual observation or current-owner authorization requirements.
+        differences: []
+      strengthening:
+        subject_signature: 4de2f993f8f17bed2c4ca4f1f34ea779b9742c617c58679585552ebc8ce7573e
+        verdict: EQUIVALENT
+        reason: Under the supplied predicate meanings and catalog definitions, the formula preserves retry-horizon applicability,
+          full request identity and semantics, reachable-state terminal coherence, shared arbitration, acceptance-producer
+          preservation, rejection request and authoritative-context binding, immutable outcomes across lifecycle rewrites,
+          and faithful external terminal results. It imposes neither eventual observation nor current-owner authorization,
+          and adds no rejection-producer preservation requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 4de2f993f8f17bed2c4ca4f1f34ea779b9742c617c58679585552ebc8ce7573e
+        verdict: EQUIVALENT
+        reason: The rendering preserves full request identity, retry-horizon boundaries, single-valued terminal arbitration,
+          outcome immutability, acceptance producer binding, rejection request and authoritative-context binding, and faithful
+          external replay. Its lifecycle clauses preserve logical outcomes without adding rejection-producer retention. Under
+          the supplied vocabulary, uncertain attempts remain non-terminal, and neither proposition requires eventual terminal
+          observation.
+        differences: []
+  claim:G12_client_pending_state_tracks_unresolved_edits:
+    kind: claim
+    subject_id: G12_client_pending_state_tracks_unresolved_edits
+    subject_signature: be4a66d1f809d5762ba2a0c93da6a07a355cba8840a71d1f75338919d4107c3f
+    roundtrip:
+      subject_signature: be4a66d1f809d5762ba2a0c93da6a07a355cba8840a71d1f75338919d4107c3f
+      status: TRANSLATED
+      natural_language: The following requirements hold conjunctively. An exact logical-edit identity comprises both document_id
+        and client_change_id. Reachability refers to the normal client protocol, including restore, view switching, bookkeeping,
+        reconnect/resync, publication, and explicit terminal disposition; impossible states and transitions outside that lifecycle
+        are excluded where reachability is required. Terminalization means that the normal speculative lifecycle of the exact
+        identity has ended, and may be implemented by deletion or non-reactivatable archival state without a separately materialized
+        tombstone. For every client state s and exact logical-edit identity e, if s is reachable and e is active in client_pending_edits
+        in s, the pending representation in s remains bound to that edit's creation identity, preserving both document_id
+        and client_change_id without relabeling or cross-binding. For every client state s and overlay token o, if s is reachable
+        and o represents a retained unresolved acceptance-eligible logical edit within the normal retry/reconnect horizon
+        in s, the logical-edit identity represented by o remains active in client_pending_edits in s. For every client state
+        s and overlay token o, if s is reachable and s reflects retirement of pending edit o with authoritative accepted/reconciled
+        semantics, that retirement is sourced from canonical acceptance or equivalent authoritative accepted evidence for
+        the exact same full identity. For every client state s and exact logical-edit identity e, if s is exactly the user-visible
+        state atomically exposed by a normal foreground reconnect/reconciliation publication through response head H after
+        the authoritative reconciliation result classified e as ACCEPTED at canonical revision r with r <= H, and the reconciled
+        canonical state published through H contains that acceptance, then at that publication boundary e is absent from active
+        pending edits, has no retained normal-lifecycle speculative representation, has no exposed normal-lifecycle speculative
+        representation, and is classified as terminalized in s. These consequences hold at that boundary, not merely after
+        a later cleanup transition. For every protocol transition t and exact logical-edit identity e, if t occurs on a reachable
+        execution of the normal client speculative lifecycle and uses a non-acceptance terminal disposition to terminally
+        retire e's normal speculative lifecycle, the disposition consumed by t was produced for that same logical edit and
+        preserves its full document_id and client_change_id identity through routing and the destructive retirement sink.
+        A non-acceptance terminal disposition is an explicit lifecycle decision that ends an edit without claiming authoritative
+        acceptance, including expiry, abandonment, conflict resolution, manual resolution, or an equivalent path. For every
+        client state s and exact logical-edit identity e, if s is reachable and e is classified as terminalized in s, e is
+        not active in pending edits in s and has neither a retained nor an exposed normal-lifecycle speculative representation
+        in s. Also, for every pair of client states earlier and later and every exact logical-edit identity e, if both states
+        are reachable, later is reachable from earlier by one or more client-protocol transitions in the continuing client
+        lifecycle/history, and e is classified as terminalized in earlier, then e remains classified as terminalized in later
+        and is neither active in pending edits nor represented by any retained or exposed normal-lifecycle speculative representation
+        in later. Such later transitions include restore/reactivation, view switching, bookkeeping, reconnect/resync, and
+        publication. For every client state s and exact logical-edit identity e, if the normally participating client has
+        observed an authoritative externally terminal definitive REJECTED result for e before or atomically with visible state
+        s, then in s e is not active in pending edits, has neither a retained nor an exposed normal-lifecycle speculative
+        representation, and is classified as terminalized. An externally terminal result is exposed after its corresponding
+        authoritative terminal result has linearized. For every client state s and exact logical-edit identity e, if s is
+        a reachable client state exactly equal to the user-visible state published by a qualifying authoritative reconnect/reconciliation
+        through response head H after e was classified ACCEPTED at canonical revision r with r <= H, and the reconciled canonical
+        state published through H contains that acceptance, then at that publication state e is not active in pending edits,
+        has neither a retained nor an exposed normal-lifecycle speculative representation, and is classified as terminalized.
+        This implication does not require the publication to be foreground. Finally, for every client state s and every pair
+        of logical edits first and second, if s is reachable, both edits have been created as genuine logical client edits
+        in the continuing normal client protocol history represented by s, first and second are distinct logical edits, and
+        they belong to the same document namespace in which client_change_id uniqueness is required, then the client_change_id
+        assigned to first differs from the client_change_id assigned to second. Membership in that history includes edits
+        that are currently active, terminalized, or retained only in non-reactivatable archival/history state; retransmissions
+        of the same logical operation are retries of that edit rather than distinct logical edits. The referenced semantic
+        contracts supply vocabulary and relations; their entire formulas are not additionally conjoined to these requirements.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: be4a66d1f809d5762ba2a0c93da6a07a355cba8840a71d1f75338919d4107c3f
+        verdict: EQUIVALENT
+        reason: The formula preserves reachable-state coverage, full creation-identity binding, exact-identity acceptance
+          and non-acceptance retirement provenance, publication-boundary retirement for authoritative acceptance and definitive
+          rejection, and absorbing terminal closure. The additional authoritative-publication clause covers non-foreground
+          reconciliation, and same-document change-ID uniqueness expresses the source requirement that genuinely new edits
+          receive new identifiers.
+        differences: []
+      strengthening:
+        subject_signature: be4a66d1f809d5762ba2a0c93da6a07a355cba8840a71d1f75338919d4107c3f
+        verdict: EQUIVALENT
+        reason: The formula preserves reachable-state coverage, creation-identity binding, exact-identity retirement provenance,
+          accepted and rejected publication-boundary retirement, and absorbing terminal closure. The authoritative publication
+          clause captures the statement's scope beyond foreground reconciliation. Same-document identifier uniqueness expresses
+          the requirement that genuinely new edits receive new identifiers without imposing uniqueness across documents. No
+          additional cardinality or eventual-progress requirement is introduced.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: be4a66d1f809d5762ba2a0c93da6a07a355cba8840a71d1f75338919d4107c3f
+        verdict: EQUIVALENT
+        reason: The rendering preserves full-identity provenance, eligible retained-edit pending coverage, same-edit retirement
+          sources, publication-boundary acceptance and rejection terminalization, and absorbing lifecycle closure. Its additional
+          acceptance clause preserves non-foreground applicability, while historical identifier freshness expresses the source's
+          new-edit requirement within each document namespace. Archival retention and the absence of eventual-progress guarantees
+          remain preserved.
         differences: []
