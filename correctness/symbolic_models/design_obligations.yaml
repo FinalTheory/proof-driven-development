@@ -131,3 +131,522 @@ obligations:
                 args:
                 - var: earlier
                 - var: later
+  speculative_representation_preserves_creation_identity_and_operation:
+    description: 'Historical regression for cross-document relabeling and speculative-payload
+      substitution: retained or exposed speculative state must preserve both the logical
+      edit creation identity and the semantic optimistic operation it represents.'
+    statement: Every retained or user-visible speculative representation that continues
+      to represent a logical client edit preserves that same edit’s full creation identity
+      (document_id, client_change_id) and its semantic optimistic operation; relabeling
+      the representation or substituting another edit’s operation is invalid even when
+      current scalar values or rendered effects happen to match.
+    source_refs:
+    - reconnect_revision_boundary
+    coverage_scope: all_roots
+    claims: []
+    assumptions: []
+    contracts: []
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          o: Overlay
+        body:
+          implies:
+          - or:
+            - call:
+                fn: retained_overlay
+                args:
+                - var: s
+                - var: o
+            - call:
+                fn: visible_overlay
+                args:
+                - var: s
+                - var: o
+          - and:
+            - call:
+                fn: speculative_identity_provenance_ok
+                args:
+                - var: s
+                - var: o
+            - call:
+                fn: speculative_operation_provenance_ok
+                args:
+                - var: s
+                - var: o
+  canonical_append_uses_document_scoped_current_owner_generation:
+    description: 'Historical regression for stale-owner epoch substitution and cross-document
+      generation aliasing: canonical append authority must come from the exact current
+      generation of the target document.'
+    statement: Every canonical accepted-history append for document D is authorized
+      by the exact current document-scoped owner generation for D, including its epoch
+      and immutable generation identity; a superseded generation cannot regain authority
+      by copying newer scalar credentials, and an equal tuple belonging to another document
+      does not authorize the append.
+    source_refs:
+    - owner_failover
+    coverage_scope: all_roots
+    claims: []
+    assumptions: []
+    contracts: []
+    formula:
+      forall:
+        vars:
+          t: ProtocolTransition
+          d: Document
+        body:
+          implies:
+          - call:
+              fn: canonical_append_for_document
+              args:
+              - var: t
+              - var: d
+          - call:
+              fn: append_uses_exact_current_document_generation
+              args:
+              - var: t
+              - var: d
+  terminal_outcome_is_single_mutually_exclusive_and_immutable:
+    description: Historical regression for overlapping ACCEPTED versus definitive REJECTED
+      races on one idempotency identity.
+    statement: For every reachable authoritative state and in-horizon idempotency key,
+      there is at most one durable terminal outcome; ACCEPTED is coherent with a matching
+      canonical acceptance, REJECTED excludes canonical acceptance for that key, and
+      once either terminal outcome linearizes later attempts cannot flip it.
+    source_refs:
+    - accepted_change_log
+    coverage_scope: all_roots
+    claims: []
+    assumptions: []
+    contracts: []
+    formula:
+      forall:
+        vars:
+          s: AuthoritativeState
+          k: IdempotencyKey
+        body:
+          implies:
+          - and:
+            - call:
+                fn: reachable_authoritative_state
+                args:
+                - var: s
+            - call:
+                fn: terminal_key_within_retry_horizon
+                args:
+                - var: s
+                - var: k
+          - and:
+            - call:
+                fn: at_most_one_terminal_outcome_for_key
+                args:
+                - var: s
+                - var: k
+            - call:
+                fn: accepted_terminal_outcome_matches_canonical_acceptance
+                args:
+                - var: s
+                - var: k
+            - call:
+                fn: rejected_terminal_outcome_excludes_canonical_acceptance
+                args:
+                - var: s
+                - var: k
+            - call:
+                fn: terminal_outcome_is_immutable
+                args:
+                - var: s
+                - var: k
+  recovery_sources_preserve_target_document:
+    description: Historical regression for cross-document recovery substitution hidden
+      by extensionally equal checkpoints or tails.
+    statement: For every new-owner recovery after its authoritative recovery head is
+      captured, the recovery target, captured authoritative head, selected checkpoint,
+      replayed canonical tail, rebuilt logical/OT runtime state, and resumed owner context
+      remain bound to the same document; authoritative objects from another document
+      are not interchangeable merely because their frontier, bytes, replay result, or
+      metadata are equal.
+    source_refs:
+    - snapshot_frontier
+    - owner_failover
+    coverage_scope: all_roots
+    claims: []
+    assumptions: []
+    contracts: []
+    formula:
+      forall:
+        vars:
+          r: RecoveryAttempt
+        body:
+          implies:
+          - call:
+              fn: recovery_head_capture_event
+              args:
+              - var: r
+          - call:
+              fn: recovery_sources_preserve_document_scope
+              args:
+              - call:
+                  fn: recovery_target_document
+                  args:
+                  - var: r
+              - var: r
+  live_delivery_preserves_committed_document_provenance:
+    description: Historical regression for a WebSocket routing error that substitutes
+      an equal committed record from another document.
+    statement: Every change exposed through a document’s live stream originates from
+      a committed canonical acceptance for that same document and preserves that acceptance’s
+      document scope, canonical payload, and revision provenance; an equally-valued
+      committed acceptance from another document cannot be substituted.
+    source_refs:
+    - authoritative_truth
+    - reconnect_revision_boundary
+    coverage_scope: all_roots
+    claims: []
+    assumptions: []
+    contracts: []
+    formula:
+      forall:
+        vars:
+          d: LiveDelivery
+        body:
+          implies:
+          - call:
+              fn: live_delivery_record
+              args:
+              - var: d
+          - exists:
+              vars:
+                a: CanonicalAcceptance
+              body:
+                and:
+                - call:
+                    fn: committed_history_record
+                    args:
+                    - var: a
+                - call:
+                    fn: live_delivery_originates_from
+                    args:
+                    - var: d
+                    - var: a
+                - call:
+                    fn: live_delivery_preserves_payload_revision
+                    args:
+                    - var: d
+                    - var: a
+                - call:
+                    fn: live_delivery_preserves_document_scope
+                    args:
+                    - var: d
+                    - var: a
+  rejected_terminal_result_preserves_request_provenance:
+    description: Historical regression for routing a legitimate rejection decision from
+      one logical request into another key’s authoritative REJECTED outcome.
+    statement: Every in-horizon authoritative REJECTED terminal result derives from
+      a definitive rejection decision produced for the exact same submitted request
+      identity, and any raw_edit/base_revision values on which the reason depends come
+      from that same bound request.
+    source_refs:
+    - accepted_change_log
+    coverage_scope: all_roots
+    claims: []
+    assumptions: []
+    contracts: []
+    formula:
+      forall:
+        vars:
+          t: TerminalResultRecord
+        body:
+          implies:
+          - and:
+            - call:
+                fn: rejected_terminal_result_record
+                args:
+                - var: t
+            - call:
+                fn: rejected_terminal_result_within_retry_horizon
+                args:
+                - var: t
+          - and:
+            - call:
+                fn: rejected_terminal_identity_matches_request
+                args:
+                - var: t
+                - call:
+                    fn: rejection_decision_submitted_request
+                    args:
+                    - call:
+                        fn: terminal_result_rejection_decision
+                        args:
+                        - var: t
+            - call:
+                fn: rejection_context_values_match_request
+                args:
+                - call:
+                    fn: terminal_result_rejection_decision
+                    args:
+                    - var: t
+                - call:
+                    fn: rejection_decision_submitted_request
+                    args:
+                    - call:
+                        fn: terminal_result_rejection_decision
+                        args:
+                        - var: t
+  submitted_request_preserves_logical_edit_tuple:
+    description: Historical regression for preserving (document_id, client_change_id,
+      base_revision) while silently serializing another logical edit as raw_edit.
+    statement: 'Every normal server-visible submitted request within the retry eligibility
+      horizon presents one coherent logical-operation tuple: full request identity,
+      raw_edit semantics, and canonical authoring frontier are bound to the same logical
+      edit rather than cross-bound from another operation.'
+    source_refs:
+    - ot_input_output
+    - accepted_change_log
+    coverage_scope: all_roots
+    claims: []
+    assumptions: []
+    contracts: []
+    formula:
+      forall:
+        vars:
+          r: Request
+        body:
+          implies:
+          - call:
+              fn: normal_retry_submitted_request
+              args:
+              - var: r
+          - call:
+              fn: retry_request_identity_payload_frontier_coherent
+              args:
+              - var: r
+  accepted_terminal_result_preserves_acceptance_producer:
+    description: Historical regression for storing ACCEPTED(canonical_result) from a
+      different acceptance execution even when key, transaction boundary, payload, and
+      revision are extensionally equal.
+    statement: Every in-horizon authoritative ACCEPTED terminal result for a full idempotency
+      key is bound to a committed canonical acceptance for that same key and stores
+      the canonical result produced by the same acceptance execution that produced and
+      committed that acceptance; an extensionally equal result from another producer
+      is insufficient.
+    source_refs:
+    - accepted_change_log
+    coverage_scope: all_roots
+    claims: []
+    assumptions: []
+    contracts: []
+    formula:
+      forall:
+        vars:
+          t: TerminalResultRecord
+        body:
+          implies:
+          - and:
+            - call:
+                fn: accepted_terminal_result_record
+                args:
+                - var: t
+            - call:
+                fn: accepted_terminal_result_within_retry_horizon
+                args:
+                - var: t
+          - exists:
+              vars:
+                a: CanonicalAcceptance
+              body:
+                and:
+                - call:
+                    fn: committed_canonical_acceptance
+                    args:
+                    - var: a
+                - eq:
+                  - call:
+                      fn: terminal_result_idempotency_key
+                      args:
+                      - var: t
+                  - call:
+                      fn: acceptance_key
+                      args:
+                      - var: a
+                - call:
+                    fn: terminal_result_bound_to_acceptance_execution
+                    args:
+                    - var: t
+                    - var: a
+  non_acceptance_retirement_preserves_disposition_identity:
+    description: Historical regression for cross-binding an abandonment/expiry/conflict/manual-resolution
+      disposition from one edit into another edit’s destructive speculative retirement.
+    statement: Whenever a reachable client transition uses an explicit non-acceptance
+      terminal disposition to retire a logical edit’s normal speculative lifecycle,
+      the consumed disposition was produced for that exact same full logical edit identity
+      and preserves that identity through routing and the destructive retirement sink.
+    source_refs:
+    - reconnect_revision_boundary
+    coverage_scope: all_roots
+    claims: []
+    assumptions: []
+    contracts: []
+    formula:
+      forall:
+        vars:
+          t: ProtocolTransition
+          e: LogicalEditIdentity
+        body:
+          implies:
+          - and:
+            - call:
+                fn: reachable_client_protocol_transition
+                args:
+                - var: t
+            - call:
+                fn: non_acceptance_retirement_transition
+                args:
+                - var: t
+                - var: e
+          - call:
+              fn: non_acceptance_disposition_preserves_edit_identity
+              args:
+              - var: t
+              - var: e
+  state_dependent_rejection_uses_authoritative_context:
+    description: Historical regression for a superseded owner terminalizing a state-dependent
+      definitive rejection from stale owner-local document/OT state.
+    statement: Every in-horizon authoritative REJECTED result whose reason depends on
+      document or history state derives from same-document authoritative rejection context,
+      and that context or evidence remains sufficient when the terminal result linearizes;
+      stale unvalidated owner-local state is not enough.
+    source_refs:
+    - accepted_change_log
+    - owner_failover
+    coverage_scope: all_roots
+    claims: []
+    assumptions: []
+    contracts: []
+    formula:
+      forall:
+        vars:
+          t: TerminalResultRecord
+        body:
+          implies:
+          - and:
+            - call:
+                fn: state_dependent_rejected_terminal_result
+                args:
+                - var: t
+            - call:
+                fn: rejected_terminal_result_within_retry_horizon
+                args:
+                - var: t
+          - and:
+            - call:
+                fn: rejection_decision_has_authoritative_context
+                args:
+                - call:
+                    fn: terminal_result_rejection_decision
+                    args:
+                    - var: t
+            - call:
+                fn: rejection_context_sufficient_at_terminalization
+                args:
+                - var: t
+                - call:
+                    fn: terminal_result_rejection_decision
+                    args:
+                    - var: t
+  visible_speculative_effect_is_unique:
+    description: Historical regression for two provenance-correct physical overlays
+      of one unresolved logical edit contributing the optimistic operation twice to
+      user-visible composition.
+    statement: In every user-visible client state, each logical edit identity contributes
+      at most one effective speculative operation to the rendered document. Multiple
+      physical representations are allowed only when projection/composition prevents
+      duplicate semantic contribution.
+    source_refs:
+    - reconnect_revision_boundary
+    coverage_scope: all_roots
+    claims: []
+    assumptions: []
+    contracts: []
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          o: Overlay
+        body:
+          implies:
+          - call:
+              fn: visible_overlay
+              args:
+              - var: s
+              - var: o
+          - call:
+              fn: single_effective_speculative_contribution
+              args:
+              - var: s
+              - var: o
+  terminal_speculative_lifecycle_is_absorbing:
+    description: Historical regression for a terminally abandoned/reconciled edit reappearing
+      through restore, reactivation, view switching, bookkeeping, or resync publication.
+    statement: Once an exact logical edit identity is terminalized in a reachable client
+      state, every later reachable state in the continuing client lifecycle keeps that
+      lifecycle terminalized and prevents it from becoming active again in pending,
+      retained speculative, or visible speculative state.
+    source_refs:
+    - reconnect_revision_boundary
+    coverage_scope: all_roots
+    claims: []
+    assumptions: []
+    contracts: []
+    formula:
+      forall:
+        vars:
+          earlier: ClientState
+          later: ClientState
+          e: LogicalEditIdentity
+        body:
+          implies:
+          - and:
+            - call:
+                fn: reachable_client_state
+                args:
+                - var: earlier
+            - call:
+                fn: reachable_client_state
+                args:
+                - var: later
+            - call:
+                fn: later_reachable_client_state
+                args:
+                - var: earlier
+                - var: later
+            - call:
+                fn: terminalized_speculative_identity
+                args:
+                - var: earlier
+                - var: e
+          - and:
+            - call:
+                fn: terminalized_speculative_identity
+                args:
+                - var: later
+                - var: e
+            - not:
+                call:
+                  fn: pending_identity_active
+                  args:
+                  - var: later
+                  - var: e
+            - not:
+                call:
+                  fn: retained_speculative_identity_active
+                  args:
+                  - var: later
+                  - var: e
+            - not:
+                call:
+                  fn: visible_speculative_identity_active
+                  args:
+                  - var: later
+                  - var: e

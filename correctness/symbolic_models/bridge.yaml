@@ -6,6 +6,7 @@ sorts:
 - Overlay
 - LogicalEditIdentity
 - Request
+- CatchupAttempt
 - CatchupResponse
 - AuthoritativeState
 - CanonicalAcceptance
@@ -358,6 +359,7 @@ functions:
     meaning: Live delivery d originates from acceptance record a as its accepted-history source; this relation alone does not assert that a is committed or that every payload/revision field is preserved exactly.
     semantic_anchors:
     - contract:live_delivery_acceptance_binding
+    - source:authoritative_truth
   live_delivery_preserves_payload_revision:
     args:
     - LiveDelivery
@@ -367,6 +369,19 @@ functions:
     meaning: Live delivery d preserves acceptance record a's canonical payload and revision provenance exactly; whether a is committed is expressed separately by committed_history_record(a).
     semantic_anchors:
     - contract:live_delivery_acceptance_binding
+    - source:authoritative_truth
+  live_delivery_preserves_document_scope:
+    args:
+    - LiveDelivery
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    meaning: Live delivery d is consumed on the same document-scoped stream as the committed canonical acceptance a from which it originates; an equally-valued acceptance from another document cannot satisfy this relation.
+    semantic_anchors:
+    - contract:live_delivery_acceptance_binding
+    - source:authoritative_truth
+    - source:reconnect_revision_boundary
+
   recovery_head_capture_event:
     args:
     - RecoveryAttempt
@@ -375,6 +390,8 @@ functions:
     meaning: Recovery attempt r has reached the new-owner recovery-head capture event after epoch handoff, at which it reads the authoritative frontier and binds recovery_head.
     semantic_anchors:
     - contract:recovery_head_binding
+    - contract:recovery_document_scope_binding
+    - source:owner_failover
   captured_recovery_authoritative_head:
     args:
     - RecoveryAttempt
@@ -396,6 +413,36 @@ functions:
     catalog_symbols:
     - recovery_head
     meaning: The same captured recovery_head governs checkpoint selection, exact tail replay, recovered metadata reconstruction, and acceptance resumption for recovery attempt r.
+  recovery_target_document:
+    args:
+    - RecoveryAttempt
+    returns: Document
+    catalog_symbols: []
+    meaning: The target document identity bound to recovery attempt r.
+    semantic_anchors:
+    - contract:recovery_document_scope_binding
+    - source:owner_failover
+  recovery_sources_preserve_document_scope:
+    args:
+    - Document
+    - RecoveryAttempt
+    returns: Bool
+    catalog_symbols:
+    - document_current_epoch
+    - document_owner_generation_id
+    - recovery_head
+    - snapshot_content_with_snapshot_revision
+    - accepted_change_log
+    - recovered_owner_runtime_state
+    dimensions:
+    - document
+    - observation
+    meaning: For recovery attempt r targeting document d, the authoritative owner context, captured head, selected authoritative checkpoint, replayed canonical tail, rebuilt logical and OT runtime state, and resumed owner context all preserve d as the same document identity; an extensionally equal checkpoint or tail from another document cannot satisfy this relation.
+    semantic_anchors:
+    - contract:recovery_document_scope_binding
+    - source:snapshot_frontier
+    - source:owner_failover
+
   acceptance_capable_transition:
     args:
     - ProtocolTransition
@@ -1099,6 +1146,7 @@ functions:
     meaning: Accepted terminal result t is still within the 30-day normal retry eligibility horizon in which producer provenance must be retained.
     semantic_anchors:
     - contract:accepted_terminal_result_binding
+    - source:accepted_change_log
   terminal_result_bound_to_acceptance_execution:
     args:
     - TerminalResultRecord
@@ -1142,6 +1190,7 @@ functions:
     semantic_anchors:
     - contract:definitive_rejection_request_binding
     - contract:state_dependent_rejection_context_binding
+    - source:accepted_change_log
   terminal_result_rejection_decision:
     args:
     - TerminalResultRecord
@@ -1192,6 +1241,7 @@ functions:
     meaning: Idempotency key k is within the 30-day normal retry eligibility horizon in authoritative state s.
     semantic_anchors:
     - contract:idempotency_terminal_outcome_coherence
+    - source:accepted_change_log
   at_most_one_terminal_outcome_for_key:
     args:
     - AuthoritativeState
@@ -1337,6 +1387,8 @@ functions:
     meaning: The authoritative context/evidence for decision d remains sufficient when terminal result t linearizes, either because it is current or because a reason-specific guard, monotonicity argument, or revalidation preserves the rejection truth.
     semantic_anchors:
     - contract:state_dependent_rejection_context_binding
+    - source:accepted_change_log
+    - source:owner_failover
   externally_terminal_result_record:
     args:
     - ExternalTerminalResult
@@ -1427,7 +1479,7 @@ functions:
     - assumption:A2_ot_engine_is_correct
   foreground_catchup_attempt:
     args:
-    - CatchupResponse
+    - CatchupAttempt
     returns: Bool
     catalog_symbols:
     - last_applied_revision
@@ -1436,7 +1488,7 @@ functions:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
   catchup_eligible_for_completion_or_publication:
     args:
-    - CatchupResponse
+    - CatchupAttempt
     returns: Bool
     catalog_symbols: []
     meaning: Catch-up attempt c is eligible for completion or foreground publication under the reconnect/catch-up protocol.
@@ -1444,7 +1496,7 @@ functions:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
   catchup_head_captured_from_authoritative_latest:
     args:
-    - CatchupResponse
+    - CatchupAttempt
     returns: Bool
     catalog_symbols:
     - document_latest_revision
@@ -1453,7 +1505,7 @@ functions:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
   catchup_head_preserved_to_publication:
     args:
-    - CatchupResponse
+    - CatchupAttempt
     returns: Bool
     catalog_symbols: []
     meaning: The response-specific head captured for c is preserved unchanged through response selection, reconciliation, completion, and any publication.
@@ -1461,15 +1513,23 @@ functions:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
   catchup_visible_document_binding_uninterrupted:
     args:
-    - CatchupResponse
+    - CatchupAttempt
     returns: Bool
     catalog_symbols: []
     meaning: The visible-document binding for catch-up attempt c remains uninterrupted from start through publication eligibility.
     semantic_anchors:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
+  catchup_foreground_publication_eligible:
+    args:
+    - CatchupAttempt
+    returns: Bool
+    catalog_symbols: []
+    meaning: Catch-up attempt c remains eligible to publish to the foreground user-visible canonical state under the current visible-document binding; this predicate is specifically publication eligibility and does not assert completion eligibility.
+    semantic_anchors:
+    - claim:G4_reconnect_converges_without_gap_or_duplicate
   catchup_attempt_publishes:
     args:
-    - CatchupResponse
+    - CatchupAttempt
     returns: Bool
     catalog_symbols: []
     meaning: Catch-up attempt c completes and publishes its reconciled result to the user-visible canonical state.
@@ -1477,7 +1537,7 @@ functions:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
   catchup_published_state_is_exact_replay_through_head:
     args:
-    - CatchupResponse
+    - CatchupAttempt
     returns: Bool
     catalog_symbols: []
     meaning: If c publishes, the user-visible canonical state equals canonical replay of that same document through c captured response head with no omitted or double-applied accepted revision through H.
@@ -1485,7 +1545,7 @@ functions:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
   catchup_publication_is_atomic_and_non_regressing:
     args:
-    - CatchupResponse
+    - CatchupAttempt
     returns: Bool
     catalog_symbols: []
     meaning: Any user-visible publication effect of catch-up attempt c is one atomic publication transition with no intermediate candidate prefix exposed; additionally, any response of c whose head H is below the already-visible canonical frontier cannot regress or otherwise mutate that visible canonical/frontier state.
@@ -1493,7 +1553,7 @@ functions:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
   catchup_excludes_acceptances_after_captured_head:
     args:
-    - CatchupResponse
+    - CatchupAttempt
     returns: Bool
     catalog_symbols: []
     meaning: Acceptances that occur after c response head was captured are outside c response rather than being partially mixed into that response.
@@ -1501,7 +1561,7 @@ functions:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
   catchup_binding_break_permanently_blocks_publication:
     args:
-    - CatchupResponse
+    - CatchupAttempt
     returns: Bool
     catalog_symbols: []
     meaning: If the user-visible document switches away before publication, c permanently loses foreground publication eligibility and cannot later publish merely because the user switches back.
@@ -2194,15 +2254,18 @@ claims:
   G3_snapshot_and_recovery_preserve_state:
     contracts:
     - logical_state_equivalence_at_frontier
+    - recovery_document_scope_binding
     capability: relational
     formula_from_contracts: true
   G4_reconnect_converges_without_gap_or_duplicate:
-    contracts: []
+    contracts:
+    - live_delivery_acceptance_binding
     capability: relational
-    formula:
+    formula_from_contracts: true
+    residual_formula:
       forall:
         vars:
-          c: CatchupResponse
+          c: CatchupAttempt
         body:
           implies:
           - call:
@@ -2218,6 +2281,15 @@ claims:
                 fn: catchup_publication_is_atomic_and_non_regressing
                 args:
                 - var: c
+            - implies:
+              - call:
+                  fn: catchup_foreground_publication_eligible
+                  args:
+                  - var: c
+              - call:
+                  fn: catchup_visible_document_binding_uninterrupted
+                  args:
+                  - var: c
             - implies:
               - call:
                   fn: catchup_eligible_for_completion_or_publication
@@ -2804,6 +2876,31 @@ contracts:
                     args:
                     - var: d
                     - var: a
+                - call:
+                    fn: live_delivery_preserves_document_scope
+                    args:
+                    - var: d
+                    - var: a
+  recovery_document_scope_binding:
+    class: provenance_binding
+    formula:
+      forall:
+        vars:
+          r: RecoveryAttempt
+        body:
+          implies:
+          - call:
+              fn: recovery_head_capture_event
+              args:
+              - var: r
+          - call:
+              fn: recovery_sources_preserve_document_scope
+              args:
+              - call:
+                  fn: recovery_target_document
+                  args:
+                  - var: r
+              - var: r
   recovery_head_binding:
     class: provenance_binding
     formula:

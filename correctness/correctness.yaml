@@ -192,11 +192,11 @@ refinement:
     G3_snapshot_and_recovery_preserve_state:
       status: stable
       blocked_by: []
-      signature: 863c4e87e197279a7378179d1ccfa496879dd495cd5cdf3a2372d547ec81bfdb
+      signature: e1a64fec0b540ee9d78d2cc44c4f42345049ce6cf5a42a18935d60281f389ef0
     G4_reconnect_converges_without_gap_or_duplicate:
       status: stable
       blocked_by: []
-      signature: aa131dbbc92d304ed346fe6bf6ecdab98ddf47484acce131df42baa767984aea
+      signature: c41d20f6e47b9103ffb1d97682292e306261c55220ba6c3731b861c0af32353a
     G5_retry_resolves_idempotently:
       status: stable
       blocked_by: []
@@ -212,7 +212,7 @@ refinement:
     C9_recovery_reconstructs_committed_state:
       status: stable
       blocked_by: []
-      signature: 270935fd75c5283e0bb4220c85b4bc28c16ae638692084117a648b4631e078bd
+      signature: 4045bcc168bfd759433a383ced18b2b46138727f3b21a51344ce4696cccb49cb
     C10_catchup_represents_exact_missing_suffix:
       status: stable
       blocked_by: []
@@ -356,7 +356,7 @@ refinement:
     C25_recovery_derives_complete_ot_metadata_from_truth:
       status: stable
       blocked_by: []
-      signature: 399e11a9cc3fac7488f455da10d8ccefbb81499019fc7869c97e627fd81b4b24
+      signature: 4540d5d66df1bb9deedd9f578ad1813febd61f69bb982d754370bb9575187fc4
     L64_recovered_ot_metadata_equals_clean_authoritative_reconstruction:
       status: stable
       blocked_by: []
@@ -652,7 +652,7 @@ refinement:
     L172_snapshot_compaction_preserves_concurrent_append_suffix:
       status: stable
       blocked_by: []
-      signature: 9610e96757a7b5f5ba806a897d54aa0c1cc0f92379d888fc10971d38307e91c2
+      signature: 238047d39ebe748c3bcd0faeb3ffb559a84cb7476822e24137d13aab4454a82d
     L173_optimized_lifecycle_representation_resumes_only_through_recovery:
       status: stable
       blocked_by: []
@@ -660,7 +660,7 @@ refinement:
     L174_recovery_inputs_and_state_are_document_bound:
       status: stable
       blocked_by: []
-      signature: 78bacf2f7ce83cab2d8bbee49bdb78f5bc6ce0d4c662d4017b34f96f8d21731d
+      signature: d28cbfc46fd1a19a14a052bffea203feec682436012ce09970cf0d30a3d78bf8
     L176_visible_speculative_overlay_is_backed_by_retained_state:
       status: stable
       blocked_by: []
@@ -898,7 +898,14 @@ claims:
     statement: >-
       Every optimized authoritative lifecycle representation at a common frontier H—including snapshotting,
       checkpoint replacement, cleanup, and compaction—and every completed owner recovery satisfy the logical_state_equivalence_at_frontier
-      semantic contract relative to canonical accepted history.
+      semantic contract relative to canonical accepted history. For every new-owner recovery that has
+      captured
+      its authoritative recovery head for target document D, recovery_document_scope_binding also holds
+      across
+      the authoritative owner context, captured head, selected checkpoint, replayed canonical tail, rebuilt
+      logical/OT runtime state, and resumed owner context: extensionally equal authoritative objects from
+      D2 != D
+      cannot substitute for D's recovery inputs or installed state.
     depends_on:
       - C9_recovery_reconstructs_committed_state
       - C16_non_append_lifecycle_preserves_logical_revision_prefix
@@ -911,6 +918,7 @@ claims:
       - final_architecture
     semantic_contracts:
       - logical_state_equivalence_at_frontier
+      - recovery_document_scope_binding
   G4_reconnect_converges_without_gap_or_duplicate:
     kind: root
     statement: >-
@@ -928,7 +936,11 @@ claims:
       attempts: no intermediate candidate prefix is user-visible, and a response whose H is below the
       already visible canonical frontier cannot regress or otherwise mutate that visible canonical/frontier
       state. Acceptances after H capture are outside that response; this claim does not require catching
-      a continuously advancing live head.
+      a continuously advancing live head. Independently of catch-up mode, every change exposed through
+      websocket_live_stream for document D satisfies live_delivery_acceptance_binding: it originates from
+      committed accepted history for that same D and preserves the canonical payload and revision provenance
+      of its committed acceptance source; an extensionally equal acceptance from another document cannot
+      substitute for D.
     depends_on:
       - C10_catchup_represents_exact_missing_suffix
       - L19_client_applies_only_contiguous_revisions
@@ -948,6 +960,8 @@ claims:
       - owner_failover
       - raft_analogy
       - final_architecture
+    semantic_contracts:
+      - live_delivery_acceptance_binding
   G5_retry_resolves_idempotently:
     kind: root
     statement: >-
@@ -1058,15 +1072,22 @@ claims:
   C9_recovery_reconstructs_committed_state:
     kind: derived
     statement: >-
-      For a new-owner recovery target document D that completes at authoritative frontier H, recovery_document_scope_binding
-      holds: the ownership context, captured head H, selected checkpoint, replayed canonical tail, and
-      installed recovered runtime state all belong to the same D. The recovered logical document state
-      equals deterministic canonical replay of D's accepted revisions through H and the recovered service
-      frontier is H. If that recovered owner is used to resume acceptance, every document-history-dependent
-      runtime state value that can influence server-side OT transformation or canonical acceptance is
-      equivalent to a clean reconstruction from D's authoritative canonical history through H, so resumed
-      canonical semantics are unchanged. A recovery attempt may crash or abort before completion without
-      any progress obligation.
+      In this model, owner recovery/reconstruction that establishes or resumes an authoritative owner
+      generation is recovery for a fresh owner generation: owner-identity change, cold takeover, warm
+      promotion, and same-owner restart/reacquisition all install a strictly newer epoch and fresh owner
+      generation before or atomically with becoming authoritative or acceptance-eligible, and they use
+      the same reconstruction boundary. For every such recovery targeting document D that has captured
+      its authoritative recovery_head, recovery_document_scope_binding holds: the ownership context, captured
+      head, selected checkpoint, replayed canonical tail, rebuilt logical/OT runtime state, installed
+      recovered state, and any resumed owner context remain bound to the same D. If that recovery completes
+      at authoritative frontier H, the recovered logical document state equals deterministic canonical
+      replay of D's accepted revisions through H and the recovered service frontier is H. If that recovered
+      owner is used to resume acceptance, every document-history-dependent runtime state value that can
+      influence server-side OT transformation or canonical acceptance is equivalent to a clean reconstruction
+      from D's authoritative canonical history through H, so resumed canonical semantics are unchanged.
+      A recovery attempt may crash or abort before completion without any progress obligation, but crash
+      or abort does not relax the document-provenance binding for recovery inputs or state already selected
+      or constructed after head capture.
     depends_on:
       - L8_snapshot_is_exact_committed_prefix
       - L10_replay_covers_exact_tail_in_order_once
@@ -1080,6 +1101,8 @@ claims:
       - L131_post_recovery_acceptance_state_is_exhaustive
       - C8_stale_owner_is_fenced
       - L174_recovery_inputs_and_state_are_document_bound
+      - L156_owner_handoff_installs_fresh_epoch
+      - L168_owner_handoff_installs_fresh_generation
     source_refs:
       - authoritative_truth
       - snapshot_frontier
@@ -3827,13 +3850,14 @@ claims:
             identity and terminal variant/value are preserved without aliasing or loss.
     kind: leaf
   L172_snapshot_compaction_preserves_concurrent_append_suffix:
-    statement: For every authoritative snapshotting or compaction lifecycle procedure that overlaps
-      one or more canonical accepted-change appends, let H be document_latest_revision after all
-      canonical appends that committed before that lifecycle procedure completes. The completed
-      authoritative representation preserves document_latest_revision = H and denotes exactly the
-      same logical document state as deterministic canonical replay through H; no canonical accepted
-      suffix committed during the overlap is deleted, omitted, rewritten, or double-applied by
-      snapshot publication or compaction. Canonical appends that commit only after the lifecycle
+    statement: For every authoritative snapshotting, checkpoint-replacement, cleanup, or compaction
+      lifecycle procedure that overlaps one or more canonical accepted-change appends, let H be
+      document_latest_revision after all canonical appends that committed before that lifecycle
+      procedure completes. The completed authoritative representation preserves
+      document_latest_revision = H and denotes exactly the same logical document state as
+      deterministic canonical replay through H; no canonical accepted suffix committed during the
+      overlap is deleted, omitted, rewritten, or double-applied by snapshot publication, checkpoint
+      replacement, cleanup, or compaction. Canonical appends that commit only after the lifecycle
       procedure completes are outside this transition's post-state.
     source_refs:
       - authoritative_truth
@@ -3848,14 +3872,15 @@ claims:
     verification:
       verifiers:
         - kind: state_machine
-          intent: Interleave snapshot publication/compaction steps with one or more canonical append
-            commits; at lifecycle completion capture authoritative H and require frontier H plus
-            exact logical equivalence to independent replay through H, preserving every concurrently
-            committed suffix revision exactly once.
+          intent: Interleave snapshot publication, checkpoint replacement, cleanup, and compaction
+            steps with one or more canonical append commits; at each lifecycle completion capture
+            authoritative H and require frontier H plus exact logical equivalence to independent
+            replay through H, preserving every concurrently committed suffix revision exactly once.
         - kind: fault_injection
-          intent: Pause lifecycle work around checkpoint publication, pointer swap, and cleanup
-            while accepted edits commit; completion must not regress the frontier or lose,
-            duplicate, or rewrite any append committed before the lifecycle operation completes.
+          intent: Pause lifecycle work around snapshot publication, checkpoint replacement/pointer
+            swap, cleanup, and compaction while accepted edits commit; completion must not regress
+            the frontier or lose, duplicate, rewrite, or double-apply any append committed before
+            the lifecycle operation completes.
     kind: leaf
   L173_optimized_lifecycle_representation_resumes_only_through_recovery:
     statement: An authoritative snapshot publication or compaction transition never directly
@@ -3886,12 +3911,15 @@ claims:
             non-accepting until completed recovery through its bound authoritative frontier.
     kind: leaf
   L174_recovery_inputs_and_state_are_document_bound:
-    statement: 'recovery_document_scope_binding holds for every completed new-owner recovery: for recovery
-      target document D, the authoritative owner/epoch context, captured recovery_head, selected checkpoint,
-      every canonical tail entry consumed by replay, and the installed recovered_owner_runtime_state are
-      all document-scoped to the same D. A checkpoint, history entry, head, or runtime state from D2 !=
-      D cannot satisfy the recovery merely because its frontier, payload, logical state, or reconstructed
-      metadata is extensionally equal.'
+    statement: 'recovery_document_scope_binding holds for every new-owner recovery after its authoritative
+      recovery_head has been captured: for recovery target document D, the authoritative owner/epoch context,
+      captured recovery_head, any selected checkpoint, every canonical tail entry consumed by replay,
+      any rebuilt logical/OT runtime state, the installed recovered_owner_runtime_state, and any resumed
+      owner context remain document-scoped to that same D. A checkpoint, history entry, head, runtime
+      state, or owner context from D2 != D cannot satisfy the recovery merely because its frontier, payload,
+      logical state, or reconstructed metadata is extensionally equal. This provenance obligation applies
+      to recovery state already selected or constructed even if the attempt later crashes or aborts; it
+      imposes no completion or progress requirement.'
     source_refs:
       - snapshot_frontier
       - owner_failover
@@ -3907,15 +3935,18 @@ claims:
     verification:
       verifiers:
         - kind: control_flow
-          intent: Trace recovery target document identity through owner/epoch lookup, recovery-head
-            capture, checkpoint selection, tail queries, metadata reconstruction, runtime
-            installation, and service resumption; every authoritative source and sink must retain
-            the same document scope.
+          intent: Trace recovery target document identity from owner/epoch lookup and recovery-head
+            capture through checkpoint selection, tail queries, metadata reconstruction, runtime
+            installation, service resumption, and every abort exit after head capture; no selected
+            or constructed authoritative recovery input/state may lose the same document scope
+            before completion or abort.
         - kind: state_machine
           intent: Construct two documents with equal frontiers, checkpoint contents, canonical
-            tails, and reconstructed metadata, then cross-substitute one document recovery input at
-            a time; every cross-document substitution must be rejected or remain unable to
-            complete/install recovery.
+            tails, and reconstructed metadata, then cross-substitute one recovery input/state at a
+            time after D's head capture. The D2 object must never be accepted as the corresponding
+            D-scoped recovery input/state; aborting after the attempted substitution does not make
+            that cross-document binding valid, and no such substitution may install or resume
+            service.
     kind: leaf
   L176_visible_speculative_overlay_is_backed_by_retained_state:
     statement: 'visible_speculative_retention_coherence holds at every user-visible client state: each

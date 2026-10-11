@@ -544,63 +544,69 @@ records:
   claim:G4_reconnect_converges_without_gap_or_duplicate:
     kind: claim
     subject_id: G4_reconnect_converges_without_gap_or_duplicate
-    subject_signature: 4e352efdfea7709e0db1401984366a705b7e1bac074a23706700094a5ee6f068
+    subject_signature: 010cdf3c9a40a6df7932c3a06836bf2a7d7aa35c08376401c4a7f3b6c9fb2a1e
     roundtrip:
-      subject_signature: 4e352efdfea7709e0db1401984366a705b7e1bac074a23706700094a5ee6f068
+      subject_signature: 010cdf3c9a40a6df7932c3a06836bf2a7d7aa35c08376401c4a7f3b6c9fb2a1e
       status: TRANSLATED
-      natural_language: For every catch-up response c, if c is a normal foreground, visible-document-bound reconnect/catch-up
-        attempt for the current document starting from the client's last_applied_revision L, where L is the highest contiguous
-        canonical revision already applied by that client, then all of the following hold. If the user-visible document switches
-        away before publication, c permanently loses foreground publication eligibility and cannot later publish merely because
-        the user switches back. Any user-visible publication effect of c is one atomic publication transition, with no intermediate
-        candidate prefix exposed; additionally, any response of c whose head H is below the already-visible canonical frontier
-        cannot regress or otherwise mutate that visible canonical/frontier state. If c is eligible for completion or foreground
-        publication under the reconnect/catch-up protocol, then c binds one response-specific head H captured from the same
-        document's authoritative document_latest_revision, its persisted canonical revision frontier, at one authoritative-store
-        read/linearization point; that captured head remains unchanged through response selection, reconciliation, completion,
-        and any publication; and acceptances occurring after that head was captured are outside c's response rather than partially
-        mixed into it. Under that same eligibility condition, if c completes and publishes its reconciled result to the user-visible
-        canonical state, then c's visible-document binding remains uninterrupted from start through publication eligibility,
-        and the published user-visible canonical state equals canonical replay of that same document through c's captured
-        response head H, with no accepted revision through H omitted or applied twice.
+      natural_language: 'Every change delivery d that is actually exposed through the document-scoped websocket live stream
+        must have at least one canonical acceptance record a such that a is a committed record in that document''s authoritative
+        accepted_change_log, d originates from a as its accepted-history source, d preserves exactly a''s canonical payload
+        and revision provenance, and d is consumed on the same document-scoped stream as a, so an equally valued acceptance
+        from another document cannot satisfy that document-scope condition. In addition, for every normal foreground, visible-document-bound
+        reconnect/catch-up attempt c for the current document, starting from the client''s last_applied_revision L (the highest
+        contiguous canonical revision already applied by that client), all of the following hold: if the visible document switches
+        away before c publishes, c permanently loses foreground publication eligibility and cannot later publish merely because
+        the user switches back; any user-visible publication effect of c is a single atomic publication transition that exposes
+        no intermediate candidate prefix, and any response of c whose captured response head H is below the already-visible
+        canonical frontier cannot regress or otherwise mutate that visible canonical/frontier state; if c is currently eligible
+        to publish to the foreground user-visible canonical state, then c''s visible-document binding has remained uninterrupted
+        from the start through that publication eligibility; and if c is eligible for completion or foreground publication under
+        the reconnect/catch-up protocol, then c captures one response-specific head H from the same document''s authoritative
+        document_latest_revision at one authoritative-store read/linearization point, preserves that same captured head unchanged
+        through response selection, reconciliation, completion, and any publication, and excludes from that response every acceptance
+        occurring after H rather than partially mixing any such later acceptance into the response. Furthermore, under that
+        same eligibility-for-completion-or-publication condition, if c actually completes and publishes its reconciled result
+        to the user-visible canonical state, then c''s visible-document binding is uninterrupted and the published user-visible
+        canonical state is exactly the canonical replay of that same document through c''s captured response head H, with no
+        accepted revision through H omitted or double-applied.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 4e352efdfea7709e0db1401984366a705b7e1bac074a23706700094a5ee6f068
+        subject_signature: 010cdf3c9a40a6df7932c3a06836bf2a7d7aa35c08376401c4a7f3b6c9fb2a1e
         verdict: EQUIVALENT
-        reason: The formula preserves the foreground-attempt scope, eligibility guard, authoritative response-specific head
-          capture and preservation, exclusion of later acceptances, and exact replay upon eligible publication. Its unconditional
-          predicates preserve permanent loss of publication eligibility after a document switch and atomic, non-regressing
-          publication across overlapping or retried attempts. The supplied predicate meanings retain the source's document,
-          head, temporal, and visible-state coordinates without adding requirements.
+        reason: The formula preserves the source claim's scope and guards for normal foreground catch-up attempts, including
+          fixed single-head capture from the same document's authoritative latest revision, preservation of that head through
+          the response lifecycle, uninterrupted visible-document binding as a publication-eligibility condition, permanent blocking
+          after a pre-publication binding break, exact replay through the captured head on eligible completion/publication,
+          atomic non-regressing publication, and exclusion of post-capture acceptances. Its live-stream clause also requires
+          every exposed delivery to have a committed same-document acceptance source with payload and revision provenance preserved,
+          without cross-document substitution. The helper predicate meanings carry the same identity, temporal, cardinality,
+          and provenance coordinates stated by the canonical proposition and introduce no additional obligation.
         differences: []
       strengthening:
-        subject_signature: 4e352efdfea7709e0db1401984366a705b7e1bac074a23706700094a5ee6f068
+        subject_signature: 010cdf3c9a40a6df7932c3a06836bf2a7d7aa35c08376401c4a7f3b6c9fb2a1e
         verdict: EQUIVALENT
-        reason: The supplied predicate meanings preserve the foreground-attempt scope, eligibility guards, same-document authoritative
-          head capture and preservation, permanent publication disqualification after a binding break, exact replay upon eligible
-          publication, and atomic non-regressing publication across attempts. Post-capture acceptances remain excluded without
-          requiring convergence to an advancing live head. No additional identity, temporal, provenance, or cardinality requirement
-          is introduced.
+        reason: 'The formula preserves the canonical claim''s applicability boundaries and decomposes its guarantees without
+          changing their scope: eligible foreground catch-up attempts bind and preserve one authoritative response head, foreground
+          publication eligibility requires uninterrupted visible-document binding with permanent blocking after a binding break,
+          eligible publishing attempts expose exact replay through that head, and publication remains atomic and non-regressing.
+          The live-stream conjunct independently requires every exposed delivery to originate from committed accepted history
+          for the same document while preserving payload and revision provenance, including the cross-document substitution
+          exclusion. The supplied predicate meanings retain the relevant attempt/document/head/frontier/source coordinates and
+          add no extra ordering, delivery, liveness, or continuously-advancing-head obligation.'
         differences: []
     roundtrip_reviews:
-      weakening:
-        subject_signature: 4e352efdfea7709e0db1401984366a705b7e1bac074a23706700094a5ee6f068
+      balanced:
+        subject_signature: 010cdf3c9a40a6df7932c3a06836bf2a7d7aa35c08376401c4a7f3b6c9fb2a1e
         verdict: EQUIVALENT
-        reason: The rendering preserves the eligible-attempt scope, document identity, single authoritative head capture and
-          its preservation, permanent publication disqualification after switching away, exact canonical replay through H,
-          atomic publication, and protection against stale responses mutating visible state across overlapping or retried
-          attempts. Excluding post-capture acceptances preserves the bounded response scope without requiring convergence
-          to a continuously advancing live head.
-        differences: []
-      strengthening:
-        subject_signature: 4e352efdfea7709e0db1401984366a705b7e1bac074a23706700094a5ee6f068
-        verdict: EQUIVALENT
-        reason: The rendering preserves the foreground applicability boundary, eligibility guards, document identity, authoritative
-          capture of one response-specific H, and preservation of H throughout processing. It also preserves permanent publication
-          disqualification on switching away, uninterrupted binding for publication, exact canonical replay through H, atomic
-          publication, protection against stale-head mutation, and exclusion of acceptances after capture without requiring
-          convergence to an advancing live head.
+        reason: The round-trip preserves the original contract's quantifiers and precondition boundaries for both reconnect/catch-up
+          attempts and live-stream deliveries. It retains the response-specific single head captured from the same document's
+          authoritative frontier and preserved through selection, reconciliation, completion, and publication; the irreversible
+          loss of foreground publication eligibility after any visible-document switch away; exact replay through the captured
+          head on eligible completion/publication with no omission or double application; atomic non-prefix publication and
+          monotonic protection against below-frontier responses; exclusion of post-capture acceptances; and same-document committed-history
+          provenance with payload/revision preservation for live delivery. The rendering adds no stronger temporal, identity,
+          provenance, cardinality, or delivery guarantee beyond those source requirements.
         differences: []
   assumption:A5_apply_accepted_change_is_deterministic:
     kind: assumption
@@ -886,43 +892,58 @@ records:
   claim:G3_snapshot_and_recovery_preserve_state:
     kind: claim
     subject_id: G3_snapshot_and_recovery_preserve_state
-    subject_signature: feefd1118d918e260b3216e9546a4936f8e0b1275dc93b7b979317bd57e194e7
+    subject_signature: 6515f3de8259905e52e75b74617d9d2e44dd15bb6fd28bb5512ea024b45a7f21
     roundtrip:
-      subject_signature: feefd1118d918e260b3216e9546a4936f8e0b1275dc93b7b979317bd57e194e7
+      subject_signature: 6515f3de8259905e52e75b74617d9d2e44dd15bb6fd28bb5512ea024b45a7f21
       status: TRANSLATED
-      natural_language: For every authoritative state representation s and every revision h, if s is an optimized authoritative
-        lifecycle representation (a snapshot, checkpoint, cleanup, or compaction result) at frontier h, or s is the result
-        of a completed owner recovery at frontier h, or both, then the logical document state denoted by s equals deterministic
-        canonical replay of accepted revisions through frontier h, and s preserves its authoritative latest_revision exactly
-        equal to h. Under the same condition, if s is used to resume owner service, then s reconstructs the acceptance-relevant
-        state required to continue accepting from frontier h without changing canonical semantics.
+      natural_language: 'Both of the following hold. First, for every authoritative-state representation s and every revision
+        frontier H, if s is either an optimized authoritative lifecycle representation at H (such as a snapshot, checkpoint,
+        cleanup, or compaction result) or the result of a completed owner recovery at H, then all of these conditions hold for
+        that same s and H: the logical document state denoted by s equals the deterministic canonical replay of accepted revisions
+        through H; the authoritative latest_revision preserved by s is exactly H; and, if s is used to resume owner service,
+        then s reconstructs the acceptance-relevant state required to continue accepting from frontier H without changing canonical
+        semantics. Second, for every recovery attempt r, if r has reached the new-owner recovery-head capture event after epoch
+        handoff, where it reads the authoritative frontier and binds recovery_head, then the recovery sources for r must preserve
+        the document scope of the specific target document recovery_target_document(r): the authoritative owner context, captured
+        head, selected authoritative checkpoint, replayed canonical tail, rebuilt logical and OT runtime state, and resumed
+        owner context must all remain bound to that same document identity, and an extensionally equal checkpoint or tail belonging
+        to another document does not satisfy this condition.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: feefd1118d918e260b3216e9546a4936f8e0b1275dc93b7b979317bd57e194e7
+        subject_signature: 6515f3de8259905e52e75b74617d9d2e44dd15bb6fd28bb5512ea024b45a7f21
         verdict: EQUIVALENT
-        reason: The formula universally covers optimized authoritative lifecycle representations and completed owner recoveries
-          at the same frontier h. It requires logical document state equal to canonical replay through h, preserves latest_revision
-          = h, and requires reconstruction of acceptance-relevant state exactly when the representation resumes owner service.
-          The predicate meanings preserve the source's state and frontier coordinates without adding temporal or provenance
-          bridges or requirements for excluded observations.
+        reason: The formula preserves both source guarantees with the same applicability boundaries. The first universal clause
+          exactly requires optimized authoritative lifecycle representations and completed recoveries at frontier h to match
+          canonical replay through h, preserve latest_revision = h, and reconstruct acceptance-relevant state only when used
+          to resume owner service. The second universal clause applies exactly after a new-owner recovery captures its authoritative
+          head and binds the authoritative owner context, captured head, selected checkpoint, replayed canonical tail, rebuilt
+          logical/OT runtime state, and resumed owner context to the recovery target document; the predicate meaning also excludes
+          extensionally equal cross-document substitution. No source requirement is dropped and no excluded liveness, storage,
+          audit, timing, or stronger identity requirement is added.
         differences: []
       strengthening:
-        subject_signature: feefd1118d918e260b3216e9546a4936f8e0b1275dc93b7b979317bd57e194e7
+        subject_signature: 6515f3de8259905e52e75b74617d9d2e44dd15bb6fd28bb5512ea024b45a7f21
         verdict: EQUIVALENT
-        reason: The formula universally covers optimized authoritative lifecycle representations and completed owner recoveries
-          at their frontier, requiring canonical replay equivalence and latest_revision equal to that same frontier. Acceptance-relevant
-          reconstruction is required only when the representation resumes owner service. The supplied predicate meanings preserve
-          the source's observation scope and exclusions without adding identity, provenance, cardinality, or temporal requirements.
+        reason: 'The formula preserves both source guarantees at their stated applicability boundaries: every optimized authoritative
+          representation or completed recovery at frontier H must match canonical replay, preserve latest_revision = H, and
+          reconstruct acceptance-relevant state when used to resume service; every new-owner recovery that has captured its
+          authoritative head must preserve the target document identity across owner context, head, checkpoint, replay tail,
+          rebuilt runtime state, installation, and resumption. The supplied predicate meanings retain the document-provenance/non-substitution
+          requirement without adding byte identity, eventual completion, audit equivalence, or other excluded observations.'
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: feefd1118d918e260b3216e9546a4936f8e0b1275dc93b7b979317bd57e194e7
+        subject_signature: 6515f3de8259905e52e75b74617d9d2e44dd15bb6fd28bb5512ea024b45a7f21
         verdict: EQUIVALENT
-        reason: The rendering preserves universal applicability to optimized authoritative lifecycle representations and completed
-          owner recoveries at a common frontier, equality with deterministic replay of accepted revisions, and latest_revision
-          equal to that frontier. It also preserves the conditional reconstruction requirement when resuming owner service,
-          without adding guarantees about excluded physical, audit-query, or performance observations.
+        reason: 'The rendering preserves both guarantees with the same applicability boundaries and coordinates: each optimized
+          authoritative representation or completed recovery is compared at the same frontier H to canonical accepted-history
+          replay, including latest_revision = H and acceptance-relevant resumption state when applicable; and each new-owner
+          recovery after authoritative recovery-head capture remains bound to its target document across owner context, head,
+          checkpoint, canonical tail, rebuilt runtime state, and resumed context. The added wording about capture after epoch
+          handoff is already inherent in recovery_head, and the explicit cross-document checkpoint/tail example does not narrow
+          the broader same-document binding stated for all listed recovery components. No source requirement is omitted and
+          no additional observation or guarantee is introduced.'
         differences: []
   claim:G10_user_visible_client_state_matches_document:
     kind: claim
@@ -1407,4 +1428,555 @@ records:
           additional clauses explicitly preserve non-foreground reconciliation coverage, the insufficiency of bookkeeping deletion,
           and new-edit identity separation. Quantifiers, eligibility boundaries, observation scopes, and archival allowances
           introduce no substantive strengthening or weakening.
+        differences: []
+  obligation:speculative_representation_preserves_creation_identity_and_operation:
+    kind: obligation
+    subject_id: speculative_representation_preserves_creation_identity_and_operation
+    subject_signature: 0c26b5287003a89a109e3e0306ddc662f5d0d9d178b340183a342384eb695397
+    roundtrip:
+      subject_signature: 0c26b5287003a89a109e3e0306ddc662f5d0d9d178b340183a342384eb695397
+      status: TRANSLATED
+      natural_language: For every client state s and every overlay o, if o is retained in the client_speculative_overlays of
+        s or is currently exposed in the client_visible_speculative_overlays of s, then its representation in s preserves the
+        complete creation identity of the same logical client edit, including its document identity and client-supplied client_change_id,
+        and remains semantically derived from that same logical edit's operation within that document rather than substituting
+        another edit's operation. Both requirements apply to retained overlays even when they are not currently exposed. Different
+        physical encodings or rendering objects are permitted provided they preserve that identity and operation semantics.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 0c26b5287003a89a109e3e0306ddc662f5d0d9d178b340183a342384eb695397
+        verdict: EQUIVALENT
+        reason: The cited sections explicitly require both full creation-identity provenance and semantic operation provenance
+          for every retained or exposed representation of the same logical edit. The formula universally covers both representation
+          scopes and requires both properties. The supplied predicate meanings preserve both identity coordinates and the original
+          operation's provenance, without requiring byte-identical encodings or allowing matching rendered effects to justify
+          substitution. No additional temporal or lifecycle requirement is imposed.
+        differences: []
+      strengthening:
+        subject_signature: 0c26b5287003a89a109e3e0306ddc662f5d0d9d178b340183a342384eb695397
+        verdict: EQUIVALENT
+        reason: The canonical sections explicitly require retained and exposed representations of a logical edit to preserve
+          its full creation identity and semantic optimistic operation. The formula universally enforces both requirements for
+          each retained or visible overlay. The supplied predicate meanings preserve same-edit provenance, including both identity
+          coordinates, without requiring byte-identical encodings or treating equal rendered effects as sufficient. No additional
+          cardinality, lifecycle, or publication requirement is introduced.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 0c26b5287003a89a109e3e0306ddc662f5d0d9d178b340183a342384eb695397
+        verdict: EQUIVALENT
+        reason: The rendering preserves the same universal scope over retained or currently exposed speculative overlays, the
+          same full logical-edit creation identity coordinates (document_id, client_change_id), and the same operation-provenance
+          requirement that the representation continue to encode that edit's semantic optimistic operation rather than another
+          edit's operation. The canonical vocabulary already defines retained and visible overlays as representations of logical
+          edits, so the rendering's state/set formulation does not broaden applicability beyond the source's "continues to represent"
+          boundary. Its allowance for different physical encodings matches the source's explicit exclusion of byte/object identity,
+          and it neither weakens nor adds temporal, cardinality, visibility, or provenance guarantees.
+        differences: []
+  obligation:canonical_append_uses_document_scoped_current_owner_generation:
+    kind: obligation
+    subject_id: canonical_append_uses_document_scoped_current_owner_generation
+    subject_signature: 6e7c283cfce6144ee8ecf09bdecbd7fca2c2c6c9e40e858852384c2ec5e19f93
+    roundtrip:
+      subject_signature: 6e7c283cfce6144ee8ecf09bdecbd7fca2c2c6c9e40e858852384c2ec5e19f93
+      status: TRANSLATED
+      natural_language: For every protocol transition t and every document d, if t performs a canonical accepted-history append
+        for d, then that append is authorized by the exact current document-scoped generation identity for d, including its
+        epoch and generation-bound server append identity. Copied scalar values or another document's tuple do not authorize
+        that append.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 6e7c283cfce6144ee8ecf09bdecbd7fca2c2c6c9e40e858852384c2ec5e19f93
+        verdict: EQUIVALENT
+        reason: The cited source explicitly requires each canonical append to use the target document's exact current owner
+          generation, including epoch and immutable server-side generation identity, and rejects copied scalar credentials and
+          cross-document tuple aliasing. The formula universally quantifies transitions and documents, applies precisely to
+          canonical appends, and preserves these identity and provenance requirements through the supplied predicate meaning
+          without extending authorization requirements to other mutations.
+        differences: []
+      strengthening:
+        subject_signature: 6e7c283cfce6144ee8ecf09bdecbd7fca2c2c6c9e40e858852384c2ec5e19f93
+        verdict: EQUIVALENT
+        reason: The cited source explicitly requires every canonical append to use the performing generation's immutable document-scoped
+          identity and epoch, matching the target document's authoritative current generation. The universal implication preserves
+          that applicability and, through the supplied predicate meaning, excludes copied scalar credentials and cross-document
+          authorization. It adds no requirements for terminal outcomes or other non-append mutations.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 6e7c283cfce6144ee8ecf09bdecbd7fca2c2c6c9e40e858852384c2ec5e19f93
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the obligation''s universal scope over canonical accepted-history appends, the target-document-scoped
+          current owner-generation authority, both epoch and immutable generation identity, and the two provenance exclusions:
+          a superseded generation cannot regain authority by copying newer scalar credentials, and an equal tuple from another
+          document cannot authorize the append. The cited owner-failover section explicitly commits to these same conditions,
+          so the rendering neither weakens nor strengthens the canonical contract.'
+        differences: []
+  obligation:terminal_outcome_is_single_mutually_exclusive_and_immutable:
+    kind: obligation
+    subject_id: terminal_outcome_is_single_mutually_exclusive_and_immutable
+    subject_signature: a729d4ffe15457b3bf1c111ed72c788c6e9b5c90c8de228c25b551c4d96e98a7
+    roundtrip:
+      subject_signature: a729d4ffe15457b3bf1c111ed72c788c6e9b5c90c8de228c25b551c4d96e98a7
+      status: TRANSLATED
+      natural_language: 'For every authoritative state s and every idempotency key k, if s is reachable under the canonical
+        server protocol and failure model and k is within the 30-day normal retry eligibility horizon in s, then all of the
+        following hold: s contains at most one durable terminal result for k; if k has an ACCEPTED terminal outcome in s, the
+        canonical ordered history of accepted changes for the relevant document contains the matching acceptance for k and no
+        incompatible REJECTED outcome exists in s; if k has a REJECTED terminal outcome in s, that canonical accepted history
+        contains no canonical acceptance for k; and once a terminal outcome for k has linearized, later acceptance or definitive-rejection
+        attempts preserve that same single-valued outcome. A terminal result is either ACCEPTED with a canonical result or REJECTED
+        with a definitive reason; uncertainty has no terminal entry. No terminal result is required to exist. The implication
+        imposes no requirements for unreachable states or for keys outside the stated retry horizon in s.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: a729d4ffe15457b3bf1c111ed72c788c6e9b5c90c8de228c25b551c4d96e98a7
+        verdict: EQUIVALENT
+        reason: The cited design supports the extracted property. The formula universally quantifies authoritative states and
+          idempotency keys, restricts applicability to reachable states and the 30-day retry horizon, and preserves terminal-outcome
+          uniqueness, matching canonical acceptance for ACCEPTED, exclusion of canonical acceptance for REJECTED, and immutability
+          after linearization. The supplied predicate meanings introduce no unsupported identity or temporal bridge.
+        differences: []
+      strengthening:
+        subject_signature: a729d4ffe15457b3bf1c111ed72c788c6e9b5c90c8de228c25b551c4d96e98a7
+        verdict: EQUIVALENT
+        reason: The cited design supports the extracted property. The formula restricts its requirements to reachable authoritative
+          states and in-horizon idempotency keys, and preserves terminal-result cardinality, ACCEPTED coherence, REJECTED exclusion,
+          and immutability after linearization. The supplied predicate meanings introduce no additional identity, provenance,
+          or observation requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: a729d4ffe15457b3bf1c111ed72c788c6e9b5c90c8de228c25b551c4d96e98a7
+        verdict: EQUIVALENT
+        reason: The rendering preserves the source contract's state and horizon scope, per-key cardinality, ACCEPTED-to-matching-canonical-acceptance
+          coherence, REJECTED exclusion of canonical acceptance, and post-linearization immutability. Its explicit two-terminal-class
+          and uncertainty/no-entry statements are supported by the cited canonical section, while the added observation that
+          no terminal result need exist and that unreachable or out-of-horizon cases are unconstrained merely makes the original
+          applicability boundary explicit rather than strengthening it. The extracted obligation itself is directly supported
+          by the cited canonical design.
+        differences: []
+  obligation:recovery_sources_preserve_target_document:
+    kind: obligation
+    subject_id: recovery_sources_preserve_target_document
+    subject_signature: 101d1fe9de55c387a9b3e549d44aac09122b5e59ab67970292eb7cc1026ddc48
+    roundtrip:
+      subject_signature: 101d1fe9de55c387a9b3e549d44aac09122b5e59ab67970292eb7cc1026ddc48
+      status: TRANSLATED
+      natural_language: For every recovery attempt r, if r has reached the new-owner recovery-head capture event after epoch
+        handoff, where it reads the authoritative frontier and binds recovery_head, then, for the document identity bound as
+        r's recovery target and for that recovery observation, the authoritative owner context, the captured recovery head,
+        the selected authoritative checkpoint, the replayed canonical tail, the rebuilt logical and OT runtime state, and the
+        resumed owner context must all preserve that target as the same document identity. An extensionally equal checkpoint
+        or tail belonging to a different document does not satisfy this document-scoped preservation relation.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 101d1fe9de55c387a9b3e549d44aac09122b5e59ab67970292eb7cc1026ddc48
+        verdict: EQUIVALENT
+        reason: 'The cited owner-failover section explicitly requires provenance closure for new-owner recovery after the authoritative
+          head is captured: the recovery target, handoff/owner context, captured head, selected checkpoint, canonical replay
+          tail, rebuilt logical/OT state, and resumed owner context must all remain scoped to the same document, with cross-document
+          substitution forbidden even when representations or replay results are extensionally equal. The formula preserves
+          that applicability boundary through recovery_head_capture_event, preserves universal quantification over recovery
+          attempts, and its document-scoped predicate meaning carries the same identity/provenance relation without adding a
+          stronger temporal, cardinality, or observation requirement.'
+        differences: []
+      strengthening:
+        subject_signature: 101d1fe9de55c387a9b3e549d44aac09122b5e59ab67970292eb7cc1026ddc48
+        verdict: EQUIVALENT
+        reason: The canonical sections explicitly require document-scoped provenance closure across the new-owner recovery handoff,
+          captured recovery head, selected authoritative checkpoint, canonical replay tail, rebuilt logical/OT runtime state,
+          and resumed owner context, including rejection of cross-document substitution despite extensional equality. The formula
+          applies exactly once a recovery attempt reaches the authoritative head-capture event after handoff, quantifies over
+          every such attempt, binds the target through recovery_target_document(r), and the typed predicate meaning preserves
+          the same document identity across precisely those recovery artifacts and contexts without adding an unsupported equality,
+          cardinality, or temporal requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 101d1fe9de55c387a9b3e549d44aac09122b5e59ab67970292eb7cc1026ddc48
+        verdict: EQUIVALENT
+        reason: The rendering preserves the source's per-new-owner-recovery applicability after recovery-head capture, keeps
+          the recovery target as the fixed document identity coordinate, and requires the handoff/owner context, captured head,
+          checkpoint, canonical tail, rebuilt logical/OT state, and resumed owner context to retain that same document provenance.
+          Its explicit rejection of cross-document substitution for extensionally equal checkpoints or tails is consistent with,
+          and does not narrow, the first sentence's identity-preservation requirement for all listed recovery objects; the added
+          reference to the authoritative owner context is supported by the cited ownership-handoff requirement and does not
+          strengthen the contract.
+        differences: []
+  obligation:live_delivery_preserves_committed_document_provenance:
+    kind: obligation
+    subject_id: live_delivery_preserves_committed_document_provenance
+    subject_signature: 34fb53df040d9e9ad553ac10f234c27ef9d0d194d92d7df539c6944329b86915
+    roundtrip:
+      subject_signature: 34fb53df040d9e9ad553ac10f234c27ef9d0d194d92d7df539c6944329b86915
+      status: TRANSLATED
+      natural_language: 'For every live delivery d, if d is a change actually exposed through the websocket live stream, then
+        there exists a canonical acceptance record a such that all of the following hold: a is committed in the authoritative
+        accepted_change_log; d originates from a as its accepted-history source; d preserves a''s canonical payload and revision
+        provenance exactly; and d is consumed on the same document-scoped stream as a. An equally-valued acceptance from another
+        document cannot satisfy this document-scope condition. The implication applies to every exposed change, including any
+        provisional, speculative, rejected, aborted, or never-committed change that might be exposed; none is exempt from the
+        requirement for a committed source satisfying all these conditions.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 34fb53df040d9e9ad553ac10f234c27ef9d0d194d92d7df539c6944329b86915
+        verdict: EQUIVALENT
+        reason: The cited sections establish committed accepted history as authoritative and require document-scoped live delivery
+          without substitution of equally-valued records from another document. The formula covers every actually exposed change
+          and requires one common acceptance witness satisfying commitment, actual source provenance, document scope, and canonical
+          payload/revision preservation. It neither excludes invalid exposures from applicability nor introduces additional
+          cardinality, ordering, or delivery guarantees.
+        differences: []
+      strengthening:
+        subject_signature: 34fb53df040d9e9ad553ac10f234c27ef9d0d194d92d7df539c6944329b86915
+        verdict: EQUIVALENT
+        reason: The cited sections support document-scoped delivery of committed canonical accepted changes and explicitly prohibit
+          substituting equally-valued records from another document. The formula covers every actually exposed live change and
+          requires one common acceptance witness establishing commitment, actual source provenance, document scope, and canonical
+          payload/revision preservation. It adds no uniqueness, ordering, eventual-delivery, or client-state requirement and
+          excludes no exposed provisional or uncommitted changes from its scope.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 34fb53df040d9e9ad553ac10f234c27ef9d0d194d92d7df539c6944329b86915
+        verdict: EQUIVALENT
+        reason: The rendering preserves the source contract's universal scope over every change actually exposed on a document's
+          live stream, requires a committed canonical acceptance as the provenance source, retains the same-document binding
+          together with canonical payload and revision provenance, and rejects substitution by an extensionally equal acceptance
+          from another document. Its explicit mention of provisional, speculative, rejected, aborted, or never-committed changes
+          adds no new applicability because the original already quantifies over every exposed change; such a change is permitted
+          only if it in fact has the required committed same-document source.
+        differences: []
+  obligation:rejected_terminal_result_preserves_request_provenance:
+    kind: obligation
+    subject_id: rejected_terminal_result_preserves_request_provenance
+    subject_signature: 05aeaba9a90123e28a89daa183e8b4e1f161479f76e20864e78b9b49d15d5b61
+    roundtrip:
+      subject_signature: 05aeaba9a90123e28a89daa183e8b4e1f161479f76e20864e78b9b49d15d5b61
+      status: TRANSLATED
+      natural_language: For every terminal result record t, if t is an authoritative REJECTED outcome carrying a definitive
+        rejection reason and its logical identity is still within the 30-day normal retry eligibility horizon in which definitive-rejection
+        request and authoritative-context provenance are guaranteed, then both of the following hold. Let d be the definitive
+        rejection decision from which t derives, and let r be the exact submitted request instance for which d was produced.
+        First, t and r carry exactly the same full (document_id, client_change_id) identity. Second, whenever the definitive
+        rejection reason depends on raw_edit or base_revision, d uses the exact values of those fields from that same bound
+        request r. Here raw_edit is the client-submitted edit before server-side transformation or rebase, and base_revision
+        is the canonical client revision frontier that the submitted raw_edit declares as its authoring base; the correctness
+        of that declaration is a separate obligation. A definitive rejection decision is a server-side definitive negative decision
+        for one submitted request, such as invalid or rebase-required; timeout, cancellation, transport loss, and crash-before-decision
+        are not such decisions. Post-expiry re-submissions are outside the horizon predicate and are not constrained by this
+        implication.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 05aeaba9a90123e28a89daa183e8b4e1f161479f76e20864e78b9b49d15d5b61
+        verdict: EQUIVALENT
+        reason: The cited design supports the extracted requirement. The formula universally covers authoritative REJECTED results
+          within the retry horizon, follows each result's producing definitive rejection decision to its exact submitted request,
+          requires both document_id and client_change_id to match, and binds any reason-dependent raw_edit/base_revision values
+          to that same request. The supplied function meanings preserve producer provenance rather than merely asserting value
+          equality, without adding unrelated context-authority requirements.
+        differences: []
+      strengthening:
+        subject_signature: 05aeaba9a90123e28a89daa183e8b4e1f161479f76e20864e78b9b49d15d5b61
+        verdict: EQUIVALENT
+        reason: The canonical sections support the extracted request-provenance requirement. The formula quantifies over every
+          authoritative REJECTED result within the normal retry horizon, follows its producing definitive decision to that decision's
+          exact submitted request, requires matching document_id and client_change_id, and conditionally binds reason-dependent
+          raw_edit and base_revision values to that same request. The supplied meanings preserve provenance direction without
+          adding uniqueness, latest-state, or post-expiry guarantees.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 05aeaba9a90123e28a89daa183e8b4e1f161479f76e20864e78b9b49d15d5b61
+        verdict: EQUIVALENT
+        reason: The rendering preserves the obligation's universal in-horizon scope, authoritative REJECTED terminal-result
+          applicability, full (document_id, client_change_id) identity binding to the definitive rejection decision's originating
+          submitted request, and the conditional provenance of any raw_edit/base_revision values on which the rejection reason
+          depends. Its 30-day qualification and exclusion of timeout/cancellation/transport/crash-before-decision are supported
+          by the canonical sections, while the mention of authoritative-context provenance is descriptive of the same protocol
+          horizon and does not add a conclusion to this obligation.
+        differences: []
+  obligation:submitted_request_preserves_logical_edit_tuple:
+    kind: obligation
+    subject_id: submitted_request_preserves_logical_edit_tuple
+    subject_signature: 6e1b0a19c3a061c6dd111e3dd55609c764f4916b92e43b91290a62d51bf0ff08
+    roundtrip:
+      subject_signature: 6e1b0a19c3a061c6dd111e3dd55609c764f4916b92e43b91290a62d51bf0ff08
+      status: TRANSLATED
+      natural_language: For every Request r, if r is a normal submitted_request representing one logical edit within the 30-day
+        normal retry eligibility horizon, then r preserves the same full request identity, raw_edit semantics, and canonical
+        authoring frontier for that logical operation; the document_id, client_change_id, raw_edit, and base_revision coordinates
+        remain coherent with that operation and are not cross-bound from another operation.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 6e1b0a19c3a061c6dd111e3dd55609c764f4916b92e43b91290a62d51bf0ff08
+        verdict: EQUIVALENT
+        reason: 'The formula preserves the proposition''s universal scope over normal server-visible submitted requests within
+          the defined 30-day retry eligibility horizon and requires exactly the stated coherence relation: document_id and client_change_id
+          identity, raw_edit semantics, and base_revision/canonical authoring frontier remain bound to the same logical edit
+          rather than being cross-bound. The supplied predicate meanings do not add a distinct retry-attempt restriction or
+          any extra temporal, cardinality, provenance, or observation requirement beyond that contract.'
+        differences: []
+      strengthening:
+        subject_signature: 6e1b0a19c3a061c6dd111e3dd55609c764f4916b92e43b91290a62d51bf0ff08
+        verdict: EQUIVALENT
+        reason: 'The cited canonical sections support the stated normal-horizon requirement: each server-visible submitted request
+          must keep document_id, client_change_id, raw_edit semantics, and the canonical base/frontier jointly bound to the
+          same logical edit. The antecedent matches that applicability boundary, and the consequent preserves the same identity/provenance
+          coordinates without requiring physical serialization equality or extending the guarantee outside the 30-day normal
+          retry horizon.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 6e1b0a19c3a061c6dd111e3dd55609c764f4916b92e43b91290a62d51bf0ff08
+        verdict: EQUIVALENT
+        reason: The rendering preserves the same universal applicability to normal server-visible submitted requests within
+          the 30-day retry horizon and the same logical-edit provenance relation across document_id, client_change_id, raw_edit
+          semantics, and canonical base_revision/frontier. Its coherence and anti-cross-binding language matches the cited request-construction,
+          serialization, and retry constraints without adding or omitting a material identity, provenance, cardinality, or observation-boundary
+          requirement.
+        differences: []
+  obligation:accepted_terminal_result_preserves_acceptance_producer:
+    kind: obligation
+    subject_id: accepted_terminal_result_preserves_acceptance_producer
+    subject_signature: d6d741e38745a505d8ef239f5ebc64a0fd99cf0c2a3b8bf7b581167c4bdfc678
+    roundtrip:
+      subject_signature: d6d741e38745a505d8ef239f5ebc64a0fd99cf0c2a3b8bf7b581167c4bdfc678
+      status: TRANSLATED
+      natural_language: 'For every terminal result record t, if t is an authoritative ACCEPTED(canonical result) outcome and
+        is still within the 30-day normal retry eligibility horizon in which producer provenance must be retained, then there
+        exists a canonical acceptance a such that all of the following hold: a is a committed canonical accepted-change record
+        in authoritative accepted history for its document; the full idempotency key carried by t, consisting of document_id
+        plus client_change_id, equals the authoritative idempotency identity carried by a; and t stores the canonical result
+        produced by the same acceptance execution that both produced a and committed a into authoritative accepted history.
+        An extensionally equal result from another producer, or an acceptance committed by a different execution, does not satisfy
+        that execution-binding requirement.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: d6d741e38745a505d8ef239f5ebc64a0fd99cf0c2a3b8bf7b581167c4bdfc678
+        verdict: EQUIVALENT
+        reason: The extracted property is supported by the canonical acceptance-producer binding requirement. The formula universally
+          covers authoritative ACCEPTED terminal results within the retry horizon and requires a committed canonical acceptance
+          carrying the same full idempotency key. The binding predicate explicitly requires the stored result to originate from
+          the same execution that produced and committed that acceptance, excluding extensionally equal results from another
+          producer. No additional uniqueness or transaction requirement is introduced.
+        differences: []
+      strengthening:
+        subject_signature: d6d741e38745a505d8ef239f5ebc64a0fd99cf0c2a3b8bf7b581167c4bdfc678
+        verdict: EQUIVALENT
+        reason: The cited source supports the extracted requirement. The formula quantifies over authoritative ACCEPTED terminal
+          results within the retry horizon and requires a committed canonical acceptance with the same full idempotency identity.
+          The binding predicate explicitly preserves the execution that produced both the stored result and the committed acceptance,
+          excluding substitution by an extensionally equal result from another producer. No additional uniqueness, physical
+          retention, or out-of-horizon guarantee is imposed.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: d6d741e38745a505d8ef239f5ebc64a0fd99cf0c2a3b8bf7b581167c4bdfc678
+        verdict: EQUIVALENT
+        reason: The rendering preserves the source contract's universal in-horizon applicability, full (document_id, client_change_id)
+          identity, existence of the matching committed canonical acceptance, and the producer-provenance requirement that the
+          stored ACCEPTED result come from the same acceptance execution that produced and committed that acceptance. Its rejection
+          of extensionally equal results or acceptances from a different execution is exactly the source exclusion and adds
+          no independent guarantee.
+        differences: []
+  obligation:non_acceptance_retirement_preserves_disposition_identity:
+    kind: obligation
+    subject_id: non_acceptance_retirement_preserves_disposition_identity
+    subject_signature: c5f16c11a026a8e972f76bc3ba82d8bacc0bbd9f326da3efe8b17e43957da58d
+    roundtrip:
+      subject_signature: c5f16c11a026a8e972f76bc3ba82d8bacc0bbd9f326da3efe8b17e43957da58d
+      status: TRANSLATED
+      natural_language: For every protocol transition t and every logical edit identity e, if t occurs on a reachable execution
+        of the normal client speculative lifecycle and t uses an explicit non-acceptance terminal disposition to terminally
+        retire the normal speculative lifecycle of the exact logical edit identified by e, then the disposition consumed by
+        t was produced for that same logical edit e and preserves its full identity, comprising both document_id and client_change_id,
+        through routing and the destructive retirement sink. A non-acceptance terminal disposition terminates an edit without
+        claiming authoritative acceptance and includes expiry, abandonment, conflict resolution, manual resolution, or an equivalent
+        non-acceptance terminal path. Logical edits are scoped to a document; retransmissions of the same logical operation
+        are retries of that edit, not new logical edits. The implication excludes impossible transitions and transitions outside
+        the normal client speculative lifecycle. It does not itself assert stability of client_change_id across retries or uniqueness
+        of client_change_id across distinct logical edits.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: c5f16c11a026a8e972f76bc3ba82d8bacc0bbd9f326da3efe8b17e43957da58d
+        verdict: EQUIVALENT
+        reason: The canonical source explicitly requires a consumed non-acceptance terminal disposition to originate from the
+          retired logical edit and preserve its full document_id and client_change_id through routing and retirement. The formula
+          universally enforces that same provenance relation for every reachable retirement transition and affected edit, without
+          adding eventual retirement, business-reason validity, or subsequent lifecycle-closure requirements.
+        differences: []
+      strengthening:
+        subject_signature: c5f16c11a026a8e972f76bc3ba82d8bacc0bbd9f326da3efe8b17e43957da58d
+        verdict: EQUIVALENT
+        reason: The canonical source explicitly requires a consumed non-acceptance terminal disposition to originate from the
+          same logical edit and preserve its full document_id and client_change_id identity through routing and retirement.
+          The formula universally enforces precisely this provenance requirement for reachable transitions using such dispositions
+          to retire that edit’s normal speculative lifecycle. It adds no occurrence, business-justification, cardinality, or
+          subsequent lifecycle guarantee.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: c5f16c11a026a8e972f76bc3ba82d8bacc0bbd9f326da3efe8b17e43957da58d
+        verdict: EQUIVALENT
+        reason: 'The round-trip preserves the same universal safety implication over reachable normal speculative-lifecycle
+          retirements: whenever an explicit non-acceptance terminal disposition destructively retires a logical edit, that consumed
+          disposition must have been produced for the exact same full (document_id, client_change_id) identity and must preserve
+          that identity through routing to the retirement sink. Its definitions of non-acceptance dispositions, document scoping,
+          retries, reachability, and exclusions neither add nor remove a requirement from the extracted obligation, and the
+          obligation itself is directly supported by the cited canonical section.'
+        differences: []
+  obligation:state_dependent_rejection_uses_authoritative_context:
+    kind: obligation
+    subject_id: state_dependent_rejection_uses_authoritative_context
+    subject_signature: 3ddd9283d1ecd09abb7b3a7061a17643c032fec056c1581e65398cce85c8b9f9
+    roundtrip:
+      subject_signature: 3ddd9283d1ecd09abb7b3a7061a17643c032fec056c1581e65398cce85c8b9f9
+      status: TRANSLATED
+      natural_language: 'For every terminal result record t, if t is an authoritative REJECTED terminal result whose definitive
+        rejection reason depends on document/history state, and t belongs to a logical identity still within the 30-day normal
+        retry eligibility horizon in which definitive-rejection request and authoritative-context provenance are guaranteed,
+        then both of the following hold for the definitive rejection decision d from which t derives: d is bound to authoritative
+        rejection context for the same document, rather than unvalidated stale owner-local state; and the authoritative context
+        or evidence for that same decision d remains sufficient when t linearizes, either because it is current or because a
+        reason-specific guard, monotonicity argument, or revalidation preserves the rejection truth. Authoritative context may
+        consist of a canonical committed prefix or frontier, authoritative metadata, or a proof or guard derived from authoritative
+        document state; owner-local runtime state is not authoritative merely because it was once valid. The decision d is a
+        server-side definitive negative decision computed for one submitted request, such as invalid or rebase-required; timeout,
+        cancellation, transport loss, and crash-before-decision do not qualify. The terminal result is scoped to one document
+        and one idempotency key within the normal retry horizon. Post-expiry re-submission is outside the horizon predicate
+        and is therefore not subject to this implication.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 3ddd9283d1ecd09abb7b3a7061a17643c032fec056c1581e65398cce85c8b9f9
+        verdict: EQUIVALENT
+        reason: The cited sections support the extracted requirement. The formula universally covers in-horizon authoritative
+          state-dependent REJECTED results and requires their producing decisions to use same-document authoritative context
+          whose evidence remains sufficient at terminal linearization. It excludes unvalidated stale owner-local state while
+          permitting earlier authoritative evidence with reason-specific justification. It imposes no latest-head or current-owner
+          requirement and leaves request-intrinsic rejections outside its scope.
+        differences: []
+      strengthening:
+        subject_signature: 3ddd9283d1ecd09abb7b3a7061a17643c032fec056c1581e65398cce85c8b9f9
+        verdict: EQUIVALENT
+        reason: 'The formula preserves the source contract: it ranges over authoritative state-dependent REJECTED terminal results
+          within the normal retry horizon, binds the producing definitive rejection decision to same-document authoritative
+          rejection context rather than stale unvalidated owner-local state, and requires that context or reason-specific evidence
+          to remain sufficient when the result linearizes. The helper meanings preserve the source allowances for current authoritative
+          state, monotonic/guard evidence, or revalidation and add no extra identity, cardinality, or post-expiry guarantee.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 3ddd9283d1ecd09abb7b3a7061a17643c032fec056c1581e65398cce85c8b9f9
+        verdict: EQUIVALENT
+        reason: The rendering preserves the obligation's universal scope over in-horizon authoritative REJECTED terminal results
+          with state-dependent reasons, the same-document authoritative-context provenance requirement, and the requirement
+          that the supporting context or evidence remain sufficient at terminal-result linearization. It also preserves the
+          exclusion of stale unvalidated owner-local state, the 30-day applicability boundary, document/idempotency scoping,
+          and the canonical distinction between request-intrinsic and state-dependent rejection reasoning without adding a stronger
+          product guarantee.
+        differences: []
+  obligation:visible_speculative_effect_is_unique:
+    kind: obligation
+    subject_id: visible_speculative_effect_is_unique
+    subject_signature: 07eb35fa8ab24ba16f17deb41cffc68df0783f7234d4d9f60e18688c5ed46299
+    roundtrip:
+      subject_signature: 07eb35fa8ab24ba16f17deb41cffc68df0783f7234d4d9f60e18688c5ed46299
+      status: TRANSLATED
+      natural_language: For every client state s and every overlay o, if o is currently exposed as a speculative user-visible
+        overlay in client state s, then the logical identity represented by that same overlay o contributes at most one effective
+        speculative operation to the rendered state of that same client state s; this condition applies within the document-scoped
+        client-visible speculative-overlay state represented by o.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 07eb35fa8ab24ba16f17deb41cffc68df0783f7234d4d9f60e18688c5ed46299
+        verdict: EQUIVALENT
+        reason: 'The canonical section explicitly requires at most one effective speculative contribution per full logical identity
+          (D,k) in every user-visible state, while allowing duplicate physical representations. The universal formula enforces
+          this identity-level bound for every exposed overlay: the supplied helper meaning counts the represented identity''s
+          aggregate contribution, not each physical overlay separately. The visibility guard preserves the observer boundary
+          without restricting private or unexposed representations.'
+        differences: []
+      strengthening:
+        subject_signature: 07eb35fa8ab24ba16f17deb41cffc68df0783f7234d4d9f60e18688c5ed46299
+        verdict: EQUIVALENT
+        reason: The cited canonical section explicitly requires that, in every user-visible client state, a logical edit identity
+          contribute at most one effective speculative operation while allowing multiple physical representations when projection/composition
+          prevents duplicate semantic effect. The formula preserves that observer boundary through visible_overlay(s,o), and
+          single_effective_speculative_contribution(s,o) is defined at the logical identity represented by o rather than at
+          physical-overlay-object cardinality, so duplicate physical representations remain allowed provided the identity-level
+          rendered contribution count is at most one. No additional identity, provenance, temporal, or representation-uniqueness
+          requirement is introduced.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 07eb35fa8ab24ba16f17deb41cffc68df0783f7234d4d9f60e18688c5ed46299
+        verdict: EQUIVALENT
+        reason: The rendering preserves the same user-visible observer invariant. Its bound is on the logical identity's total
+          effective speculative contribution in a client state, so duplicate physical overlays for one identity are still allowed
+          only when projection or composition prevents duplicate semantic effect. The document-scoped visible-overlay boundary
+          is preserved, and the cited canonical section directly supports this property.
+        differences: []
+  obligation:terminal_speculative_lifecycle_is_absorbing:
+    kind: obligation
+    subject_id: terminal_speculative_lifecycle_is_absorbing
+    subject_signature: 15c223d0968711dd0dd0ed3042a7d01bfb4a99a7569b381cd1385448ec45fb31
+    roundtrip:
+      subject_signature: 15c223d0968711dd0dd0ed3042a7d01bfb4a99a7569b381cd1385448ec45fb31
+      status: TRANSLATED
+      natural_language: 'For every earlier client state, every later client state, and every exact logical edit identity e:
+        if the earlier client state is reachable under the normal client protocol, the later client state is reachable under
+        the normal client protocol, the later client state is reachable after the earlier client state by one or more client-protocol
+        transitions within the continuing client lifecycle/history (including restore/reactivation, view switching, bookkeeping,
+        reconnect/resync, or publication transitions), and e is classified in the earlier client state as having a terminalized
+        normal speculative lifecycle, then in the later client state e is still classified as having a terminalized normal speculative
+        lifecycle, e is not active in client_pending_edits, the later client state does not retain a normal-lifecycle speculative
+        representation for e in client_speculative_overlays, and the later client state does not expose a normal-lifecycle speculative
+        representation for e in client_visible_speculative_overlays.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 15c223d0968711dd0dd0ed3042a7d01bfb4a99a7569b381cd1385448ec45fb31
+        verdict: EQUIVALENT
+        reason: 'The cited canonical section explicitly makes terminal disposition an absorbing lifecycle boundary for the exact
+          logical-edit identity: after authoritative reconciliation or an explicit terminal disposition ends that lifecycle,
+          all later reachable transitions in the continuing client lifecycle must keep it ended and must not restore the same
+          identity to pending, retained speculative, or visible speculative participation. The formula preserves exactly those
+          quantifiers, reachability and temporal boundaries, full-identity scope, and three prohibited active-state categories;
+          its terminalized predicate is consistent with the canonical logical classification, including implementations realized
+          by deletion or non-reactivatable archival state.'
+        differences: []
+      strengthening:
+        subject_signature: 15c223d0968711dd0dd0ed3042a7d01bfb4a99a7569b381cd1385448ec45fb31
+        verdict: EQUIVALENT
+        reason: 'The canonical sections explicitly make terminal disposition an absorbing boundary for the exact logical-edit
+          identity: once its normal speculative lifecycle is terminalized, every later reachable state in the same continuing
+          client lifecycle must remain terminalized and must not reactivate that identity in pending, retained speculative,
+          or visible speculative state. The formula preserves exactly those quantifiers, reachability/lifecycle boundaries,
+          identity scope, and three excluded active-state coordinates without adding a progress, persistence-representation,
+          or provenance requirement beyond the source.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 15c223d0968711dd0dd0ed3042a7d01bfb4a99a7569b381cd1385448ec45fb31
+        verdict: EQUIVALENT
+        reason: 'The round-trip preserves the absorbing terminal-lifecycle contract over the same exact logical-edit identity
+          and continuing client lifecycle: once a reachable state terminalizes that normal speculative lifecycle, every later
+          reachable state must preserve terminal status and exclude the same identity from pending, retained speculative, and
+          visible speculative participation. Its temporal ordering, reachability, identity, observer-state coordinates, and
+          allowed transition classes match the canonical terminal_speculative_lifecycle_closure; requiring the later state to
+          remain logically terminalized does not require a materialized tombstone, consistent with the canonical allowance for
+          deletion or non-reactivatable archival realization.'
         differences: []
