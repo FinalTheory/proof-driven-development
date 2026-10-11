@@ -534,7 +534,7 @@ class SymbolicBridgeTests(unittest.TestCase):
         )
         self.assertTrue(result.closes_counterexample)
 
-    def test_claim_L92_excludes_wrong_recovery_head_without_lifecycle_overreach(self):
+    def test_claim_L92_excludes_wrong_head_and_downstream_rebind_without_progress_overreach(self):
         bad_head = exists(
             {"r": "RecoveryAttempt"},
             and_(
@@ -551,16 +551,29 @@ class SymbolicBridgeTests(unittest.TestCase):
         )
         self.assertTrue(result.closes_counterexample)
 
-        unrelated_lifecycle_violation = exists(
+        downstream_rebind = exists(
             {"r": "RecoveryAttempt"},
             and_(
                 call("recovery_head_capture_event", var("r")),
                 not_(call("recovery_head_preserved", var("r"))),
             ),
         )
+        result = self.verifier.claim_exclusion_check(
+            downstream_rebind,
+            claims=["L92_captured_recovery_head_equals_authoritative_frontier"],
+        )
+        self.assertTrue(result.closes_counterexample)
+
+        pre_capture_abort = exists(
+            {"r": "RecoveryAttempt"},
+            and_(
+                not_(call("recovery_head_capture_event", var("r"))),
+                not_(call("recovery_head_preserved", var("r"))),
+            ),
+        )
         self.assertEqual(
             self.verifier.check_claims(
-                unrelated_lifecycle_violation,
+                pre_capture_abort,
                 claims=["L92_captured_recovery_head_equals_authoritative_frontier"],
             ).status,
             "sat",

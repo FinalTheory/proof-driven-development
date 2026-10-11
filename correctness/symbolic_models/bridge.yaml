@@ -382,6 +382,21 @@ functions:
     - source:authoritative_truth
     - source:reconnect_revision_boundary
 
+  new_owner_recovery_attempt:
+    args:
+    - RecoveryAttempt
+    returns: Bool
+    catalog_symbols: []
+    meaning: >-
+      Recovery attempt r is within the canonical new-owner recovery boundary for its target document.
+      This classification is established by entering that recovery boundary and does not depend on
+      successful progress: r remains a new-owner recovery attempt if it stalls, crashes, or aborts
+      before owner-generation installation, recovery-head capture, or completion. Recovery or
+      reconstruction activity outside the canonical new-owner recovery boundary is excluded.
+    semantic_anchors:
+    - contract:recovery_document_scope_binding
+    - source:owner_failover
+
   recovery_head_capture_event:
     args:
     - RecoveryAttempt
@@ -390,7 +405,6 @@ functions:
     meaning: Recovery attempt r has reached the new-owner recovery-head capture event after epoch handoff, at which it reads the authoritative frontier and binds recovery_head.
     semantic_anchors:
     - contract:recovery_head_binding
-    - contract:recovery_document_scope_binding
     - source:owner_failover
   captured_recovery_authoritative_head:
     args:
@@ -437,7 +451,7 @@ functions:
     dimensions:
     - document
     - observation
-    meaning: For recovery attempt r targeting document d, the authoritative owner context, captured head, selected authoritative checkpoint, replayed canonical tail, rebuilt logical and OT runtime state, and resumed owner context all preserve d as the same document identity; an extensionally equal checkpoint or tail from another document cannot satisfy this relation.
+    meaning: For recovery attempt r targeting document d, every authoritative owner context and every recovery head, authoritative checkpoint, canonical tail entry, rebuilt logical or OT runtime state, installed recovered state, and resumed owner context that is actually established, selected, captured, consumed, constructed, installed, or used by r preserves d as the same document identity. This relation imposes no progress or existence requirement on later recovery stages, but an extensionally equal owner context, checkpoint, tail, or state from another document cannot satisfy it whenever that stage exists.
     semantic_anchors:
     - contract:recovery_document_scope_binding
     - source:snapshot_frontier
@@ -1965,84 +1979,15 @@ claims:
   C12_live_delivery_contains_only_accepted_changes:
     contracts:
     - live_delivery_acceptance_binding
-    formula:
-      forall:
-        vars:
-          d: LiveDelivery
-        body:
-          implies:
-          - call:
-              fn: live_delivery_record
-              args:
-              - var: d
-          - exists:
-              vars:
-                a: CanonicalAcceptance
-              body:
-                and:
-                - call:
-                    fn: committed_history_record
-                    args:
-                    - var: a
-                - call:
-                    fn: live_delivery_originates_from
-                    args:
-                    - var: d
-                    - var: a
+    formula_from_contracts: true
   L116_live_delivery_is_bound_to_committed_acceptance:
     contracts:
     - live_delivery_acceptance_binding
-    formula:
-      forall:
-        vars:
-          d: LiveDelivery
-        body:
-          implies:
-          - call:
-              fn: live_delivery_record
-              args:
-              - var: d
-          - exists:
-              vars:
-                a: CanonicalAcceptance
-              body:
-                and:
-                - call:
-                    fn: committed_history_record
-                    args:
-                    - var: a
-                - call:
-                    fn: live_delivery_originates_from
-                    args:
-                    - var: d
-                    - var: a
-                - call:
-                    fn: live_delivery_preserves_payload_revision
-                    args:
-                    - var: d
-                    - var: a
+    formula_from_contracts: true
   L92_captured_recovery_head_equals_authoritative_frontier:
     contracts:
     - recovery_head_binding
-    formula:
-      forall:
-        vars:
-          r: RecoveryAttempt
-        body:
-          implies:
-          - call:
-              fn: recovery_head_capture_event
-              args:
-              - var: r
-          - eq:
-            - call:
-                fn: recovery_head_value
-                args:
-                - var: r
-            - call:
-                fn: captured_recovery_authoritative_head
-                args:
-                - var: r
+    formula_from_contracts: true
   G0_acked_edit_survives_failover:
     contracts:
     - acked_edit_failover_survival
@@ -2890,7 +2835,7 @@ contracts:
         body:
           implies:
           - call:
-              fn: recovery_head_capture_event
+              fn: new_owner_recovery_attempt
               args:
               - var: r
           - call:

@@ -12,7 +12,7 @@ Before doing any repository work, obtain the current ChatGPT conversation URL fr
 
 If the user has not provided it yet, ask only for the current conversation URL and wait for the reply. Do not begin this campaign before receiving it.
 
-Once the URL is provided, call `start_timer` with that URL and pass the same `conversation_url` on subsequent Writer MCP calls. Thereafter follow the authoritative long-session status and wakeup protocol provided by the MCP server.
+Once the URL is provided, call `register_conversation_url` exactly once with that URL. After registration, do not pass `conversation_url` to ordinary Writer MCP calls; the MCP server identifies the conversation from OpenAI-provided session metadata. For long-session control tools such as `register_wakeup`, follow the currently exposed tool schema; if it still requires `conversation_url`, use the same already-registered URL rather than treating it as a new registration. The first ordinary Writer MCP call after registration starts the long-session timer, and later calls do not reset it. Thereafter follow the authoritative long-session status and wakeup protocol provided by the MCP server.
 
 Use only Writer MCP for repository access. Start from a fresh context and do not use prior chats, audit transcripts, or history as correctness evidence.
 

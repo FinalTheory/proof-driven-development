@@ -91,7 +91,7 @@ class FormalizationRoutingTests(unittest.TestCase):
         )
         self.assertEqual(state.effective, "SYMBOLIC_READY")
 
-    def test_symbolic_composition_never_falls_back_to_llm(self) -> None:
+    def test_fresh_trusted_symbolic_composition_routes_ready_without_llm(self) -> None:
         route = composition_formalization_route(
             self.graph,
             self.bridge,
@@ -99,8 +99,8 @@ class FormalizationRoutingTests(unittest.TestCase):
             "C12_live_delivery_contains_only_accepted_changes",
         )
         self.assertEqual(route["backend"], "symbolic")
-        self.assertEqual(route["state"], "BLOCKED")
-        self.assertTrue(route["blocking"])
+        self.assertEqual(route["state"], "READY")
+        self.assertEqual(route["blocking"], [])
 
     def test_explicit_non_symbolic_target_routes_to_non_symbolic_backend(self) -> None:
         doc = copy.deepcopy(self.graph.doc)

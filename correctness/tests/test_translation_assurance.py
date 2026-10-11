@@ -97,16 +97,16 @@ ambiguities: []
         self.assertIn("acceptance_identity_preserved_end_to_end", claim.symbolic_context())
         self.assertIn("durable_evidence_identity_matches_request", claim.symbolic_context())
 
-    def test_claim_formula_can_project_narrower_property_than_referenced_contract(self):
+    def test_claim_formula_from_contracts_materializes_full_recovery_head_binding(self):
         claim = build_claim_translation_subject(
             self.graph,
             self.bridge,
             "L92_captured_recovery_head_equals_authoritative_frontier",
         )
         self.assertIn("recovery_head_value", claim.symbolic_context())
-        self.assertNotIn("recovery_head_preserved", claim.symbolic_context())
+        self.assertIn("recovery_head_preserved", claim.symbolic_context())
         self.assertIn("acceptance resumption", claim.source_context())
-        self.assertIn("context only", claim.source_context())
+        self.assertIn("no downstream", claim.source_context())
 
     def test_roundtrip_prompt_is_blind_to_source_contract(self):
         prompt = build_roundtrip_translation_prompt(self.subject)

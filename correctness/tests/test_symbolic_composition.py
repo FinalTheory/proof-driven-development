@@ -84,12 +84,14 @@ class SymbolicCompositionTests(unittest.TestCase):
         self.assertFalse(result.machine_checked)
         self.assertIsNotNone(result.solver_result.model)
 
-    def test_trusted_c12_composition_requires_fresh_translation_review(self):
+    def test_trusted_c12_composition_runs_after_fresh_translation_review(self):
         registry = TranslationAssuranceRegistry.load(ASSURANCE_PATH)
         verifier = SymbolicCompositionVerifier(self.graph, self.bridge, registry)
-        with self.assertRaises(TranslationReviewError) as ctx:
-            verifier.check(C12_TARGET, require_trusted=True)
-        self.assertIn("STALE", str(ctx.exception))
+        result = verifier.check(C12_TARGET, require_trusted=True)
+        self.assertEqual(result.premise_ids, (C12_PREMISE,))
+        self.assertEqual(result.solver_result.status, "unsat")
+        self.assertEqual(result.verdict, "ENTAILED")
+        self.assertTrue(result.machine_checked)
 
     def test_stale_c12_machine_check_is_not_recorded(self):
         entry = self.graph.doc["assurance"]["composition"][C12_TARGET]

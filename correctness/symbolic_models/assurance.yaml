@@ -48,43 +48,28 @@ records:
   claim:L92_captured_recovery_head_equals_authoritative_frontier:
     kind: claim
     subject_id: L92_captured_recovery_head_equals_authoritative_frontier
-    subject_signature: af9ce92ddced7847779f198c4cd75dada8cf26f0f598c7d14812f41870bbd6b5
+    subject_signature: 8b28a158453cf63f6fa93a0a65b144fd0b9e8afccd918fc084a1a03b78964d40
     roundtrip:
-      subject_signature: af9ce92ddced7847779f198c4cd75dada8cf26f0f598c7d14812f41870bbd6b5
+      subject_signature: 8b28a158453cf63f6fa93a0a65b144fd0b9e8afccd918fc084a1a03b78964d40
       status: TRANSLATED
-      natural_language: For every recovery attempt r, if r has reached the new-owner recovery-head capture event after epoch
-        handoff, then the recovery_head value bound to r is equal to the authoritative document_latest_revision value read
-        when r captures its recovery frontier.
+      natural_language: 'For every recovery attempt r, if r has reached the new-owner recovery-head capture event after epoch handoff, at which it reads the authoritative frontier and binds recovery_head, then both of the following hold: the recovery_head value bound to r equals the authoritative persisted document_latest_revision frontier for the document read when r captures its recovery frontier; and that same captured recovery_head governs checkpoint selection, exact tail replay, recovered metadata reconstruction, and acceptance resumption for r.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: af9ce92ddced7847779f198c4cd75dada8cf26f0f598c7d14812f41870bbd6b5
+        subject_signature: 8b28a158453cf63f6fa93a0a65b144fd0b9e8afccd918fc084a1a03b78964d40
         verdict: EQUIVALENT
-        reason: 'The formula exactly captures the source proposition: for every recovery attempt, after the recovery-head
-          capture event, recovery_head_value equals the authoritative document_latest_revision value captured at that event.
-          No additional guarantees from the contextual semantic contract are introduced.'
+        reason: Universal quantification and the capture-event guard preserve applicability to each new-owner attempt reaching capture after epoch handoff. Equality binds that attempt's recovery head to the authoritative frontier read at its capture event. The preservation predicate requires the same captured head to govern all four downstream stages, excluding substitution of a different recovery head. No progress obligation is imposed before capture, and no checkpoint, replay, or metadata correctness guarantee is added.
         differences: []
       strengthening:
-        subject_signature: af9ce92ddced7847779f198c4cd75dada8cf26f0f598c7d14812f41870bbd6b5
+        subject_signature: 8b28a158453cf63f6fa93a0a65b144fd0b9e8afccd918fc084a1a03b78964d40
         verdict: EQUIVALENT
-        reason: 'The symbolic formula matches the canonical proposition: after the capture event, the recovery_head value
-          equals the authoritative revision value captured at that event. No additional guarantees or missing requirements
-          are introduced.'
+        reason: The capture-event guard restricts obligations to new-owner recovery attempts reaching head capture after epoch handoff. Equality binds the attempt's recovery head to the authoritative frontier read at that event, and preservation requires that same captured head to govern all four named downstream stages, excluding substitution of a different frontier. Attempts not reaching capture incur no obligation. Attempt identity, observation timing, and provenance are preserved, with no additional progress or stage-correctness requirements.
         differences: []
     roundtrip_reviews:
-      weakening:
-        subject_signature: af9ce92ddced7847779f198c4cd75dada8cf26f0f598c7d14812f41870bbd6b5
+      balanced:
+        subject_signature: 8b28a158453cf63f6fa93a0a65b144fd0b9e8afccd918fc084a1a03b78964d40
         verdict: EQUIVALENT
-        reason: The rendering preserves the original contract's applicability boundary after epoch handoff, the capture-event
-          condition, the equality relation, the authoritative source of document_latest_revision, and the binding of recovery_head
-          to that captured value. No quantifier, provenance direction, identity component, or guarantee scope is changed.
-        differences: []
-      strengthening:
-        subject_signature: af9ce92ddced7847779f198c4cd75dada8cf26f0f598c7d14812f41870bbd6b5
-        verdict: EQUIVALENT
-        reason: The rendering preserves the original applicability boundary, epoch handoff precondition, provenance direction,
-          and equality relation between recovery_head and the authoritative document_latest_revision value observed at the
-          capture event. It does not add guarantees beyond the source proposition.
+        reason: Both propositions apply to new-owner recovery attempts reaching head capture after epoch handoff, bind recovery_head to the authoritative document_latest_revision read at that event, and require that same captured value to govern all four downstream stages. This preserves the prohibition on substituting a different recovery head and imposes no progress obligation on attempts that terminate before capture.
         differences: []
   claim:L108_acceptance_preserves_request_identity:
     kind: claim
@@ -142,94 +127,54 @@ records:
   claim:L116_live_delivery_is_bound_to_committed_acceptance:
     kind: claim
     subject_id: L116_live_delivery_is_bound_to_committed_acceptance
-    subject_signature: 304dce79d40b4efee56ca83ff8810a13e3608856d587f246769e569a9da185bf
+    subject_signature: 5a28b7e9d561cb1483416363a7e74af5daf44b25754d6128f926ad3541abdb99
     roundtrip:
-      subject_signature: 304dce79d40b4efee56ca83ff8810a13e3608856d587f246769e569a9da185bf
+      subject_signature: 5a28b7e9d561cb1483416363a7e74af5daf44b25754d6128f926ad3541abdb99
       status: TRANSLATED
-      natural_language: For every live delivery d such that d is a delivery actually exposed through the websocket live stream,
-        there exists a CanonicalAcceptance record a such that a is a committed record in the authoritative accepted_change_log,
-        d originates from a as its accepted-history source, and d preserves a's canonical payload and revision provenance
-        exactly. The existence of such a committed acceptance record and the two stated relations must hold separately for
-        each live delivery; the formula does not assert that the delivery is canonical merely from being a live delivery,
-        and it does not treat origin alone as implying commitment or exact payload/revision preservation.
+      natural_language: 'For every LiveDelivery d, if d is a change actually exposed through the websocket live stream, then there exists a CanonicalAcceptance a such that all of the following hold: a is a committed record in the authoritative accepted_change_log; d originates from a as its accepted-history source; d preserves a''s canonical payload and revision provenance exactly; and d is consumed on the same document-scoped stream as a, with an equally-valued acceptance from another document unable to satisfy this document-scope condition. The implication applies to every actually exposed change, including any provisional, speculative, rejected, aborted, or never-committed change that is exposed.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 304dce79d40b4efee56ca83ff8810a13e3608856d587f246769e569a9da185bf
+        subject_signature: 5a28b7e9d561cb1483416363a7e74af5daf44b25754d6128f926ad3541abdb99
         verdict: EQUIVALENT
-        reason: The formula requires every exposed live delivery to have a committed accepted-history witness, an origin relation
-          to that witness, and preservation of canonical payload and revision provenance. These correspond directly to the
-          source requirements that live changes are bound to committed canonical records and preserve their payload and provenance,
-          while the formula adds no guarantees about ordering, duplication, timing, or delivery success.
+        reason: Every actually exposed delivery requires a single acceptance witness that is committed, is its accepted-history source, and preserves both document scope and canonical payload/revision provenance. These obligations exclude uncommitted sources and other-document substitutions even when values collide. The formula adds no uniqueness, ordering, timeliness, or eventual-delivery requirement and introduces no unsupported identity or temporal bridge.
         differences: []
       strengthening:
-        subject_signature: 304dce79d40b4efee56ca83ff8810a13e3608856d587f246769e569a9da185bf
+        subject_signature: 5a28b7e9d561cb1483416363a7e74af5daf44b25754d6128f926ad3541abdb99
         verdict: EQUIVALENT
-        reason: The formula preserves the original proposition's observation scope over every live stream delivery and requires
-          a committed accepted-history source plus preservation of canonical payload and revision provenance. The exclusion
-          of provisional, rejected, aborted, or never-committed changes follows from the universal source obligation without
-          adding guarantees such as ordering or exactly-once delivery.
+        reason: Every actually exposed delivery must originate from a committed canonical acceptance that preserves both document scope and canonical payload/revision provenance. All obligations share the same acceptance witness, excluding other-document substitution despite value collisions. The exposure predicate includes invalid provisional deliveries rather than excluding them by preclassification. The formula adds no uniqueness, ordering, timeliness, or eventual-delivery requirement and introduces no unsupported identity or temporal bridge.
         differences: []
     roundtrip_reviews:
-      weakening:
-        subject_signature: 304dce79d40b4efee56ca83ff8810a13e3608856d587f246769e569a9da185bf
+      balanced:
+        subject_signature: 5a28b7e9d561cb1483416363a7e74af5daf44b25754d6128f926ad3541abdb99
         verdict: EQUIVALENT
-        reason: The rendering preserves the original quantification boundary, provenance direction, commitment requirement,
-          payload and revision provenance preservation, and exclusion of non-committed changes. It does not add delivery guarantees
-          or collapse identity dimensions beyond the canonical contract.
-        differences: []
-      strengthening:
-        subject_signature: 304dce79d40b4efee56ca83ff8810a13e3608856d587f246769e569a9da185bf
-        verdict: EQUIVALENT
-        reason: The rendering preserves the universal scope over exposed websocket live deliveries, the existential binding
-          to a committed accepted-history record, the provenance direction, canonical payload and revision provenance preservation,
-          and does not add guarantees beyond the canonical contract.
+        reason: 'Both require every exposed change to originate from a committed canonical acceptance for the same document, preserving canonical payload and revision provenance even when values collide across documents. Including provisional or otherwise uncommitted changes within the implication''s scope does not authorize their exposure: they must satisfy the same committed-source requirement. Neither adds uniqueness, ordering, timeliness, or delivery success guarantees.'
         differences: []
   claim:C12_live_delivery_contains_only_accepted_changes:
     kind: claim
     subject_id: C12_live_delivery_contains_only_accepted_changes
-    subject_signature: 45bf7508462ebbe46adb3f9a45040fa3a5ab0cb3a71876ac549fdd6b4f511df3
+    subject_signature: f0958426822769f618719a1b97a2d340c7cf3fa6e99dc48501345118a6e6a060
     roundtrip:
-      subject_signature: 45bf7508462ebbe46adb3f9a45040fa3a5ab0cb3a71876ac549fdd6b4f511df3
+      subject_signature: f0958426822769f618719a1b97a2d340c7cf3fa6e99dc48501345118a6e6a060
       status: TRANSLATED
-      natural_language: For every live delivery d, if d is a change actually exposed through the websocket live stream, then
-        there exists a CanonicalAcceptance record a such that a is a committed record in the authoritative accepted_change_log
-        and d originates from that acceptance record a as its accepted-history source. The proposition only requires that
-        each exposed live delivery has some committed canonical acceptance record as its origin; the origin relation itself
-        does not assert that every payload or revision field is preserved exactly, and the proposition does not additionally
-        assert that all committed acceptance records are delivered.
+      natural_language: 'For every live delivery d, if d is a change actually exposed through the websocket live stream, then there exists a canonical acceptance record a such that all of the following hold: a is a committed record in the authoritative accepted_change_log; d originates from a as its accepted-history source; d preserves a''s canonical payload and revision provenance exactly; and d is consumed on the same document-scoped stream as a. An equally-valued acceptance from another document cannot satisfy this document-scope condition. The exposure guard includes any provisional, speculative, rejected, aborted, or never-committed change actually exposed through the stream; such exposure must satisfy the same committed-source, origin, payload/revision, and document-scope requirements with a single acceptance record a.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 45bf7508462ebbe46adb3f9a45040fa3a5ab0cb3a71876ac549fdd6b4f511df3
+        subject_signature: f0958426822769f618719a1b97a2d340c7cf3fa6e99dc48501345118a6e6a060
         verdict: EQUIVALENT
-        reason: The formula requires every observed live delivery to have a committed accepted-history witness and an origin
-          relation from that witness, which matches the source claim that live delivery is derived from committed accepted
-          history and never exposes an unaccepted change. The source's duplicate and reorder allowances are exclusions of
-          stronger delivery guarantees rather than additional obligations, so their absence from the formula does not weaken
-          the translation.
+        reason: Every exposed live change must originate from one committed acceptance record that preserves both document scope and canonical payload/revision provenance. The same witness satisfies all obligations, excluding uncommitted changes and equally-valued records from other documents. No uniqueness, ordering, timeliness, or delivery-completeness requirement is imposed, so duplication and reordering remain permitted. No identity, observation, or provenance coordinate is lost.
         differences: []
       strengthening:
-        subject_signature: 45bf7508462ebbe46adb3f9a45040fa3a5ab0cb3a71876ac549fdd6b4f511df3
+        subject_signature: f0958426822769f618719a1b97a2d340c7cf3fa6e99dc48501345118a6e6a060
         verdict: EQUIVALENT
-        reason: 'The formula preserves the canonical provenance requirement: every observed live delivery must originate from
-          some committed accepted history record. It does not add exactly-once, ordering, timing, or completeness guarantees,
-          and the origin relation matches the source''s accepted-history derivation boundary.'
+        reason: Every exposed live change must originate from a committed acceptance record, preserving that same record's document scope, canonical payload, and revision provenance. The shared existential witness prevents substitution of an equally-valued record from another document. No uniqueness, ordering, timeliness, or eventual-delivery obligation is added; duplication and reordering remain permitted. The typed predicates preserve the source's distinct delivery and acceptance coordinates without adding temporal or cross-claim bridges.
         differences: []
     roundtrip_reviews:
-      weakening:
-        subject_signature: 45bf7508462ebbe46adb3f9a45040fa3a5ab0cb3a71876ac549fdd6b4f511df3
+      balanced:
+        subject_signature: f0958426822769f618719a1b97a2d340c7cf3fa6e99dc48501345118a6e6a060
         verdict: EQUIVALENT
-        reason: 'The rendering preserves the core provenance binding: every exposed live delivery must originate from a committed
-          accepted-change record. It retains the existential acceptance witness, the direction from canonical acceptance to
-          live delivery, and does not add delivery guarantees such as completeness, ordering, or exactly-once.'
-        differences: []
-      strengthening:
-        subject_signature: 45bf7508462ebbe46adb3f9a45040fa3a5ab0cb3a71876ac549fdd6b4f511df3
-        verdict: EQUIVALENT
-        reason: 'The rendering preserves the original provenance guarantee: every exposed live delivery must originate from
-          a committed accepted history record, while it does not add delivery completeness, ordering, exactly-once, timing,
-          or other guarantees. It also preserves the one-way non-invention boundary.'
+        reason: Both require every exposed live change to originate from committed accepted history for the same document, preserving canonical payload and revision provenance. The single-record witness prevents mixing provenance coordinates or substituting equally-valued records from other documents. The exposure guard restates the universal scope without adding guarantees of ordering, uniqueness, timeliness, or eventual delivery.
         differences: []
   claim:L20_acceptance_paths_are_authoritatively_mediated:
     kind: claim
@@ -892,58 +837,62 @@ records:
   claim:G3_snapshot_and_recovery_preserve_state:
     kind: claim
     subject_id: G3_snapshot_and_recovery_preserve_state
-    subject_signature: 6515f3de8259905e52e75b74617d9d2e44dd15bb6fd28bb5512ea024b45a7f21
+    subject_signature: df5101b86f1a2db4e5ef2bf70528a2a1ff4ed340749efa863cffaedeb35d8493
     roundtrip:
-      subject_signature: 6515f3de8259905e52e75b74617d9d2e44dd15bb6fd28bb5512ea024b45a7f21
+      subject_signature: df5101b86f1a2db4e5ef2bf70528a2a1ff4ed340749efa863cffaedeb35d8493
       status: TRANSLATED
-      natural_language: 'Both of the following hold. First, for every authoritative-state representation s and every revision
-        frontier H, if s is either an optimized authoritative lifecycle representation at H (such as a snapshot, checkpoint,
-        cleanup, or compaction result) or the result of a completed owner recovery at H, then all of these conditions hold for
-        that same s and H: the logical document state denoted by s equals the deterministic canonical replay of accepted revisions
-        through H; the authoritative latest_revision preserved by s is exactly H; and, if s is used to resume owner service,
-        then s reconstructs the acceptance-relevant state required to continue accepting from frontier H without changing canonical
-        semantics. Second, for every recovery attempt r, if r has reached the new-owner recovery-head capture event after epoch
-        handoff, where it reads the authoritative frontier and binds recovery_head, then the recovery sources for r must preserve
-        the document scope of the specific target document recovery_target_document(r): the authoritative owner context, captured
-        head, selected authoritative checkpoint, replayed canonical tail, rebuilt logical and OT runtime state, and resumed
-        owner context must all remain bound to that same document identity, and an extensionally equal checkpoint or tail belonging
-        to another document does not satisfy this condition.'
+      natural_language: Both of the following conditions hold. First, for every authoritative state representation s and every
+        revision frontier H, if s is an optimized authoritative lifecycle representation (a snapshot, checkpoint, cleanup, or
+        compaction result) at H, or s is the result of a completed owner recovery at H, then the logical document state denoted
+        by s equals deterministic canonical replay of accepted revisions through H, and s preserves authoritative latest_revision
+        exactly equal to H. Under that same disjunctive guard, if s is used to resume owner service, then s also reconstructs
+        the acceptance-relevant state required to continue accepting from H without changing canonical semantics. Second, for
+        every recovery attempt r, if r is within the canonical new-owner recovery boundary for its target document, then every
+        authoritative owner context and every recovery head, authoritative checkpoint, canonical tail entry, rebuilt logical
+        or OT runtime state, installed recovered state, and resumed owner context actually established, selected, captured,
+        consumed, constructed, installed, or used by r preserves the identity of recovery_target_document(r) as the same document.
+        This document identity requirement applies to each such context, source, or state as it occurs in that attempt, including
+        the document-scoped current epoch, owner-generation identity, recovery head, checkpoint content paired with its exact
+        snapshot revision, accepted change log, and recovered owner runtime state wherever those are actually involved. Entering
+        the canonical new-owner recovery boundary establishes the classification of r as a new-owner recovery attempt, even
+        if r stalls, crashes, or aborts before owner-generation installation, recovery-head capture, or completion. Recovery
+        or reconstruction activity outside that boundary is excluded from this classification. The document identity requirement
+        imposes no progress or existence requirement on later recovery stages; whenever a stage exists, however, an extensionally
+        equal owner context, checkpoint, tail, or state from a different document cannot satisfy that requirement. These universal
+        conditions do not assert that qualifying representations or recovery attempts exist. Referenced semantic contracts supply
+        vocabulary and relations without adding their entire formulas to these conditions.
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 6515f3de8259905e52e75b74617d9d2e44dd15bb6fd28bb5512ea024b45a7f21
+        subject_signature: df5101b86f1a2db4e5ef2bf70528a2a1ff4ed340749efa863cffaedeb35d8493
         verdict: EQUIVALENT
-        reason: The formula preserves both source guarantees with the same applicability boundaries. The first universal clause
-          exactly requires optimized authoritative lifecycle representations and completed recoveries at frontier h to match
-          canonical replay through h, preserve latest_revision = h, and reconstruct acceptance-relevant state only when used
-          to resume owner service. The second universal clause applies exactly after a new-owner recovery captures its authoritative
-          head and binds the authoritative owner context, captured head, selected checkpoint, replayed canonical tail, rebuilt
-          logical/OT runtime state, and resumed owner context to the recovery target document; the predicate meaning also excludes
-          extensionally equal cross-document substitution. No source requirement is dropped and no excluded liveness, storage,
-          audit, timing, or stronger identity requirement is added.
+        reason: The formula requires every optimized authoritative representation and completed recovery at frontier H to preserve
+          canonical logical state and latest_revision, with acceptance-relevant reconstruction required when resuming service.
+          It independently requires document provenance throughout every new-owner recovery attempt, including owner context
+          before head capture and every subsequent stage that occurs. The supplied predicate meanings preserve target-document
+          identity, forbid extensionally equal cross-document substitutions, and cover stalled, crashed, or aborted attempts
+          without requiring progress or completion. No additional observation, cardinality, or cross-claim bridge is introduced.
         differences: []
       strengthening:
-        subject_signature: 6515f3de8259905e52e75b74617d9d2e44dd15bb6fd28bb5512ea024b45a7f21
+        subject_signature: df5101b86f1a2db4e5ef2bf70528a2a1ff4ed340749efa863cffaedeb35d8493
         verdict: EQUIVALENT
-        reason: 'The formula preserves both source guarantees at their stated applicability boundaries: every optimized authoritative
-          representation or completed recovery at frontier H must match canonical replay, preserve latest_revision = H, and
-          reconstruct acceptance-relevant state when used to resume service; every new-owner recovery that has captured its
-          authoritative head must preserve the target document identity across owner context, head, checkpoint, replay tail,
-          rebuilt runtime state, installation, and resumption. The supplied predicate meanings retain the document-provenance/non-substitution
-          requirement without adding byte identity, eventual completion, audit equivalence, or other excluded observations.'
+        reason: The formula preserves universal coverage of optimized representations and completed recoveries at a common frontier,
+          requiring canonical logical-state equality and latest_revision preservation, with acceptance-state reconstruction
+          conditional on service resumption. Its recovery clause covers every new-owner attempt, including stalled or aborted
+          attempts, and binds all occurring owner contexts and recovery stages to the target document without requiring progress
+          or completion. The supplied predicate meanings preserve document provenance independently of extensional equality,
+          retain distinct state, frontier, and attempt coordinates, and introduce no additional observation requirements or
+          cross-claim bridges.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 6515f3de8259905e52e75b74617d9d2e44dd15bb6fd28bb5512ea024b45a7f21
+        subject_signature: df5101b86f1a2db4e5ef2bf70528a2a1ff4ed340749efa863cffaedeb35d8493
         verdict: EQUIVALENT
-        reason: 'The rendering preserves both guarantees with the same applicability boundaries and coordinates: each optimized
-          authoritative representation or completed recovery is compared at the same frontier H to canonical accepted-history
-          replay, including latest_revision = H and acceptance-relevant resumption state when applicable; and each new-owner
-          recovery after authoritative recovery-head capture remains bound to its target document across owner context, head,
-          checkpoint, canonical tail, rebuilt runtime state, and resumed context. The added wording about capture after epoch
-          handoff is already inherent in recovery_head, and the explicit cross-document checkpoint/tail example does not narrow
-          the broader same-document binding stated for all listed recovery components. No source requirement is omitted and
-          no additional observation or guarantee is introduced.'
+        reason: The rendering preserves frontier-relative logical state, latest_revision, and acceptance-relevant reconstruction
+          when service resumes. Its boundary language classifies new-owner recovery attempts without conditioning provenance
+          on installation, head capture, or completion. Same-document binding covers the initial authoritative owner context
+          and every occurring recovery stage, rejects extensionally equal cross-document substitutes, and requires neither progress
+          nor existence of later stages. Neither side adds guarantees about physical representation or other excluded observations.
         differences: []
   claim:G10_user_visible_client_state_matches_document:
     kind: claim
@@ -1562,51 +1511,56 @@ records:
   obligation:recovery_sources_preserve_target_document:
     kind: obligation
     subject_id: recovery_sources_preserve_target_document
-    subject_signature: 101d1fe9de55c387a9b3e549d44aac09122b5e59ab67970292eb7cc1026ddc48
+    subject_signature: 41c78e76a30c49e65d66a15e3fd387e5a928eb285da8b7923cbf85ad5ed9ecce
     roundtrip:
-      subject_signature: 101d1fe9de55c387a9b3e549d44aac09122b5e59ab67970292eb7cc1026ddc48
+      subject_signature: 41c78e76a30c49e65d66a15e3fd387e5a928eb285da8b7923cbf85ad5ed9ecce
       status: TRANSLATED
-      natural_language: For every recovery attempt r, if r has reached the new-owner recovery-head capture event after epoch
-        handoff, where it reads the authoritative frontier and binds recovery_head, then, for the document identity bound as
-        r's recovery target and for that recovery observation, the authoritative owner context, the captured recovery head,
-        the selected authoritative checkpoint, the replayed canonical tail, the rebuilt logical and OT runtime state, and the
-        resumed owner context must all preserve that target as the same document identity. An extensionally equal checkpoint
-        or tail belonging to a different document does not satisfy this document-scoped preservation relation.
+      natural_language: 'For every recovery attempt r, if r has entered the canonical new-owner recovery boundary for its bound
+        target document d, then every authoritative owner context, recovery head, authoritative checkpoint, canonical tail entry,
+        rebuilt logical or operational-transformation runtime state, installed recovered state, and resumed owner context that
+        r actually establishes, selects, captures, consumes, constructs, installs, or uses must preserve d as the same document
+        identity at each such observation within r. This includes the document-scoped authoritative persisted ownership epoch
+        and immutable owner-generation identity; the authoritative recovery revision frontier captured after epoch handoff;
+        atomically published checkpoint content paired with its exact canonical revision frontier; canonical ordered accepted-change
+        history; and recovered logical document state, service frontier, and acceptance-relevant runtime state. An extensionally
+        equal owner context, checkpoint, tail, or state belonging to another document does not satisfy this requirement whenever
+        the corresponding stage exists. Entry into the canonical boundary suffices for the implication''s guard: r remains covered
+        if it stalls, crashes, or aborts before owner-generation installation, recovery-head capture, or completion. The requirement
+        imposes no progress requirement and does not require later recovery stages or their artifacts to exist. Recovery or
+        reconstruction activity outside the canonical new-owner recovery boundary is excluded from the guard. This proposition
+        is an independently extracted required design property serving as an oracle above the correctness DAG, rather than a
+        proof premise generated from DAG roots.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 101d1fe9de55c387a9b3e549d44aac09122b5e59ab67970292eb7cc1026ddc48
+        subject_signature: 41c78e76a30c49e65d66a15e3fd387e5a928eb285da8b7923cbf85ad5ed9ecce
         verdict: EQUIVALENT
-        reason: 'The cited owner-failover section explicitly requires provenance closure for new-owner recovery after the authoritative
-          head is captured: the recovery target, handoff/owner context, captured head, selected checkpoint, canonical replay
-          tail, rebuilt logical/OT state, and resumed owner context must all remain scoped to the same document, with cross-document
-          substitution forbidden even when representations or replay results are extensionally equal. The formula preserves
-          that applicability boundary through recovery_head_capture_event, preserves universal quantification over recovery
-          attempts, and its document-scoped predicate meaning carries the same identity/provenance relation without adding a
-          stronger temporal, cardinality, or observation requirement.'
+        reason: The cited sections support document-scoped provenance from ownership handoff through recovery and resumption.
+          The formula covers every new-owner recovery attempt, including attempts that stop before owner installation or head
+          capture, and requires every occurring owner context and recovery artifact to preserve the target document identity.
+          It rejects cross-document substitution despite extensional equality, preserves attempt and stage scope, and imposes
+          no progress or completion requirement.
         differences: []
       strengthening:
-        subject_signature: 101d1fe9de55c387a9b3e549d44aac09122b5e59ab67970292eb7cc1026ddc48
+        subject_signature: 41c78e76a30c49e65d66a15e3fd387e5a928eb285da8b7923cbf85ad5ed9ecce
         verdict: EQUIVALENT
-        reason: The canonical sections explicitly require document-scoped provenance closure across the new-owner recovery handoff,
-          captured recovery head, selected authoritative checkpoint, canonical replay tail, rebuilt logical/OT runtime state,
-          and resumed owner context, including rejection of cross-document substitution despite extensional equality. The formula
-          applies exactly once a recovery attempt reaches the authoritative head-capture event after handoff, quantifies over
-          every such attempt, binds the target through recovery_target_document(r), and the typed predicate meaning preserves
-          the same document identity across precisely those recovery artifacts and contexts without adding an unsupported equality,
-          cardinality, or temporal requirement.
+        reason: The canonical sections support document provenance closure from ownership handoff through recovery and resumption.
+          The formula preserves that requirement for every canonical new-owner recovery attempt, including stalled or aborted
+          attempts, while constraining later stages only when they occur. Its typed predicate preserves the target document
+          identity across owner contexts, heads, checkpoints, tail entries, rebuilt logical/OT state, installation, and resumption;
+          extensional equality cannot authorize cross-document substitution. It adds no progress, completion, cardinality, or
+          out-of-boundary requirement.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 101d1fe9de55c387a9b3e549d44aac09122b5e59ab67970292eb7cc1026ddc48
+        subject_signature: 41c78e76a30c49e65d66a15e3fd387e5a928eb285da8b7923cbf85ad5ed9ecce
         verdict: EQUIVALENT
-        reason: The rendering preserves the source's per-new-owner-recovery applicability after recovery-head capture, keeps
-          the recovery target as the fixed document identity coordinate, and requires the handoff/owner context, captured head,
-          checkpoint, canonical tail, rebuilt logical/OT state, and resumed owner context to retain that same document provenance.
-          Its explicit rejection of cross-document substitution for extensionally equal checkpoints or tails is consistent with,
-          and does not narrow, the first sentence's identity-preservation requirement for all listed recovery objects; the added
-          reference to the authoritative owner context is supported by the cited ownership-handoff requirement and does not
-          strengthen the contract.
+        reason: Both require target-document provenance throughout every new-owner recovery attempt, including owner context
+          before head capture and each later stage that actually occurs. The rendering preserves distinct document-scoped authority,
+          frontier, checkpoint, history, and runtime-state coordinates, rejects cross-document substitution despite extensional
+          equality, and imposes no progress or completion requirement. Its boundary guard includes stalled, crashed, and aborted
+          attempts before installation or capture. The cited design sections support this provenance closure; excluding activity
+          outside new-owner recovery does not narrow the original scope.
         differences: []
   obligation:live_delivery_preserves_committed_document_provenance:
     kind: obligation

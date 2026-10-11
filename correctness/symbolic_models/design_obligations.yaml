@@ -261,12 +261,14 @@ obligations:
   recovery_sources_preserve_target_document:
     description: Historical regression for cross-document recovery substitution hidden
       by extensionally equal checkpoints or tails.
-    statement: For every new-owner recovery after its authoritative recovery head is
-      captured, the recovery target, captured authoritative head, selected checkpoint,
-      replayed canonical tail, rebuilt logical/OT runtime state, and resumed owner context
-      remain bound to the same document; authoritative objects from another document
-      are not interchangeable merely because their frontier, bytes, replay result, or
-      metadata are equal.
+    statement: For every new-owner recovery targeting document D, document provenance
+      is preserved throughout the attempt starting with its authoritative owner context
+      before recovery-head capture and, whenever later stages occur, through the captured
+      authoritative head, selected checkpoint, replayed canonical tail, rebuilt logical/OT
+      runtime state, installed recovered state, and resumed owner context. Authoritative
+      objects or owner contexts from another document are not interchangeable merely because
+      their epoch/generation scalars, frontier, bytes, replay result, or metadata are equal;
+      this invariant imposes no recovery progress or completion requirement.
     source_refs:
     - snapshot_frontier
     - owner_failover
@@ -281,7 +283,7 @@ obligations:
         body:
           implies:
           - call:
-              fn: recovery_head_capture_event
+              fn: new_owner_recovery_attempt
               args:
               - var: r
           - call:
