@@ -78,6 +78,9 @@ class SymbolicBridgeTests(unittest.TestCase):
         broken["functions"]["request_raw_edit_bound_to_source_content"][
             "catalog_symbols"
         ] = ["client_local_document"]
+        broken["functions"]["request_authoring_tuple_preserved_through_lifecycle"][
+            "catalog_symbols"
+        ].remove("raw_edit")
         bridge = SymbolicBridge.from_data(broken)
         with self.assertRaises(SymbolicBridgeError) as ctx:
             bridge.validate_against_graph(self.graph)
@@ -181,11 +184,9 @@ class SymbolicBridgeTests(unittest.TestCase):
     def test_bridge_rejects_claim_contract_coverage_drift(self):
         raw = yaml.load(BRIDGE_PATH.read_text(), Loader=UniqueKeyLoader)
         broken = copy.deepcopy(raw)
-        broken["claims"]["L108_acceptance_preserves_request_identity"]["contracts"] = [
-            "live_delivery_acceptance_binding"
+        broken["claims"]["G8_user_visible_state_does_not_double_render_accepted_optimistic_edit"]["contracts"] = [
+            "client_canonical_frontier_coherence"
         ]
-        anchors = broken["functions"]["acceptance_produced_from_request"]["semantic_anchors"]
-        anchors.append("claim:L108_acceptance_preserves_request_identity")
         bridge = SymbolicBridge.from_data(broken)
         with self.assertRaises(SymbolicBridgeError) as ctx:
             bridge.validate_against_graph(self.graph)
@@ -206,12 +207,12 @@ class SymbolicBridgeTests(unittest.TestCase):
         bad_state = exists(
             {"s": "ClientState"},
             and_(
-                call("user_visible_client_state", var("s")),
+                call("user_visible_canonical_state", var("s")),
                 not_(
                     call(
                         "canonical_content_matches",
                         var("s"),
-                        call("visible_document", var("s")),
+                        call("represented_document", var("s")),
                         call("visible_frontier", var("s")),
                     )
                 ),
@@ -256,6 +257,7 @@ class SymbolicBridgeTests(unittest.TestCase):
         bad_request = exists(
             {"r": "Request", "s": "ClientState"},
             and_(
+                call("request_ot_acceptance_eligible", var("r")),
                 call("authored_from", var("r"), var("s")),
                 neq(
                     call("request_document", var("r")),
@@ -334,7 +336,7 @@ class SymbolicBridgeTests(unittest.TestCase):
         wrong_head = exists(
             {"r": "CatchupResponse"},
             and_(
-                call("eligible_catchup_response", var("r")),
+                call("catchup_head_binding_eligible_response", var("r")),
                 neq(
                     call("catchup_response_head_value", var("r")),
                     call("captured_authoritative_head", var("r")),
@@ -353,7 +355,7 @@ class SymbolicBridgeTests(unittest.TestCase):
         lost_head = exists(
             {"r": "CatchupResponse"},
             and_(
-                call("eligible_catchup_response", var("r")),
+                call("catchup_head_binding_eligible_response", var("r")),
                 not_(call("catchup_head_preserved", var("r"))),
             ),
         )
@@ -366,7 +368,7 @@ class SymbolicBridgeTests(unittest.TestCase):
         out_of_scope = exists(
             {"r": "CatchupResponse"},
             and_(
-                not_(call("eligible_catchup_response", var("r"))),
+                not_(call("catchup_head_binding_eligible_response", var("r"))),
                 not_(call("catchup_head_preserved", var("r"))),
             ),
         )
@@ -440,7 +442,7 @@ class SymbolicBridgeTests(unittest.TestCase):
                     call("acceptance_key", var("a")),
                 ),
                 call(
-                    "evidence_derived_from_acceptance",
+                    "accepted_evidence_origin_valid",
                     var("e"),
                     var("a"),
                 ),

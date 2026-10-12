@@ -70,7 +70,7 @@ obligations:
         body:
           implies:
           - call:
-              fn: definitive_rejection_observed
+              fn: definitive_rejection_published_into_state
               args:
               - var: s
               - var: e
@@ -283,17 +283,26 @@ obligations:
         body:
           implies:
           - call:
-              fn: new_owner_recovery_attempt
+              fn: recovery_document_scope_attempt
               args:
               - var: r
-          - call:
-              fn: recovery_sources_preserve_document_scope
-              args:
-              - call:
-                  fn: recovery_target_document
-                  args:
-                  - var: r
-              - var: r
+          - and:
+            - call:
+                fn: recovery_sources_preserve_document_scope
+                args:
+                - call:
+                    fn: recovery_target_document
+                    args:
+                    - var: r
+                - var: r
+            - call:
+                fn: g3_rebuilt_runtime_and_resumed_context_preserve_document_scope
+                args:
+                - call:
+                    fn: recovery_target_document
+                    args:
+                    - var: r
+                - var: r
   live_delivery_preserves_committed_document_provenance:
     description: Historical regression for a WebSocket routing error that substitutes
       an equal committed record from another document.

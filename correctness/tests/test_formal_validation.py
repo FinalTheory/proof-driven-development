@@ -58,7 +58,11 @@ class FormalSchemaTests(unittest.TestCase):
     def test_assurance_schema_accepts_single_balanced_roundtrip_review(self) -> None:
         raw = yaml.safe_load((ROOT / "symbolic_models" / "assurance.yaml").read_text())
         candidate = copy.deepcopy(raw)
-        record = next(iter(candidate["records"].values()))
+        record = next(
+            value
+            for value in candidate["records"].values()
+            if "weakening" in value.get("roundtrip_reviews", {})
+        )
         legacy_review = record["roundtrip_reviews"]["weakening"]
         record["roundtrip_reviews"] = {"balanced": legacy_review}
         errors = list(
@@ -69,7 +73,11 @@ class FormalSchemaTests(unittest.TestCase):
     def test_assurance_schema_rejects_single_directional_roundtrip_review(self) -> None:
         raw = yaml.safe_load((ROOT / "symbolic_models" / "assurance.yaml").read_text())
         candidate = copy.deepcopy(raw)
-        record = next(iter(candidate["records"].values()))
+        record = next(
+            value
+            for value in candidate["records"].values()
+            if "weakening" in value.get("roundtrip_reviews", {})
+        )
         record["roundtrip_reviews"] = {
             "weakening": record["roundtrip_reviews"]["weakening"]
         }

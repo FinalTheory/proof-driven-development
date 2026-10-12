@@ -93,9 +93,13 @@ class SymbolicCompositionTests(unittest.TestCase):
         self.assertEqual(result.verdict, "ENTAILED")
         self.assertTrue(result.machine_checked)
 
-    def test_stale_c12_machine_check_is_not_recorded(self):
+    def test_current_c12_machine_check_is_recorded(self):
         entry = self.graph.doc["assurance"]["composition"][C12_TARGET]
-        self.assertEqual(entry["status"], "unaudited")
+        registry = TranslationAssuranceRegistry.load(ASSURANCE_PATH)
+        verifier = SymbolicCompositionVerifier(self.graph, self.bridge, registry)
+        result = verifier.check(C12_TARGET, require_trusted=True)
+        self.assertEqual(entry["status"], "machine_checked")
+        self.assertEqual(entry["signature"], result.composition_signature)
         self.assertNotIn("artifact_refs", entry)
 
     def test_c14_two_premise_composition_is_entailed_trusted(self):
@@ -132,7 +136,7 @@ class SymbolicCompositionTests(unittest.TestCase):
         rendered = output.getvalue()
 
         self.assertEqual(rc, 0)
-        self.assertNotIn(f"{C12_TARGET}  [MACHINE-CHECKED]", rendered)
+        self.assertIn(f"{C12_TARGET}  [MACHINE-CHECKED]", rendered)
         self.assertIn(f"{C14_TARGET}  [MACHINE-CHECKED]", rendered)
         self.assertIn("SMT counterexample query:", rendered)
         self.assertIn("Solver: UNSAT → ENTAILED", rendered)

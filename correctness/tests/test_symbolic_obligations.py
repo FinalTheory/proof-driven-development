@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import unittest
 from pathlib import Path
 
@@ -21,6 +22,17 @@ ASSURANCE = ROOT / "symbolic_models" / "assurance.yaml"
 OBLIGATIONS = ROOT / "symbolic_models" / "design_obligations.yaml"
 
 
+def contains_call(expr, fn_name: str) -> bool:
+    if isinstance(expr, dict):
+        call = expr.get("call")
+        if isinstance(call, dict) and call.get("fn") == fn_name:
+            return True
+        return any(contains_call(value, fn_name) for value in expr.values())
+    if isinstance(expr, list):
+        return any(contains_call(value, fn_name) for value in expr)
+    return False
+
+
 class SymbolicDesignObligationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.graph = Graph.load()
@@ -36,6 +48,18 @@ class SymbolicDesignObligationTests(unittest.TestCase):
             self.spec.require(obligation_id), require_trusted=False
         )
 
+    def g12_without_clause(self, fn_name: str):
+        formula = copy.deepcopy(
+            self.bridge.claims["G12_client_pending_state_tracks_unresolved_edits"].formula
+        )
+        clauses = formula["and"]
+        matching = [
+            index for index, clause in enumerate(clauses) if contains_call(clause, fn_name)
+        ]
+        self.assertEqual(len(matching), 1, f"expected one G12 clause containing {fn_name}")
+        clauses[matching[0]] = {"bool": True}
+        return formula
+
     def test_accepted_reconciliation_pending_bridge_is_now_covered(self) -> None:
         obligation = self.spec.require("accepted_reconciliation_closes_pending_lifecycle")
         result = self.verifier.check(obligation, require_trusted=False)
@@ -45,8 +69,10 @@ class SymbolicDesignObligationTests(unittest.TestCase):
 
         weakened = self.verifier.check_with_overrides(
             obligation,
-            contract_formula_overrides={
-                "accepted_terminal_speculative_retirement": {"bool": True}
+            claim_formula_overrides={
+                "G12_client_pending_state_tracks_unresolved_edits": self.g12_without_clause(
+                    "accepted_reconciliation_published"
+                )
             },
         )
         self.assertEqual(weakened.constrained.status, "sat")
@@ -72,8 +98,10 @@ class SymbolicDesignObligationTests(unittest.TestCase):
 
         weakened = self.verifier.check_with_overrides(
             obligation,
-            contract_formula_overrides={
-                "rejected_terminal_speculative_retirement": {"bool": True}
+            claim_formula_overrides={
+                "G12_client_pending_state_tracks_unresolved_edits": self.g12_without_clause(
+                    "definitive_rejection_published_into_state"
+                )
             },
         )
         self.assertEqual(weakened.constrained.status, "sat")
