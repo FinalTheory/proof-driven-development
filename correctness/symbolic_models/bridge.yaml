@@ -9692,10 +9692,16 @@ claims:
                   t: ProtocolTransition
                 body:
                   implies:
-                  - call:
-                      fn: durable_retention_transition
-                      args:
-                      - var: t
+                  - and:
+                    - call:
+                        fn: durable_retention_transition
+                        args:
+                        - var: t
+                    - call:
+                        fn: transition_within_identity_eligibility_window
+                        args:
+                        - var: t
+                        - var: e
                   - call:
                       fn: transition_preserves_frontier_evidence_binding
                       args:
@@ -9723,10 +9729,16 @@ claims:
                   t: ProtocolTransition
                 body:
                   implies:
-                  - call:
-                      fn: completed_recovery_transition
-                      args:
-                      - var: t
+                  - and:
+                    - call:
+                        fn: completed_recovery_transition
+                        args:
+                        - var: t
+                    - call:
+                        fn: transition_within_identity_eligibility_window
+                        args:
+                        - var: t
+                        - var: e
                   - call:
                       fn: transition_preserves_frontier_evidence_binding
                       args:
@@ -9737,177 +9749,128 @@ claims:
     capability: relational
     contracts: []
     formula:
-      and:
-      - forall:
-          vars:
-            c: CatchupResponse
-            e: LogicalEditIdentity
-            d: Document
-            k: ClientChangeId
-            h: Revision
-            r: Revision
-          body:
-            implies:
+      forall:
+        vars:
+          c: CatchupResponse
+          e: LogicalEditIdentity
+          d: Document
+          k: ClientChangeId
+          h: Revision
+          r: Revision
+        body:
+          implies:
+          - and:
             - and:
-              - and:
-                - eq:
-                  - call:
-                      fn: logical_identity_document_id
-                      args:
-                      - var: e
-                  - var: d
-                - eq:
-                  - call:
-                      fn: logical_identity_change_id
-                      args:
-                      - var: e
-                  - var: k
-              - call:
-                  fn: pending_identity_at_resync_start
-                  args:
-                  - var: c
-                  - var: e
-              - call:
-                  fn: resync_identity_within_normal_horizon
-                  args:
-                  - var: c
-                  - var: e
-              - call:
-                  fn: catchup_response_head_is
-                  args:
-                  - var: c
-                  - var: h
+              - eq:
+                - call:
+                    fn: logical_identity_document_id
+                    args:
+                    - var: e
+                - var: d
+              - eq:
+                - call:
+                    fn: logical_identity_change_id
+                    args:
+                    - var: e
+                - var: k
+            - call:
+                fn: pending_identity_at_resync_start
+                args:
+                - var: c
+                - var: e
+            - call:
+                fn: resync_identity_within_normal_horizon
+                args:
+                - var: c
+                - var: e
+            - call:
+                fn: catchup_response_head_is
+                args:
+                - var: c
+                - var: h
+          - and:
             - and:
-              - and:
-                - implies:
+              - implies:
+                - call:
+                    fn: classifier_reports_accepted_at_revision
+                    args:
+                    - var: c
+                    - var: e
+                    - var: r
+                - and:
                   - call:
-                      fn: classifier_reports_accepted_at_revision
+                      fn: canonical_acceptance_for_identity_commits_at_revision
                       args:
-                      - var: c
                       - var: e
                       - var: r
-                  - and:
-                    - call:
-                        fn: canonical_acceptance_for_identity_commits_at_revision
-                        args:
-                        - var: e
-                        - var: r
-                    - call:
-                        fn: revision_at_or_before
-                        args:
-                        - var: r
-                        - var: h
-                - implies:
-                  - and:
-                    - call:
-                        fn: canonical_acceptance_for_identity_commits_at_revision
-                        args:
-                        - var: e
-                        - var: r
-                    - call:
-                        fn: revision_at_or_before
-                        args:
-                        - var: r
-                        - var: h
                   - call:
-                      fn: classifier_reports_accepted_at_revision
+                      fn: revision_at_or_before
                       args:
-                      - var: c
+                      - var: r
+                      - var: h
+              - implies:
+                - and:
+                  - call:
+                      fn: canonical_acceptance_for_identity_commits_at_revision
+                      args:
                       - var: e
                       - var: r
-              - and:
-                - implies:
                   - call:
-                      fn: classifier_reports_unresolved_through_head
+                      fn: revision_at_or_before
                       args:
-                      - var: c
-                      - var: e
-                  - not:
-                      exists:
-                        vars:
-                          r2: Revision
-                        body:
-                          and:
-                          - call:
-                              fn: canonical_acceptance_for_identity_commits_at_revision
-                              args:
-                              - var: e
-                              - var: r2
-                          - call:
-                              fn: revision_at_or_before
-                              args:
-                              - var: r2
-                              - var: h
-                - implies:
-                  - not:
-                      exists:
-                        vars:
-                          r2: Revision
-                        body:
-                          and:
-                          - call:
-                              fn: canonical_acceptance_for_identity_commits_at_revision
-                              args:
-                              - var: e
-                              - var: r2
-                          - call:
-                              fn: revision_at_or_before
-                              args:
-                              - var: r2
-                              - var: h
-                  - call:
-                      fn: classifier_reports_unresolved_through_head
-                      args:
-                      - var: c
-                      - var: e
-      - forall:
-          vars:
-            c: CatchupResponse
-            e: LogicalEditIdentity
-            h: Revision
-            r1: Revision
-            r2: Revision
-          body:
-            implies:
+                      - var: r
+                      - var: h
+                - call:
+                    fn: classifier_reports_accepted_at_revision
+                    args:
+                    - var: c
+                    - var: e
+                    - var: r
             - and:
-              - call:
-                  fn: pending_identity_at_resync_start
-                  args:
-                  - var: c
-                  - var: e
-              - call:
-                  fn: resync_identity_within_normal_horizon
-                  args:
-                  - var: c
-                  - var: e
-              - call:
-                  fn: catchup_response_head_is
-                  args:
-                  - var: c
-                  - var: h
-              - call:
-                  fn: canonical_acceptance_for_identity_commits_at_revision
-                  args:
-                  - var: e
-                  - var: r1
-              - call:
-                  fn: canonical_acceptance_for_identity_commits_at_revision
-                  args:
-                  - var: e
-                  - var: r2
-              - call:
-                  fn: revision_at_or_before
-                  args:
-                  - var: r1
-                  - var: h
-              - call:
-                  fn: revision_at_or_before
-                  args:
-                  - var: r2
-                  - var: h
-            - eq:
-              - var: r1
-              - var: r2
+              - implies:
+                - call:
+                    fn: classifier_reports_unresolved_through_head
+                    args:
+                    - var: c
+                    - var: e
+                - not:
+                    exists:
+                      vars:
+                        r2: Revision
+                      body:
+                        and:
+                        - call:
+                            fn: canonical_acceptance_for_identity_commits_at_revision
+                            args:
+                            - var: e
+                            - var: r2
+                        - call:
+                            fn: revision_at_or_before
+                            args:
+                            - var: r2
+                            - var: h
+              - implies:
+                - not:
+                    exists:
+                      vars:
+                        r2: Revision
+                      body:
+                        and:
+                        - call:
+                            fn: canonical_acceptance_for_identity_commits_at_revision
+                            args:
+                            - var: e
+                            - var: r2
+                        - call:
+                            fn: revision_at_or_before
+                            args:
+                            - var: r2
+                            - var: h
+                - call:
+                    fn: classifier_reports_unresolved_through_head
+                    args:
+                    - var: c
+                    - var: e
   C37_pending_identity_resolution_is_bound_to_response_head:
     capability: relational
     contracts: []
@@ -9953,94 +9916,88 @@ claims:
                   - var: c
                   - var: h
             - and:
-              - implies:
-                - call:
-                    fn: classifier_reports_accepted_at_revision
-                    args:
-                    - var: c
-                    - var: e
-                    - var: r
-                - and:
+              - and:
+                - implies:
                   - call:
-                      fn: canonical_acceptance_for_identity_commits_at_revision
+                      fn: classifier_reports_accepted_at_revision
                       args:
+                      - var: c
                       - var: e
                       - var: r
+                  - and:
+                    - call:
+                        fn: canonical_acceptance_for_identity_commits_at_revision
+                        args:
+                        - var: e
+                        - var: r
+                    - call:
+                        fn: revision_at_or_before
+                        args:
+                        - var: r
+                        - var: h
+                - implies:
+                  - and:
+                    - call:
+                        fn: canonical_acceptance_for_identity_commits_at_revision
+                        args:
+                        - var: e
+                        - var: r
+                    - call:
+                        fn: revision_at_or_before
+                        args:
+                        - var: r
+                        - var: h
                   - call:
-                      fn: revision_at_or_before
+                      fn: classifier_reports_accepted_at_revision
                       args:
+                      - var: c
+                      - var: e
                       - var: r
-                      - var: h
-              - implies:
-                - call:
-                    fn: classifier_reports_unresolved_through_head
-                    args:
-                    - var: c
-                    - var: e
-                - not:
-                    exists:
-                      vars:
-                        r2: Revision
-                      body:
-                        and:
-                        - call:
-                            fn: canonical_acceptance_for_identity_commits_at_revision
-                            args:
-                            - var: e
-                            - var: r2
-                        - call:
-                            fn: revision_at_or_before
-                            args:
-                            - var: r2
-                            - var: h
-      - forall:
-          vars:
-            c: CatchupResponse
-            e: LogicalEditIdentity
-            h: Revision
-            r1: Revision
-            r2: Revision
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: pending_identity_at_resync_start
-                  args:
-                  - var: c
-                  - var: e
-              - call:
-                  fn: resync_identity_within_normal_horizon
-                  args:
-                  - var: c
-                  - var: e
-              - call:
-                  fn: catchup_response_head_is
-                  args:
-                  - var: c
-                  - var: h
-              - call:
-                  fn: canonical_acceptance_for_identity_commits_at_revision
-                  args:
-                  - var: e
-                  - var: r1
-              - call:
-                  fn: canonical_acceptance_for_identity_commits_at_revision
-                  args:
-                  - var: e
-                  - var: r2
-              - call:
-                  fn: revision_at_or_before
-                  args:
-                  - var: r1
-                  - var: h
-              - call:
-                  fn: revision_at_or_before
-                  args:
-                  - var: r2
-                  - var: h
-            - eq:
-              - var: r1
-              - var: r2
+              - and:
+                - implies:
+                  - call:
+                      fn: classifier_reports_unresolved_through_head
+                      args:
+                      - var: c
+                      - var: e
+                  - not:
+                      exists:
+                        vars:
+                          r2: Revision
+                        body:
+                          and:
+                          - call:
+                              fn: canonical_acceptance_for_identity_commits_at_revision
+                              args:
+                              - var: e
+                              - var: r2
+                          - call:
+                              fn: revision_at_or_before
+                              args:
+                              - var: r2
+                              - var: h
+                - implies:
+                  - not:
+                      exists:
+                        vars:
+                          r2: Revision
+                        body:
+                          and:
+                          - call:
+                              fn: canonical_acceptance_for_identity_commits_at_revision
+                              args:
+                              - var: e
+                              - var: r2
+                          - call:
+                              fn: revision_at_or_before
+                              args:
+                              - var: r2
+                              - var: h
+                  - call:
+                      fn: classifier_reports_unresolved_through_head
+                      args:
+                      - var: c
+                      - var: e
       - forall:
           vars:
             c: CatchupResponse
