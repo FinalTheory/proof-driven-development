@@ -1456,7 +1456,7 @@ functions:
     returns: Bool
     catalog_symbols:
     - terminal_result
-    meaning: Accepted terminal result representation t carries a canonical result produced by the same acceptance execution that produced canonical acceptance a for the producer binding under audit. At an accepted_terminal_acceptance_origin boundary, this means the result placed into t comes from that same execution rather than another request, document, acceptance execution, or merely extensionally equal substitute. The relation states which acceptance execution the canonical result carried by a representation is bound to; whether that binding is preserved across a lifecycle transition is asserted by the lifecycle propositions that use this relation, not by this relation alone. This relation alone does not assert that a committed, when binding metadata was materialized, or that t is provenance-reachable from an acceptance origin; those are separate proof obligations.
+    meaning: Accepted terminal result representation t carries a canonical result produced by the same acceptance execution that produced canonical acceptance a for the producer binding under audit. At an accepted_terminal_acceptance_origin boundary, this means the result placed into t comes from that same execution rather than another request, document, acceptance execution, or merely extensionally equal substitute. For a later lifecycle-rewritten representation of the same logical terminal outcome, this relation classifies that representation by the same test; the canonical result it carries is the one produced by that same acceptance execution. This relation alone does not assert that a committed, when binding metadata was materialized, or that t is provenance-reachable from an acceptance origin; those are separate proof obligations.
     semantic_anchors:
     - contract:accepted_terminal_result_binding
     - claim:L197_accepted_terminal_result_captures_same_acceptance_producer
@@ -4893,18 +4893,6 @@ claims:
                         args:
                         - var: before
                         - var: after
-                  - not:
-                      call:
-                        fn: accepted_terminal_compaction_retention_edge
-                        args:
-                        - var: before
-                        - var: after
-                  - not:
-                      call:
-                        fn: accepted_terminal_representation_migration_edge
-                        args:
-                        - var: before
-                        - var: after
                 - and:
                   - call:
                       fn: accepted_terminal_supported_compaction_retention_edge
@@ -4928,18 +4916,6 @@ claims:
                         args:
                         - var: before
                         - var: after
-                  - not:
-                      call:
-                        fn: accepted_terminal_persistence_restore_edge
-                        args:
-                        - var: before
-                        - var: after
-                  - not:
-                      call:
-                        fn: accepted_terminal_representation_migration_edge
-                        args:
-                        - var: before
-                        - var: after
                 - and:
                   - call:
                       fn: accepted_terminal_supported_representation_migration_edge
@@ -4960,18 +4936,6 @@ claims:
                   - not:
                       call:
                         fn: accepted_terminal_supported_compaction_retention_edge
-                        args:
-                        - var: before
-                        - var: after
-                  - not:
-                      call:
-                        fn: accepted_terminal_persistence_restore_edge
-                        args:
-                        - var: before
-                        - var: after
-                  - not:
-                      call:
-                        fn: accepted_terminal_compaction_retention_edge
                         args:
                         - var: before
                         - var: after
