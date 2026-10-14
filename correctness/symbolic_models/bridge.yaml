@@ -4503,6 +4503,54 @@ claims:
                       fn: accepted_terminal_matching_canonical_acceptance
                       args:
                       - var: a
+      - forall:
+          vars:
+            t: TerminalResultRecord
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: accepted_terminal_result_record
+                  args:
+                  - var: t
+              - call:
+                  fn: accepted_terminal_result_within_retry_horizon
+                  args:
+                  - var: t
+            - exists:
+                vars:
+                  o: TerminalResultRecord
+                  a: CanonicalAcceptance
+                body:
+                  and:
+                  - call:
+                      fn: accepted_terminal_linearization_origin_record
+                      args:
+                      - var: o
+                  - call:
+                      fn: accepted_terminal_matching_creation_pair
+                      args:
+                      - var: o
+                      - var: a
+                  - call:
+                      fn: accepted_terminal_creation_pair_co_commits
+                      args:
+                      - var: o
+                      - var: a
+                  - call:
+                      fn: terminal_result_bound_to_acceptance_execution
+                      args:
+                      - var: t
+                      - var: a
+                  - call:
+                      fn: accepted_terminal_binding_identity_matches
+                      args:
+                      - var: t
+                      - var: a
+                  - call:
+                      fn: accepted_terminal_matching_canonical_acceptance
+                      args:
+                      - var: a
   C47_accepted_terminal_result_provenance_survives_lifecycle:
     contracts: []
     formula:
@@ -4844,6 +4892,10 @@ claims:
                     - var: t0
                 - call:
                     fn: accepted_terminal_origin_created_by_acceptance_transaction
+                    args:
+                    - var: t0
+                - call:
+                    fn: accepted_terminal_created_for_eligible_identity
                     args:
                     - var: t0
                 - or:
