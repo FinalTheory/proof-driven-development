@@ -6761,11 +6761,6 @@ contracts:
                 body:
                   and:
                   - call:
-                      fn: accepted_terminal_contract_acceptance_assembly_pair
-                      args:
-                      - var: t
-                      - var: a
-                  - call:
                       fn: accepted_terminal_contract_source_acceptance
                       args:
                       - var: a
@@ -6779,15 +6774,34 @@ contracts:
                         args:
                         - var: a
                   - call:
-                      fn: accepted_terminal_contract_binding_established_at_assembly
-                      args:
-                      - var: t
-                      - var: a
-                  - call:
                       fn: terminal_result_bound_to_acceptance_execution
                       args:
                       - var: t
                       - var: a
+                  - exists:
+                      vars:
+                        t0: TerminalResultRecord
+                      body:
+                        and:
+                        - call:
+                            fn: accepted_terminal_contract_acceptance_assembly_pair
+                            args:
+                            - var: t0
+                            - var: a
+                        - call:
+                            fn: accepted_terminal_contract_binding_established_at_assembly
+                            args:
+                            - var: t0
+                            - var: a
+                        - eq:
+                          - call:
+                              fn: terminal_result_idempotency_key
+                              args:
+                              - var: t0
+                          - call:
+                              fn: acceptance_key
+                              args:
+                              - var: a
       - forall:
           vars:
             x: ProtocolTransition
