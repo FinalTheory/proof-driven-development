@@ -607,9 +607,8 @@ refinement:
       status: pending
       blocked_by: []
     L164_terminal_paths_share_per_key_arbitration:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 7a8377e3f47dcfd57e5a1a3fd3b135a128179bae461b4a303b6dcf7b50c7bfca
     C40_terminal_outcome_is_single_valued_per_idempotency_key:
       status: stable
       blocked_by: []
@@ -3637,7 +3636,7 @@ claims:
     statement: Every path that can create a canonical acceptance or authoritative definitive
       rejection for an eligible idempotency_key passes through the same per-key terminal-outcome
       arbitration gate before becoming authoritative; there is no bypass path that can publish or
-      commit a terminal decision outside that gate.
+      commit a terminal decision for an eligible idempotency_key outside that gate.
     source_refs:
       - accepted_change_log
       - owner_failover

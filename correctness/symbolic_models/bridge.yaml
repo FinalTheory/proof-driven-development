@@ -7094,11 +7094,16 @@ claims:
             k: IdempotencyKey
           body:
             implies:
-            - call:
-                fn: terminal_decision_publish_or_commit_path
-                args:
-                - var: x
-                - var: k
+            - and:
+              - call:
+                  fn: terminal_decision_publish_or_commit_path
+                  args:
+                  - var: x
+                  - var: k
+              - call:
+                  fn: idempotency_key_is_eligible
+                  args:
+                  - var: k
             - call:
                 fn: terminal_path_passes_shared_arbitration_gate
                 args:
