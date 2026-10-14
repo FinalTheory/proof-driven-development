@@ -4832,3 +4832,66 @@ records:
           for S+1..H via both completeness and converse range restriction, together with exactly-once occurrence and increasing
           revision order.
         differences: []
+  claim:L110_client_retires_matching_speculative_overlay_before_canonical_publication:
+    kind: claim
+    subject_id: L110_client_retires_matching_speculative_overlay_before_canonical_publication
+    subject_signature: 60ca3d417c7b7c87faba55da4fbbf7e6112e8b5f9c652010d7b313749a4974c4
+    roundtrip:
+      subject_signature: 60ca3d417c7b7c87faba55da4fbbf7e6112e8b5f9c652010d7b313749a4974c4
+      status: TRANSLATED
+      natural_language: 'All of the following four conditions hold conjunctively. (1) For every client state s and every overlay
+        o, if s is a visible canonical speculative observation state (i.e., s is currently exposed at the user-visible client
+        observation boundary for its visible canonical prefix and speculative overlay set, with private, intermediate, or
+        not-yet-published states excluded and with no added progress or freshness requirement) and the canonical prefix visible
+        in s already contains a canonical acceptance whose full (document_id, client_change_id) identity equals the full identity
+        carried by o — where full-identity equality alone triggers this relation, no additional proof that the acceptance
+        and the overlay denote the same semantic edit is required, and an identity collision does not bypass this relation
+        — then o is not visible in s, i.e., o is not currently exposed as a speculative user-visible overlay in s. (2) For
+        every client state e, every client state l, and every overlay o, if l is later reachable from e (l is reachable after
+        e by one or more client-protocol transitions for the continuing client lifecycle/history, including restore/reactivation,
+        view switching, bookkeeping, reconnect/resync, or publication transitions), l is a visible canonical speculative observation
+        state, the canonical prefix visible in e does not contain such a full-identity-matching canonical acceptance for o,
+        and the canonical prefix visible in l does contain such a full-identity-matching canonical acceptance for o, then
+        o is not visible in l. (3) For every client state e, every client state l, and every overlay o, if l is later reachable
+        from e, l is a visible canonical speculative observation state, the canonical prefix visible in e does contain such
+        a full-identity-matching canonical acceptance for o, and the canonical prefix visible in l also does contain such
+        a full-identity-matching canonical acceptance for o, then o is not visible in l. (4) For every client state e, every
+        client state l, and every overlay o, if l is later reachable from e, e is a visible canonical speculative observation
+        state, l is a visible canonical speculative observation state, the canonical prefix visible in e does contain such
+        a full-identity-matching canonical acceptance for o, the canonical prefix visible in l does contain such a full-identity-matching
+        canonical acceptance for o, and o is not visible in e, then it is not the case that a client transition recreates
+        the speculative overlay from e to l: i.e., along the client-protocol path from user-visible state e to later user-visible
+        state l, no client transition creates or re-enables speculative overlay o — the speculative representation of the
+        logical client edit identified by (document_id, client_change_id) — as a user-visible speculative overlay exposing
+        it at the user-visible client observation boundary at some point on that path, although that overlay was absent in
+        e; this recreation predicate classifies only user-visible creation or re-enablement, recreation remaining in private,
+        intermediate, or not-yet-published states and never exposed at the user-visible boundary is outside it, and it does
+        not assert that the overlay is visible in l.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 60ca3d417c7b7c87faba55da4fbbf7e6112e8b5f9c652010d7b313749a4974c4
+        verdict: EQUIVALENT
+        reason: The formula encodes the full identity-based exclusion at every user-visible observation state, covers the
+          first publication state and persistent acceptance states, and additionally forbids transient recreation/re-enablement
+          along later reachable paths while the same (document_id, client_change_id) acceptance remains visible at both ends;
+          distinct identities are not excluded.
+        differences: []
+      strengthening:
+        subject_signature: 60ca3d417c7b7c87faba55da4fbbf7e6112e8b5f9c652010d7b313749a4974c4
+        verdict: EQUIVALENT
+        reason: The formula captures the identity-based exclusion at every user-visible observation state where the canonical
+          prefix contains the matching (document_id, client_change_id) acceptance, covers both first-publication and continued-visibility
+          cases, and separately forbids user-visible recreation/re-enablement along later reachable paths while the acceptance
+          is present at the path endpoints. Distinct identities are not excluded because the canonical-containment predicate
+          is triggered only by full-identity equality, matching the source's distinct-new-edit exception.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 60ca3d417c7b7c87faba55da4fbbf7e6112e8b5f9c652010d7b313749a4974c4
+        verdict: EQUIVALENT
+        reason: The rendering preserves the identity-based (document_id, client_change_id) exclusion at every user-visible
+          state, including the first state where the acceptance becomes visible, persistence while it remains visible, and
+          prohibition of later visible recreation; distinct identities remain outside the exclusion and no additional semantic-identity
+          or provenance proof is required.
+        differences: []

@@ -6274,7 +6274,13 @@ assurance:
     G7_reconnect_does_not_double_render_accepted_optimistic_edit:
       status: unaudited
     G8_user_visible_state_does_not_double_render_accepted_optimistic_edit:
-      status: unaudited
+      status: machine_checked
+      rationale: Trusted symbolic translations exist for G8 (formula derived from the trusted
+        visible_canonical_speculative_exclusion contract) and its sole direct premise L110. Z3
+        checked L110 AND NOT(G8) as UNSAT (direct_smt). A mutation test replacing L110 with True
+        becomes SAT with a concrete counterexample, demonstrating the premise is necessary to
+        establish the target.
+      signature: 9e8051d69ec174a13c1a47901e1243cce33e75e30e60b990c89920e35c1949b2
     G9_accepted_idempotency_evidence_matches_committed_acceptance:
       status: unaudited
     C35_accepted_key_classification_requires_committed_acceptance:
