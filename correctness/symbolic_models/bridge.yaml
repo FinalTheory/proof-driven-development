@@ -1456,7 +1456,7 @@ functions:
     returns: Bool
     catalog_symbols:
     - terminal_result
-    meaning: Accepted terminal result representation t carries a canonical result produced by the same acceptance execution that produced canonical acceptance a for the producer binding under audit. At an accepted_terminal_acceptance_origin boundary, this means the result placed into t comes from that same execution rather than another request, document, acceptance execution, or merely extensionally equal substitute. For a later lifecycle-rewritten representation of the same logical terminal outcome, this means the same logical producer binding is preserved. This relation alone does not assert that a committed, when binding metadata was materialized, or that t is provenance-reachable from an acceptance origin; those are separate proof obligations.
+    meaning: Accepted terminal result representation t carries a canonical result produced by the same acceptance execution that produced canonical acceptance a for the producer binding under audit. At an accepted_terminal_acceptance_origin boundary, this means the result placed into t comes from that same execution rather than another request, document, acceptance execution, or merely extensionally equal substitute. The relation states which acceptance execution the canonical result carried by a representation is bound to; whether that binding is preserved across a lifecycle transition is asserted by the lifecycle propositions that use this relation, not by this relation alone. This relation alone does not assert that a committed, when binding metadata was materialized, or that t is provenance-reachable from an acceptance origin; those are separate proof obligations.
     semantic_anchors:
     - contract:accepted_terminal_result_binding
     - claim:L197_accepted_terminal_result_captures_same_acceptance_producer
@@ -2839,7 +2839,7 @@ functions:
     returns: Bool
     catalog_symbols:
     - terminal_result
-    meaning: before->after is one compaction or retention representation rewrite, within the normal retry horizon, of an authoritative ACCEPTED terminal_result that preserves the same logical terminal outcome. A cleanup implementation is included whenever the transition itself semantically performs compaction or retention; a cleanup label alone does not make an unrelated rewrite part of this category. Classification does not assert full-identity or producer-binding preservation.
+    meaning: before->after is one compaction or retention transition, within the normal retry horizon, of an authoritative ACCEPTED terminal_result that preserves the same logical terminal outcome. The transition may rewrite the durable representation or leave its encoding unchanged while retaining that outcome; preserving the logical outcome does not require a representation change. A cleanup implementation is included whenever the transition itself semantically performs compaction or retention; a cleanup label alone does not make an unrelated rewrite part of this category. Classification does not assert full-identity or producer-binding preservation.
     semantic_anchors:
     - claim:L200_accepted_terminal_provenance_survives_compaction_and_retention
     - claim:C47_accepted_terminal_result_provenance_survives_lifecycle
@@ -2872,7 +2872,7 @@ functions:
     - CanonicalAcceptance
     returns: Bool
     catalog_symbols: []
-    meaning: Matching canonical acceptance a committed as the acceptance side of the same authoritative transaction boundary that created the corresponding ACCEPTED terminal outcome. This predicate asserts the committed matching-acceptance fact only; it does not require one named implementation path or assert producer provenance.
+    meaning: Canonical acceptance a is a committed canonical accepted-change record, and the acceptance execution that committed a is the same acceptance execution that produced a. This predicate asserts that committed fact and its committing execution only; it does not assert a shared transaction boundary with the creation of a terminal outcome, producer provenance of a stored result by itself, one named implementation path, or when any binding metadata was materialized.
     semantic_anchors:
     - claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance
     - claim:C46_accepted_terminal_result_preserves_acceptance_provenance
@@ -2950,7 +2950,7 @@ functions:
     returns: Bool
     catalog_symbols:
     - terminal_result
-    meaning: before->after is one durable persistence or completed recovery/restoration representation transition, within the normal retry horizon, of an authoritative ACCEPTED terminal_result that preserves the same logical terminal outcome. Classification does not assert full-identity or producer-binding preservation.
+    meaning: before->after is one durable persistence or completed recovery/restoration transition, within the normal retry horizon, of an authoritative ACCEPTED terminal_result that preserves the same logical terminal outcome. The transition acts on the durable representation of that outcome and may rewrite that representation or leave its encoding unchanged; preserving the logical outcome does not require a representation change. Classification does not assert full-identity or producer-binding preservation.
     semantic_anchors:
     - claim:L199_accepted_terminal_provenance_survives_persistence_and_restore
     - claim:C47_accepted_terminal_result_provenance_survives_lifecycle
@@ -4869,6 +4869,18 @@ claims:
                         args:
                         - var: before
                         - var: after
+                  - not:
+                      call:
+                        fn: accepted_terminal_compaction_retention_edge
+                        args:
+                        - var: before
+                        - var: after
+                  - not:
+                      call:
+                        fn: accepted_terminal_representation_migration_edge
+                        args:
+                        - var: before
+                        - var: after
                 - and:
                   - call:
                       fn: accepted_terminal_supported_compaction_retention_edge
@@ -4889,6 +4901,18 @@ claims:
                   - not:
                       call:
                         fn: accepted_terminal_supported_representation_migration_edge
+                        args:
+                        - var: before
+                        - var: after
+                  - not:
+                      call:
+                        fn: accepted_terminal_persistence_restore_edge
+                        args:
+                        - var: before
+                        - var: after
+                  - not:
+                      call:
+                        fn: accepted_terminal_representation_migration_edge
                         args:
                         - var: before
                         - var: after
@@ -4915,6 +4939,18 @@ claims:
                         args:
                         - var: before
                         - var: after
+                  - not:
+                      call:
+                        fn: accepted_terminal_persistence_restore_edge
+                        args:
+                        - var: before
+                        - var: after
+                  - not:
+                      call:
+                        fn: accepted_terminal_compaction_retention_edge
+                        args:
+                        - var: before
+                        - var: after
       - forall:
           vars:
             before: TerminalResultRecord
@@ -4923,6 +4959,54 @@ claims:
             implies:
             - call:
                 fn: accepted_terminal_supported_lifecycle_edge
+                args:
+                - var: before
+                - var: after
+            - call:
+                fn: accepted_terminal_lifecycle_edge
+                args:
+                - var: before
+                - var: after
+      - forall:
+          vars:
+            before: TerminalResultRecord
+            after: TerminalResultRecord
+          body:
+            implies:
+            - call:
+                fn: accepted_terminal_supported_persistence_restore_edge
+                args:
+                - var: before
+                - var: after
+            - call:
+                fn: accepted_terminal_lifecycle_edge
+                args:
+                - var: before
+                - var: after
+      - forall:
+          vars:
+            before: TerminalResultRecord
+            after: TerminalResultRecord
+          body:
+            implies:
+            - call:
+                fn: accepted_terminal_supported_compaction_retention_edge
+                args:
+                - var: before
+                - var: after
+            - call:
+                fn: accepted_terminal_lifecycle_edge
+                args:
+                - var: before
+                - var: after
+      - forall:
+          vars:
+            before: TerminalResultRecord
+            after: TerminalResultRecord
+          body:
+            implies:
+            - call:
+                fn: accepted_terminal_supported_representation_migration_edge
                 args:
                 - var: before
                 - var: after
