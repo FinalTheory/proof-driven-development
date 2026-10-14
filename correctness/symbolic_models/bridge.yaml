@@ -4170,8 +4170,7 @@ functions:
     - TerminalResultRecord
     returns: Bool
     catalog_symbols: []
-    meaning: Transition x exposes terminal result record t to a protocol consumer
-      through an authoritative publication path.
+    meaning: Transition x exposes terminal result record t to a protocol consumer.
     semantic_anchors:
     - claim:L190_authoritative_terminal_publication_surfaces_are_exhaustive
   transition_exposes_terminal_result_through_gate:
