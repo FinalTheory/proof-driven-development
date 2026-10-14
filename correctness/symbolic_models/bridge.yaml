@@ -4407,6 +4407,48 @@ functions:
     - claim:L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance
     - claim:L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance
     - claim:C35_accepted_key_classification_requires_committed_acceptance
+  lifecycle_evidence_has_only_committed_provenance:
+    args:
+    - AcceptedEvidence
+    returns: Bool
+    catalog_symbols: []
+    meaning: Every provenance source of evidence e is a canonical acceptance for the
+      same full (document_id, client_change_id) identity as e that was committed before
+      e was created, replaced, or preserved, or an intermediate whose own provenance
+      terminates at such an acceptance; no never-committed attempt, reservation, in-progress
+      arbitration, timeout, cancellation, or other provisional state is a provenance
+      source of e, and no acceptance for a different identity is a provenance source
+      of e.
+    semantic_anchors:
+    - claim:L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance
+    - claim:C35_accepted_key_classification_requires_committed_acceptance
+  runtime_evidence_has_only_committed_provenance:
+    args:
+    - AcceptedEvidence
+    returns: Bool
+    catalog_symbols: []
+    meaning: Every provenance source of evidence e is a canonical acceptance for the
+      same full (document_id, client_change_id) identity as e that was committed before
+      e was created or preserved, or an intermediate whose own provenance terminates
+      at such an acceptance; no failed-owner residue, cache, reservation, never-committed
+      attempt, timeout or cancellation state, or other provisional or non-authoritative
+      runtime data is a provenance source of e, and no acceptance for a different
+      identity is a provenance source of e.
+    semantic_anchors:
+    - claim:L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance
+    - claim:C35_accepted_key_classification_requires_committed_acceptance
+  accepted_evidence_has_no_provisional_provenance:
+    args:
+    - AcceptedEvidence
+    returns: Bool
+    catalog_symbols: []
+    meaning: No reservation, in-progress arbitration, pre-commit ownership, aborted,
+      timed-out, or cancelled attempt, or other provisional state is a provenance
+      source of evidence e; e's accepted-evidence provenance is the acceptance transaction
+      of its matching committed canonical acceptance.
+    semantic_anchors:
+    - claim:L114_hot_path_accepted_evidence_requires_committed_acceptance
+    - claim:C35_accepted_key_classification_requires_committed_acceptance
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -8974,6 +9016,24 @@ claims:
                       args:
                       - var: e
                       - var: a
+      - forall:
+          vars:
+            e: AcceptedEvidence
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: already_accepted_evidence
+                  args:
+                  - var: e
+              - call:
+                  fn: evidence_acquired_on_normal_acceptance_path
+                  args:
+                  - var: e
+            - call:
+                fn: accepted_evidence_has_no_provisional_provenance
+                args:
+                - var: e
   L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance:
     capability: relational
     contracts: []
@@ -9040,7 +9100,7 @@ claims:
                   args:
                   - var: e
             - call:
-                fn: accepted_evidence_has_only_committed_provenance
+                fn: lifecycle_evidence_has_only_committed_provenance
                 args:
                 - var: e
   L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance:
@@ -9109,7 +9169,7 @@ claims:
                   args:
                   - var: e
             - call:
-                fn: accepted_evidence_has_only_committed_provenance
+                fn: runtime_evidence_has_only_committed_provenance
                 args:
                 - var: e
   C35_accepted_key_classification_requires_committed_acceptance:
@@ -9219,136 +9279,152 @@ claims:
                       args:
                       - var: e
                       - var: a
-      - and:
-        - forall:
-            vars:
-              e: AcceptedEvidence
-            body:
-              implies:
-              - and:
-                - call:
-                    fn: already_accepted_evidence
-                    args:
-                    - var: e
-                - call:
-                    fn: evidence_transformed_by_durable_lifecycle
-                    args:
-                    - var: e
-              - exists:
-                  vars:
-                    a: CanonicalAcceptance
-                  body:
-                    and:
-                    - call:
-                        fn: canonical_acceptance_is_committed
-                        args:
-                        - var: a
-                    - eq:
-                      - call:
-                          fn: evidence_document_id
-                          args:
-                          - var: e
-                      - call:
-                          fn: acceptance_document_id
-                          args:
-                          - var: a
-                    - eq:
-                      - call:
-                          fn: evidence_client_change_id
-                          args:
-                          - var: e
-                      - call:
-                          fn: acceptance_client_change_id
-                          args:
-                          - var: a
-                    - call:
-                        fn: accepted_evidence_derives_from_prior_committed_acceptance
-                        args:
-                        - var: e
-                        - var: a
-        - forall:
-            vars:
-              e: AcceptedEvidence
-            body:
-              implies:
-              - and:
-                - call:
-                    fn: already_accepted_evidence
-                    args:
-                    - var: e
-                - call:
-                    fn: evidence_transformed_by_durable_lifecycle
-                    args:
-                    - var: e
+      - forall:
+          vars:
+            e: AcceptedEvidence
+          body:
+            implies:
+            - and:
               - call:
-                  fn: accepted_evidence_has_only_committed_provenance
+                  fn: already_accepted_evidence
                   args:
                   - var: e
-      - and:
-        - forall:
-            vars:
-              e: AcceptedEvidence
-            body:
-              implies:
-              - and:
-                - call:
-                    fn: already_accepted_evidence
-                    args:
-                    - var: e
-                - call:
-                    fn: evidence_reconstructed_by_runtime
-                    args:
-                    - var: e
-              - exists:
-                  vars:
-                    a: CanonicalAcceptance
-                  body:
-                    and:
-                    - call:
-                        fn: canonical_acceptance_is_committed
-                        args:
-                        - var: a
-                    - eq:
-                      - call:
-                          fn: evidence_document_id
-                          args:
-                          - var: e
-                      - call:
-                          fn: acceptance_document_id
-                          args:
-                          - var: a
-                    - eq:
-                      - call:
-                          fn: evidence_client_change_id
-                          args:
-                          - var: e
-                      - call:
-                          fn: acceptance_client_change_id
-                          args:
-                          - var: a
-                    - call:
-                        fn: accepted_evidence_derives_from_prior_committed_acceptance
-                        args:
-                        - var: e
-                        - var: a
-        - forall:
-            vars:
-              e: AcceptedEvidence
-            body:
-              implies:
-              - and:
-                - call:
-                    fn: already_accepted_evidence
-                    args:
-                    - var: e
-                - call:
-                    fn: evidence_reconstructed_by_runtime
-                    args:
-                    - var: e
               - call:
-                  fn: accepted_evidence_has_only_committed_provenance
+                  fn: evidence_acquired_on_normal_acceptance_path
                   args:
                   - var: e
+            - call:
+                fn: accepted_evidence_has_no_provisional_provenance
+                args:
+                - var: e
+      - forall:
+          vars:
+            e: AcceptedEvidence
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: already_accepted_evidence
+                  args:
+                  - var: e
+              - call:
+                  fn: evidence_transformed_by_durable_lifecycle
+                  args:
+                  - var: e
+            - exists:
+                vars:
+                  a: CanonicalAcceptance
+                body:
+                  and:
+                  - call:
+                      fn: canonical_acceptance_is_committed
+                      args:
+                      - var: a
+                  - eq:
+                    - call:
+                        fn: evidence_document_id
+                        args:
+                        - var: e
+                    - call:
+                        fn: acceptance_document_id
+                        args:
+                        - var: a
+                  - eq:
+                    - call:
+                        fn: evidence_client_change_id
+                        args:
+                        - var: e
+                    - call:
+                        fn: acceptance_client_change_id
+                        args:
+                        - var: a
+                  - call:
+                      fn: accepted_evidence_derives_from_prior_committed_acceptance
+                      args:
+                      - var: e
+                      - var: a
+      - forall:
+          vars:
+            e: AcceptedEvidence
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: already_accepted_evidence
+                  args:
+                  - var: e
+              - call:
+                  fn: evidence_transformed_by_durable_lifecycle
+                  args:
+                  - var: e
+            - call:
+                fn: lifecycle_evidence_has_only_committed_provenance
+                args:
+                - var: e
+      - forall:
+          vars:
+            e: AcceptedEvidence
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: already_accepted_evidence
+                  args:
+                  - var: e
+              - call:
+                  fn: evidence_reconstructed_by_runtime
+                  args:
+                  - var: e
+            - exists:
+                vars:
+                  a: CanonicalAcceptance
+                body:
+                  and:
+                  - call:
+                      fn: canonical_acceptance_is_committed
+                      args:
+                      - var: a
+                  - eq:
+                    - call:
+                        fn: evidence_document_id
+                        args:
+                        - var: e
+                    - call:
+                        fn: acceptance_document_id
+                        args:
+                        - var: a
+                  - eq:
+                    - call:
+                        fn: evidence_client_change_id
+                        args:
+                        - var: e
+                    - call:
+                        fn: acceptance_client_change_id
+                        args:
+                        - var: a
+                  - call:
+                      fn: accepted_evidence_derives_from_prior_committed_acceptance
+                      args:
+                      - var: e
+                      - var: a
+      - forall:
+          vars:
+            e: AcceptedEvidence
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: already_accepted_evidence
+                  args:
+                  - var: e
+              - call:
+                  fn: evidence_reconstructed_by_runtime
+                  args:
+                  - var: e
+            - call:
+                fn: runtime_evidence_has_only_committed_provenance
+                args:
+                - var: e
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
