@@ -6746,3 +6746,90 @@ records:
           rewrite, replacement, or other alteration; its explicit state-transition and logical-history wording does not add
           or remove a guarantee.
         differences: []
+  claim:L138_committed_append_preserves_gap_free_state_shape:
+    kind: claim
+    subject_id: L138_committed_append_preserves_gap_free_state_shape
+    subject_signature: 6734eda89b0a84203a4558d53b8f29d4ec75f42f0d49d2934f903319caca5cd2
+    roundtrip:
+      subject_signature: 6734eda89b0a84203a4558d53b8f29d4ec75f42f0d49d2934f903319caca5cd2
+      status: TRANSLATED
+      natural_language: 'For every authoritative state before, every authoritative state after, and every document d, if all
+        of the following hold: (1) after is the immediate successor of before under one committed authoritative protocol transition,
+        with the transition''s full authoritative effect separating the two states and no intermediate authoritative state
+        between them, where aborted, rolled-back, or never-committed work creates no such step and no successor authoritative
+        state; (2) in authoritative state before, the accepted canonical history for document d is one gap-free revision sequence;
+        and (3) there exists a revision r such that the authoritative step from before to after is a committed canonical accepted-change
+        append for document d whose one new canonical accepted change is at revision r, committing exactly that one canonical
+        accepted change for d and no other accepted-history change for d; then in authoritative state after, the accepted
+        canonical history for document d is one gap-free revision sequence.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 6734eda89b0a84203a4558d53b8f29d4ec75f42f0d49d2934f903319caca5cd2
+        verdict: EQUIVALENT
+        reason: The formula quantifies over the same before/after states and document, requires an authoritative step, gap-free
+          history for that document in the pre-state, and an existential revision witnessing a committed canonical append
+          of exactly one accepted change for that document, and concludes gap-free history for the same document in the post-state,
+          preserving scope, cardinality, identity, and direction with no added or omitted requirement.
+        differences: []
+      strengthening:
+        subject_signature: 6734eda89b0a84203a4558d53b8f29d4ec75f42f0d49d2934f903319caca5cd2
+        verdict: EQUIVALENT
+        reason: The formula quantifies over the same before/after states and document, requires the pre-state to be gap-free
+          for that document together with a committed canonical append step at some revision, and concludes the post-state
+          is gap-free for the same document, preserving scope, direction, and cardinality without added or omitted requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 6734eda89b0a84203a4558d53b8f29d4ec75f42f0d49d2934f903319caca5cd2
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original conditional guarantee: a gap-free accepted revision sequence in the
+          authoritative pre-state, followed by a committed canonical accepted-change append, yields a gap-free accepted revision
+          sequence in the authoritative post-state. Its explicit immediate-successor, single-change, and per-document phrasing
+          unpacks the pre/post append transition without adding or omitting a semantic requirement, changing cardinality,
+          or altering the conclusion.'
+        differences: []
+  claim:L139_non_append_lifecycle_preserves_gap_free_state_shape:
+    kind: claim
+    subject_id: L139_non_append_lifecycle_preserves_gap_free_state_shape
+    subject_signature: 3eb392964b6a11472960bf5d45e680b09305ff4b175699aa3454ebe3cbdaab59
+    roundtrip:
+      subject_signature: 3eb392964b6a11472960bf5d45e680b09305ff4b175699aa3454ebe3cbdaab59
+      status: TRANSLATED
+      natural_language: For all authoritative states before and after and for every document d, if (1) after is the immediate
+        successor of before under one committed authoritative protocol transition, with the transition's full authoritative
+        effect separating the two states and no intermediate authoritative state between them, and aborted, rolled-back, or
+        never-committed work creating no such step or successor state, and (2) that step is an authoritative non-append representation/lifecycle
+        transition for d that accepts no new edit, namely it changes d's authoritative representation or lifecycle state while
+        committing no canonical accepted change for d, excluding steps that do not change d's representation or lifecycle
+        state, including steps that accept edits only for other documents and steps that leave d entirely untouched, and excluding
+        steps that commit an append for d, and (3) in state before, the accepted canonical history for d is one gap-free revision
+        sequence, then in state after, the accepted canonical history for d is one gap-free revision sequence.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 3eb392964b6a11472960bf5d45e680b09305ff4b175699aa3454ebe3cbdaab59
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies before, after, and d, conjoins a committed immediate authoritative step,
+          a non-append representation/lifecycle step for d accepting no new edit, and gap-free canonical history in before,
+          and concludes the same gap-free predicate in after, matching the proposition's preconditions and conclusion without
+          added or dropped constraints.
+        differences: []
+      strengthening:
+        subject_signature: 3eb392964b6a11472960bf5d45e680b09305ff4b175699aa3454ebe3cbdaab59
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies the same before/after states and document, requires a committed immediate
+          authoritative step classified as a non-append representation/lifecycle transition accepting no new edit for that
+          document, plus gap-free canonical history in the pre-state, and concludes the same gap-free property in the post-state,
+          with no added or omitted scope, cardinality, or coordinate conditions.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 3eb392964b6a11472960bf5d45e680b09305ff4b175699aa3454ebe3cbdaab59
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original implication: for the relevant document, a completed authoritative representation/lifecycle
+          transition that commits no new accepted edit for that document, starting from a state whose accepted revision history
+          is one gap-free sequence, ends in a state whose accepted revision history is also one gap-free sequence. The per-document
+          scope, immediate pre/post-state relation, and exclusion of non-committed, non-changing, and append steps are elaborations
+          of the original pre-state/post-state and no-new-edit conditions, with no material weakening or strengthening.'
+        differences: []
