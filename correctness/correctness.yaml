@@ -604,9 +604,8 @@ refinement:
       blocked_by: []
       signature: 7717bf770173bf217e3fd82cc84a91189d9d061e9ad44a3a3e0fe38ba28f1990
     L163_accepted_terminal_outcome_commits_with_canonical_acceptance:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 13458c34466c74945863468ba95aa31c32facb50330ca4ebff92caf8083f80ac
     L164_terminal_paths_share_per_key_arbitration:
       status: stable
       blocked_by: []
@@ -3615,7 +3614,10 @@ claims:
     statement: For every eligible idempotency_key whose terminal_result becomes ACCEPTED, creation
       of that ACCEPTED terminal result and creation of the matching canonical accepted change occur
       in the same authoritative transaction boundary and therefore commit or roll back together; no
-      reachable authoritative state contains one without the other.
+      reachable authoritative state contains one without the other. In particular, whenever the
+      ACCEPTED terminal result side of such a pair stands as an authoritative outcome, the matching
+      canonical accepted change stands committed too, since a rolled-back transaction leaves neither
+      side in any authoritative state.
     source_refs:
       - accepted_change_log
       - owner_failover
