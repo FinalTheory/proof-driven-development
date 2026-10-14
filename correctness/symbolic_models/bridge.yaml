@@ -3727,6 +3727,7 @@ functions:
     - claim:L170_recovery_preserves_terminal_outcomes
     - claim:C42_nonterminal_lifecycle_preserves_terminal_outcomes
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
+    - claim:L171_terminal_outcome_representation_migration_preserves_mapping
   state_has_accepted_terminal_outcome:
     args:
     - AuthoritativeState
@@ -4196,7 +4197,6 @@ functions:
       identity k, whether or not x itself creates the acceptance or rejection.
     semantic_anchors:
     - claim:L164_terminal_paths_share_per_key_arbitration
-    - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
   recovery_reconstructs_outcomes_solely_from_snapshot_and_history:
     args:
     - ProtocolTransition
@@ -7240,13 +7240,19 @@ claims:
           body:
             implies:
             - and:
+              - and:
+                - call:
+                    fn: representation_migration_transition_at
+                    args:
+                    - var: x
+                    - var: s
+                - call:
+                    fn: terminal_key_is_normal_retry_eligible
+                    args:
+                    - var: s
+                    - var: k
               - call:
-                  fn: representation_migration_transition_at
-                  args:
-                  - var: x
-                  - var: s
-              - call:
-                  fn: terminal_key_is_normal_retry_eligible
+                  fn: state_contains_terminal_outcome
                   args:
                   - var: s
                   - var: k
@@ -8504,27 +8510,6 @@ claims:
                 - var: k
       - forall:
           vars:
-            x: ProtocolTransition
-            k: IdempotencyKey
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: terminal_decision_publish_or_commit_path
-                  args:
-                  - var: x
-                  - var: k
-              - call:
-                  fn: idempotency_key_is_eligible
-                  args:
-                  - var: k
-            - call:
-                fn: terminal_path_passes_shared_arbitration_gate
-                args:
-                - var: x
-                - var: k
-      - forall:
-          vars:
             t: TerminalResultRecord
             a: CanonicalAcceptance
           body:
@@ -8557,6 +8542,30 @@ claims:
                 fn: accepted_terminal_matching_acceptance_committed
                 args:
                 - var: a
+      - forall:
+          vars:
+            t: TerminalResultRecord
+          body:
+            implies:
+            - call:
+                fn: accepted_terminal_created_for_eligible_identity
+                args:
+                - var: t
+            - exists:
+                vars:
+                  a: CanonicalAcceptance
+                body:
+                  and:
+                  - call:
+                      fn: accepted_terminal_matching_creation_pair
+                      args:
+                      - var: t
+                      - var: a
+                  - call:
+                      fn: accepted_terminal_creation_pair_co_commits
+                      args:
+                      - var: t
+                      - var: a
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
