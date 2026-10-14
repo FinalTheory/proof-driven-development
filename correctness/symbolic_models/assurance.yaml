@@ -5912,3 +5912,180 @@ records:
           and aborted/timed-out/cancelled attempts lacking a committed acceptance, and clause (2) preserves same-transaction
           commit-or-abort atomicity for a separate hot-path accepted-key record or index. No requirement is omitted or added.
         differences: []
+  claim:L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance:
+    kind: claim
+    subject_id: L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance
+    subject_signature: ab5b0a77c58cbdcadd0caeb8d97988accdc5264f03f1e61d508c29351a9311f5
+    roundtrip:
+      subject_signature: ab5b0a77c58cbdcadd0caeb8d97988accdc5264f03f1e61d508c29351a9311f5
+      status: TRANSLATED
+      natural_language: 'The proposition is a conjunction of two statements, both quantified over every AcceptedEvidence e.
+        First: for every e, if e is authoritative accepted-idempotency evidence (authoritative durable state counts e as establishing
+        that the full identity e carries is already accepted) and e is created, replaced, or preserved by a durable accepted-history
+        lifecycle transformation outside the normal acceptance transaction, such as compaction, cleanup, or snapshot replacement,
+        then there exists a CanonicalAcceptance a such that all of the following hold: a is a committed canonical accepted-change
+        record in authoritative accepted history; the document_id component of the full identity carried by e equals the document_id
+        component of the full identity carried by a; the client_change_id component of the full identity carried by e equals
+        the client_change_id component of the full identity carried by a; and e is derived from and corresponds to a, and
+        a was committed before the lifecycle transformation or runtime reconstruction that created or preserved e. Second:
+        for every e, if e is authoritative accepted-idempotency evidence as defined above and e is created, replaced, or preserved
+        by such a durable accepted-history lifecycle transformation, then e has only committed provenance, meaning every provenance
+        source of e is a canonical acceptance for the same full (document_id, client_change_id) identity as e that was committed
+        before e was created, replaced, or preserved, or an intermediate whose own provenance terminates at such an acceptance;
+        no never-committed attempt, reservation, in-progress arbitration, timeout, cancellation, or other provisional state
+        is a provenance source of e, and no acceptance for a different identity is a provenance source of e.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: ab5b0a77c58cbdcadd0caeb8d97988accdc5264f03f1e61d508c29351a9311f5
+        verdict: EQUIVALENT
+        reason: The formula preserves the durable-lifecycle antecedent, both document_id and client_change_id identity components,
+          prior commitment, derivation from a committed canonical acceptance, and the only-committed-provenance exclusion
+          of never-committed and provisional sources, with no material strengthening or weakening.
+        differences: []
+      strengthening:
+        subject_signature: ab5b0a77c58cbdcadd0caeb8d97988accdc5264f03f1e61d508c29351a9311f5
+        verdict: EQUIVALENT
+        reason: The formula scopes to exactly the already-accepted evidence created, replaced, or preserved by a durable lifecycle
+          transformation outside normal acceptance, requires a previously committed canonical acceptance with equal document_id
+          and client_change_id from which it derives, and the only-provenance predicate captures the same exclusivity, including
+          transitive intermediates terminating at such an acceptance and excluding never-committed or provisional sources
+          and different-identity acceptances. No requirement is added or omitted.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: ab5b0a77c58cbdcadd0caeb8d97988accdc5264f03f1e61d508c29351a9311f5
+        verdict: EQUIVALENT
+        reason: The rendering preserves the original scope over evidence created, replaced, or preserved by a durable lifecycle
+          transformation outside the normal acceptance transaction, and splits 'derived only from a previously committed canonical
+          acceptance for the same (D,k)' into an equivalent existence component plus an exclusivity component covering same-identity
+          committed provenance and excluding never-committed or provisional sources and different-identity acceptances, with
+          no material strengthening or weakening.
+        differences: []
+  claim:L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance:
+    kind: claim
+    subject_id: L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance
+    subject_signature: d0472ef04677d0a20ade9446bce344c97fc93a8ae446616a2665e07aa5a00df9
+    roundtrip:
+      subject_signature: d0472ef04677d0a20ade9446bce344c97fc93a8ae446616a2665e07aa5a00df9
+      status: TRANSLATED
+      natural_language: 'For every accepted evidence e, if both of the following hold — (1) e is authoritative accepted-idempotency
+        evidence, meaning authoritative durable state counts e as establishing that the full identity e carries is already
+        accepted, and (2) e is created or preserved by a non-hot-path runtime reconstruction or materialization, such as recovery,
+        owner restart, restore, index rebuild, or cache rebuild — then both of the following hold. First, there exists a canonical
+        acceptance a such that: a is a committed canonical accepted-change record in authoritative accepted history; the document_id
+        component of the full identity carried by e equals the document_id component of the full identity carried by a; the
+        client_change_id component of the full identity carried by e equals the client_change_id component of the full identity
+        carried by a; and e is derived from and corresponds to a, and a was committed before the lifecycle transformation
+        or runtime reconstruction that created or preserved e. Second, e has only committed provenance, meaning every provenance
+        source of e is a canonical acceptance for the same full (document_id, client_change_id) identity as e that was committed
+        before e was created or preserved, or an intermediate whose own provenance terminates at such an acceptance; no failed-owner
+        residue, cache, reservation, never-committed attempt, timeout or cancellation state, or other provisional or non-authoritative
+        runtime data is a provenance source of e, and no acceptance for a different identity is a provenance source of e.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: d0472ef04677d0a20ade9446bce344c97fc93a8ae446616a2665e07aa5a00df9
+        verdict: EQUIVALENT
+        reason: The formula's antecedent matches authoritative already-accepted evidence created or preserved by non-hot-path
+          runtime reconstruction, and its consequents require existence of a previously committed canonical acceptance with
+          identical document_id and client_change_id from which the evidence derives, plus only-committed provenance excluding
+          failed-owner residue, caches, reservations, never-committed attempts, timeout/cancellation state, and other provisional
+          or non-authoritative sources. No requirement is omitted, added, or altered in identity, direction, or scope.
+        differences: []
+      strengthening:
+        subject_signature: d0472ef04677d0a20ade9446bce344c97fc93a8ae446616a2665e07aa5a00df9
+        verdict: EQUIVALENT
+        reason: The formula restricts to already-accepted evidence created or preserved by non-hot-path runtime reconstruction,
+          requires an existing previously committed canonical acceptance with matching document_id and client_change_id from
+          which it derives, and separately enforces that no provisional, non-authoritative, or different-identity source is
+          provenance, matching the source scope, identity, temporal direction, and exclusions without adding or omitting requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: d0472ef04677d0a20ade9446bce344c97fc93a8ae446616a2665e07aa5a00df9
+        verdict: EQUIVALENT
+        reason: The rendering preserves the scope (non-hot-path reconstruction/materialization creating or preserving authoritative
+          already-accepted evidence), the same (document_id, client_change_id) identity matching, the requirement of a previously
+          committed canonical acceptance as sole provenance, the temporal precedence, and the full exclusion of failed-owner
+          residue, caches, reservations, never-committed attempts, timeout/cancellation state, and other provisional or non-authoritative
+          sources, without adding or omitting a requirement.
+        differences: []
+  claim:C35_accepted_key_classification_requires_committed_acceptance:
+    kind: claim
+    subject_id: C35_accepted_key_classification_requires_committed_acceptance
+    subject_signature: 759b29fffb231715a2aa21991b1ea92c3ef8cac3f0dcb54b35c9170b1a4d470a
+    roundtrip:
+      subject_signature: 759b29fffb231715a2aa21991b1ea92c3ef8cac3f0dcb54b35c9170b1a4d470a
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following seven universally quantified implications holds. (1) For every AcceptedEvidence
+        e, if e is already-accepted evidence (authoritative durable state counts e as establishing that the full identity
+        e carries is already accepted) and e is acquired on the normal acceptance path (the acceptance flow by which authoritative
+        durable state first gains already-accepted evidence for an identity, as opposed to a lifecycle transformation or a
+        runtime reconstruction), then there exists a CanonicalAcceptance a such that a is committed (a committed canonical
+        accepted-change record in authoritative accepted history), the document_id of e equals the document_id of a, the client_change_id
+        of e equals the client_change_id of a, and e derives from and corresponds to a (a is the acceptance from which e''s
+        already-accepted evidence is established). (2) For every AcceptedEvidence e, if e is already-accepted evidence, e
+        is acquired on the normal acceptance path, and a separate hot-path accepted-key record or index distinct from the
+        committed accepted row / unique identity itself is the accepted-evidence mechanism for e''s identity, then there exists
+        a CanonicalAcceptance a such that a is committed, the document_id of e equals the document_id of a, the client_change_id
+        of e equals the client_change_id of a, e derives from and corresponds to a, and the separate hot-path accepted-key
+        record for e and a commit or abort together in the same acceptance transaction. (3) For every AcceptedEvidence e,
+        if e is already-accepted evidence and e is acquired on the normal acceptance path, then e has no provisional provenance:
+        no reservation, in-progress arbitration, pre-commit ownership, aborted, timed-out, or cancelled attempt, or other
+        provisional state is a provenance source of e, and e''s accepted-evidence provenance is the acceptance transaction
+        of its matching committed canonical acceptance. (4) For every AcceptedEvidence e, if e is already-accepted evidence
+        and e is created, replaced, or preserved by a durable accepted-history lifecycle transformation outside the normal
+        acceptance transaction, such as compaction, cleanup, or snapshot replacement, then there exists a CanonicalAcceptance
+        a such that a is committed, the document_id of e equals the document_id of a, the client_change_id of e equals the
+        client_change_id of a, and e derives from and corresponds to a where a was committed before the lifecycle transformation
+        that created or preserved e. (5) For every AcceptedEvidence e, if e is already-accepted evidence and e is transformed
+        by a durable lifecycle as in (4), then every provenance source of e is a canonical acceptance for the same full (document_id,
+        client_change_id) identity as e that was committed before e was created, replaced, or preserved, or an intermediate
+        whose own provenance terminates at such an acceptance; no never-committed attempt, reservation, in-progress arbitration,
+        timeout, cancellation, or other provisional state is a provenance source of e, and no acceptance for a different identity
+        is a provenance source of e. (6) For every AcceptedEvidence e, if e is already-accepted evidence and e is created
+        or preserved by a non-hot-path runtime reconstruction or materialization, such as recovery, owner restart, restore,
+        index rebuild, or cache rebuild, then there exists a CanonicalAcceptance a such that a is committed, the document_id
+        of e equals the document_id of a, the client_change_id of e equals the client_change_id of a, and e derives from and
+        corresponds to a where a was committed before the runtime reconstruction that created or preserved e. (7) For every
+        AcceptedEvidence e, if e is already-accepted evidence and e is reconstructed by runtime as in (6), then every provenance
+        source of e is a canonical acceptance for the same full (document_id, client_change_id) identity as e that was committed
+        before e was created or preserved, or an intermediate whose own provenance terminates at such an acceptance; no failed-owner
+        residue, cache, reservation, never-committed attempt, timeout or cancellation state, or other provisional or non-authoritative
+        runtime data is a provenance source of e, and no acceptance for a different identity is a provenance source of e.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 759b29fffb231715a2aa21991b1ea92c3ef8cac3f0dcb54b35c9170b1a4d470a
+        verdict: EQUIVALENT
+        reason: 'The formula covers all three acquisition cases in the claim with matching (document_id, client_change_id)
+          identity and committed canonical acceptance provenance: on the normal path it requires derivation from a committed
+          matching acceptance, atomic co-commit when a separate hot-path record exists, and no provisional provenance; on
+          durable lifecycle and runtime reconstruction paths it requires derivation from a prior committed matching acceptance
+          together with only-committed-provenance helpers that exclude provisional, cached, failed-owner, and different-identity
+          sources. No requirement is omitted, added, or materially altered.'
+        differences: []
+      strengthening:
+        subject_signature: 759b29fffb231715a2aa21991b1ea92c3ef8cac3f0dcb54b35c9170b1a4d470a
+        verdict: EQUIVALENT
+        reason: The formula faithfully partitions authoritative evidence into the normal acceptance path, durable lifecycle
+          transformations, and runtime reconstructions. On the normal path it requires a matching committed canonical acceptance
+          for the same (document_id, client_change_id), derivation from it, no provisional provenance, and atomic co-commit
+          when a separate hot-path record exists. On lifecycle and runtime paths it requires derivation from a prior committed
+          matching acceptance and only-committed provenance, excluding reservations, aborted/timed-out/cancelled attempts,
+          caches, failed-owner residue, and other provisional or non-authoritative sources, matching the source scope and
+          exclusions without adding extra cardinality or identity requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 759b29fffb231715a2aa21991b1ea92c3ef8cac3f0dcb54b35c9170b1a4d470a
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original provenance requirement across all paths: on the normal acceptance path
+          evidence must correspond to the matching committed canonical acceptance for the same (document_id, client_change_id),
+          with atomic commit/abort for any separate hot-path record; on lifecycle and runtime reconstruction paths the acceptance
+          must have been previously committed and be the sole ultimate provenance source, excluding reservations, in-progress
+          or pre-commit state, aborted/timed-out/cancelled or never-committed attempts, caches, failed-owner residue, and
+          other provisional or non-authoritative state. Quantifiers, identity coordinates, temporal ordering, and exclusions
+          match without weakening or strengthening.'
+        differences: []
