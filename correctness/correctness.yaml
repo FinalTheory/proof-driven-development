@@ -715,9 +715,8 @@ refinement:
       status: pending
       blocked_by: []
     L190_authoritative_terminal_publication_surfaces_are_exhaustive:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 25706ebb0f38f1c048b62184ef34380abdc07a80661db2fa04e42d26680ab007
     L192_terminal_publication_preserves_store_identity_provenance:
       status: pending
       blocked_by: []
@@ -4317,8 +4316,8 @@ claims:
       - L195_rejected_terminal_publication_excludes_canonical_acceptance
       - L163_accepted_terminal_outcome_commits_with_canonical_acceptance
   L190_authoritative_terminal_publication_surfaces_are_exhaustive:
-    statement: Every authoritative path that can expose an ACCEPTED or REJECTED terminal result for
-      a normal_retry_eligible_identity to a protocol consumer flows through
+    statement: Every path that can expose an ACCEPTED or REJECTED terminal result for a
+      normal_retry_eligible_identity to a protocol consumer flows through
       terminal_outcome_publication_gate; ordinary request, retry, reconnect, restoration-facing, and
       any other terminal-result handler cannot read durable_terminal_outcome_store and publish a
       terminal outcome through a bypass path.
