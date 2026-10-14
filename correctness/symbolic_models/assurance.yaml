@@ -6341,3 +6341,52 @@ records:
           the snapshot/compaction/cleanup/recovery evidence-preservation requirement throughout the eligibility horizon, with
           expired identities remaining outside the conditioned scope.'
         differences: []
+  claim:L143_acked_edit_completed_recovery_matches_canonical_replay:
+    kind: claim
+    subject_id: L143_acked_edit_completed_recovery_matches_canonical_replay
+    subject_signature: 48ed3ce6511563401dfbeca223c17708b284b1865694dbc431012e5dbc29294d
+    roundtrip:
+      subject_signature: 48ed3ce6511563401dfbeca223c17708b284b1865694dbc431012e5dbc29294d
+      status: TRANSLATED
+      natural_language: 'For all SuccessAck observations x, canonical acceptances a, and recovery attempts r, if all of the
+        following hold: (1) x was actually exposed to the client for one particular exact logical edit under evaluation, where
+        each acknowledged logical edit is represented by its own SuccessAck observation and no single-edit transport cardinality
+        is imposed; (2) x is bound to the exact logical edit whose canonical acceptance witness is a, preserving the acknowledged
+        edit and document identity; (3) a was durably committed at its authoritative acceptance linearization point strictly
+        before x was exposed, without requiring that the physical accepted-change row remain retained or directly queryable
+        afterward; (4) r is an already-completed owner recovery attempt whose recovery-completion event and whose service-resumption
+        event both occur strictly after x was exposed, each independently required to be post-ACK with no additional ordering
+        imposed between those two events, so a recovery that completed before the ACK but resumed service after it does not
+        satisfy this condition, and this condition asserts neither that any recovery is scheduled nor that any recovery eventually
+        completes; and (5) r completed and resumed service for the same target document as a from the authoritative frontier
+        H of that document, with the canonical revision of a at or before H, where this condition only classifies an already-existing
+        completed attempt and does not assert that any recovery is eventually scheduled or completes; then the recovered logical
+        document state equals canonical replay through the recovery frontier, so a is not omitted relative to that replay
+        even if later accepted edits alter its visible effect.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 48ed3ce6511563401dfbeca223c17708b284b1865694dbc431012e5dbc29294d
+        verdict: EQUIVALENT
+        reason: The formula's antecedent captures an exposed ACK bound to the exact acceptance, committed before the ACK,
+          plus a later completed-and-resumed owner recovery covering that acceptance at a frontier at or beyond its revision,
+          and its consequent asserts recovered state equality with canonical replay through that frontier. The stated non-requirements
+          (scheduling/completion, reconnection, physical row retention) are preserved by the predicate meanings and are not
+          added as preconditions.
+        differences: []
+      strengthening:
+        subject_signature: 48ed3ce6511563401dfbeca223c17708b284b1865694dbc431012e5dbc29294d
+        verdict: EQUIVALENT
+        reason: The formula's antecedent captures ACK exposure bound to the exact acceptance, canonical acceptance committed
+          before the ACK, and a later owner recovery that both completes and resumes after the ACK and covers the acceptance
+          at frontier H >= its revision, while the consequent asserts the recovered logical state equals canonical replay
+          through H, without adding recovery-existence, client-reconnect, or physical row-retention requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 48ed3ce6511563401dfbeca223c17708b284b1865694dbc431012e5dbc29294d
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal scope over ACKed edits, the acceptance-before-ACK and H >= acceptance-revision
+          preconditions, same-document identity, the completed-and-resumed recovery classification without asserting any recovery
+          occurs, the no-retention qualification, and the exact equality of recovered state to canonical replay through H.
+        differences: []
