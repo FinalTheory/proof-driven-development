@@ -5020,3 +5020,181 @@ records:
           the atomic creating-gate ordering via the completed-before-begin condition; the horizon expiry limit is encoded
           by the preconditions, with no guarantee added or omitted.
         differences: []
+  claim:L184_terminal_outcome_entry_has_single_authoritative_value:
+    kind: claim
+    subject_id: L184_terminal_outcome_entry_has_single_authoritative_value
+    subject_signature: a2c1513cdd00e1e6b131f52c2d9a1513052868b17e1c3e97de1490240b9bbb8e
+    roundtrip:
+      subject_signature: a2c1513cdd00e1e6b131f52c2d9a1513052868b17e1c3e97de1490240b9bbb8e
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following four statements holds. In each statement, the idempotency key k
+        is the exact full composite identity (document_id, client_change_id), where equal client_change_id values in different
+        document namespaces are distinct identities, and a state s satisfies the boundary condition when s is an authoritative
+        initialization state for the terminal outcome store, or s is an authoritative restoration state for the terminal outcome
+        store, or s is an authoritative import state for the terminal outcome store, or s is an authoritative publication
+        state that makes terminal outcomes observable to protocol consumers; and terminal_key_is_normal_retry_eligible(s,
+        k) means that in s, k is a normal_retry_eligible_identity, i.e. the logical edit it identifies remains within the
+        normal retry/reconnect eligibility boundary (its pending/retry age is no more than 30 days). (1) For all authoritative
+        states s, terminal result records t1 and t2, and idempotency keys k, if s satisfies the boundary condition, k is normal-retry-eligible
+        in s, t1 is the terminal_result contained in the terminal outcome store in s for k, and t2 is the terminal_result
+        contained in the terminal outcome store in s for k, then t1 equals t2. (2) For all s and k, if s satisfies the boundary
+        condition and k is normal-retry-eligible in s, then both: s contains at most one durable terminal result for k, and
+        it is not the case that both the terminal outcome contained in s for k is ACCEPTED(canonical result) and the terminal
+        outcome contained in s for k is REJECTED(definitive rejection reason). (3) For all s and k, if s satisfies the boundary
+        condition, k is normal-retry-eligible in s, and k is fresh in s at an entry boundary in the sense that no terminal
+        outcome or canonical acceptance for k predates that boundary, then there does not exist a terminal result record t
+        such that t is the terminal_result contained in the terminal outcome store in s for k. (4) For all s, terminal result
+        records t, and k, if s satisfies the boundary condition, k is normal-retry-eligible in s, and t is the terminal_result
+        contained in the terminal outcome store in s for k, then t was already an authoritative terminal_result before the
+        entry boundary at which it is exposed and is not newly introduced at that boundary.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: a2c1513cdd00e1e6b131f52c2d9a1513052868b17e1c3e97de1490240b9bbb8e
+        verdict: EQUIVALENT
+        reason: The formula covers all four boundary types and normal-retry-eligible full keys, enforces at most one terminal
+          record with no ACCEPTED/REJECTED conflict, forbids any terminal result for a fresh identity, and requires any exposed
+          terminal result to be previously authoritative, matching the source's zero-or-one previously authoritative value
+          requirement.
+        differences: []
+      strengthening:
+        subject_signature: a2c1513cdd00e1e6b131f52c2d9a1513052868b17e1c3e97de1490240b9bbb8e
+        verdict: EQUIVALENT
+        reason: The formula covers all four named boundaries for normal-retry-eligible full keys, enforces at most one terminal
+          record with no simultaneous ACCEPTED and REJECTED value, forbids any terminal record for a fresh identity, and requires
+          any present record to have been previously authoritative, matching the source's zero-for-fresh or exactly-one-previously-authoritative
+          requirement without added scope or cardinality.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: a2c1513cdd00e1e6b131f52c2d9a1513052868b17e1c3e97de1490240b9bbb8e
+        verdict: EQUIVALENT
+        reason: 'The four conjuncts jointly preserve the original: at the same authoritative initialization/restoration/import/publication
+          boundaries and for the same full composite key (document_id, client_change_id) restricted to normal-retry-eligible
+          identities, they require at most one terminal result with no ACCEPTED/REJECTED conflict, none for a fresh identity,
+          and any present result to be previously authoritative rather than newly introduced at the boundary. No requirement
+          is omitted, added, or dimensionally collapsed.'
+        differences: []
+  claim:L186_terminal_outcome_initialization_matches_canonical_acceptance:
+    kind: claim
+    subject_id: L186_terminal_outcome_initialization_matches_canonical_acceptance
+    subject_signature: e8d5a861afbf759669f0a67266a444ba98b74fcb2cdb9545a6cefdbce020777e
+    roundtrip:
+      subject_signature: e8d5a861afbf759669f0a67266a444ba98b74fcb2cdb9545a6cefdbce020777e
+      status: TRANSLATED
+      natural_language: 'For every terminal result record t, both of the following hold: (1) if t is the terminal_result exposed
+        at an authoritative initialization boundary that makes a normal_retry_eligible_identity observable to the idempotency
+        protocol, and t is a terminal_result for a normal_retry_eligible_identity, and t is an authoritative ACCEPTED (canonical
+        result) outcome, then the matching canonical accepted change for t''s full identity is present in canonical accepted
+        history; and (2) if t is the terminal_result exposed at an authoritative initialization boundary that makes a normal_retry_eligible_identity
+        observable to the idempotency protocol, and t is a terminal_result for a normal_retry_eligible_identity, and t is
+        an authoritative REJECTED (definitive rejection reason) outcome, then the matching canonical accepted change for t''s
+        full identity is not present in canonical accepted history.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: e8d5a861afbf759669f0a67266a444ba98b74fcb2cdb9545a6cefdbce020777e
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over terminal result records guarded by the initialization-boundary and
+          eligible-identity predicates, exactly matching the source scope. The ACCEPTED branch requires the matching canonical
+          acceptance for the record's full identity, and the REJECTED branch requires its absence, preserving both directions,
+          identity, and conditional structure without added or omitted requirements.
+        differences: []
+      strengthening:
+        subject_signature: e8d5a861afbf759669f0a67266a444ba98b74fcb2cdb9545a6cefdbce020777e
+        verdict: EQUIVALENT
+        reason: 'The formula conjoins the two source conditionals over the same scope: for records at an authoritative initialization
+          boundary and for a normal_retry_eligible_identity, ACCEPTED implies matching canonical acceptance present, and REJECTED
+          implies its absence, with the helper predicate preserving the full identity match and no extra guard, cardinality,
+          or provenance requirement.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: e8d5a861afbf759669f0a67266a444ba98b74fcb2cdb9545a6cefdbce020777e
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves both branches at every authoritative initialization boundary for a normal_retry_eligible_identity:
+          ACCEPTED implies the matching canonical accepted change for the same full identity is present, and REJECTED implies
+          that matching change is absent, with no added or omitted quantifier, identity, scope, or provenance condition.'
+        differences: []
+  claim:L187_terminal_outcome_restoration_matches_canonical_acceptance:
+    kind: claim
+    subject_id: L187_terminal_outcome_restoration_matches_canonical_acceptance
+    subject_signature: a49807985e777e83890cfd99992ba2714637c4f61d9425f3ad4ab3800efb14a4
+    roundtrip:
+      subject_signature: a49807985e777e83890cfd99992ba2714637c4f61d9425f3ad4ab3800efb14a4
+      status: TRANSLATED
+      natural_language: 'For every terminal result record t, both of the following hold: (1) if t is the ACCEPTED terminal_result
+        exposed at an authoritative restoration boundary for a normal_retry_eligible_identity — that is, a logical edit identity
+        (document_id, client_change_id) whose pending/retry age is no more than 30 days and therefore remains inside the normal
+        retry/reconnect protocol boundary defined by A6 — then the matching canonical accepted change for t''s full identity
+        is present in canonical accepted history; and (2) if t is the REJECTED terminal_result exposed at an authoritative
+        restoration boundary for a normal_retry_eligible_identity, then it is not the case that the matching canonical accepted
+        change for t''s full identity is present in canonical accepted history.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: a49807985e777e83890cfd99992ba2714637c4f61d9425f3ad4ab3800efb14a4
+        verdict: EQUIVALENT
+        reason: 'The formula universally encodes both source conditions: an ACCEPTED result at an authoritative restoration
+          boundary for a normal_retry_eligible_identity implies presence of the matching canonical acceptance for its full
+          identity, and a REJECTED result at such a boundary implies absence of that matching canonical acceptance, with no
+          added or dropped guards, identity components, or bridges.'
+        differences: []
+      strengthening:
+        subject_signature: a49807985e777e83890cfd99992ba2714637c4f61d9425f3ad4ab3800efb14a4
+        verdict: EQUIVALENT
+        reason: 'The formula encodes exactly the two source conditionals at the stated boundary: an ACCEPTED restoration record
+          (antecedent already scoped to an authoritative restoration boundary for a normal_retry_eligible_identity) implies
+          presence of the matching canonical accepted change for its full identity, and a REJECTED restoration record under
+          the same scope implies absence of that matching canonical acceptance. No quantifier, identity, scope, or cardinality
+          strengthening or weakening is introduced.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: a49807985e777e83890cfd99992ba2714637c4f61d9425f3ad4ab3800efb14a4
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves both conditional guarantees at every authoritative restoration boundary for a normal_retry_eligible_identity
+          (full (document_id, client_change_id) identity, age no more than 30 days): ACCEPTED restoration requires the matching
+          canonical accepted change to be present, and REJECTED restoration requires its absence for the same full identity.
+          No quantifier, identity coordinate, provenance direction, or strength is added or omitted.'
+        differences: []
+  claim:L188_terminal_outcome_import_matches_canonical_acceptance:
+    kind: claim
+    subject_id: L188_terminal_outcome_import_matches_canonical_acceptance
+    subject_signature: b18d314338ab38bc82480b0e8e54f0d1ac53fddc97552a3424328ff1c3f6c121
+    roundtrip:
+      subject_signature: b18d314338ab38bc82480b0e8e54f0d1ac53fddc97552a3424328ff1c3f6c121
+      status: TRANSLATED
+      natural_language: 'For every terminal result record t, both of the following hold: (1) if t is the ACCEPTED terminal_result
+        exposed at an authoritative import boundary for a normal_retry_eligible_identity — that is, a logical edit identity
+        (document_id, client_change_id) whose pending/retry age is no more than 30 days and therefore remains inside the normal
+        retry/reconnect protocol boundary defined by A6 — then the matching canonical accepted change for t''s full identity
+        is present in canonical accepted history; and (2) if t is the REJECTED terminal_result exposed at an authoritative
+        import boundary for a normal_retry_eligible_identity, then it is not the case that the matching canonical accepted
+        change for t''s full identity is present in canonical accepted history.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: b18d314338ab38bc82480b0e8e54f0d1ac53fddc97552a3424328ff1c3f6c121
+        verdict: EQUIVALENT
+        reason: 'The formula exactly encodes both conjuncts: every ACCEPTED terminal result exposed at an authoritative import
+          boundary for a normal_retry_eligible_identity has its matching canonical accepted change present, and every such
+          REJECTED result has no such matching canonical acceptance for its full identity, with no added or dropped guard,
+          identity component, or cardinality requirement.'
+        differences: []
+      strengthening:
+        subject_signature: b18d314338ab38bc82480b0e8e54f0d1ac53fddc97552a3424328ff1c3f6c121
+        verdict: EQUIVALENT
+        reason: 'The formula''s two universal implications exactly encode the statement: an ACCEPTED terminal result at an
+          authoritative import boundary for a normal_retry_eligible_identity implies presence of the matching canonical accepted
+          change for that record''s full identity, and a REJECTED such result implies its absence, with no added or omitted
+          scope, identity, or cardinality constraints.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: b18d314338ab38bc82480b0e8e54f0d1ac53fddc97552a3424328ff1c3f6c121
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the scope (authoritative import boundaries for normal_retry_eligible_identity), the
+          full-identity matching, and both directions: ACCEPTED implies the matching canonical accepted change is present,
+          and REJECTED implies no canonical acceptance for that identity is present. No requirement is added or omitted.'
+        differences: []
