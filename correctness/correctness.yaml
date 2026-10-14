@@ -230,9 +230,8 @@ refinement:
       blocked_by: []
       signature: 4d83dfc12b890f96feeb57eebe3be0c919126a1cb88fcc2882fcd0a73c40ff61
     L14_accepted_idempotency_identity_survives_lifecycle:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 6fd9ec71b48503efcfa5de127b617b030b562351e2947fc23d72d8c8d5d77d61
     L4_append_requires_previous_frontier:
       status: stable
       blocked_by: []
@@ -286,9 +285,8 @@ refinement:
       blocked_by: []
       signature: 3183daf5cd6bff8d69574c1623e3bc16c7c9c94b66f10c0a0cf30ce8300973fc
     L27_concurrent_first_acceptance_is_atomically_arbitrated:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: c8c98d72251d8a32fa699932307969d45da4fddf860d58ccda72fd9c6d62c829
     L28_authoritative_epoch_never_regresses_or_reuses:
       status: stable
       blocked_by: []
@@ -1233,7 +1231,9 @@ claims:
       edit remains within the 30-day normal retry/reconnect eligibility horizon, including across owner
       recovery, snapshotting, compaction, and accepted-history lifecycle cleanup. The protocol does not
       require this ordinary retry/reconnect classification evidence to remain available after the identity
-      has expired from that horizon.
+      has expired from that horizon. The accepted-key gate makes its decision by reading the authoritative
+      state, so the evidence preserved in that state is exactly what a later transition's gate decision
+      observes as the key already being accepted.
     verification:
       verifiers:
         - kind: state_machine
@@ -1533,7 +1533,9 @@ claims:
     statement: For overlapping transitions mediated by the authoritative accepted-key gate for the
       same initially absent key, the absent-key decision and create outcome are atomically
       arbitrated so that at most one transition can produce an acceptance event; every other
-      contender cannot create an acceptance event for that key.
+      contender cannot create an acceptance event for that key. The absent-key decision and the
+      create are a single atomic gate operation, so one transition's gate operation by itself
+      produces at most one acceptance event for the key.
     verification:
       verifiers:
         - kind: transaction_atomicity
