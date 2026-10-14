@@ -1416,17 +1416,16 @@ functions:
     args:
     - RecoveryAttempt
     - CanonicalAcceptance
-    returns: Bool
     catalog_symbols: []
     meaning: Recovery attempt r completed and resumed service for the same target
       document as canonical acceptance a from authoritative frontier H of that document,
       with the canonical revision of a at or before H. This predicate only classifies
       an already-existing completed attempt; it does not assert that any recovery
       is eventually scheduled or completes.
+    returns: Bool
     semantic_anchors:
     - contract:acked_edit_failover_survival
     - claim:L143_acked_edit_completed_recovery_matches_canonical_replay
-    - claim:L146_ack_justifying_acceptance_survives_process_and_owner_failures
   recovery_matches_replay_including_acceptance:
     args:
     - RecoveryAttempt
@@ -3153,7 +3152,6 @@ functions:
     args:
     - RecoveryAttempt
     - SuccessAck
-    returns: Bool
     catalog_symbols: []
     meaning: Owner recovery attempt r has both its recovery-completion event and its
       service-resumption event occur strictly after success ACK event x was exposed.
@@ -3162,11 +3160,11 @@ functions:
       before the ACK but resumed service after it does not satisfy this predicate.
       This is only an ordering and applicability fact over an already-completed recovery;
       it does not assert that any recovery is scheduled or eventually completes.
+    returns: Bool
     semantic_anchors:
     - contract:acked_edit_failover_survival
     - source:owner_failover
     - claim:L143_acked_edit_completed_recovery_matches_canonical_replay
-    - claim:L146_ack_justifying_acceptance_survives_process_and_owner_failures
   catchup_response_targets_document_with_captured_head:
     args:
     - CatchupResponse
@@ -10570,65 +10568,31 @@ claims:
     capability: relational
     contracts: []
     formula:
-      and:
-      - forall:
-          body:
-            implies:
-            - and:
-              - call:
-                  args:
-                  - var: x
-                  fn: success_ack_exposed
-              - call:
-                  args:
-                  - var: x
-                  - var: a
-                  fn: success_ack_for_acceptance
-              - call:
-                  args:
-                  - var: a
-                  - var: x
-                  fn: canonical_acceptance_committed_before_success_ack
+      forall:
+        body:
+          implies:
+          - and:
+            - call:
+                args:
+                - var: x
+                fn: success_ack_exposed
+            - call:
+                args:
+                - var: x
+                - var: a
+                fn: success_ack_for_acceptance
             - call:
                 args:
                 - var: a
-                fn: committed_acceptance_remains_in_recoverable_authoritative_history
-          vars:
-            a: CanonicalAcceptance
-            x: SuccessAck
-      - forall:
-          body:
-            implies:
-            - and:
-              - and:
-                - call:
-                    args:
-                    - var: x
-                    fn: success_ack_exposed
-                - call:
-                    args:
-                    - var: x
-                    - var: a
-                    fn: success_ack_for_acceptance
-                - call:
-                    args:
-                    - var: a
-                    - var: x
-                    fn: canonical_acceptance_committed_before_success_ack
-              - call:
-                  args:
-                  - var: r
-                  - var: x
-                  fn: owner_recovery_completion_and_resumption_after_success_ack
-            - call:
-                args:
-                - var: r
-                - var: a
-                fn: completed_recovery_covers_acceptance
-          vars:
-            a: CanonicalAcceptance
-            r: RecoveryAttempt
-            x: SuccessAck
+                - var: x
+                fn: canonical_acceptance_committed_before_success_ack
+          - call:
+              args:
+              - var: a
+              fn: committed_acceptance_remains_in_recoverable_authoritative_history
+        vars:
+          a: CanonicalAcceptance
+          x: SuccessAck
   L143_acked_edit_completed_recovery_matches_canonical_replay:
     capability: relational
     contracts: []
