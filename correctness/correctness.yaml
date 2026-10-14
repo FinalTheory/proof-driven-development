@@ -6303,7 +6303,13 @@ assurance:
     C46_accepted_terminal_result_preserves_acceptance_provenance:
       status: unaudited
     C47_accepted_terminal_result_provenance_survives_lifecycle:
-      status: unaudited
+      status: machine_checked
+      rationale: Trusted symbolic translations exist for C47 and all three direct premises L199,
+        L200 and L201. Z3 checked L199 AND L200 AND L201 AND NOT(C47) as UNSAT (direct_smt).
+        Independent mutation tests that replace any one of L199, L200 or L201 with True each become
+        SAT with a concrete counterexample, demonstrating that all three direct premises are
+        necessary to establish the target.
+      signature: 5436d195b0ac21b84b16fe7e65436e2240dd56fe82d7a6fa9e0ae8f5b45f2c97
   implementation_evidence:
     L19_client_applies_only_contiguous_revisions:
       status: planned
