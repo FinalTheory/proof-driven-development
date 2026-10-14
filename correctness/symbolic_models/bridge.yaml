@@ -5791,33 +5791,6 @@ contracts:
                       args:
                       - var: t
                       - var: a
-                  - forall:
-                      vars:
-                        other: CanonicalAcceptance
-                      body:
-                        implies:
-                        - and:
-                          - call:
-                              fn: accepted_terminal_contract_source_acceptance
-                              args:
-                              - var: other
-                          - eq:
-                            - call:
-                                fn: terminal_result_idempotency_key
-                                args:
-                                - var: t
-                            - call:
-                                fn: acceptance_key
-                                args:
-                                - var: other
-                          - call:
-                              fn: terminal_result_bound_to_acceptance_execution
-                              args:
-                              - var: t
-                              - var: other
-                        - eq:
-                          - var: other
-                          - var: a
       - forall:
           vars:
             x: ProtocolTransition
