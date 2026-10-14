@@ -63,6 +63,7 @@ functions:
     - contract:idempotency_terminal_outcome_coherence
     - claim:G5_retry_resolves_idempotently
     - claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance
+    - claim:L14_accepted_idempotency_identity_survives_lifecycle
   reachable_client_state:
     args:
     - ClientState
@@ -265,6 +266,7 @@ functions:
     semantic_anchors:
     - contract:accepted_evidence_correspondence
     - claim:G5_retry_resolves_idempotently
+    - claim:L14_accepted_idempotency_identity_survives_lifecycle
   accepted_evidence_for_key:
     args:
     - AuthoritativeState
@@ -606,6 +608,7 @@ functions:
     - claim:C14_all_acceptance_paths_honor_idempotency_identity
     - claim:L14_accepted_idempotency_identity_survives_lifecycle
     - claim:L27_concurrent_first_acceptance_is_atomically_arbitrated
+    - claim:C13_idempotency_key_is_temporally_unique
   transition_creates_acceptance:
     args:
     - ProtocolTransition
@@ -675,10 +678,46 @@ functions:
     returns: Bool
     catalog_symbols:
     - acceptance_events
-    meaning: An acceptance event produced by transition t is recorded in the authoritative acceptance_events log for
-      idempotency key k, as part of the durable acceptance history that the temporal-uniqueness count ranges over. This
-      predicate records the event's presence in the log; it does not assert how the event was arbitrated.
+    meaning: Transition t's creation of an acceptance event for idempotency key k is entered in the authoritative
+      acceptance_events log, the durable acceptance history that the temporal-uniqueness count ranges over. This predicate
+      asserts that the creation was logged when it occurred; it does not assert that any particular later authoritative state
+      still retains the entry, and it does not assert how the event was arbitrated.
     semantic_anchors:
+    - claim:C13_idempotency_key_is_temporally_unique
+  acceptance_event_occurred_for_key:
+    args:
+    - AuthoritativeState
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols: []
+    meaning: An acceptance event creating a canonical accepted change for idempotency key k has occurred at or before
+      authoritative state s. This predicate records that the acceptance lies in s's past; it does not assert that evidence
+      of it is present in s.
+    semantic_anchors:
+    - claim:L14_accepted_idempotency_identity_survives_lifecycle
+  accepted_evidence_present_for_key:
+    args:
+    - AuthoritativeState
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols: []
+    meaning: Authoritative state s contains sufficient non-reusable evidence that idempotency key k has already been
+      accepted, so while that evidence stands the key is distinguished as already accepted and cannot be reused for a new
+      acceptance. This predicate asserts the presence of that classification evidence in s only; it does not assert which
+      mechanism wrote or preserved it.
+    semantic_anchors:
+    - claim:L14_accepted_idempotency_identity_survives_lifecycle
+  transition_creates_multiple_acceptances_for_key:
+    args:
+    - ProtocolTransition
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols: []
+    meaning: Transition t creates more than one acceptance event, that is more than one canonical accepted change, for
+      idempotency key k within the transition itself, so the key would acquire two acceptance events from a single
+      transition.
+    semantic_anchors:
+    - claim:L27_concurrent_first_acceptance_is_atomically_arbitrated
     - claim:C13_idempotency_key_is_temporally_unique
   pending_edit:
     args:
@@ -5096,168 +5135,247 @@ claims:
   L14_accepted_idempotency_identity_survives_lifecycle:
     contracts: []
     formula:
-      forall:
-        vars:
-          t1: ProtocolTransition
-          t2: ProtocolTransition
-          k: IdempotencyKey
-        body:
-          implies:
-          - and:
+      and:
+      - forall:
+          vars:
+            s: AuthoritativeState
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_authoritative_state
+                  args:
+                  - var: s
+              - call:
+                  fn: within_retry_reconnect_eligibility
+                  args:
+                  - var: s
+                  - var: k
+              - call:
+                  fn: acceptance_event_occurred_for_key
+                  args:
+                  - var: s
+                  - var: k
             - call:
-                fn: acceptance_transition_for_key
+                fn: accepted_evidence_present_for_key
                 args:
-                - var: t1
+                - var: s
                 - var: k
+      - forall:
+          vars:
+            t1: ProtocolTransition
+            t2: ProtocolTransition
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: acceptance_transition_for_key
+                  args:
+                  - var: t1
+                  - var: k
+              - call:
+                  fn: transition_creates_acceptance
+                  args:
+                  - var: t1
+              - call:
+                  fn: acceptance_transition_for_key
+                  args:
+                  - var: t2
+                  - var: k
+              - call:
+                  fn: transition_decision_precedes
+                  args:
+                  - var: t1
+                  - var: t2
+              - call:
+                  fn: acceptance_transition_within_retry_horizon
+                  args:
+                  - var: t2
             - call:
-                fn: transition_creates_acceptance
-                args:
-                - var: t1
-            - call:
-                fn: acceptance_transition_for_key
+                fn: gate_observes_key_already_accepted
                 args:
                 - var: t2
-                - var: k
-            - call:
-                fn: transition_decision_precedes
-                args:
-                - var: t1
-                - var: t2
-            - call:
-                fn: acceptance_transition_within_retry_horizon
-                args:
-                - var: t2
-          - call:
-              fn: gate_observes_key_already_accepted
-              args:
-              - var: t2
   L27_concurrent_first_acceptance_is_atomically_arbitrated:
     contracts: []
     formula:
-      forall:
-        vars:
-          t1: ProtocolTransition
-          t2: ProtocolTransition
-          k: IdempotencyKey
-        body:
-          implies:
-          - and:
-            - not:
-                eq:
-                - var: t1
-                - var: t2
-            - call:
-                fn: acceptance_transition_for_key
-                args:
-                - var: t1
-                - var: k
-            - call:
-                fn: acceptance_transition_for_key
-                args:
-                - var: t2
-                - var: k
-            - not:
-                call:
-                  fn: transition_decision_precedes
-                  args:
+      and:
+      - forall:
+          vars:
+            t1: ProtocolTransition
+            t2: ProtocolTransition
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - not:
+                  eq:
                   - var: t1
                   - var: t2
-            - not:
-                call:
-                  fn: transition_decision_precedes
-                  args:
-                  - var: t2
-                  - var: t1
-            - not:
-                call:
-                  fn: gate_observes_key_already_accepted
-                  args:
-                  - var: t1
-            - not:
-                call:
-                  fn: gate_observes_key_already_accepted
-                  args:
-                  - var: t2
-          - not:
-              and:
               - call:
-                  fn: transition_creates_acceptance
+                  fn: acceptance_transition_for_key
                   args:
                   - var: t1
+                  - var: k
               - call:
-                  fn: transition_creates_acceptance
+                  fn: acceptance_transition_for_key
                   args:
                   - var: t2
+                  - var: k
+              - not:
+                  call:
+                    fn: transition_decision_precedes
+                    args:
+                    - var: t1
+                    - var: t2
+              - not:
+                  call:
+                    fn: transition_decision_precedes
+                    args:
+                    - var: t2
+                    - var: t1
+              - not:
+                  call:
+                    fn: gate_observes_key_already_accepted
+                    args:
+                    - var: t1
+              - not:
+                  call:
+                    fn: gate_observes_key_already_accepted
+                    args:
+                    - var: t2
+            - not:
+                and:
+                - call:
+                    fn: transition_creates_acceptance
+                    args:
+                    - var: t1
+                - call:
+                    fn: transition_creates_acceptance
+                    args:
+                    - var: t2
+      - forall:
+          vars:
+            t: ProtocolTransition
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: acceptance_transition_for_key
+                  args:
+                  - var: t
+                  - var: k
+              - not:
+                  call:
+                    fn: gate_observes_key_already_accepted
+                    args:
+                    - var: t
+            - not:
+                call:
+                  fn: transition_creates_multiple_acceptances_for_key
+                  args:
+                  - var: t
+                  - var: k
   C13_idempotency_key_is_temporally_unique:
     contracts: []
     formula:
-      forall:
-        vars:
-          t1: ProtocolTransition
-          t2: ProtocolTransition
-          k: IdempotencyKey
-        body:
-          implies:
-          - and:
-            - call:
-                fn: acceptance_transition_for_key
-                args:
-                - var: t1
-                - var: k
-            - call:
-                fn: acceptance_transition_for_key
-                args:
-                - var: t2
-                - var: k
-            - call:
-                fn: acceptance_event_recorded_for_key
-                args:
-                - var: t1
-                - var: k
-            - call:
-                fn: acceptance_event_recorded_for_key
-                args:
-                - var: t2
-                - var: k
-            - call:
-                fn: acceptance_capable_transition
-                args:
-                - var: t1
-            - call:
-                fn: acceptance_capable_transition
-                args:
-                - var: t2
-            - call:
-                fn: transition_creates_acceptance
-                args:
-                - var: t1
-            - call:
-                fn: transition_creates_acceptance
-                args:
-                - var: t2
-            - call:
-                fn: acceptance_transition_within_retry_horizon
-                args:
-                - var: t1
-            - call:
-                fn: acceptance_transition_within_retry_horizon
-                args:
-                - var: t2
-            - eq:
+      and:
+      - forall:
+          vars:
+            t1: ProtocolTransition
+            t2: ProtocolTransition
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
               - call:
-                  fn: transition_idempotency_key
+                  fn: acceptance_transition_for_key
                   args:
                   - var: t1
-              - var: k
-            - eq:
+                  - var: k
               - call:
-                  fn: transition_idempotency_key
+                  fn: acceptance_transition_for_key
                   args:
                   - var: t2
-              - var: k
-          - eq:
-            - var: t1
-            - var: t2
+                  - var: k
+              - call:
+                  fn: acceptance_event_recorded_for_key
+                  args:
+                  - var: t1
+                  - var: k
+              - call:
+                  fn: acceptance_event_recorded_for_key
+                  args:
+                  - var: t2
+                  - var: k
+              - call:
+                  fn: acceptance_capable_transition
+                  args:
+                  - var: t1
+              - call:
+                  fn: acceptance_capable_transition
+                  args:
+                  - var: t2
+              - call:
+                  fn: transition_creates_acceptance
+                  args:
+                  - var: t1
+              - call:
+                  fn: transition_creates_acceptance
+                  args:
+                  - var: t2
+              - call:
+                  fn: acceptance_transition_within_retry_horizon
+                  args:
+                  - var: t1
+              - call:
+                  fn: acceptance_transition_within_retry_horizon
+                  args:
+                  - var: t2
+              - eq:
+                - call:
+                    fn: transition_idempotency_key
+                    args:
+                    - var: t1
+                - var: k
+              - eq:
+                - call:
+                    fn: transition_idempotency_key
+                    args:
+                    - var: t2
+                - var: k
+            - eq:
+              - var: t1
+              - var: t2
+      - forall:
+          vars:
+            t: ProtocolTransition
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: acceptance_transition_for_key
+                  args:
+                  - var: t
+                  - var: k
+              - not:
+                  call:
+                    fn: gate_observes_key_already_accepted
+                    args:
+                    - var: t
+              - call:
+                  fn: acceptance_transition_within_retry_horizon
+                  args:
+                  - var: t
+            - not:
+                call:
+                  fn: transition_creates_multiple_acceptances_for_key
+                  args:
+                  - var: t
+                  - var: k
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
