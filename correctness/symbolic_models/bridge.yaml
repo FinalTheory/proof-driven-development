@@ -3437,6 +3437,7 @@ functions:
     - claim:C47_accepted_terminal_result_provenance_survives_lifecycle
     - claim:L211_accepted_terminal_result_origin_is_authoritative
     - claim:C46_accepted_terminal_result_preserves_acceptance_provenance
+    - claim:L192_terminal_publication_preserves_store_identity_provenance
   accepted_terminal_compaction_retention_edge:
     args:
     - TerminalResultRecord
@@ -3874,6 +3875,7 @@ functions:
     - claim:L171_terminal_outcome_representation_migration_preserves_mapping
     - claim:L184_terminal_outcome_entry_has_single_authoritative_value
     - claim:C43_terminal_outcome_entry_state_is_coherent
+    - claim:L192_terminal_publication_preserves_store_identity_provenance
   migration_preserves_terminal_result_record:
     args:
     - ProtocolTransition
@@ -7969,6 +7971,54 @@ claims:
                         fn: terminal_result_has_matching_canonical_acceptance
                         args:
                         - var: r
+                    - call:
+                        fn: accepted_terminal_binding_identity_matches
+                        args:
+                        - var: r
+                        - var: a
+      - forall:
+          vars:
+            s: AuthoritativeState
+            k: IdempotencyKey
+            t: TerminalResultRecord
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: terminal_result_in_state_for_key
+                  args:
+                  - var: t
+                  - var: s
+                  - var: k
+              - call:
+                  fn: accepted_terminal_result_record
+                  args:
+                  - var: t
+            - call:
+                fn: accepted_terminal_created_for_eligible_identity
+                args:
+                - var: t
+      - forall:
+          vars:
+            r: TerminalResultRecord
+            a1: CanonicalAcceptance
+            a2: CanonicalAcceptance
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: accepted_terminal_matching_creation_pair
+                  args:
+                  - var: r
+                  - var: a1
+              - call:
+                  fn: accepted_terminal_matching_creation_pair
+                  args:
+                  - var: r
+                  - var: a2
+            - eq:
+              - var: a1
+              - var: a2
   L195_rejected_terminal_publication_excludes_canonical_acceptance:
     capability: relational
     contracts: []
