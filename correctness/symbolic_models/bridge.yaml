@@ -2991,7 +2991,7 @@ functions:
     returns: Bool
     catalog_symbols:
     - terminal_result
-    meaning: before->after is exactly one architecture-supported in-horizon ACCEPTED lifecycle transition in the durable persistence or recovery/restoration category. A persistence edge in this category is durable; initialization, import, repair, generic rewrite, compaction/retention, and representation-migration writers are not classified by this predicate merely because they preserve an equal terminal value.
+    meaning: before->after is exactly one architecture-supported in-horizon ACCEPTED lifecycle transition in the durable persistence or recovery/restoration category. A persistence edge in this category is durable; initialization, import, repair, generic rewrite, compaction/retention, and representation-migration writers are not classified by this predicate merely because they preserve an equal terminal value. The exactly-one lifecycle classification ranges over these architecture-supported category predicates; a descriptive category edge holding for independent descriptive reasons does not by itself constitute a second supported classification.
     semantic_anchors:
     - claim:L212_accepted_terminal_lifecycle_categories_are_exhaustive
   accepted_terminal_supported_compaction_retention_edge:
@@ -3001,7 +3001,7 @@ functions:
     returns: Bool
     catalog_symbols:
     - terminal_result
-    meaning: before->after is exactly one architecture-supported in-horizon ACCEPTED lifecycle compaction or retention rewrite. A cleanup implementation belongs to this category whenever the transition itself is semantically that supported compaction or retention rewrite; the cleanup label alone is insufficient. Initialization, import, repair, unrelated cleanup/rewrite, persistence/recovery/restoration, and representation-migration writers are outside this predicate merely because they preserve an extensionally equal value.
+    meaning: before->after is exactly one architecture-supported in-horizon ACCEPTED lifecycle compaction or retention rewrite. A cleanup implementation belongs to this category whenever the transition itself is semantically that supported compaction or retention rewrite; the cleanup label alone is insufficient. Initialization, import, repair, unrelated cleanup/rewrite, persistence/recovery/restoration, and representation-migration writers are outside this predicate merely because they preserve an extensionally equal value. The exactly-one lifecycle classification ranges over these architecture-supported category predicates; a descriptive category edge holding for independent descriptive reasons does not by itself constitute a second supported classification.
     semantic_anchors:
     - claim:L212_accepted_terminal_lifecycle_categories_are_exhaustive
   accepted_terminal_supported_representation_migration_edge:
@@ -3011,7 +3011,7 @@ functions:
     returns: Bool
     catalog_symbols:
     - terminal_result
-    meaning: before->after is exactly one architecture-supported in-horizon ACCEPTED representation-migration transition. Initialization, import, repair, generic rewrite, persistence/recovery/restoration, and compaction/retention writers are not classified as migration merely because their output is extensionally equal.
+    meaning: before->after is exactly one architecture-supported in-horizon ACCEPTED representation-migration transition. Initialization, import, repair, generic rewrite, persistence/recovery/restoration, and compaction/retention writers are not classified as migration merely because their output is extensionally equal. The exactly-one lifecycle classification ranges over these architecture-supported category predicates; a descriptive category edge holding for independent descriptive reasons does not by itself constitute a second supported classification.
     semantic_anchors:
     - claim:L212_accepted_terminal_lifecycle_categories_are_exhaustive
   accepted_terminal_transition_identity_matches:
