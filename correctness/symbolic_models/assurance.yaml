@@ -6095,43 +6095,91 @@ records:
   claim:L166_recovery_preserves_pending_identity_revision_evidence:
     kind: claim
     subject_id: L166_recovery_preserves_pending_identity_revision_evidence
-    subject_signature: 5fb79776126f2430bd786e0a094a08bbc6fd9f7845f43915a8bca6fd51fd571c
+    subject_signature: 2e2b7102805dd56fec90ed876dc09c4713ec8d3da3b2b045c7ee06a028182cc0
     roundtrip:
-      subject_signature: 5fb79776126f2430bd786e0a094a08bbc6fd9f7845f43915a8bca6fd51fd571c
+      subject_signature: 2e2b7102805dd56fec90ed876dc09c4713ec8d3da3b2b045c7ee06a028182cc0
       status: TRANSLATED
-      natural_language: 'For all logical edit identities e, documents d, client change ids k, and revisions r, if the document_id
-        component of e is d and the client_change_id coordinate carried by the exact full logical edit identity e is k, and
-        the authoritative accepted_identity_frontier_evidence binds e to the canonical accepted revision r with the exact
-        query semantics that e is included through a response head H if and only if r <= H, and e is a normal_retry_eligible_identity,
-        meaning the logical edit identified by e remains within the normal retry/reconnect eligibility boundary, then for
-        every protocol transition t, if t is a completed recovery/restart reconstruction transition, then across t the logical
-        accepted_identity_frontier_evidence binding of e to r is preserved: after t the authoritative evidence still binds
-        the same full identity e to the same revision r with the exact included-through-head query semantics (e included through
-        head H if and only if r <= H), even though the physical representation may change and physical rows may be deleted
-        under a replacement representation, and the logical binding is not dropped, relabeled, or reinterpreted.'
+      natural_language: 'For every logical edit identity e, document d, client change id k, and revision r, if the document_id
+        component of e is equal to d and the client_change_id coordinate carried by e is equal to k, and there is a canonical
+        acceptance for the exact full identity e that commits at canonical revision r, where r is the canonical revision of
+        that acceptance, and e is a normal retry eligible identity, meaning the logical edit identified by e remains within
+        the normal retry/reconnect eligibility boundary, then for every protocol transition t, if t is a completed recovery/restart
+        reconstruction transition, then t preserves the frontier evidence binding for e and r: across t, the logical accepted_identity_frontier_evidence
+        binding of identity e to revision r is preserved, so that after t the authoritative evidence still binds the same
+        full identity e to the same revision r with the exact included-through-head query semantics that e is included through
+        head H if and only if r <= H; physical representation may change and physical rows may be deleted under a replacement
+        representation, but the logical binding is not dropped, relabeled, or reinterpreted.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 5fb79776126f2430bd786e0a094a08bbc6fd9f7845f43915a8bca6fd51fd571c
+        subject_signature: 2e2b7102805dd56fec90ed876dc09c4713ec8d3da3b2b045c7ee06a028182cc0
         verdict: EQUIVALENT
-        reason: The formula faithfully quantifies over the full identity e decomposed as (d,k), requires the authoritative
-          binding of e to r and normal retry eligibility, and requires every completed recovery transition to preserve that
-          same binding with the exact included-through-H iff r<=H semantics and no drop, relabel, or reinterpretation.
+        reason: The formula requires, for a fully decomposed identity e=(d,k) that is normal-retry-eligible and canonically
+          accepted at revision r, that every completed recovery transition preserve the frontier-evidence binding of e to
+          r; the preservation predicate's meaning carries exactly the included-through-H iff r<=H semantics and the no-drop,
+          no-relabel, no-reinterpret requirement, with physical representation allowed to change. No requirement is omitted
+          or added.
         differences: []
       strengthening:
-        subject_signature: 5fb79776126f2430bd786e0a094a08bbc6fd9f7845f43915a8bca6fd51fd571c
+        subject_signature: 2e2b7102805dd56fec90ed876dc09c4713ec8d3da3b2b045c7ee06a028182cc0
         verdict: EQUIVALENT
-        reason: The formula guards exactly on the decomposed full identity e=(d,k), its authoritative frontier binding to
-          r, and normal retry eligibility, then requires every completed recovery transition to preserve that same e-to-r
-          binding with the exact included-through-H iff r<=H semantics, matching the source scope without added or omitted
-          requirements.
+        reason: The formula decomposes the identity into its document_id and client_change_id coordinates, guards on canonical
+          acceptance at revision r and normal retry eligibility, and requires every completed recovery/restart transition
+          to preserve that same (identity, r) frontier-evidence binding with the exact included-through-H iff r<=H semantics,
+          matching the source scope without added or omitted requirements.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 5fb79776126f2430bd786e0a094a08bbc6fd9f7845f43915a8bca6fd51fd571c
+        subject_signature: 2e2b7102805dd56fec90ed876dc09c4713ec8d3da3b2b045c7ee06a028182cc0
         verdict: EQUIVALENT
-        reason: 'The round-trip preserves the same precondition (authoritative evidence binding a normal-retry-eligible identity
-          (D,k) to canonical revision r), the same completed recovery/restart scope, and the same post-transition guarantee:
-          the identical logical binding and exact included-through-H iff r<=H semantics are preserved, with only physical
-          representation allowed to change and no dropping, relabeling, or reinterpretation.'
+        reason: Both condition on the same normal-retry-eligible identity (D,k) bound to canonical accepted revision r, and
+          require every completed recovery/restart reconstruction to preserve that same logical binding with the exact included-through-H
+          iff r<=H semantics, allowing only physical representation change and forbidding dropping, relabeling, or reinterpretation.
+        differences: []
+  claim:L165_pending_identity_revision_evidence_survives_retention:
+    kind: claim
+    subject_id: L165_pending_identity_revision_evidence_survives_retention
+    subject_signature: f1fa86bc595e3a21d8c6f0a22dd0091e02c6bd26ebe5476eaf74f8e566141a90
+    roundtrip:
+      subject_signature: f1fa86bc595e3a21d8c6f0a22dd0091e02c6bd26ebe5476eaf74f8e566141a90
+      status: TRANSLATED
+      natural_language: 'For every logical edit identity e and every revision r, if there is a canonical acceptance for the
+        exact full identity e that commits at canonical revision r, where r is the canonical revision of that acceptance,
+        and e is a normal retry eligible identity, meaning the logical edit identified by e remains within the normal retry/reconnect
+        eligibility boundary, with its pending/retry age being no more than 30 days, then for every protocol transition t,
+        if t is a durable retention transition, being a snapshotting, compaction, cleanup, or other durable retention transition,
+        then t preserves the frontier evidence binding for e and r: across t, the logical accepted identity frontier evidence
+        binding of identity e to revision r is preserved, so that after t the authoritative evidence still binds the same
+        full identity e to the same revision r with the exact included-through-head query semantics, namely e is included
+        through head H if and only if r <= H. Physical representation may change and physical rows may be deleted under a
+        replacement representation, but the logical binding is not dropped, relabeled, or reinterpreted.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: f1fa86bc595e3a21d8c6f0a22dd0091e02c6bd26ebe5476eaf74f8e566141a90
+        verdict: EQUIVALENT
+        reason: The formula requires, for every identity e and revision r, that canonical acceptance at r plus normal-retry
+          eligibility imply every durable retention transition preserves the frontier-evidence binding of the same full identity
+          e to the same r, with the predicate meaning retaining the exact included-through-head semantics (e included through
+          H iff r <= H) and allowing physical-row deletion only under a replacement representation that preserves that binding;
+          it imposes no immediate-deletion requirement on expiry.
+        differences: []
+      strengthening:
+        subject_signature: f1fa86bc595e3a21d8c6f0a22dd0091e02c6bd26ebe5476eaf74f8e566141a90
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies the same identity e and revision r, guarded by the same canonical acceptance
+          and normal-retry-eligibility preconditions, and requires every durable retention transition to preserve the logical
+          frontier-evidence binding with the exact included-through-head semantics (r <= H); physical deletion under a semantics-preserving
+          replacement is allowed by the predicate meaning, and no scope, cardinality, or provenance requirement is added or
+          omitted.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: f1fa86bc595e3a21d8c6f0a22dd0091e02c6bd26ebe5476eaf74f8e566141a90
+        verdict: EQUIVALENT
+        reason: The rendering preserves the same precondition (canonical acceptance committing at r for a normal-retry-eligible
+          identity with age no more than 30 days), the same universal scope over snapshotting, compaction, cleanup, and other
+          durable retention transitions, and the same guarantee that the logical evidence binding the same full identity to
+          the same r is preserved with the exact included-through-head semantics r <= H, with physical representation change
+          or row deletion under a replacement not dropping that binding. No requirement is omitted or added beyond that guarantee.
         differences: []
