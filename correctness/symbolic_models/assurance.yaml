@@ -6428,3 +6428,43 @@ records:
           identity, durability, linearization-point, and non-retention phrasing only unpacks that corresponding committed
           acceptance without adding or removing a guarantee.
         differences: []
+  claim:L146_ack_justifying_acceptance_survives_process_and_owner_failures:
+    kind: claim
+    subject_id: L146_ack_justifying_acceptance_survives_process_and_owner_failures
+    subject_signature: 371861562e0b628f537b6cd137e467d20edd5b357fbf798e4390d0ee79b3b986
+    roundtrip:
+      subject_signature: 371861562e0b628f537b6cd137e467d20edd5b357fbf798e4390d0ee79b3b986
+      status: TRANSLATED
+      natural_language: 'For every canonical acceptance a and every success ACK observation x, if all of the following hold:
+        (1) x was actually exposed to the client for one particular exact logical edit under evaluation; (2) x is bound to
+        the exact logical edit whose canonical acceptance witness is a, preserving the acknowledged edit and document identity;
+        and (3) a was durably committed at its authoritative acceptance linearization point strictly before x was exposed,
+        then a remains present in the recoverable authoritative logical accepted history after any covered server-process
+        crash/restart or ownership move.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 371861562e0b628f537b6cd137e467d20edd5b357fbf798e4390d0ee79b3b986
+        verdict: EQUIVALENT
+        reason: The formula quantifies over all ACK/acceptance pairs where the ACK is actually exposed, bound to the exact
+          acceptance, and that acceptance was durably committed before the ACK, and requires that acceptance to remain in
+          recoverable authoritative logical history; the predicate meanings preserve the covered crash/restart and ownership-move
+          scope and the acknowledged committed acceptance condition of the source, with no added or omitted requirement.
+        differences: []
+      strengthening:
+        subject_signature: 371861562e0b628f537b6cd137e467d20edd5b357fbf798e4390d0ee79b3b986
+        verdict: EQUIVALENT
+        reason: The formula requires an actually exposed success ACK bound to the exact canonical acceptance, with that acceptance
+          durably committed before the ACK, matching the source's acknowledged committed canonical accepted change; it then
+          concludes that acceptance remains in recoverable authoritative logical history after any covered crash/restart or
+          ownership move, exactly the source preservation guarantee, with no added scope, cardinality, or identity requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 371861562e0b628f537b6cd137e467d20edd5b357fbf798e4390d0ee79b3b986
+        verdict: EQUIVALENT
+        reason: Both quantify over a canonical acceptance matched to an actually client-received/exposed success ACK for the
+          same exact edit, and require that same acceptance to remain in recoverable authoritative logical accepted history
+          after any covered crash/restart or ownership move. The binding and committed-before-ACK conditions only unpack the
+          original's matching acknowledged committed acceptance, adding no new guarantee and omitting none.
+        differences: []
