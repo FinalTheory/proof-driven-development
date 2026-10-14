@@ -3633,9 +3633,11 @@ claims:
     kind: leaf
   L164_terminal_paths_share_per_key_arbitration:
     statement: Every path that can create a canonical acceptance or authoritative definitive
-      rejection for an eligible idempotency_key passes through the same per-key terminal-outcome
-      arbitration gate before becoming authoritative; there is no bypass path that can publish or
-      commit a terminal decision for an eligible idempotency_key outside that gate.
+      rejection for an eligible idempotency_key — one whose logical edit identity is a
+      normal-retry-eligible identity within the protocol's eligibility boundary — passes through the
+      same per-key terminal-outcome arbitration gate before becoming authoritative; there is no
+      bypass path that can publish or commit a terminal decision for an eligible idempotency_key
+      outside that gate.
     source_refs:
       - accepted_change_log
       - owner_failover
