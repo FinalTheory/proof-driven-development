@@ -55,6 +55,11 @@ functions:
     semantic_anchors:
     - contract:client_canonical_frontier_coherence
     - claim:G10_user_visible_client_state_matches_document
+    - claim:L128_client_canonical_frontier_is_established_on_publication
+    - claim:L129_client_canonical_frontier_is_preserved_by_visible_transitions
+    - claim:L130_reconnect_start_is_bound_to_visible_client_tuple
+    - claim:L136_reconnect_initiation_visible_frontier_is_canonical
+    - claim:C38_client_frontier_matches_canonical_base
   reachable_authoritative_state:
     args:
     - AuthoritativeState
@@ -105,6 +110,7 @@ functions:
     - claim:G12_client_pending_state_tracks_unresolved_edits
     - claim:L110_client_retires_matching_speculative_overlay_before_canonical_publication
     - claim:L206_terminal_speculative_lifecycle_is_absorbing
+    - claim:L129_client_canonical_frontier_is_preserved_by_visible_transitions
   visible_document:
     args:
     - ClientState
@@ -126,6 +132,13 @@ functions:
     semantic_anchors:
     - contract:client_canonical_frontier_coherence
     - contract:request_authoring_frontier_binding
+    - claim:L128_client_canonical_frontier_is_established_on_publication
+    - claim:L129_client_canonical_frontier_is_preserved_by_visible_transitions
+    - claim:L130_reconnect_start_is_bound_to_visible_client_tuple
+    - claim:L136_reconnect_initiation_visible_frontier_is_canonical
+    - claim:L207_visible_canonical_frontier_never_regresses_per_session_document
+    - claim:C36_reconnect_starts_from_canonical_client_frontier
+    - claim:C38_client_frontier_matches_canonical_base
   canonical_content_matches:
     args:
     - ClientState
@@ -1332,6 +1345,7 @@ functions:
     semantic_anchors:
     - contract:visible_canonical_frontier_non_regression
     - source:reconnect_revision_boundary
+    - claim:L207_visible_canonical_frontier_never_regresses_per_session_document
   visible_frontier_regresses:
     args:
     - ClientState
@@ -1343,6 +1357,7 @@ functions:
     semantic_anchors:
     - contract:visible_canonical_frontier_non_regression
     - source:reconnect_revision_boundary
+    - claim:L207_visible_canonical_frontier_never_regresses_per_session_document
   pending_representation_bound_to_creation_identity:
     args:
     - ClientState
@@ -2417,6 +2432,8 @@ functions:
       specifically publication eligibility and does not assert completion eligibility.
     semantic_anchors:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
+    - claim:L157_foreground_reconnect_loses_publication_eligibility_after_document_switch
+    - claim:C36_reconnect_starts_from_canonical_client_frontier
   catchup_attempt_publishes:
     args:
     - CatchupAttempt
@@ -2426,6 +2443,8 @@ functions:
       user-visible canonical state.
     semantic_anchors:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
+    - claim:L157_foreground_reconnect_loses_publication_eligibility_after_document_switch
+    - claim:C36_reconnect_starts_from_canonical_client_frontier
   catchup_published_state_is_exact_replay_through_head:
     args:
     - CatchupAttempt
@@ -2466,6 +2485,8 @@ functions:
       the user switches back.
     semantic_anchors:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
+    - claim:L157_foreground_reconnect_loses_publication_eligibility_after_document_switch
+    - claim:C36_reconnect_starts_from_canonical_client_frontier
   normal_client_resync_attempt:
     args:
     - CatchupResponse
@@ -3272,6 +3293,12 @@ functions:
     - contract:client_canonical_frontier_coherence
     - claim:L132_visible_overlay_document_binding_established_on_publication
     - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
+    - claim:L128_client_canonical_frontier_is_established_on_publication
+    - claim:L129_client_canonical_frontier_is_preserved_by_visible_transitions
+    - claim:L130_reconnect_start_is_bound_to_visible_client_tuple
+    - claim:L136_reconnect_initiation_visible_frontier_is_canonical
+    - claim:C36_reconnect_starts_from_canonical_client_frontier
+    - claim:C38_client_frontier_matches_canonical_base
   client_document_id_value:
     args:
     - ClientState
@@ -3283,6 +3310,10 @@ functions:
       represented document.
     semantic_anchors:
     - contract:client_canonical_frontier_coherence
+    - claim:L128_client_canonical_frontier_is_established_on_publication
+    - claim:L129_client_canonical_frontier_is_preserved_by_visible_transitions
+    - claim:C36_reconnect_starts_from_canonical_client_frontier
+    - claim:C38_client_frontier_matches_canonical_base
   definitive_rejection_path_preserves_bound_request:
     args:
     - TerminalResultRecord
@@ -4696,6 +4727,7 @@ functions:
     - claim:L6_frontier_advance_and_insert_commit_together
     - claim:L38_selected_checkpoint_does_not_exceed_response_head
     - claim:C17_snapshot_mode_selects_checkpoint_not_after_head
+    - claim:L207_visible_canonical_frontier_never_regresses_per_session_document
   classification_evidence_preserved_throughout_horizon:
     args:
     - CatchupResponse
@@ -5220,6 +5252,8 @@ functions:
     semantic_anchors:
     - claim:L132_visible_overlay_document_binding_established_on_publication
     - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
+    - claim:L128_client_canonical_frontier_is_established_on_publication
+    - claim:L129_client_canonical_frontier_is_preserved_by_visible_transitions
   visible_overlay_document_binding_holds:
     args:
     - ClientState
@@ -5416,6 +5450,96 @@ functions:
     semantic_anchors:
     - claim:L174_recovery_inputs_and_state_are_document_bound
     - claim:C25_recovery_derives_complete_ot_metadata_from_truth
+  client_resync_candidate_outside_visible_tuple:
+    args:
+    - ClientState
+    returns: Bool
+    catalog_symbols:
+    - client_resync_candidate
+    meaning: 'The client_resync_candidate associated with client state s (if any)
+      is private construction state outside the user-visible observer boundary: it
+      is not part of s''s user-visible canonical tuple, contributes nothing to s''s
+      client_document_id, client_local_document, or last_applied_revision, and can
+      affect the user-visible state only through an atomic publication that creates
+      a new user-visible state.'
+    semantic_anchors:
+    - claim:L128_client_canonical_frontier_is_established_on_publication
+    - claim:L129_client_canonical_frontier_is_preserved_by_visible_transitions
+    - claim:C38_client_frontier_matches_canonical_base
+  normal_foreground_reconnect_attempt:
+    args:
+    - CatchupAttempt
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Catch-up attempt c is a normal foreground reconnect/catch-up attempt:
+      an attempt by a normally participating client that proceeds on the foreground,
+      user-visible-document-bound path for one document. Background or non-visible
+      per-document synchronization attempts do not satisfy this predicate. This is
+      the catalog-free classification of the same attempt class that foreground_catchup_attempt
+      classifies with the client''s last_applied_revision coordinate attached.'
+    semantic_anchors:
+    - claim:L130_reconnect_start_is_bound_to_visible_client_tuple
+    - claim:L157_foreground_reconnect_loses_publication_eligibility_after_document_switch
+    - claim:C36_reconnect_starts_from_canonical_client_frontier
+  reconnect_attempt_document:
+    args:
+    - CatchupAttempt
+    returns: Document
+    catalog_symbols: []
+    meaning: 'The document D that reconnect/catch-up attempt c is for: the document
+      whose user-visible canonical tuple the attempt starts from and whose canonical
+      state the attempt seeks to bring the client to.'
+    semantic_anchors:
+    - claim:L130_reconnect_start_is_bound_to_visible_client_tuple
+    - claim:C36_reconnect_starts_from_canonical_client_frontier
+  reconnect_attempt_initiated_from_visible_state:
+    args:
+    - CatchupAttempt
+    - ClientState
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Reconnect/catch-up attempt c was initiated from user-visible client
+      state s: s was the current user-visible client state at the moment of c''s initiation.'
+    semantic_anchors:
+    - claim:L130_reconnect_start_is_bound_to_visible_client_tuple
+    - claim:C36_reconnect_starts_from_canonical_client_frontier
+  reconnect_start_base_captured_from_visible_state:
+    args:
+    - CatchupAttempt
+    - ClientState
+    returns: Bool
+    catalog_symbols: []
+    meaning: Attempt c's reconnect-start base -- its document identity, canonical
+      client document, and last_applied_revision -- was captured from the user-visible
+      canonical tuple of state s, or from one exact private copy of that tuple. No
+      start coordinate was independently reread, substituted, synthesized, or cross-bound
+      across a visible-state transition, and no private resync-candidate or request-construction
+      scratch state replaced that visible tuple as the attempt's starting base.
+    semantic_anchors:
+    - claim:L130_reconnect_start_is_bound_to_visible_client_tuple
+    - claim:C36_reconnect_starts_from_canonical_client_frontier
+  reconnect_start_last_applied_revision:
+    args:
+    - CatchupAttempt
+    returns: Revision
+    catalog_symbols:
+    - last_applied_revision
+    meaning: 'The last_applied_revision coordinate captured in attempt c''s reconnect-start
+      base: the frontier L from which the attempt''s catch-up proceeds.'
+    semantic_anchors:
+    - claim:L130_reconnect_start_is_bound_to_visible_client_tuple
+    - claim:C36_reconnect_starts_from_canonical_client_frontier
+  reconnect_initiation_enabled_at_visible_state:
+    args:
+    - ClientState
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Normal foreground reconnect/catch-up initiation is enabled from user-visible
+      client state s: s is a user-visible tuple from which such an attempt may be
+      initiated.'
+    semantic_anchors:
+    - claim:L130_reconnect_start_is_bound_to_visible_client_tuple
+    - claim:L136_reconnect_initiation_visible_frontier_is_canonical
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -13441,6 +13565,513 @@ claims:
                 fn: recovery_inputs_and_installed_ot_preserve_target_document_scope
                 args:
                 - var: r
+  L128_client_canonical_frontier_is_established_on_publication:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          s: ClientState
+        body:
+          implies:
+          - call:
+              fn: client_state_establishes_visible_document
+              args:
+              - var: s
+          - and:
+            - and:
+              - eq:
+                - call:
+                    fn: client_document_id_value
+                    args:
+                    - var: s
+                - call:
+                    fn: represented_document
+                    args:
+                    - var: s
+              - call:
+                  fn: canonical_content_matches
+                  args:
+                  - var: s
+                  - call:
+                      fn: represented_document
+                      args:
+                      - var: s
+                  - call:
+                      fn: visible_frontier
+                      args:
+                      - var: s
+            - call:
+                fn: client_resync_candidate_outside_visible_tuple
+                args:
+                - var: s
+  L129_client_canonical_frontier_is_preserved_by_visible_transitions:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            e: ClientState
+            l: ClientState
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: later_reachable_client_state
+                  args:
+                  - var: e
+                  - var: l
+              - and:
+                - eq:
+                  - call:
+                      fn: client_document_id_value
+                      args:
+                      - var: e
+                  - call:
+                      fn: represented_document
+                      args:
+                      - var: e
+                - call:
+                    fn: canonical_content_matches
+                    args:
+                    - var: e
+                    - call:
+                        fn: represented_document
+                        args:
+                        - var: e
+                    - call:
+                        fn: visible_frontier
+                        args:
+                        - var: e
+              - call:
+                  fn: user_visible_canonical_state
+                  args:
+                  - var: l
+            - and:
+              - eq:
+                - call:
+                    fn: client_document_id_value
+                    args:
+                    - var: l
+                - call:
+                    fn: represented_document
+                    args:
+                    - var: l
+              - call:
+                  fn: canonical_content_matches
+                  args:
+                  - var: l
+                  - call:
+                      fn: represented_document
+                      args:
+                      - var: l
+                  - call:
+                      fn: visible_frontier
+                      args:
+                      - var: l
+      - forall:
+          vars:
+            s: ClientState
+          body:
+            implies:
+            - call:
+                fn: user_visible_canonical_state
+                args:
+                - var: s
+            - or:
+              - call:
+                  fn: client_state_establishes_visible_document
+                  args:
+                  - var: s
+              - exists:
+                  vars:
+                    e: ClientState
+                  body:
+                    and:
+                    - call:
+                        fn: client_state_establishes_visible_document
+                        args:
+                        - var: e
+                    - call:
+                        fn: later_reachable_client_state
+                        args:
+                        - var: e
+                        - var: s
+      - forall:
+          vars:
+            s: ClientState
+          body:
+            implies:
+            - call:
+                fn: user_visible_canonical_state
+                args:
+                - var: s
+            - call:
+                fn: client_resync_candidate_outside_visible_tuple
+                args:
+                - var: s
+  C38_client_frontier_matches_canonical_base:
+    capability: relational
+    contracts:
+    - client_canonical_frontier_coherence
+    formula:
+      and:
+      - forall:
+          vars:
+            s: ClientState
+          body:
+            implies:
+            - call:
+                fn: user_visible_canonical_state
+                args:
+                - var: s
+            - and:
+              - eq:
+                - call:
+                    fn: client_document_id_value
+                    args:
+                    - var: s
+                - call:
+                    fn: represented_document
+                    args:
+                    - var: s
+              - call:
+                  fn: canonical_content_matches
+                  args:
+                  - var: s
+                  - call:
+                      fn: represented_document
+                      args:
+                      - var: s
+                  - call:
+                      fn: visible_frontier
+                      args:
+                      - var: s
+      - forall:
+          vars:
+            s: ClientState
+          body:
+            implies:
+            - call:
+                fn: user_visible_canonical_state
+                args:
+                - var: s
+            - call:
+                fn: client_resync_candidate_outside_visible_tuple
+                args:
+                - var: s
+  L130_reconnect_start_is_bound_to_visible_client_tuple:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          c: CatchupAttempt
+          s: ClientState
+        body:
+          implies:
+          - and:
+            - call:
+                fn: normal_foreground_reconnect_attempt
+                args:
+                - var: c
+            - call:
+                fn: reconnect_attempt_initiated_from_visible_state
+                args:
+                - var: c
+                - var: s
+          - and:
+            - eq:
+              - call:
+                  fn: represented_document
+                  args:
+                  - var: s
+              - call:
+                  fn: reconnect_attempt_document
+                  args:
+                  - var: c
+            - call:
+                fn: reconnect_start_base_captured_from_visible_state
+                args:
+                - var: c
+                - var: s
+            - eq:
+              - call:
+                  fn: reconnect_start_last_applied_revision
+                  args:
+                  - var: c
+              - call:
+                  fn: visible_frontier
+                  args:
+                  - var: s
+            - call:
+                fn: user_visible_canonical_state
+                args:
+                - var: s
+            - call:
+                fn: reconnect_initiation_enabled_at_visible_state
+                args:
+                - var: s
+  L136_reconnect_initiation_visible_frontier_is_canonical:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          s: ClientState
+        body:
+          implies:
+          - and:
+            - call:
+                fn: user_visible_canonical_state
+                args:
+                - var: s
+            - call:
+                fn: reconnect_initiation_enabled_at_visible_state
+                args:
+                - var: s
+          - call:
+              fn: canonical_content_matches
+              args:
+              - var: s
+              - call:
+                  fn: represented_document
+                  args:
+                  - var: s
+              - call:
+                  fn: visible_frontier
+                  args:
+                  - var: s
+  L157_foreground_reconnect_loses_publication_eligibility_after_document_switch:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            c: CatchupAttempt
+          body:
+            implies:
+            - call:
+                fn: normal_foreground_reconnect_attempt
+                args:
+                - var: c
+            - call:
+                fn: catchup_binding_break_permanently_blocks_publication
+                args:
+                - var: c
+      - forall:
+          vars:
+            c: CatchupAttempt
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: normal_foreground_reconnect_attempt
+                  args:
+                  - var: c
+              - call:
+                  fn: catchup_attempt_publishes
+                  args:
+                  - var: c
+            - call:
+                fn: catchup_foreground_publication_eligible
+                args:
+                - var: c
+  C36_reconnect_starts_from_canonical_client_frontier:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            c: CatchupAttempt
+            s: ClientState
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: normal_foreground_reconnect_attempt
+                  args:
+                  - var: c
+              - call:
+                  fn: reconnect_attempt_initiated_from_visible_state
+                  args:
+                  - var: c
+                  - var: s
+            - and:
+              - eq:
+                - call:
+                    fn: represented_document
+                    args:
+                    - var: s
+                - call:
+                    fn: reconnect_attempt_document
+                    args:
+                    - var: c
+      - forall:
+          vars:
+            c: CatchupAttempt
+            s: ClientState
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: normal_foreground_reconnect_attempt
+                  args:
+                  - var: c
+              - call:
+                  fn: reconnect_attempt_initiated_from_visible_state
+                  args:
+                  - var: c
+                  - var: s
+            - and:
+              - call:
+                  fn: reconnect_start_base_captured_from_visible_state
+                  args:
+                  - var: c
+                  - var: s
+              - eq:
+                - call:
+                    fn: reconnect_start_last_applied_revision
+                    args:
+                    - var: c
+                - call:
+                    fn: visible_frontier
+                    args:
+                    - var: s
+      - forall:
+          vars:
+            c: CatchupAttempt
+            s: ClientState
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: normal_foreground_reconnect_attempt
+                  args:
+                  - var: c
+              - call:
+                  fn: reconnect_attempt_initiated_from_visible_state
+                  args:
+                  - var: c
+                  - var: s
+            - and:
+              - call:
+                  fn: canonical_content_matches
+                  args:
+                  - var: s
+                  - call:
+                      fn: represented_document
+                      args:
+                      - var: s
+                  - call:
+                      fn: visible_frontier
+                      args:
+                      - var: s
+      - forall:
+          vars:
+            c: CatchupAttempt
+            s: ClientState
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: normal_foreground_reconnect_attempt
+                  args:
+                  - var: c
+              - call:
+                  fn: reconnect_attempt_initiated_from_visible_state
+                  args:
+                  - var: c
+                  - var: s
+            - and:
+              - eq:
+                - call:
+                    fn: client_document_id_value
+                    args:
+                    - var: s
+                - call:
+                    fn: reconnect_attempt_document
+                    args:
+                    - var: c
+      - forall:
+          vars:
+            c: CatchupAttempt
+          body:
+            implies:
+            - call:
+                fn: normal_foreground_reconnect_attempt
+                args:
+                - var: c
+            - call:
+                fn: catchup_binding_break_permanently_blocks_publication
+                args:
+                - var: c
+      - forall:
+          vars:
+            c: CatchupAttempt
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: normal_foreground_reconnect_attempt
+                  args:
+                  - var: c
+              - call:
+                  fn: catchup_attempt_publishes
+                  args:
+                  - var: c
+            - call:
+                fn: catchup_foreground_publication_eligible
+                args:
+                - var: c
+  L207_visible_canonical_frontier_never_regresses_per_session_document:
+    capability: relational
+    contracts:
+    - visible_canonical_frontier_non_regression
+    formula:
+      and:
+      - forall:
+          vars:
+            e: ClientState
+            l: ClientState
+          body:
+            implies:
+            - call:
+                fn: same_session_later_visible_same_document
+                args:
+                - var: e
+                - var: l
+            - not:
+                call:
+                  fn: visible_frontier_regresses
+                  args:
+                  - var: e
+                  - var: l
+      - forall:
+          vars:
+            e: ClientState
+            l: ClientState
+          body:
+            implies:
+            - call:
+                fn: same_session_later_visible_same_document
+                args:
+                - var: e
+                - var: l
+            - call:
+                fn: revision_at_or_before
+                args:
+                - call:
+                    fn: visible_frontier
+                    args:
+                    - var: e
+                - call:
+                    fn: visible_frontier
+                    args:
+                    - var: l
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
