@@ -4495,6 +4495,7 @@ functions:
     - claim:C41_pending_identity_revision_evidence_survives_lifecycle
     - claim:L124_pending_identity_classifier_uses_same_identity_and_response_head
     - claim:C37_pending_identity_resolution_is_bound_to_response_head
+    - claim:L166_recovery_preserves_pending_identity_revision_evidence
   frontier_evidence_binds_identity_to_revision:
     args:
     - LogicalEditIdentity
@@ -9605,16 +9606,10 @@ claims:
                 t: ProtocolTransition
               body:
                 implies:
-                - and:
-                  - call:
-                      fn: durable_retention_transition
-                      args:
-                      - var: t
-                  - call:
-                      fn: transition_within_identity_eligibility_window
-                      args:
-                      - var: t
-                      - var: e
+                - call:
+                    fn: durable_retention_transition
+                    args:
+                    - var: t
                 - call:
                     fn: transition_preserves_frontier_evidence_binding
                     args:
@@ -9648,7 +9643,7 @@ claims:
                     - var: e
                 - var: k
             - call:
-                fn: frontier_evidence_binds_identity_to_revision
+                fn: canonical_acceptance_for_identity_commits_at_revision
                 args:
                 - var: e
                 - var: r
@@ -9697,16 +9692,10 @@ claims:
                   t: ProtocolTransition
                 body:
                   implies:
-                  - and:
-                    - call:
-                        fn: durable_retention_transition
-                        args:
-                        - var: t
-                    - call:
-                        fn: transition_within_identity_eligibility_window
-                        args:
-                        - var: t
-                        - var: e
+                  - call:
+                      fn: durable_retention_transition
+                      args:
+                      - var: t
                   - call:
                       fn: transition_preserves_frontier_evidence_binding
                       args:
@@ -9721,7 +9710,7 @@ claims:
             implies:
             - and:
               - call:
-                  fn: frontier_evidence_binds_identity_to_revision
+                  fn: canonical_acceptance_for_identity_commits_at_revision
                   args:
                   - var: e
                   - var: r
@@ -9734,16 +9723,10 @@ claims:
                   t: ProtocolTransition
                 body:
                   implies:
-                  - and:
-                    - call:
-                        fn: completed_recovery_transition
-                        args:
-                        - var: t
-                    - call:
-                        fn: transition_within_identity_eligibility_window
-                        args:
-                        - var: t
-                        - var: e
+                  - call:
+                      fn: completed_recovery_transition
+                      args:
+                      - var: t
                   - call:
                       fn: transition_preserves_frontier_evidence_binding
                       args:
@@ -9879,12 +9862,29 @@ claims:
                       - var: e
       - forall:
           vars:
+            c: CatchupResponse
             e: LogicalEditIdentity
+            h: Revision
             r1: Revision
             r2: Revision
           body:
             implies:
             - and:
+              - call:
+                  fn: pending_identity_at_resync_start
+                  args:
+                  - var: c
+                  - var: e
+              - call:
+                  fn: resync_identity_within_normal_horizon
+                  args:
+                  - var: c
+                  - var: e
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: c
+                  - var: h
               - call:
                   fn: canonical_acceptance_for_identity_commits_at_revision
                   args:
@@ -9895,6 +9895,16 @@ claims:
                   args:
                   - var: e
                   - var: r2
+              - call:
+                  fn: revision_at_or_before
+                  args:
+                  - var: r1
+                  - var: h
+              - call:
+                  fn: revision_at_or_before
+                  args:
+                  - var: r2
+                  - var: h
             - eq:
               - var: r1
               - var: r2
@@ -9985,12 +9995,29 @@ claims:
                             - var: h
       - forall:
           vars:
+            c: CatchupResponse
             e: LogicalEditIdentity
+            h: Revision
             r1: Revision
             r2: Revision
           body:
             implies:
             - and:
+              - call:
+                  fn: pending_identity_at_resync_start
+                  args:
+                  - var: c
+                  - var: e
+              - call:
+                  fn: resync_identity_within_normal_horizon
+                  args:
+                  - var: c
+                  - var: e
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: c
+                  - var: h
               - call:
                   fn: canonical_acceptance_for_identity_commits_at_revision
                   args:
@@ -10001,6 +10028,16 @@ claims:
                   args:
                   - var: e
                   - var: r2
+              - call:
+                  fn: revision_at_or_before
+                  args:
+                  - var: r1
+                  - var: h
+              - call:
+                  fn: revision_at_or_before
+                  args:
+                  - var: r2
+                  - var: h
             - eq:
               - var: r1
               - var: r2
