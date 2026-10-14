@@ -6468,3 +6468,100 @@ records:
           after any covered crash/restart or ownership move. The binding and committed-before-ACK conditions only unpack the
           original's matching acknowledged committed acceptance, adding no new guarantee and omitting none.
         differences: []
+  claim:L6_frontier_advance_and_insert_commit_together:
+    kind: claim
+    subject_id: L6_frontier_advance_and_insert_commit_together
+    subject_signature: c8aae26ac817410a85819c0395486e1a8260061dac6a22eb280987c0f7ee52f4
+    roundtrip:
+      subject_signature: c8aae26ac817410a85819c0395486e1a8260061dac6a22eb280987c0f7ee52f4
+      status: TRANSLATED
+      natural_language: 'For every authoritative state s, every document d, and every revision r: if s includes an authoritative
+        state instance for d, so that d''s document_latest_revision frontier coordinate is defined in s, then both of the
+        following hold. First, if s''s logical accepted history for d contains a canonical accepted change at revision r,
+        then r is at or before, in the canonical revision order, the document_latest_revision frontier value of d in s, namely
+        the revision coordinate at which s''s logical accepted history for d ends. Second, if the document_latest_revision
+        frontier value of d in s is equal to r, then s''s logical accepted history for d contains a canonical accepted change
+        at revision r. And, for every authoritative states before and after, every document d, and every revision r: if after
+        is the immediate successor of before under one committed authoritative protocol transition, with no intermediate authoritative
+        state between them, and that step is a committed canonical accepted-change append for d whose one new canonical accepted
+        change is at revision r and which commits no other accepted-history change for d, then both of the following hold:
+        that step advances d''s document_latest_revision to exactly r in after, with that frontier advance authoritatively
+        visible in after as the co-visible companion of the insertion of the matching canonical accepted change at r by the
+        same committed append, and after''s logical accepted history for d contains a canonical accepted change at revision
+        r.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: c8aae26ac817410a85819c0395486e1a8260061dac6a22eb280987c0f7ee52f4
+        verdict: EQUIVALENT
+        reason: 'The formula faithfully encodes co-visibility: a contained change at r requires the frontier to have reached
+          at least r, frontier exactly r requires the matching change at r, and any committed append step at r must also advance
+          the frontier to r with the change present in the post-state. No requirement is omitted, added, or altered in scope,
+          identity, or cardinality.'
+        differences: []
+      strengthening:
+        subject_signature: c8aae26ac817410a85819c0395486e1a8260061dac6a22eb280987c0f7ee52f4
+        verdict: EQUIVALENT
+        reason: The state conjunct requires any contained change to lie at or before the frontier and requires the matching
+          change whenever the frontier equals r, while the step conjunct requires every committed append at r to advance the
+          frontier to r and expose that change in the successor state, exactly encoding co-visibility of insertion and frontier
+          advance.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: c8aae26ac817410a85819c0395486e1a8260061dac6a22eb280987c0f7ee52f4
+        verdict: EQUIVALENT
+        reason: 'The rendering decomposes co-visibility correctly: the state clauses make the frontier the tip of the accepted
+          history (a change at r implies r is at or before the frontier, and frontier equal to r implies a matching change
+          at r), while the immediate-successor append clause requires the insertion at r and the advance to exactly r to become
+          visible together in the same committed step. The at-or-before wording covers later legitimate frontier advances
+          beyond an earlier historical revision without weakening the exact equality required at that revision''s insertion.'
+        differences: []
+  claim:L22_initial_history_matches_frontier:
+    kind: claim
+    subject_id: L22_initial_history_matches_frontier
+    subject_signature: 6b5d7acb80bf86fdae1924730a24b3864facc7114c498c6024d8416f8ae134af
+    roundtrip:
+      subject_signature: 6b5d7acb80bf86fdae1924730a24b3864facc7114c498c6024d8416f8ae134af
+      status: TRANSLATED
+      natural_language: 'For every authoritative state s and every document d, if s is document d''s authoritative state as
+        produced by document-state initialization — that is, the first authoritative state of document d, in which d''s accepted_change_log
+        and document_latest_revision coordinates are created with their initialized values — then all of the following hold
+        together: (1) in authoritative state s, the accepted canonical history for document d is one gap-free revision sequence;
+        (2) the logical canonical accepted history denoted for document d in authoritative state s starts at the document''s
+        canonical beginning and ends exactly at s''s document_latest_revision for d, with no logically represented accepted
+        revision above that frontier, where an empty accepted history ends at the document''s initial frontier, this history
+        is its logical denotation across authoritative representations and not the set of physically retained accepted rows,
+        and missing or undefined authoritative coordinates do not satisfy this condition; and (3) authoritative state s includes
+        an authoritative state instance for document d, so d''s document_latest_revision frontier coordinate is defined in
+        s.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 6b5d7acb80bf86fdae1924730a24b3864facc7114c498c6024d8416f8ae134af
+        verdict: EQUIVALENT
+        reason: The formula conditions exactly on document_initialization_state and requires a gap-free canonical history,
+          an accepted history starting at the canonical beginning and ending exactly at document_latest_revision with none
+          above, and a defined frontier coordinate; no source requirement is omitted or added beyond what the ends-exactly
+          predicate already presupposes.
+        differences: []
+      strengthening:
+        subject_signature: 6b5d7acb80bf86fdae1924730a24b3864facc7114c498c6024d8416f8ae134af
+        verdict: EQUIVALENT
+        reason: The formula scopes universally quantified states/documents by document_initialization_state, matching the
+          initialization boundary, and conjoins gap-free canonical history with accepted_history_ends_exactly_at_frontier,
+          whose meaning covers a prefix starting at the canonical beginning, ending exactly at document_latest_revision, and
+          no accepted revision above it. state_exposes_document_frontier only makes explicit the frontier definedness presupposed
+          by that ending-at relation and by initialization creating the coordinates; it adds no material requirement beyond
+          the source.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 6b5d7acb80bf86fdae1924730a24b3864facc7114c498c6024d8416f8ae134af
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original guarantee: at document-state initialization the authoritative state
+          represents a single gap-free canonical accepted prefix beginning at the canonical start, ending exactly at document_latest_revision,
+          with no accepted revision above that frontier. Its added phrasing only makes explicit what the original presupposes
+          or entails (initialization state, a defined frontier coordinate, the empty-prefix case, and representation-level
+          rather than physical-row reading) without narrowing applicability or adding a material new requirement.'
+        differences: []
