@@ -1718,6 +1718,10 @@ functions:
     - claim:L22_initial_history_matches_frontier
     - claim:L29_non_append_lifecycle_preserves_revision_domain
     - claim:L137_authoritative_history_mutators_are_exhaustively_classified
+    - claim:C39_authoritative_history_state_is_gap_free
+    - claim:L138_committed_append_preserves_gap_free_state_shape
+    - claim:L139_non_append_lifecycle_preserves_gap_free_state_shape
+    - claim:L140_initial_authoritative_history_is_gap_free
   authoritative_handoff_for_document:
     args:
     - ProtocolTransition
@@ -4751,6 +4755,9 @@ functions:
     - claim:L29_non_append_lifecycle_preserves_revision_domain
     - claim:L33_committed_append_preserves_existing_revision_prefix
     - claim:L137_authoritative_history_mutators_are_exhaustively_classified
+    - claim:C39_authoritative_history_state_is_gap_free
+    - claim:L138_committed_append_preserves_gap_free_state_shape
+    - claim:L139_non_append_lifecycle_preserves_gap_free_state_shape
   document_initialization_state:
     args:
     - AuthoritativeState
@@ -4765,6 +4772,7 @@ functions:
     semantic_anchors:
     - claim:L22_initial_history_matches_frontier
     - claim:L137_authoritative_history_mutators_are_exhaustively_classified
+    - claim:L140_initial_authoritative_history_is_gap_free
   state_step_commits_append_at_revision:
     args:
     - AuthoritativeState
@@ -4783,6 +4791,7 @@ functions:
     - claim:L6_frontier_advance_and_insert_commit_together
     - claim:L33_committed_append_preserves_existing_revision_prefix
     - claim:L137_authoritative_history_mutators_are_exhaustively_classified
+    - claim:L138_committed_append_preserves_gap_free_state_shape
   state_step_accepts_no_new_edit:
     args:
     - AuthoritativeState
@@ -4801,6 +4810,7 @@ functions:
     - claim:C7_revision_frontier_is_linear
     - claim:L29_non_append_lifecycle_preserves_revision_domain
     - claim:L137_authoritative_history_mutators_are_exhaustively_classified
+    - claim:L139_non_append_lifecycle_preserves_gap_free_state_shape
   state_step_extends_history_by_exactly_one_at_revision:
     args:
     - AuthoritativeState
@@ -4995,6 +5005,24 @@ functions:
       value does not create or change either symbol and does not satisfy this predicate.'
     semantic_anchors:
     - claim:L137_authoritative_history_mutators_are_exhaustively_classified
+  state_denotes_accepted_history_for_document:
+    args:
+    - AuthoritativeState
+    - Document
+    returns: Bool
+    catalog_symbols:
+    - accepted_change_log
+    meaning: 'Authoritative state s denotes an accepted_change_log for document d:
+      s includes d''s authoritative accepted-history coordinate, and the logical accepted
+      history it denotes for d is the history under observation. This is the accepted-history-coordinate
+      half of document_has_authoritative_state (whose frontier-coordinate half is
+      state_exposes_document_frontier): a scope predicate only. It asserts nothing
+      about d''s document_latest_revision coordinate, and nothing about whether the
+      denoted history is gap-free or ends at any frontier. A state with no authoritative
+      accepted-history coordinate for d does not satisfy this predicate.'
+    semantic_anchors:
+    - claim:L140_initial_authoritative_history_is_gap_free
+    - claim:C39_authoritative_history_state_is_gap_free
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -11608,6 +11636,148 @@ claims:
                     args:
                     - var: after
                     - var: d
+  L140_initial_authoritative_history_is_gap_free:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          s: AuthoritativeState
+          d: Document
+        body:
+          implies:
+          - call:
+              fn: document_initialization_state
+              args:
+              - var: s
+              - var: d
+          - and:
+            - call:
+                fn: canonical_history_gap_free_for_document
+                args:
+                - var: s
+                - var: d
+            - call:
+                fn: state_denotes_accepted_history_for_document
+                args:
+                - var: s
+                - var: d
+  L138_committed_append_preserves_gap_free_state_shape:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          before: AuthoritativeState
+          after: AuthoritativeState
+          d: Document
+        body:
+          implies:
+          - and:
+            - call:
+                fn: authoritative_state_step
+                args:
+                - var: before
+                - var: after
+            - call:
+                fn: canonical_history_gap_free_for_document
+                args:
+                - var: before
+                - var: d
+            - exists:
+                vars:
+                  r: Revision
+                body:
+                  call:
+                    fn: state_step_commits_append_at_revision
+                    args:
+                    - var: before
+                    - var: after
+                    - var: d
+                    - var: r
+          - call:
+              fn: canonical_history_gap_free_for_document
+              args:
+              - var: after
+              - var: d
+  L139_non_append_lifecycle_preserves_gap_free_state_shape:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          before: AuthoritativeState
+          after: AuthoritativeState
+          d: Document
+        body:
+          implies:
+          - and:
+            - call:
+                fn: authoritative_state_step
+                args:
+                - var: before
+                - var: after
+            - call:
+                fn: state_step_accepts_no_new_edit
+                args:
+                - var: before
+                - var: after
+                - var: d
+            - call:
+                fn: canonical_history_gap_free_for_document
+                args:
+                - var: before
+                - var: d
+          - call:
+              fn: canonical_history_gap_free_for_document
+              args:
+              - var: after
+              - var: d
+  C39_authoritative_history_state_is_gap_free:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            s: AuthoritativeState
+            d: Document
+          body:
+            implies:
+            - call:
+                fn: state_denotes_accepted_history_for_document
+                args:
+                - var: s
+                - var: d
+            - call:
+                fn: canonical_history_gap_free_for_document
+                args:
+                - var: s
+                - var: d
+      - forall:
+          vars:
+            before: AuthoritativeState
+            after: AuthoritativeState
+            d: Document
+          body:
+            implies:
+            - and:
+              - transitive_closure:
+                  fn: authoritative_state_step
+                  from:
+                    var: before
+                  to:
+                    var: after
+              - call:
+                  fn: canonical_history_gap_free_for_document
+                  args:
+                  - var: before
+                  - var: d
+            - call:
+                fn: canonical_history_gap_free_for_document
+                args:
+                - var: after
+                - var: d
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
