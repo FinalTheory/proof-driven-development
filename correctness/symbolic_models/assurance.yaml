@@ -6565,3 +6565,138 @@ records:
           or entails (initialization state, a defined frontier coordinate, the empty-prefix case, and representation-level
           rather than physical-row reading) without narrowing applicability or adding a material new requirement.'
         differences: []
+  claim:L29_non_append_lifecycle_preserves_revision_domain:
+    kind: claim
+    subject_id: L29_non_append_lifecycle_preserves_revision_domain
+    subject_signature: 9edb16852a0ae321dffcc8ab148a7f9a7bd6ebadcdd70f50cd855c401a023afd
+    roundtrip:
+      subject_signature: 9edb16852a0ae321dffcc8ab148a7f9a7bd6ebadcdd70f50cd855c401a023afd
+      status: TRANSLATED
+      natural_language: 'For all authoritative states before and after and for every document d, the following two conditions
+        hold conjunctively. (1) If after is the immediate successor of before under one committed authoritative protocol transition,
+        with the transition''s full authoritative effect separating the two states and no intermediate authoritative state
+        between them, and aborted, rolled-back, or never-committed work creating no such step and no successor authoritative
+        state, and that step is, for d, an authoritative non-append representation/lifecycle transition that accepts no new
+        edit for d, i.e. it changes d''s authoritative representation or lifecycle state while committing no canonical accepted
+        change for d, excluding steps that do not change d''s representation or lifecycle state, including steps that accept
+        edits only for other documents and steps that leave d entirely untouched, and excluding steps that commit an append
+        for d, then both: the step preserves d''s logical accepted prefix, meaning d''s logical accepted history denotes exactly
+        the same logical accepted prefix in after as in before, the same accepted revisions each represented by the same logical
+        accepted change, with physical representation changing only in semantics-preserving ways, and the document_latest_revision
+        frontier value of d in before equals the document_latest_revision frontier value of d in after. (2) If the same step
+        and no-new-edit conditions hold and, in addition, in before d''s accepted canonical history is one gap-free revision
+        sequence and d''s logical canonical accepted history in before starts at d''s canonical beginning and ends exactly
+        at before''s document_latest_revision frontier for d with no logically represented accepted revision above that frontier,
+        an empty accepted history ending at d''s initial frontier, the history being its logical denotation across authoritative
+        representations rather than the set of physically retained accepted rows, and missing or undefined authoritative coordinates
+        not satisfying this predicate, then both: in after d''s accepted canonical history is one gap-free revision sequence,
+        and d''s logical canonical accepted history in after starts at d''s canonical beginning and ends exactly at after''s
+        document_latest_revision frontier for d with no logically represented accepted revision above that frontier, under
+        the same empty-history, logical-denotation, and defined-coordinates provisions.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 9edb16852a0ae321dffcc8ab148a7f9a7bd6ebadcdd70f50cd855c401a023afd
+        verdict: EQUIVALENT
+        reason: The formula restricts to immediate authoritative steps classified as representation/lifecycle-changing and
+          accepting no new edit for the same document, and requires exactly the same logical accepted prefix and equal document_latest_revision
+          before and after; its second conjunct additionally carries gap-free status and ending exactly at that frontier from
+          before to after when those hold before, matching the preserved gap-free prefix ending at H.
+        differences: []
+      strengthening:
+        subject_signature: 9edb16852a0ae321dffcc8ab148a7f9a7bd6ebadcdd70f50cd855c401a023afd
+        verdict: EQUIVALENT
+        reason: The formula conditions on an authoritative step that is a representation/lifecycle change accepting no new
+          edit, then requires exactly the same logical accepted prefix and equality of document_latest_revision before and
+          after; its second conjunct faithfully expresses preservation of the gap-free property and ending at that same frontier
+          H, with no added scope, equality, or cardinality beyond the source.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 9edb16852a0ae321dffcc8ab148a7f9a7bd6ebadcdd70f50cd855c401a023afd
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves both required guarantees under the same no-new-edit representation-changing lifecycle
+          transition scope: the logical accepted prefix and the document_latest_revision frontier are identical before and
+          after, and the gap-free, beginning-to-frontier ending property is carried from before to after without adding or
+          omitting a requirement.'
+        differences: []
+  claim:C7_revision_frontier_is_linear:
+    kind: claim
+    subject_id: C7_revision_frontier_is_linear
+    subject_signature: 3ca6d76f15454ce7f85cc196718fb806b12b477aa19e2855b54c80822077890f
+    roundtrip:
+      subject_signature: 3ca6d76f15454ce7f85cc196718fb806b12b477aa19e2855b54c80822077890f
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following four statements holds. (1) For every authoritative state s and every
+        document d, if s includes an authoritative document-state instance for d, whose accepted_change_log and document_latest_revision
+        are the coordinates being observed — this being a scope condition only, including initialized documents with an empty
+        accepted history and not excluding an instance because either coordinate is malformed, missing, inconsistent, or being
+        authoritatively published — then both of the following hold in s for d: the accepted canonical history for d is one
+        gap-free revision sequence; and the logical canonical accepted history denoted for d in s starts at the document''s
+        canonical beginning and ends exactly at s''s document_latest_revision for d, with no logically represented accepted
+        revision above that frontier, where an empty accepted history ends at the document''s initial frontier, the history
+        is its logical denotation across authoritative representations rather than the set of physically retained accepted
+        rows, and missing or undefined authoritative coordinates do not satisfy this ending condition. (2) For every authoritative
+        states before and after and every document d, if after is the immediate successor of before under one committed authoritative
+        protocol transition — that is, the transition''s full authoritative effect separates the two states, no intermediate
+        authoritative state exists between them, and aborted, rolled-back, or never-committed work creates no such step or
+        successor — and the step from before to after is an authoritative non-append representation/lifecycle transition for
+        d that accepts no new edit, meaning it changes d''s authoritative representation or lifecycle state while committing
+        no canonical accepted change for d, excluding steps that do not change d''s representation or lifecycle state, including
+        steps accepting edits only for other documents and steps leaving d entirely untouched, and also excluding steps that
+        commit an append for d, then both of the following hold: across the step, d''s logical accepted history denotes exactly
+        the same logical accepted prefix in after as in before, with the same accepted revisions each represented by the same
+        logical accepted change, where physical representation may change only in semantics-preserving ways such as compaction
+        that do not alter the logical prefix; and the document_latest_revision frontier value of d in before equals the document_latest_revision
+        frontier value of d in after. (3) For every authoritative states before and after, every document d, and every revision
+        r, if after is the immediate successor of before under one committed authoritative protocol transition as defined
+        above, and the step from before to after is a committed canonical accepted-change append for d whose one new canonical
+        accepted change is at revision r, committing exactly that one canonical accepted change for d and no other accepted-history
+        change for d, then all three of the following hold: across the step, d''s logical accepted history in after equals
+        d''s logical accepted history in before followed by exactly one new canonical accepted change at r, with every revision
+        accepted in before remaining represented in after by the same logical accepted change, no pre-existing revision''s
+        change rewritten, replaced, or removed, and no other revision added, the comparison being between logical histories
+        so that semantics-preserving compaction does not count as a change; the step advances d''s document_latest_revision
+        to exactly r in the post-state, that frontier advance to r becoming authoritatively visible in after as the co-visible
+        companion of the insertion of the matching canonical accepted change at r by the same committed append; and the step
+        is an append for d at r whose pre-state frontier is exactly the immediate predecessor of r, i.e. d''s document_latest_revision
+        in before is the revision position immediately before r in the canonical revision numbering, so the append''s new
+        change occupies the next position after the pre-state frontier. (4) For every authoritative states before and after
+        and every document d, if both the transitive closure of the immediate-successor authoritative-state-step relation
+        holds from before to after, and, if before includes an authoritative document-state instance for d under the scope
+        condition in (1), then in before the accepted canonical history for d is one gap-free revision sequence and the logical
+        canonical accepted history for d in before ends exactly at before''s document_latest_revision for d as defined in
+        (1); then it follows that, if after includes an authoritative document-state instance for d under that same scope
+        condition, then in after the accepted canonical history for d is one gap-free revision sequence and the logical canonical
+        accepted history for d in after ends exactly at after''s document_latest_revision for d as defined in (1).'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 3ca6d76f15454ce7f85cc196718fb806b12b477aa19e2855b54c80822077890f
+        verdict: EQUIVALENT
+        reason: The formula covers the state invariant (gap-free history ending exactly at the frontier), the append case
+          (exactly one extension at r, following the prior frontier, advancing the frontier to r with prior history preserved),
+          and the no-edit representation/lifecycle case (same logical prefix and same frontier), with logical rather than
+          physical history so compaction is not penalized; the reachability conjunct adds nothing beyond the universal state
+          invariant.
+        differences: []
+      strengthening:
+        subject_signature: 3ca6d76f15454ce7f85cc196718fb806b12b477aa19e2855b54c80822077890f
+        verdict: EQUIVALENT
+        reason: 'The formula matches the source scope and guarantees: the state invariant requires a gap-free logical accepted
+          history ending exactly at the frontier for every document instance in an authoritative state; append steps preserve
+          the prior logical prefix, add exactly the next revision r, and advance the frontier to r; non-append representation/lifecycle
+          steps preserve both the logical prefix and frontier; and the predicates are explicitly logical rather than physical,
+          preserving the compaction exclusion. The reachability clause adds no requirement beyond the universal state invariant.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 3ca6d76f15454ce7f85cc196718fb806b12b477aa19e2855b54c80822077890f
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original semantics: the per-state gap-free canonical prefix ending exactly at
+          document_latest_revision with logical rather than physical retention, the append step preserving the prior prefix,
+          adding exactly revision r as the next position after the pre-state frontier and advancing the frontier to r, and
+          non-append representation/lifecycle transitions preserving both prefix and frontier. Clause (4) is only the transitive
+          consequence of the per-state invariant, and no quantifier, scope, cardinality, or exclusion boundary is weakened
+          or strengthened.'
+        differences: []
