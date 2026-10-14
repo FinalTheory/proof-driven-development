@@ -1717,7 +1717,7 @@ functions:
     - contract:accepted_history_frontier_coherence
     - claim:L22_initial_history_matches_frontier
     - claim:L29_non_append_lifecycle_preserves_revision_domain
-    - claim:L33_committed_append_preserves_existing_revision_prefix
+    - claim:L137_authoritative_history_mutators_are_exhaustively_classified
   authoritative_handoff_for_document:
     args:
     - ProtocolTransition
@@ -4790,10 +4790,13 @@ functions:
     - Document
     returns: Bool
     catalog_symbols: []
-    meaning: 'The authoritative step from before to after accepts no new edit for
-      document d: it commits no canonical accepted change for d. The step may still
-      change d''s authoritative representation or lifecycle state, may accept edits
-      for other documents, or may leave d''s authoritative coordinates untouched.'
+    meaning: 'The authoritative step from before to after is an authoritative non-append
+      representation/lifecycle transition for document d that accepts no new edit:
+      it changes d''s authoritative representation or lifecycle state while committing
+      no canonical accepted change for d. Steps that do not change d''s representation
+      or lifecycle state -- including steps that accept edits only for other documents
+      and steps that leave d entirely untouched -- are not in this class, and neither
+      are steps that commit an append for d.'
     semantic_anchors:
     - claim:C7_revision_frontier_is_linear
     - claim:L29_non_append_lifecycle_preserves_revision_domain
@@ -4816,6 +4819,7 @@ functions:
     semantic_anchors:
     - claim:C7_revision_frontier_is_linear
     - claim:L33_committed_append_preserves_existing_revision_prefix
+    - claim:L137_authoritative_history_mutators_are_exhaustively_classified
   state_step_advances_frontier_to_appended_revision:
     args:
     - AuthoritativeState
@@ -4831,7 +4835,7 @@ functions:
     semantic_anchors:
     - claim:C7_revision_frontier_is_linear
     - claim:L6_frontier_advance_and_insert_commit_together
-    - claim:L33_committed_append_preserves_existing_revision_prefix
+    - claim:L137_authoritative_history_mutators_are_exhaustively_classified
   state_step_append_follows_previous_frontier:
     args:
     - AuthoritativeState
@@ -4848,7 +4852,7 @@ functions:
     semantic_anchors:
     - claim:C7_revision_frontier_is_linear
     - claim:L4_append_requires_previous_frontier
-    - claim:L33_committed_append_preserves_existing_revision_prefix
+    - claim:L137_authoritative_history_mutators_are_exhaustively_classified
   state_step_preserves_logical_accepted_prefix:
     args:
     - AuthoritativeState
@@ -4922,7 +4926,7 @@ functions:
     - claim:C7_revision_frontier_is_linear
     - claim:L22_initial_history_matches_frontier
     - claim:L29_non_append_lifecycle_preserves_revision_domain
-    - claim:L33_committed_append_preserves_existing_revision_prefix
+    - claim:L137_authoritative_history_mutators_are_exhaustively_classified
   candidate_change_commits_as_acceptance:
     args:
     - CanonicalAcceptance
@@ -4960,6 +4964,37 @@ functions:
       than v in the document''s revision arithmetic.'
     semantic_anchors:
     - claim:L4_append_requires_previous_frontier
+  state_step_commits_acceptance:
+    args:
+    - AuthoritativeState
+    - AuthoritativeState
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'The authoritative step from before to after is the acceptance-commit
+      step of canonical acceptance a: the step''s transition is the authoritative
+      acceptance transaction whose commit makes a the canonical accepted change, so
+      this step is the state-graph edge produced by a''s acceptance transaction committing.'
+    semantic_anchors:
+    - claim:L4_append_requires_previous_frontier
+  state_step_creates_or_changes_document_coordinates:
+    args:
+    - AuthoritativeState
+    - AuthoritativeState
+    - Document
+    returns: Bool
+    catalog_symbols:
+    - accepted_change_log
+    - document_latest_revision
+    meaning: 'The authoritative step from before to after creates, destroys, or changes
+      document d''s accepted_change_log or document_latest_revision coordinates in
+      their logical denotation: before and after differ in whether d has an authoritative
+      document-state instance, or in the logical accepted history denoted for d, or
+      in d''s document_latest_revision value. A step that changes only the physical
+      representation of d''s history while preserving its logical denotation and frontier
+      value does not create or change either symbol and does not satisfy this predicate.'
+    semantic_anchors:
+    - claim:L137_authoritative_history_mutators_are_exhaustively_classified
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -10914,6 +10949,55 @@ claims:
                   - var: after
                   - var: d
                   - var: r
+            - exists:
+                vars:
+                  acc: CanonicalAcceptance
+                body:
+                  and:
+                  - call:
+                      fn: state_step_commits_acceptance
+                      args:
+                      - var: before
+                      - var: after
+                      - var: acc
+                  - call:
+                      fn: candidate_change_commits_as_acceptance
+                      args:
+                      - var: acc
+                      - var: r
+      - forall:
+          vars:
+            before: AuthoritativeState
+            after: AuthoritativeState
+            d: Document
+            r: Revision
+            acc: CanonicalAcceptance
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: authoritative_state_step
+                  args:
+                  - var: before
+                  - var: after
+              - call:
+                  fn: state_step_commits_append_at_revision
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+                  - var: r
+              - call:
+                  fn: state_step_commits_acceptance
+                  args:
+                  - var: before
+                  - var: after
+                  - var: acc
+              - call:
+                  fn: candidate_change_commits_as_acceptance
+                  args:
+                  - var: acc
+                  - var: r
             - call:
                 fn: state_step_append_follows_previous_frontier
                 args:
@@ -11122,13 +11206,73 @@ claims:
     capability: relational
     contracts: []
     formula:
+      forall:
+        vars:
+          before: AuthoritativeState
+          after: AuthoritativeState
+          d: Document
+          r: Revision
+        body:
+          implies:
+          - and:
+            - call:
+                fn: authoritative_state_step
+                args:
+                - var: before
+                - var: after
+            - call:
+                fn: state_step_commits_append_at_revision
+                args:
+                - var: before
+                - var: after
+                - var: d
+                - var: r
+          - call:
+              fn: state_step_extends_history_by_exactly_one_at_revision
+              args:
+              - var: before
+              - var: after
+              - var: d
+              - var: r
+  L137_authoritative_history_mutators_are_exhaustively_classified:
+    capability: relational
+    contracts: []
+    formula:
       and:
       - forall:
           vars:
             before: AuthoritativeState
             after: AuthoritativeState
             d: Document
-            r: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: authoritative_state_step
+                  args:
+                  - var: before
+                  - var: after
+              - not:
+                  call:
+                    fn: document_has_authoritative_state
+                    args:
+                    - var: before
+                    - var: d
+              - call:
+                  fn: document_has_authoritative_state
+                  args:
+                  - var: after
+                  - var: d
+            - call:
+                fn: document_initialization_state
+                args:
+                - var: after
+                - var: d
+      - forall:
+          vars:
+            before: AuthoritativeState
+            after: AuthoritativeState
+            d: Document
           body:
             implies:
             - and:
@@ -11138,19 +11282,34 @@ claims:
                   - var: before
                   - var: after
               - call:
-                  fn: state_step_commits_append_at_revision
+                  fn: state_step_creates_or_changes_document_coordinates
                   args:
                   - var: before
                   - var: after
                   - var: d
-                  - var: r
-            - call:
-                fn: state_step_extends_history_by_exactly_one_at_revision
-                args:
-                - var: before
-                - var: after
-                - var: d
-                - var: r
+            - or:
+              - call:
+                  fn: document_initialization_state
+                  args:
+                  - var: after
+                  - var: d
+              - exists:
+                  vars:
+                    r: Revision
+                  body:
+                    call:
+                      fn: state_step_commits_append_at_revision
+                      args:
+                      - var: before
+                      - var: after
+                      - var: d
+                      - var: r
+              - call:
+                  fn: state_step_accepts_no_new_edit
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
       - forall:
           vars:
             before: AuthoritativeState
@@ -11179,17 +11338,6 @@ claims:
                   - var: after
                   - var: d
                   - var: r
-              - and:
-                - call:
-                    fn: canonical_history_gap_free_for_document
-                    args:
-                    - var: before
-                    - var: d
-                - call:
-                    fn: accepted_history_ends_exactly_at_frontier
-                    args:
-                    - var: before
-                    - var: d
               - call:
                   fn: state_step_append_follows_previous_frontier
                   args:
@@ -11204,6 +11352,17 @@ claims:
                   - var: after
                   - var: d
                   - var: r
+              - and:
+                - call:
+                    fn: canonical_history_gap_free_for_document
+                    args:
+                    - var: before
+                    - var: d
+                - call:
+                    fn: accepted_history_ends_exactly_at_frontier
+                    args:
+                    - var: before
+                    - var: d
             - and:
               - call:
                   fn: canonical_history_gap_free_for_document
@@ -11215,11 +11374,6 @@ claims:
                   args:
                   - var: after
                   - var: d
-  L137_authoritative_history_mutators_are_exhaustively_classified:
-    capability: relational
-    contracts: []
-    formula:
-      and:
       - forall:
           vars:
             before: AuthoritativeState
@@ -11227,27 +11381,44 @@ claims:
             d: Document
           body:
             implies:
-            - call:
-                fn: authoritative_state_step
-                args:
-                - var: before
-                - var: after
-            - or:
-              - exists:
-                  vars:
-                    r: Revision
-                  body:
-                    call:
-                      fn: state_step_commits_append_at_revision
-                      args:
-                      - var: before
-                      - var: after
-                      - var: d
-                      - var: r
+            - and:
               - call:
-                  fn: state_step_accepts_no_new_edit
+                  fn: authoritative_state_step
                   args:
                   - var: before
+                  - var: after
+              - not:
+                  call:
+                    fn: state_step_creates_or_changes_document_coordinates
+                    args:
+                    - var: before
+                    - var: after
+                    - var: d
+              - call:
+                  fn: document_has_authoritative_state
+                  args:
+                  - var: before
+                  - var: d
+              - and:
+                - call:
+                    fn: canonical_history_gap_free_for_document
+                    args:
+                    - var: before
+                    - var: d
+                - call:
+                    fn: accepted_history_ends_exactly_at_frontier
+                    args:
+                    - var: before
+                    - var: d
+            - and:
+              - call:
+                  fn: canonical_history_gap_free_for_document
+                  args:
+                  - var: after
+                  - var: d
+              - call:
+                  fn: accepted_history_ends_exactly_at_frontier
+                  args:
                   - var: after
                   - var: d
       - forall:
@@ -11403,28 +11574,40 @@ claims:
                     var: before
                   to:
                     var: after
+              - implies:
+                - call:
+                    fn: document_has_authoritative_state
+                    args:
+                    - var: before
+                    - var: d
+                - and:
+                  - call:
+                      fn: canonical_history_gap_free_for_document
+                      args:
+                      - var: before
+                      - var: d
+                  - call:
+                      fn: accepted_history_ends_exactly_at_frontier
+                      args:
+                      - var: before
+                      - var: d
+            - implies:
+              - call:
+                  fn: document_has_authoritative_state
+                  args:
+                  - var: after
+                  - var: d
               - and:
                 - call:
                     fn: canonical_history_gap_free_for_document
                     args:
-                    - var: before
+                    - var: after
                     - var: d
                 - call:
                     fn: accepted_history_ends_exactly_at_frontier
                     args:
-                    - var: before
+                    - var: after
                     - var: d
-            - and:
-              - call:
-                  fn: canonical_history_gap_free_for_document
-                  args:
-                  - var: after
-                  - var: d
-              - call:
-                  fn: accepted_history_ends_exactly_at_frontier
-                  args:
-                  - var: after
-                  - var: d
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
