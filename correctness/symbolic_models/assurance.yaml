@@ -4180,53 +4180,71 @@ records:
   claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance:
     kind: claim
     subject_id: L163_accepted_terminal_outcome_commits_with_canonical_acceptance
-    subject_signature: 466809d958f49a856826da68e89ba4f5b7e40d445be60ba1077f3c793d5546e2
+    subject_signature: ea342026f9f4c1bc418a913a5211877e725b1c8bd7734251acec869e0fb49133
     roundtrip:
-      subject_signature: 466809d958f49a856826da68e89ba4f5b7e40d445be60ba1077f3c793d5546e2
+      subject_signature: ea342026f9f4c1bc418a913a5211877e725b1c8bd7734251acec869e0fb49133
       status: TRANSLATED
-      natural_language: 'All three of the following hold. (1) For every terminal-result record t, if t is the authoritative
-        creation of an ACCEPTED terminal_result for one eligible full idempotency identity, then there exists a canonical
-        acceptance a such that t and a are the ACCEPTED terminal-result creation and its matching canonical accepted-change
-        creation for one logical acceptance; this matching-pair relation by itself does not assert identity equality, producer
-        provenance, transaction atomicity, commit outcome, or implementation-path choice. (2) For every terminal-result record
-        t and every canonical acceptance a, if either (t is the authoritative creation of an ACCEPTED terminal_result for
-        one eligible full idempotency identity and t and a form that matching creation pair) or (a is the canonical accepted-change
-        creation for one eligible full idempotency identity whose terminal_result becomes ACCEPTED and t and a form that matching
-        creation pair), then both of the following hold: t and a carry the same full idempotency identity, concretely the
-        same (document_id, client_change_id); and the matching ACCEPTED terminal-result creation t and canonical accepted-change
-        creation a share one authoritative transaction boundary and therefore commit or roll back together, so that no reachable
-        authoritative post-boundary state for that pair contains exactly one side, this co-commit relation asserting atomicity
-        only and not producer provenance or a particular named transaction implementation. (3) For every canonical acceptance
-        a, if a is the canonical accepted-change creation for one eligible full idempotency identity whose terminal_result
-        becomes ACCEPTED, then there exists a terminal-result record t such that t and a form the matching creation pair described
-        above.'
+      natural_language: 'The proposition is the conjunction of the following four conditions. (1) For every terminal result
+        record t, if t is the authoritative creation of an ACCEPTED terminal_result for one eligible full idempotency identity
+        — this classifier names the qualifying creation event only and does not constrain which implementation path produced
+        it, which acceptance execution supplied its payload, or which transaction mechanism commits the matching canonical
+        accepted change — then there exists a canonical acceptance a such that t and a are the ACCEPTED terminal-result creation
+        and its matching canonical accepted-change creation for one logical acceptance; this matching relation identifies
+        the matching creation pair only, with identity equality, producer provenance, transaction atomicity, commit outcome,
+        and implementation-path choice being separate. (2) For every terminal result record t and canonical acceptance a,
+        if either (t satisfies the created-for-eligible-identity classification in (1) and t and a form such a matching creation
+        pair) or (a is the canonical accepted-change creation for one eligible full idempotency identity whose terminal_result
+        becomes ACCEPTED — this classifier names the qualifying creation event only and does not constrain which implementation
+        path produced it, which acceptance execution supplied the matching terminal result, or which transaction mechanism
+        commits the pair — and t and a form such a matching creation pair), then both of the following hold: t and a carry
+        the same full idempotency identity, concretely the same (document_id, client_change_id), this relation asserting same-key
+        identity only with producer provenance, transaction atomicity, commit outcome, and implementation-path choice remaining
+        separate; and the matching ACCEPTED terminal-result creation t and canonical accepted-change creation a share one
+        authoritative transaction boundary and therefore commit or roll back together, with no reachable authoritative post-boundary
+        state for that pair containing exactly one side, this relation asserting atomicity only and not asserting producer
+        provenance or requiring a particular named transaction implementation. (3) For every canonical acceptance a, if a
+        is the canonical accepted-change creation for one eligible full idempotency identity whose terminal_result becomes
+        ACCEPTED, then there exists a terminal result record t such that t and a form the matching creation pair described
+        above. (4) For every terminal result record t and canonical acceptance a, if t is the authoritative creation of an
+        ACCEPTED terminal_result for one eligible full idempotency identity, and either t is an authoritative ACCEPTED terminal
+        result at the acceptance-linearization creation boundary for one full identity and logical terminal outcome — this
+        predicate classifies that authoritative origin only, does not depend on whether a later representation is being classified
+        by L211, does not assert normal-retry eligibility at the origin event or current horizon eligibility of t, and does
+        not itself prove matching-producer provenance, transaction co-commit, or later lifecycle preservation — or t is an
+        authoritative ACCEPTED (canonical result) outcome, and t and a form the matching creation pair, and t and a co-commit
+        as described in (2), then the matching canonical acceptance a is committed for the corresponding ACCEPTED terminal
+        outcome and the execution that committed a is the acceptance execution that produced a; this committed predicate asserts
+        the committed matching-acceptance fact and its committing execution only and does not require one named implementation
+        path or assert producer provenance of a stored result by itself.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 466809d958f49a856826da68e89ba4f5b7e40d445be60ba1077f3c793d5546e2
+        subject_signature: ea342026f9f4c1bc418a913a5211877e725b1c8bd7734251acec869e0fb49133
         verdict: EQUIVALENT
-        reason: The formula requires a matching creation pair in both directions for eligible ACCEPTED terminal results and
-          eligible canonical accepted changes, and for any such pair requires full idempotency-identity equality and co-commits,
-          whose meaning is exactly sharing one authoritative transaction boundary, committing or rolling back together, and
-          no reachable post-boundary state containing exactly one side.
+        reason: The formula preserves the eligible scope, bidirectional existence of the matching creation pair, full idempotency-identity
+          equality, shared-transaction co-commit/rollback, and, when the terminal side stands authoritatively (origin or result
+          record), the matching acceptance committed by its producing acceptance execution, with no added or omitted requirement.
         differences: []
       strengthening:
-        subject_signature: 466809d958f49a856826da68e89ba4f5b7e40d445be60ba1077f3c793d5546e2
+        subject_signature: ea342026f9f4c1bc418a913a5211877e725b1c8bd7734251acec869e0fb49133
         verdict: EQUIVALENT
-        reason: The formula bidirectionally pairs every eligible ACCEPTED terminal-result creation with a matching canonical
-          accepted-change creation and vice versa, requires the pair to carry the same full idempotency identity, and requires
-          co-committal within one authoritative transaction boundary, matching the source's same-boundary atomicity and no-one-without-the-other
-          guarantee without adding uniqueness, provenance, or implementation constraints.
+        reason: 'The formula preserves the source scope and guarantees: eligible ACCEPTED terminal creations and eligible
+          canonical creations are paired in both directions, every such pair is required to share the full idempotency identity
+          and co-commit/co-roll-back in one transaction boundary, and whenever the terminal side is authoritative (as origin
+          record or result record) for a co-committing pair, the matching canonical acceptance is required committed by its
+          producing acceptance execution, matching the source''s same-execution provenance for the pair''s single acceptance.'
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 466809d958f49a856826da68e89ba4f5b7e40d445be60ba1077f3c793d5546e2
+        subject_signature: ea342026f9f4c1bc418a913a5211877e725b1c8bd7734251acec869e0fb49133
         verdict: EQUIVALENT
-        reason: Both quantify over eligible full (document_id, client_change_id) identities whose terminal result is ACCEPTED,
-          guarantee bidirectional existence of the matching ACCEPTED terminal-result and canonical accepted-change creations,
-          require the same full identity for the pair, and require a shared authoritative transaction boundary with joint
-          commit or rollback and no one-sided reachable authoritative state, without adding provenance or implementation-path
-          requirements.
+        reason: 'The rendering preserves the original guarantee: for eligible identities whose terminal result becomes ACCEPTED,
+          the matching terminal-result and canonical accepted-change creations exist as a pair, share the same full idempotency
+          identity, occur in one authoritative transaction boundary so they commit or roll back together with no reachable
+          authoritative state containing exactly one side, and when the ACCEPTED terminal result stands as an authoritative
+          outcome the matching canonical change is committed by the acceptance execution that produced it. The predicate disclaimers
+          only separate identity, atomicity, and provenance within individual conditions; the conjunction supplies each dimension,
+          adding and omitting none.'
         differences: []
   claim:L199_accepted_terminal_provenance_survives_persistence_and_restore:
     kind: claim
