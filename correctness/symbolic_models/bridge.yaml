@@ -4234,6 +4234,150 @@ functions:
       or roll back together; no reachable authoritative post-boundary state for that
       pair contains exactly one side. This relation asserts atomicity only and does
       not assert producer provenance or require a particular named transaction implementation.
+  already_accepted_evidence:
+    args:
+    - AcceptedEvidence
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Evidence e is authoritative accepted-idempotency evidence: authoritative
+      durable state counts e as establishing that the full identity e carries is already
+      accepted.'
+    semantic_anchors:
+    - claim:L114_hot_path_accepted_evidence_requires_committed_acceptance
+    - claim:L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance
+    - claim:L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance
+    - claim:C35_accepted_key_classification_requires_committed_acceptance
+  canonical_acceptance_is_committed:
+    args:
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    meaning: Canonical acceptance a is a committed canonical accepted-change record
+      in authoritative accepted history.
+    semantic_anchors:
+    - claim:L114_hot_path_accepted_evidence_requires_committed_acceptance
+    - claim:L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance
+    - claim:L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance
+    - claim:C35_accepted_key_classification_requires_committed_acceptance
+  accepted_evidence_derives_from:
+    args:
+    - AcceptedEvidence
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Evidence e is derived from and corresponds to canonical acceptance a:
+      a is the acceptance from which e''s already-accepted evidence is established.'
+    semantic_anchors:
+    - claim:L114_hot_path_accepted_evidence_requires_committed_acceptance
+    - claim:L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance
+    - claim:L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance
+    - claim:C35_accepted_key_classification_requires_committed_acceptance
+  evidence_document_id:
+    args:
+    - AcceptedEvidence
+    returns: Document
+    catalog_symbols:
+    - document_id
+    meaning: The document_id component of the full identity carried by evidence e.
+    semantic_anchors:
+    - claim:L114_hot_path_accepted_evidence_requires_committed_acceptance
+    - claim:L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance
+    - claim:L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance
+    - claim:C35_accepted_key_classification_requires_committed_acceptance
+  evidence_client_change_id:
+    args:
+    - AcceptedEvidence
+    returns: ClientChangeId
+    catalog_symbols:
+    - client_change_id
+    meaning: The client_change_id component of the full identity carried by evidence
+      e.
+    semantic_anchors:
+    - claim:L114_hot_path_accepted_evidence_requires_committed_acceptance
+    - claim:L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance
+    - claim:L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance
+    - claim:C35_accepted_key_classification_requires_committed_acceptance
+  acceptance_document_id:
+    args:
+    - CanonicalAcceptance
+    returns: Document
+    catalog_symbols:
+    - document_id
+    meaning: The document_id component of the full identity carried by canonical acceptance
+      a.
+    semantic_anchors:
+    - claim:L114_hot_path_accepted_evidence_requires_committed_acceptance
+    - claim:L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance
+    - claim:L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance
+    - claim:C35_accepted_key_classification_requires_committed_acceptance
+  acceptance_client_change_id:
+    args:
+    - CanonicalAcceptance
+    returns: ClientChangeId
+    catalog_symbols:
+    - client_change_id
+    meaning: The client_change_id component of the full identity carried by canonical
+      acceptance a.
+    semantic_anchors:
+    - claim:L114_hot_path_accepted_evidence_requires_committed_acceptance
+    - claim:L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance
+    - claim:L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance
+    - claim:C35_accepted_key_classification_requires_committed_acceptance
+  evidence_acquired_on_normal_acceptance_path:
+    args:
+    - AcceptedEvidence
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Evidence e is acquired on the normal acceptance path: the acceptance
+      flow by which authoritative durable state first gains already-accepted evidence
+      for an identity, as opposed to a lifecycle transformation or a runtime reconstruction.'
+    semantic_anchors:
+    - claim:L114_hot_path_accepted_evidence_requires_committed_acceptance
+    - claim:C35_accepted_key_classification_requires_committed_acceptance
+  evidence_transformed_by_durable_lifecycle:
+    args:
+    - AcceptedEvidence
+    returns: Bool
+    catalog_symbols: []
+    meaning: Evidence e is created, replaced, or preserved by a durable accepted-history
+      lifecycle transformation outside the normal acceptance transaction, such as
+      compaction, cleanup, or snapshot replacement.
+    semantic_anchors:
+    - claim:L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance
+    - claim:C35_accepted_key_classification_requires_committed_acceptance
+  evidence_reconstructed_by_runtime:
+    args:
+    - AcceptedEvidence
+    returns: Bool
+    catalog_symbols: []
+    meaning: Evidence e is created or preserved by a non-hot-path runtime reconstruction
+      or materialization, such as recovery, owner restart, restore, index rebuild,
+      or cache rebuild.
+    semantic_anchors:
+    - claim:L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance
+    - claim:C35_accepted_key_classification_requires_committed_acceptance
+  separate_hot_path_record_exists_for_evidence:
+    args:
+    - AcceptedEvidence
+    returns: Bool
+    catalog_symbols: []
+    meaning: A separate hot-path accepted-key record or index, distinct from the committed
+      accepted row / unique identity itself, is the accepted-evidence mechanism for
+      evidence e's identity.
+    semantic_anchors:
+    - claim:L114_hot_path_accepted_evidence_requires_committed_acceptance
+    - claim:C35_accepted_key_classification_requires_committed_acceptance
+  hot_path_record_co_commits_with_acceptance:
+    args:
+    - AcceptedEvidence
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    meaning: The separate hot-path accepted-key record for evidence e and canonical
+      acceptance a commit or abort together in the same acceptance transaction.
+    semantic_anchors:
+    - claim:L114_hot_path_accepted_evidence_requires_committed_acceptance
+    - claim:C35_accepted_key_classification_requires_committed_acceptance
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -8694,6 +8838,411 @@ claims:
                       fn: accepted_terminal_creation_pair_co_commits
                       args:
                       - var: t
+                      - var: a
+  L114_hot_path_accepted_evidence_requires_committed_acceptance:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            e: AcceptedEvidence
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: already_accepted_evidence
+                  args:
+                  - var: e
+              - call:
+                  fn: evidence_acquired_on_normal_acceptance_path
+                  args:
+                  - var: e
+            - exists:
+                vars:
+                  a: CanonicalAcceptance
+                body:
+                  and:
+                  - call:
+                      fn: canonical_acceptance_is_committed
+                      args:
+                      - var: a
+                  - eq:
+                    - call:
+                        fn: evidence_document_id
+                        args:
+                        - var: e
+                    - call:
+                        fn: acceptance_document_id
+                        args:
+                        - var: a
+                  - eq:
+                    - call:
+                        fn: evidence_client_change_id
+                        args:
+                        - var: e
+                    - call:
+                        fn: acceptance_client_change_id
+                        args:
+                        - var: a
+                  - call:
+                      fn: accepted_evidence_derives_from
+                      args:
+                      - var: e
+                      - var: a
+      - forall:
+          vars:
+            e: AcceptedEvidence
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: already_accepted_evidence
+                  args:
+                  - var: e
+              - call:
+                  fn: evidence_acquired_on_normal_acceptance_path
+                  args:
+                  - var: e
+              - call:
+                  fn: separate_hot_path_record_exists_for_evidence
+                  args:
+                  - var: e
+            - exists:
+                vars:
+                  a: CanonicalAcceptance
+                body:
+                  and:
+                  - call:
+                      fn: canonical_acceptance_is_committed
+                      args:
+                      - var: a
+                  - eq:
+                    - call:
+                        fn: evidence_document_id
+                        args:
+                        - var: e
+                    - call:
+                        fn: acceptance_document_id
+                        args:
+                        - var: a
+                  - eq:
+                    - call:
+                        fn: evidence_client_change_id
+                        args:
+                        - var: e
+                    - call:
+                        fn: acceptance_client_change_id
+                        args:
+                        - var: a
+                  - call:
+                      fn: accepted_evidence_derives_from
+                      args:
+                      - var: e
+                      - var: a
+                  - call:
+                      fn: hot_path_record_co_commits_with_acceptance
+                      args:
+                      - var: e
+                      - var: a
+  L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          e: AcceptedEvidence
+        body:
+          implies:
+          - and:
+            - call:
+                fn: already_accepted_evidence
+                args:
+                - var: e
+            - call:
+                fn: evidence_transformed_by_durable_lifecycle
+                args:
+                - var: e
+          - exists:
+              vars:
+                a: CanonicalAcceptance
+              body:
+                and:
+                - call:
+                    fn: canonical_acceptance_is_committed
+                    args:
+                    - var: a
+                - eq:
+                  - call:
+                      fn: evidence_document_id
+                      args:
+                      - var: e
+                  - call:
+                      fn: acceptance_document_id
+                      args:
+                      - var: a
+                - eq:
+                  - call:
+                      fn: evidence_client_change_id
+                      args:
+                      - var: e
+                  - call:
+                      fn: acceptance_client_change_id
+                      args:
+                      - var: a
+                - call:
+                    fn: accepted_evidence_derives_from
+                    args:
+                    - var: e
+                    - var: a
+  L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          e: AcceptedEvidence
+        body:
+          implies:
+          - and:
+            - call:
+                fn: already_accepted_evidence
+                args:
+                - var: e
+            - call:
+                fn: evidence_reconstructed_by_runtime
+                args:
+                - var: e
+          - exists:
+              vars:
+                a: CanonicalAcceptance
+              body:
+                and:
+                - call:
+                    fn: canonical_acceptance_is_committed
+                    args:
+                    - var: a
+                - eq:
+                  - call:
+                      fn: evidence_document_id
+                      args:
+                      - var: e
+                  - call:
+                      fn: acceptance_document_id
+                      args:
+                      - var: a
+                - eq:
+                  - call:
+                      fn: evidence_client_change_id
+                      args:
+                      - var: e
+                  - call:
+                      fn: acceptance_client_change_id
+                      args:
+                      - var: a
+                - call:
+                    fn: accepted_evidence_derives_from
+                    args:
+                    - var: e
+                    - var: a
+  C35_accepted_key_classification_requires_committed_acceptance:
+    capability: relational
+    contracts:
+    - accepted_evidence_provenance
+    formula:
+      and:
+      - forall:
+          vars:
+            e: AcceptedEvidence
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: already_accepted_evidence
+                  args:
+                  - var: e
+              - call:
+                  fn: evidence_acquired_on_normal_acceptance_path
+                  args:
+                  - var: e
+            - exists:
+                vars:
+                  a: CanonicalAcceptance
+                body:
+                  and:
+                  - call:
+                      fn: canonical_acceptance_is_committed
+                      args:
+                      - var: a
+                  - eq:
+                    - call:
+                        fn: evidence_document_id
+                        args:
+                        - var: e
+                    - call:
+                        fn: acceptance_document_id
+                        args:
+                        - var: a
+                  - eq:
+                    - call:
+                        fn: evidence_client_change_id
+                        args:
+                        - var: e
+                    - call:
+                        fn: acceptance_client_change_id
+                        args:
+                        - var: a
+                  - call:
+                      fn: accepted_evidence_derives_from
+                      args:
+                      - var: e
+                      - var: a
+      - forall:
+          vars:
+            e: AcceptedEvidence
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: already_accepted_evidence
+                  args:
+                  - var: e
+              - call:
+                  fn: evidence_acquired_on_normal_acceptance_path
+                  args:
+                  - var: e
+              - call:
+                  fn: separate_hot_path_record_exists_for_evidence
+                  args:
+                  - var: e
+            - exists:
+                vars:
+                  a: CanonicalAcceptance
+                body:
+                  and:
+                  - call:
+                      fn: canonical_acceptance_is_committed
+                      args:
+                      - var: a
+                  - eq:
+                    - call:
+                        fn: evidence_document_id
+                        args:
+                        - var: e
+                    - call:
+                        fn: acceptance_document_id
+                        args:
+                        - var: a
+                  - eq:
+                    - call:
+                        fn: evidence_client_change_id
+                        args:
+                        - var: e
+                    - call:
+                        fn: acceptance_client_change_id
+                        args:
+                        - var: a
+                  - call:
+                      fn: accepted_evidence_derives_from
+                      args:
+                      - var: e
+                      - var: a
+                  - call:
+                      fn: hot_path_record_co_commits_with_acceptance
+                      args:
+                      - var: e
+                      - var: a
+      - forall:
+          vars:
+            e: AcceptedEvidence
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: already_accepted_evidence
+                  args:
+                  - var: e
+              - call:
+                  fn: evidence_transformed_by_durable_lifecycle
+                  args:
+                  - var: e
+            - exists:
+                vars:
+                  a: CanonicalAcceptance
+                body:
+                  and:
+                  - call:
+                      fn: canonical_acceptance_is_committed
+                      args:
+                      - var: a
+                  - eq:
+                    - call:
+                        fn: evidence_document_id
+                        args:
+                        - var: e
+                    - call:
+                        fn: acceptance_document_id
+                        args:
+                        - var: a
+                  - eq:
+                    - call:
+                        fn: evidence_client_change_id
+                        args:
+                        - var: e
+                    - call:
+                        fn: acceptance_client_change_id
+                        args:
+                        - var: a
+                  - call:
+                      fn: accepted_evidence_derives_from
+                      args:
+                      - var: e
+                      - var: a
+      - forall:
+          vars:
+            e: AcceptedEvidence
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: already_accepted_evidence
+                  args:
+                  - var: e
+              - call:
+                  fn: evidence_reconstructed_by_runtime
+                  args:
+                  - var: e
+            - exists:
+                vars:
+                  a: CanonicalAcceptance
+                body:
+                  and:
+                  - call:
+                      fn: canonical_acceptance_is_committed
+                      args:
+                      - var: a
+                  - eq:
+                    - call:
+                        fn: evidence_document_id
+                        args:
+                        - var: e
+                    - call:
+                        fn: acceptance_document_id
+                        args:
+                        - var: a
+                  - eq:
+                    - call:
+                        fn: evidence_client_change_id
+                        args:
+                        - var: e
+                    - call:
+                        fn: acceptance_client_change_id
+                        args:
+                        - var: a
+                  - call:
+                      fn: accepted_evidence_derives_from
+                      args:
+                      - var: e
                       - var: a
 contracts:
   client_canonical_frontier_coherence:
