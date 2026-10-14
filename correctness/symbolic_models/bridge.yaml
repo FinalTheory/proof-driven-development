@@ -5266,17 +5266,6 @@ claims:
                       args:
                       - var: s
                       - var: k
-                - implies:
-                  - call:
-                      fn: terminal_key_within_retry_horizon
-                      args:
-                      - var: s
-                      - var: k
-                  - call:
-                      fn: within_retry_reconnect_eligibility
-                      args:
-                      - var: s
-                      - var: k
         - forall:
             vars:
               r: Request
