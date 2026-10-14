@@ -6390,3 +6390,41 @@ records:
           preconditions, same-document identity, the completed-and-resumed recovery classification without asserting any recovery
           occurs, the no-retention qualification, and the exact equality of recovered state to canonical replay through H.
         differences: []
+  claim:L144_success_ack_follows_corresponding_canonical_commit:
+    kind: claim
+    subject_id: L144_success_ack_follows_corresponding_canonical_commit
+    subject_signature: 89c270cdecd6fb96630593ab08ed2f893309e64eb5f4ff4a1d9d5e6e1089b4a2
+    roundtrip:
+      subject_signature: 89c270cdecd6fb96630593ab08ed2f893309e64eb5f4ff4a1d9d5e6e1089b4a2
+      status: TRANSLATED
+      natural_language: For every success ACK observation x, if x was actually exposed to the client for one particular exact
+        logical edit under evaluation, then there exists a canonical acceptance witness a such that x is bound to the exact
+        logical edit whose canonical acceptance witness is a, preserving the acknowledged edit and document identity, and
+        a was durably committed at its authoritative acceptance linearization point strictly before x was exposed; this committed-before
+        fact does not require the physical accepted-change row to remain retained or directly queryable afterward.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 89c270cdecd6fb96630593ab08ed2f893309e64eb5f4ff4a1d9d5e6e1089b4a2
+        verdict: EQUIVALENT
+        reason: The formula quantifies over every client-exposed success ACK and requires an existential canonical acceptance
+          witness bound to the same exact logical edit and document whose authoritative acceptance committed strictly before
+          that ACK, matching the source's existence, identity, and pre-ACK commit ordering and entailing its exclusions.
+        differences: []
+      strengthening:
+        subject_signature: 89c270cdecd6fb96630593ab08ed2f893309e64eb5f4ff4a1d9d5e6e1089b4a2
+        verdict: EQUIVALENT
+        reason: For every exposed per-edit success ACK, the formula requires a canonical acceptance bound to that exact edit
+          whose authoritative commit strictly preceded the ACK, matching the source's scope, identity, temporal ordering,
+          and exclusion of uncommitted or non-canonical edits without extra cardinality or retention requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 89c270cdecd6fb96630593ab08ed2f893309e64eb5f4ff4a1d9d5e6e1089b4a2
+        verdict: EQUIVALENT
+        reason: The rendering preserves the same universal scope over client-received success ACKs, the same existential requirement
+          of a corresponding canonical acceptance for that exact edit, and the same strict committed-before-ACK ordering;
+          the exclusions in the original follow from requiring a successfully committed canonical acceptance, and the added
+          identity, durability, linearization-point, and non-retention phrasing only unpacks that corresponding committed
+          acceptance without adding or removing a guarantee.
+        differences: []
