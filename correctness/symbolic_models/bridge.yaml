@@ -2460,6 +2460,7 @@ functions:
     - claim:C37_pending_identity_resolution_is_bound_to_response_head
     - claim:L106_resync_request_covers_start_pending_set
     - claim:L109_resync_publication_is_atomic_and_monotonic
+    - claim:L107_client_freezes_speculative_edits_during_resync
   resync_identity_age_exceeds_normal_horizon:
     args:
     - CatchupResponse
@@ -2550,7 +2551,8 @@ functions:
     returns: Bool
     catalog_symbols: []
     meaning: After reconciled publication or conflict entry for c, exact identity
-      e for the same resync document D remains protocol-eligible and unresolved.
+      e for the same resync document D remains protocol-eligible and unresolved and
+      remains contained in client_pending_edits.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
     - claim:L107_client_freezes_speculative_edits_during_resync
@@ -2560,9 +2562,9 @@ functions:
     - LogicalEditIdentity
     returns: Bool
     catalog_symbols: []
-    meaning: While e remains unresolved after c publication/conflict entry, the client
-      stays read-only or in explicit conflict/reconciliation state and creates no
-      new acceptance-eligible speculative edit.
+    meaning: While e remains unresolved after c publication/conflict entry, client_editing_mode
+      is not normal-editable for the document of e and no normal editing transition
+      creates or applies a new acceptance-eligible speculative edit for that document.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
     - claim:L107_client_freezes_speculative_edits_during_resync
@@ -4678,6 +4680,27 @@ functions:
     meaning: State from candidate c is exposed to the user only by one atomic publication
       after c's specified reconciliation work is complete; no checkpoint, tail, or
       intermediate candidate prefix from c is user-visible.
+    semantic_anchors:
+    - claim:L109_resync_publication_is_atomic_and_monotonic
+  supplied_identity_interpreted_only_under_request_document:
+    args:
+    - CatchupResponse
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: The client_change_id of exact identity e, as supplied under c's catch-up
+      request, is interpreted only under c's request document D, and e is not rebound
+      to another document during authoritative reconciliation through c's response
+      head.
+    semantic_anchors:
+    - claim:L106_resync_request_covers_start_pending_set
+  resync_publication_restores_no_previously_removed_state:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: Publication of candidate c restores no previously removed speculative
+      overlay and no previously removed pending-resolution state.
     semantic_anchors:
     - claim:L109_resync_publication_is_atomic_and_monotonic
 assumptions:
@@ -10137,11 +10160,17 @@ claims:
             e: LogicalEditIdentity
           body:
             implies:
-            - call:
-                fn: pending_identity_at_resync_start
-                args:
-                - var: c
-                - var: e
+            - and:
+              - call:
+                  fn: pending_identity_at_resync_start
+                  args:
+                  - var: c
+                  - var: e
+              - call:
+                  fn: resync_identity_within_normal_horizon
+                  args:
+                  - var: c
+                  - var: e
             - call:
                 fn: resync_identity_matches_document
                 args:
@@ -10169,6 +10198,54 @@ claims:
                 args:
                 - var: c
                 - var: e
+      - forall:
+          vars:
+            c: CatchupResponse
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: pending_identity_at_resync_start
+                  args:
+                  - var: c
+                  - var: e
+              - call:
+                  fn: resync_identity_within_normal_horizon
+                  args:
+                  - var: c
+                  - var: e
+            - call:
+                fn: supplied_identity_interpreted_only_under_request_document
+                args:
+                - var: c
+                - var: e
+      - forall:
+          vars:
+            c: CatchupResponse
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: pending_identity_at_resync_start
+                  args:
+                  - var: c
+                  - var: e
+              - call:
+                  fn: resync_identity_age_exceeds_normal_horizon
+                  args:
+                  - var: c
+                  - var: e
+            - not:
+                call:
+                  fn: catchup_request_includes_pending_change_id
+                  args:
+                  - var: c
+                  - call:
+                      fn: logical_identity_change_id
+                      args:
+                      - var: e
   L107_client_freezes_speculative_edits_during_resync:
     capability: relational
     contracts:
@@ -10244,11 +10321,17 @@ claims:
             e: LogicalEditIdentity
           body:
             implies:
-            - call:
-                fn: pending_identity_at_resync_start
-                args:
-                - var: c
-                - var: e
+            - and:
+              - call:
+                  fn: pending_identity_at_resync_start
+                  args:
+                  - var: c
+                  - var: e
+              - call:
+                  fn: resync_identity_within_normal_horizon
+                  args:
+                  - var: c
+                  - var: e
             - call:
                 fn: catchup_request_includes_pending_change_id
                 args:
@@ -10313,10 +10396,15 @@ claims:
                   args:
                   - var: f
                   - var: h
-            - call:
-                fn: resync_state_exposed_only_by_atomic_publication
-                args:
-                - var: c
+            - and:
+              - call:
+                  fn: resync_state_exposed_only_by_atomic_publication
+                  args:
+                  - var: c
+              - call:
+                  fn: resync_publication_restores_no_previously_removed_state
+                  args:
+                  - var: c
       - forall:
           vars:
             c: CatchupResponse
@@ -10340,6 +10428,21 @@ claims:
                 args:
                 - var: f1
                 - var: f2
+      - forall:
+          vars:
+            c: CatchupResponse
+            h: Revision
+          body:
+            implies:
+            - call:
+                fn: catchup_response_head_is
+                args:
+                - var: c
+                - var: h
+            - call:
+                fn: resync_state_exposed_only_by_atomic_publication
+                args:
+                - var: c
       - forall:
           vars:
             c: CatchupResponse
