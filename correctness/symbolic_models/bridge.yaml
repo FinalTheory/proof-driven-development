@@ -3782,10 +3782,10 @@ functions:
     returns: Bool
     catalog_symbols: []
     meaning: 'Transition x is an authoritative terminal-state transition applied at
-      state s: any authoritative transition whose execution is governed by the terminal
-      outcome state in s, including transitions that linearize or attempt terminal
-      outcomes and lifecycle, recovery, or migration transitions of the terminal outcome
-      store.'
+      state s: a transition that linearizes, attempts to linearize, or is arbitrated
+      against the per-key terminal outcome state in s (the acceptance and definitive-rejection
+      transitions of the terminal state machine). Non-terminal lifecycle, recovery,
+      and representation-migration transitions are not terminal-state transitions.'
     semantic_anchors:
     - claim:L162_terminal_state_transition_preserves_single_outcome
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
@@ -4174,6 +4174,40 @@ functions:
     meaning: Transition x exposes terminal result record t through terminal_outcome_publication_gate.
     semantic_anchors:
     - claim:L190_authoritative_terminal_publication_surfaces_are_exhaustive
+  idempotency_key_is_eligible:
+    args:
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols:
+    - idempotency_key
+    meaning: 'Key k is an eligible idempotency_key: the logical edit identity it denotes
+      is a normal-retry-eligible identity within the protocol''s eligibility boundary.'
+    semantic_anchors:
+    - claim:L164_terminal_paths_share_per_key_arbitration
+    - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
+  terminal_decision_publish_or_commit_path:
+    args:
+    - ProtocolTransition
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols:
+    - idempotency_key
+    meaning: Path x can publish or commit a terminal decision for the exact full idempotency
+      identity k, whether or not x itself creates the acceptance or rejection.
+    semantic_anchors:
+    - claim:L164_terminal_paths_share_per_key_arbitration
+    - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
+  recovery_reconstructs_outcomes_solely_from_snapshot_and_history:
+    args:
+    - ProtocolTransition
+    returns: Bool
+    catalog_symbols:
+    - terminal_result
+    meaning: Recovery transition x derives terminal outcomes solely by reconstructing
+      them from snapshot plus accepted history, without carrying the authoritative
+      terminal outcome store forward.
+    semantic_anchors:
+    - claim:L170_recovery_preserves_terminal_outcomes
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -6894,11 +6928,6 @@ claims:
                   - var: s
                   - var: k
             - and:
-              - call:
-                  fn: at_most_one_terminal_outcome_for_key
-                  args:
-                  - var: s
-                  - var: k
               - not:
                   and:
                   - call:
@@ -6916,6 +6945,32 @@ claims:
                   args:
                   - var: s
                   - var: k
+      - forall:
+          vars:
+            s: AuthoritativeState
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_authoritative_state
+                  args:
+                  - var: s
+              - call:
+                  fn: terminal_key_within_retry_horizon
+                  args:
+                  - var: s
+                  - var: k
+              - call:
+                  fn: state_contains_terminal_outcome
+                  args:
+                  - var: s
+                  - var: k
+            - call:
+                fn: at_most_one_terminal_outcome_for_key
+                args:
+                - var: s
+                - var: k
       - forall:
           vars:
             x: ProtocolTransition
@@ -6986,22 +7041,49 @@ claims:
     capability: relational
     contracts: []
     formula:
-      forall:
-        vars:
-          x: ProtocolTransition
-          k: IdempotencyKey
-        body:
-          implies:
-          - call:
-              fn: acceptance_or_rejection_path_for_key
-              args:
-              - var: x
-              - var: k
-          - call:
-              fn: terminal_path_passes_shared_arbitration_gate
-              args:
-              - var: x
-              - var: k
+      and:
+      - forall:
+          vars:
+            x: ProtocolTransition
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: acceptance_or_rejection_path_for_key
+                  args:
+                  - var: x
+                  - var: k
+              - call:
+                  fn: idempotency_key_is_eligible
+                  args:
+                  - var: k
+            - call:
+                fn: terminal_path_passes_shared_arbitration_gate
+                args:
+                - var: x
+                - var: k
+      - forall:
+          vars:
+            x: ProtocolTransition
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: terminal_decision_publish_or_commit_path
+                  args:
+                  - var: x
+                  - var: k
+              - call:
+                  fn: idempotency_key_is_eligible
+                  args:
+                  - var: k
+            - call:
+                fn: terminal_path_passes_shared_arbitration_gate
+                args:
+                - var: x
+                - var: k
   L169_persistence_lifecycle_preserves_terminal_outcomes:
     capability: relational
     contracts: []
@@ -7117,6 +7199,34 @@ claims:
                 args:
                 - var: s
                 - var: k
+      - forall:
+          vars:
+            x: ProtocolTransition
+            s: AuthoritativeState
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: recovery_transition_at
+                  args:
+                  - var: x
+                  - var: s
+              - call:
+                  fn: terminal_key_is_normal_retry_eligible
+                  args:
+                  - var: s
+                  - var: k
+              - call:
+                  fn: state_contains_terminal_outcome
+                  args:
+                  - var: s
+                  - var: k
+            - not:
+                call:
+                  fn: recovery_reconstructs_outcomes_solely_from_snapshot_and_history
+                  args:
+                  - var: x
   L171_terminal_outcome_representation_migration_preserves_mapping:
     capability: relational
     contracts: []
@@ -7155,23 +7265,29 @@ claims:
           body:
             implies:
             - and:
-              - call:
-                  fn: representation_migration_transition_at
-                  args:
-                  - var: x
-                  - var: s
-              - call:
-                  fn: terminal_result_in_state_for_key
-                  args:
-                  - var: t
-                  - var: s
-                  - var: k
-              - eq:
+              - and:
                 - call:
-                    fn: terminal_result_idempotency_key
+                    fn: representation_migration_transition_at
+                    args:
+                    - var: x
+                    - var: s
+                - call:
+                    fn: terminal_result_in_state_for_key
                     args:
                     - var: t
-                - var: k
+                    - var: s
+                    - var: k
+                - eq:
+                  - call:
+                      fn: terminal_result_idempotency_key
+                      args:
+                      - var: t
+                  - var: k
+              - call:
+                  fn: terminal_key_is_normal_retry_eligible
+                  args:
+                  - var: s
+                  - var: k
             - call:
                 fn: migration_preserves_terminal_result_record
                 args:
@@ -7249,13 +7365,19 @@ claims:
           body:
             implies:
             - and:
+              - and:
+                - call:
+                    fn: representation_migration_transition_at
+                    args:
+                    - var: x
+                    - var: s
+                - call:
+                    fn: terminal_key_is_normal_retry_eligible
+                    args:
+                    - var: s
+                    - var: k
               - call:
-                  fn: representation_migration_transition_at
-                  args:
-                  - var: x
-                  - var: s
-              - call:
-                  fn: terminal_key_is_normal_retry_eligible
+                  fn: state_contains_terminal_outcome
                   args:
                   - var: s
                   - var: k
@@ -8250,11 +8372,6 @@ claims:
                   - var: s
                   - var: k
             - and:
-              - call:
-                  fn: at_most_one_terminal_outcome_for_key
-                  args:
-                  - var: s
-                  - var: k
               - not:
                   and:
                   - call:
@@ -8272,6 +8389,32 @@ claims:
                   args:
                   - var: s
                   - var: k
+      - forall:
+          vars:
+            s: AuthoritativeState
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_authoritative_state
+                  args:
+                  - var: s
+              - call:
+                  fn: terminal_key_within_retry_horizon
+                  args:
+                  - var: s
+                  - var: k
+              - call:
+                  fn: state_contains_terminal_outcome
+                  args:
+                  - var: s
+                  - var: k
+            - call:
+                fn: at_most_one_terminal_outcome_for_key
+                args:
+                - var: s
+                - var: k
       - forall:
           vars:
             x: ProtocolTransition
@@ -8344,11 +8487,37 @@ claims:
             k: IdempotencyKey
           body:
             implies:
+            - and:
+              - call:
+                  fn: acceptance_or_rejection_path_for_key
+                  args:
+                  - var: x
+                  - var: k
+              - call:
+                  fn: idempotency_key_is_eligible
+                  args:
+                  - var: k
             - call:
-                fn: acceptance_or_rejection_path_for_key
+                fn: terminal_path_passes_shared_arbitration_gate
                 args:
                 - var: x
                 - var: k
+      - forall:
+          vars:
+            x: ProtocolTransition
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: terminal_decision_publish_or_commit_path
+                  args:
+                  - var: x
+                  - var: k
+              - call:
+                  fn: idempotency_key_is_eligible
+                  args:
+                  - var: k
             - call:
                 fn: terminal_path_passes_shared_arbitration_gate
                 args:
