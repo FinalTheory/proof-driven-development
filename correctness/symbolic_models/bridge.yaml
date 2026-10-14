@@ -2754,10 +2754,9 @@ functions:
     returns: Bool
     catalog_symbols:
     - terminal_result
-    meaning: a is the canonical accepted-change creation for one full idempotency identity whose terminal_result becomes ACCEPTED
-      under retry_eligible_acceptance or another supported acceptance path that creates the terminal_result in the same transaction
-      boundary as a. This classifier names the qualifying creation event only; it does not constrain which implementation path
-      produced it or which transaction mechanism commits the pair.
+    meaning: a is the canonical accepted-change creation for one eligible full idempotency identity whose terminal_result becomes
+      ACCEPTED. This classifier names the qualifying creation event only; it does not constrain which implementation path produced
+      it, which acceptance execution supplied the matching terminal result, or which transaction mechanism commits the pair.
     semantic_anchors:
     - claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance
   accepted_terminal_matching_creation_pair:
@@ -4581,16 +4580,27 @@ claims:
             a: CanonicalAcceptance
           body:
             implies:
-            - and:
-              - call:
-                  fn: accepted_terminal_created_for_eligible_identity
-                  args:
-                  - var: t
-              - call:
-                  fn: accepted_terminal_matching_creation_pair
-                  args:
-                  - var: t
-                  - var: a
+            - or:
+              - and:
+                - call:
+                    fn: accepted_terminal_created_for_eligible_identity
+                    args:
+                    - var: t
+                - call:
+                    fn: accepted_terminal_matching_creation_pair
+                    args:
+                    - var: t
+                    - var: a
+              - and:
+                - call:
+                    fn: accepted_terminal_canonical_creation_for_eligible_identity
+                    args:
+                    - var: a
+                - call:
+                    fn: accepted_terminal_matching_creation_pair
+                    args:
+                    - var: t
+                    - var: a
             - and:
               - call:
                   fn: accepted_terminal_matching_creation_identity_matches
