@@ -2886,7 +2886,8 @@ functions:
     catalog_symbols:
     - canonical_accepted_change
     meaning: a is the matching canonical_accepted_change record created by the acceptance execution referenced by the producer
-      binding under audit.
+      binding under audit; as that matching record in authoritative accepted history, a stands committed by the acceptance
+      execution that created it.
     semantic_anchors:
     - claim:L197_accepted_terminal_result_captures_same_acceptance_producer
     - claim:C46_accepted_terminal_result_preserves_acceptance_provenance
@@ -4492,10 +4493,6 @@ claims:
                       fn: accepted_terminal_matching_canonical_acceptance
                       args:
                       - var: a
-                  - call:
-                      fn: accepted_terminal_matching_acceptance_committed
-                      args:
-                      - var: a
   C47_accepted_terminal_result_provenance_survives_lifecycle:
     contracts: []
     formula:
@@ -4645,10 +4642,6 @@ claims:
                   - var: a
               - call:
                   fn: accepted_terminal_matching_canonical_acceptance
-                  args:
-                  - var: a
-              - call:
-                  fn: accepted_terminal_matching_acceptance_committed
                   args:
                   - var: a
   L199_accepted_terminal_provenance_survives_persistence_and_restore:
