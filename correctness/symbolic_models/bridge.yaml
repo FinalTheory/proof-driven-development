@@ -4717,6 +4717,17 @@ functions:
       overlay and no previously removed pending-resolution state.
     semantic_anchors:
     - claim:L109_resync_publication_is_atomic_and_monotonic
+  committed_acceptance_remains_in_recoverable_authoritative_history:
+    args:
+    - CanonicalAcceptance
+    catalog_symbols: []
+    meaning: Canonical acceptance a remains present in the recoverable authoritative
+      logical accepted history after any covered server-process crash/restart or ownership
+      move. Such a failure may destroy process-local state or replace the serving
+      owner, but it does not remove a from that recoverable authoritative history.
+    returns: Bool
+    semantic_anchors:
+    - claim:L146_ack_justifying_acceptance_survives_process_and_owner_failures
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -10559,39 +10570,65 @@ claims:
     capability: relational
     contracts: []
     formula:
-      forall:
-        vars:
-          x: SuccessAck
-          a: CanonicalAcceptance
-          r: RecoveryAttempt
-        body:
-          implies:
-          - and:
+      and:
+      - forall:
+          body:
+            implies:
             - and:
               - call:
+                  args:
+                  - var: x
                   fn: success_ack_exposed
+              - call:
                   args:
                   - var: x
-              - call:
+                  - var: a
                   fn: success_ack_for_acceptance
-                  args:
-                  - var: x
-                  - var: a
               - call:
-                  fn: canonical_acceptance_committed_before_success_ack
                   args:
                   - var: a
                   - var: x
+                  fn: canonical_acceptance_committed_before_success_ack
             - call:
-                fn: owner_recovery_completion_and_resumption_after_success_ack
+                args:
+                - var: a
+                fn: committed_acceptance_remains_in_recoverable_authoritative_history
+          vars:
+            a: CanonicalAcceptance
+            x: SuccessAck
+      - forall:
+          body:
+            implies:
+            - and:
+              - and:
+                - call:
+                    args:
+                    - var: x
+                    fn: success_ack_exposed
+                - call:
+                    args:
+                    - var: x
+                    - var: a
+                    fn: success_ack_for_acceptance
+                - call:
+                    args:
+                    - var: a
+                    - var: x
+                    fn: canonical_acceptance_committed_before_success_ack
+              - call:
+                  args:
+                  - var: r
+                  - var: x
+                  fn: owner_recovery_completion_and_resumption_after_success_ack
+            - call:
                 args:
                 - var: r
-                - var: x
-          - call:
-              fn: completed_recovery_covers_acceptance
-              args:
-              - var: r
-              - var: a
+                - var: a
+                fn: completed_recovery_covers_acceptance
+          vars:
+            a: CanonicalAcceptance
+            r: RecoveryAttempt
+            x: SuccessAck
   L143_acked_edit_completed_recovery_matches_canonical_replay:
     capability: relational
     contracts: []
