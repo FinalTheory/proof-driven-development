@@ -695,13 +695,11 @@ refinement:
       blocked_by: []
       signature: cf5fcdf17873511be176e7d0159696fe1273058dc9e62decb7d8e641bff61cd1
     C43_terminal_outcome_entry_state_is_coherent:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 080dee1c1dcbf57d1468295faca07ee3049611a49d3fceedccf23e91ea8c0eea
     C44_terminal_outcome_entry_matches_canonical_acceptance:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 5b82342e0199d21c8893662a6bca3a30d88d840baece99a9f759f24f0587ab1d
     L186_terminal_outcome_initialization_matches_canonical_acceptance:
       status: stable
       blocked_by: []
@@ -715,17 +713,15 @@ refinement:
       blocked_by: []
       signature: 94c4333db3e03bd6465ede395e73a1539cdefbb6c89ce3c56fdbce3a7c5b98e3
     C45_terminal_outcome_publication_matches_canonical_acceptance:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 89c16cdc5aa2c986d8d3772b2284850c3c92c8463b878c641d13944ed74906eb
     L190_authoritative_terminal_publication_surfaces_are_exhaustive:
       status: stable
       blocked_by: []
       signature: 25706ebb0f38f1c048b62184ef34380abdc07a80661db2fa04e42d26680ab007
     L192_terminal_publication_preserves_store_identity_provenance:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 6bb7398d5f2b201465c8142e0119bb50cec81ca724e5af43f5a5e27eaa550231
     L195_rejected_terminal_publication_excludes_canonical_acceptance:
       status: stable
       blocked_by: []
@@ -4202,10 +4198,15 @@ claims:
             reject duplicate/conflicting entry state.
     kind: leaf
   C43_terminal_outcome_entry_state_is_coherent:
-    statement: At every authoritative initialization, restoration, import, or publication boundary
-      that makes a normal_retry_eligible_identity observable, entry state contains at most one
-      authoritative terminal_result, and any such ACCEPTED/REJECTED result is coherent with
-      canonical accepted history for the same full identity.
+    statement: "At every authoritative initialization, restoration, import, or publication boundary that
+      makes a normal_retry_eligible_identity observable, entry state contains at most one authoritative
+      terminal_result, and any such ACCEPTED/REJECTED result is coherent with canonical accepted history
+      for the same full identity. Coherence with canonical accepted history means: for an ACCEPTED result,
+      the matching canonical accepted change is present in canonical accepted history for the same full
+      identity — at a publication boundary, that is the change created together with the result by the
+      same acceptance execution and committed atomically with it in a single transaction, the result's
+      matching creation pair — and for a REJECTED result, no canonical acceptance for the same full identity
+      is present."
     source_refs:
       - accepted_change_log
       - storage_selection
@@ -4223,7 +4224,13 @@ claims:
       that makes a normal_retry_eligible_identity observable to the idempotency protocol, if the
       single terminal_result is ACCEPTED then the matching canonical accepted change is co-present,
       and if the single terminal_result is REJECTED then no canonical acceptance for that same full
-      identity is present.
+      identity is present. At an initialization, restoration, or import boundary, co-presence means
+      the matching canonical accepted change is present in canonical accepted history for the same
+      full identity; at a publication boundary, the matching canonical accepted change is the one
+      created together with the terminal_result by the same acceptance execution and committed
+      atomically with it in a single transaction — the result's matching creation pair, present in
+      canonical accepted history — because publication exposes the result together with the change
+      that produced it.
     source_refs:
       - accepted_change_log
       - storage_selection
@@ -4292,8 +4299,11 @@ claims:
   C45_terminal_outcome_publication_matches_canonical_acceptance:
     statement: At every authoritative publication boundary that makes a
       normal_retry_eligible_identity observable, an ACCEPTED terminal_result is published only with
-      the matching canonical accepted change and a REJECTED terminal_result is published only when
-      no canonical acceptance for the same full identity is present.
+      the matching canonical accepted change — the canonical accepted change created together with
+      that terminal_result by the same acceptance execution and committed atomically with it in a
+      single transaction, so that the change present in canonical accepted history for that result
+      is its matching creation pair — and a REJECTED terminal_result is published only when no
+      canonical acceptance for the same full identity is present.
     source_refs:
       - accepted_change_log
       - storage_selection
@@ -4329,11 +4339,15 @@ claims:
             attempt-local bypass.
     kind: leaf
   L192_terminal_publication_preserves_store_identity_provenance:
-    statement: Every ACCEPTED or REJECTED terminal result exposed through
-      terminal_outcome_publication_gate exactly reproduces the authoritative terminal_result read
-      from durable_terminal_outcome_store for the same full (document_id, client_change_id)
-      identity; publication cannot substitute another key, another stored value, or an attempt-local
-      result.
+    statement: 'Every ACCEPTED or REJECTED terminal result exposed through terminal_outcome_publication_gate
+      exactly reproduces the authoritative terminal_result read from durable_terminal_outcome_store for
+      the same full (document_id, client_change_id) identity; publication cannot substitute another key,
+      another stored value, or an attempt-local result. The authoritative terminal_result in durable_terminal_outcome_store
+      for an identity is the creation record of the single acceptance execution that produced it: an authoritative
+      ACCEPTED terminal_result is present in the store only as the record created for its eligible full
+      identity by the same acceptance execution whose single transaction atomically commits both that
+      result and its matching canonical accepted change, so a published ACCEPTED result is that authoritative
+      creation record.'
     source_refs:
       - accepted_change_log
       - storage_selection
