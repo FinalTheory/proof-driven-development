@@ -4948,3 +4948,50 @@ records:
           key identity, overlap and absent-state preconditions, and cardinality match the original, with no added or omitted
           requirement.'
         differences: []
+  claim:L14_accepted_idempotency_identity_survives_lifecycle:
+    kind: claim
+    subject_id: L14_accepted_idempotency_identity_survives_lifecycle
+    subject_signature: 741a276b761214d9ecabad71a923d5bd3c1c81796edade95ba0e658f29615f28
+    roundtrip:
+      subject_signature: 741a276b761214d9ecabad71a923d5bd3c1c81796edade95ba0e658f29615f28
+      status: TRANSLATED
+      natural_language: Both of the following hold. (1) For every authoritative state s and every idempotency key k, if s
+        is reachable under the canonical server protocol and failure model, and k is within the 30-day normal retry/reconnect
+        eligibility horizon in s, and an acceptance event creating a canonical accepted change for k has occurred at or before
+        s, then s contains sufficient non-reusable evidence that k has already been accepted, so while that evidence stands
+        k is distinguished as already accepted and cannot be reused for a new acceptance. (2) For every protocol transitions
+        t1 and t2 and every idempotency key k, if t1 is an acceptance-capable protocol transition whose attempted or created
+        acceptance is for k, and t1 creates a new acceptance event for its idempotency key, and t2 is an acceptance-capable
+        protocol transition whose attempted or created acceptance is for k, and the authoritative accepted-key gate decision
+        of t1 is completed before the gate decision of t2 begins, and t2's accepted-key gate decision occurs while t2's idempotency
+        key remains within the 30-day normal retry/reconnect eligibility horizon, then at t2's authoritative accepted-key
+        gate decision, authoritative state records t2's idempotency key as already accepted.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 741a276b761214d9ecabad71a923d5bd3c1c81796edade95ba0e658f29615f28
+        verdict: EQUIVALENT
+        reason: 'The first conjunct requires preserved accepted evidence in every reachable authoritative state where a prior
+          acceptance has occurred and the key remains within the retry/reconnect horizon, covering recovery, snapshot, compaction,
+          and cleanup states without imposing any post-expiry duty. The second conjunct captures the gate-read/atomicity consequence:
+          any same-key transition whose gate decision begins after a creating transition''s decision completes, and which
+          decides within the horizon, observes the key as already accepted. No source requirement is omitted or added.'
+        differences: []
+      strengthening:
+        subject_signature: 741a276b761214d9ecabad71a923d5bd3c1c81796edade95ba0e658f29615f28
+        verdict: EQUIVALENT
+        reason: 'Both conjuncts match the source: evidence is required in every reachable authoritative state within the retry
+          horizon after an acceptance event for the same key, with no requirement after expiry, and a later same-key transition
+          whose gate decision begins after a creating transition''s decision completed and which is within the horizon is
+          required to observe the key as already accepted, capturing the gate-reads-state and atomic-completion bridge without
+          added scope or cardinality.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 741a276b761214d9ecabad71a923d5bd3c1c81796edade95ba0e658f29615f28
+        verdict: EQUIVALENT
+        reason: The rendering preserves preservation of sufficient non-reusable accepted evidence in every later reachable
+          state within the 30-day horizon, the gate's observation of that authoritative-state evidence for the same key, and
+          the atomic creating-gate ordering via the completed-before-begin condition; the horizon expiry limit is encoded
+          by the preconditions, with no guarantee added or omitted.
+        differences: []
