@@ -3112,12 +3112,20 @@ functions:
     returns: Bool
     catalog_symbols:
     - terminal_result
-    meaning: before->after is one authoritative in-horizon ACCEPTED terminal-result representation transition that preserves the same already-linearized logical terminal outcome and full (document_id, client_change_id) identity. Because the logical terminal outcome is preserved rather than created, replaced, or reclassified, this is non-terminal in the lifecycle sense used by L211; non-terminal is not an additional applicability filter. This predicate does not classify the transition into a concrete architecture lifecycle category and asserts no producer-binding preservation.
+    meaning: before->after is one authoritative in-horizon ACCEPTED terminal-result
+      representation transition that preserves the same already-linearized logical terminal
+      outcome and full (document_id, client_change_id) identity. Because the logical
+      terminal outcome is preserved rather than created, replaced, or reclassified,
+      this is non-terminal in the lifecycle sense used by L211; non-terminal is not
+      an additional applicability filter. This predicate does not classify the transition
+      into a concrete architecture lifecycle category and asserts no producer-binding
+      preservation.
     semantic_anchors:
     - claim:L211_accepted_terminal_result_origin_is_authoritative
     - claim:L212_accepted_terminal_lifecycle_categories_are_exhaustive
     - claim:C47_accepted_terminal_result_provenance_survives_lifecycle
     - claim:C46_accepted_terminal_result_preserves_acceptance_provenance
+    - contract:accepted_terminal_result_binding
   accepted_terminal_matching_acceptance_committed:
     args:
     - CanonicalAcceptance
@@ -6802,6 +6810,31 @@ contracts:
                               fn: acceptance_key
                               args:
                               - var: a
+                        - or:
+                          - eq:
+                            - var: t0
+                            - var: t
+                          - transitive_closure:
+                              fn: accepted_terminal_lifecycle_edge
+                              from:
+                                var: t0
+                              to:
+                                var: t
+                  - not:
+                      exists:
+                        vars:
+                          a2: CanonicalAcceptance
+                        body:
+                          and:
+                          - not:
+                              eq:
+                              - var: a2
+                              - var: a
+                          - call:
+                              fn: terminal_result_bound_to_acceptance_execution
+                              args:
+                              - var: t
+                              - var: a2
       - forall:
           vars:
             x: ProtocolTransition
@@ -6876,6 +6909,31 @@ contracts:
                               fn: acceptance_key
                               args:
                               - var: a
+                        - or:
+                          - eq:
+                            - var: t0
+                            - var: before
+                          - transitive_closure:
+                              fn: accepted_terminal_lifecycle_edge
+                              from:
+                                var: t0
+                              to:
+                                var: before
+                  - not:
+                      exists:
+                        vars:
+                          a2: CanonicalAcceptance
+                        body:
+                          and:
+                          - not:
+                              eq:
+                              - var: a2
+                              - var: a
+                          - call:
+                              fn: terminal_result_bound_to_acceptance_execution
+                              args:
+                              - var: after
+                              - var: a2
   acked_edit_failover_survival:
     class: safety_contract
     capability: relational
