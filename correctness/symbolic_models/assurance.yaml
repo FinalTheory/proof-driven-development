@@ -5863,54 +5863,57 @@ records:
   claim:L114_hot_path_accepted_evidence_requires_committed_acceptance:
     kind: claim
     subject_id: L114_hot_path_accepted_evidence_requires_committed_acceptance
-    subject_signature: 3cda82e1e101c39786ff78cfad9132d66871ead7abfe967abc2bd6726e5f45f6
+    subject_signature: 497f22ae314a77211b9ac6d1d8938323ffafd6d58d249d0798d8644a794254e4
     roundtrip:
-      subject_signature: 3cda82e1e101c39786ff78cfad9132d66871ead7abfe967abc2bd6726e5f45f6
+      subject_signature: 497f22ae314a77211b9ac6d1d8938323ffafd6d58d249d0798d8644a794254e4
       status: TRANSLATED
-      natural_language: 'Both of the following hold. (1) For every accepted evidence e, if e is authoritative accepted-idempotency
+      natural_language: 'All three of the following hold. (1) For every accepted evidence e, if e is authoritative accepted-idempotency
         evidence (authoritative durable state counts e as establishing that the full identity e carries is already accepted)
         and e is acquired on the normal acceptance path (the acceptance flow by which authoritative durable state first gains
         already-accepted evidence for an identity, as opposed to a lifecycle transformation or a runtime reconstruction),
-        then there exists a canonical acceptance a such that: a is a committed canonical accepted-change record in authoritative
+        then there exists a canonical acceptance a such that: a is committed as a canonical accepted-change record in authoritative
         accepted history; the document_id component of the full identity carried by e equals the document_id component of
         the full identity carried by a; the client_change_id component of the full identity carried by e equals the client_change_id
-        component of the full identity carried by a; and e is derived from and corresponds to a, i.e. a is the acceptance
+        component of the full identity carried by a; and e is derived from and corresponds to a, i.e., a is the acceptance
         from which e''s already-accepted evidence is established. (2) For every accepted evidence e, if e is authoritative
         accepted-idempotency evidence, e is acquired on the normal acceptance path, and a separate hot-path accepted-key record
         or index, distinct from the committed accepted row / unique identity itself, is the accepted-evidence mechanism for
-        e''s identity, then there exists a canonical acceptance a such that: a is a committed canonical accepted-change record
-        in authoritative accepted history; the document_id component of the full identity carried by e equals the document_id
-        component of the full identity carried by a; the client_change_id component of the full identity carried by e equals
-        the client_change_id component of the full identity carried by a; e is derived from and corresponds to a, i.e. a is
-        the acceptance from which e''s already-accepted evidence is established; and the separate hot-path accepted-key record
-        for e and a commit or abort together in the same acceptance transaction.'
+        e''s identity, then there exists a canonical acceptance a such that: a is committed as a canonical accepted-change
+        record in authoritative accepted history; the document_id component of e equals the document_id component of a; the
+        client_change_id component of e equals the client_change_id component of a; e is derived from and corresponds to a;
+        and the separate hot-path accepted-key record for e and a commit or abort together in the same acceptance transaction.
+        (3) For every accepted evidence e, if e is authoritative accepted-idempotency evidence and e is acquired on the normal
+        acceptance path, then e has no provisional provenance: no reservation, in-progress arbitration, pre-commit ownership,
+        aborted, timed-out, or cancelled attempt, or other provisional state is a provenance source of e, and e''s accepted-evidence
+        provenance is the acceptance transaction of its matching committed canonical acceptance.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 3cda82e1e101c39786ff78cfad9132d66871ead7abfe967abc2bd6726e5f45f6
+        subject_signature: 497f22ae314a77211b9ac6d1d8938323ffafd6d58d249d0798d8644a794254e4
         verdict: EQUIVALENT
-        reason: The formula scopes to authoritative accepted evidence acquired on the normal acceptance path and requires
-          a committed canonical acceptance matching both document_id and client_change_id from which the evidence derives,
-          covering the provisional and aborted-attempt exclusions by contraposition; the second conjunct additionally requires,
-          when a separate hot-path record exists, that same matching committed acceptance to co-commit or co-abort with the
-          record in the same acceptance transaction.
+        reason: The formula preserves the normal-path guard, requires a committed canonical acceptance matching both document_id
+          and client_change_id with evidence deriving from it, conditionally requires same-transaction co-commit/abort when
+          a separate hot-path record exists, and forbids provisional provenance including reservation, arbitration, pre-commit,
+          aborted, timed-out, and cancelled sources, with no material strengthening or weakening.
         differences: []
       strengthening:
-        subject_signature: 3cda82e1e101c39786ff78cfad9132d66871ead7abfe967abc2bd6726e5f45f6
+        subject_signature: 497f22ae314a77211b9ac6d1d8938323ffafd6d58d249d0798d8644a794254e4
         verdict: EQUIVALENT
-        reason: The formula correctly scopes to authoritative already-accepted evidence acquired on the normal acceptance
-          path, requires a committed canonical acceptance matching both document_id and client_change_id from which the evidence
-          derives, thereby excluding provisional or uncommitted attempts, and additionally requires same-transaction commit-or-abort
-          co-commitment exactly when a separate hot-path record is the evidence mechanism, without adding or omitting requirements.
+        reason: 'The formula''s three conjuncts, all scoped to authoritative already-accepted evidence acquired on the normal
+          acceptance path, faithfully encode the source: existence of a committed canonical acceptance matching on both document_id
+          and client_change_id from which the evidence derives; co-commitment in the same acceptance transaction when a separate
+          hot-path record exists; and exclusion of reservation, arbitration, pre-commit ownership, aborted, timed-out, cancelled,
+          or other provisional provenance. No extra uniqueness, scope, or identity requirement is added and no source condition
+          is omitted.'
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 3cda82e1e101c39786ff78cfad9132d66871ead7abfe967abc2bd6726e5f45f6
+        subject_signature: 497f22ae314a77211b9ac6d1d8938323ffafd6d58d249d0798d8644a794254e4
         verdict: EQUIVALENT
-        reason: The rendering preserves the normal-path only-if-committed-acceptance requirement with exact (document_id,
-          client_change_id) matching and provenance from that committed acceptance, which entails the exclusion of provisional
-          and aborted/timed-out/cancelled attempts lacking a committed acceptance, and clause (2) preserves same-transaction
-          commit-or-abort atomicity for a separate hot-path accepted-key record or index. No requirement is omitted or added.
+        reason: The rendering preserves the normal-path precondition, the exact (document_id, client_change_id) identity match,
+          the necessity of a matching committed canonical acceptance, the same-transaction commit/abort requirement for a
+          separate hot-path record, and the exclusion of reservation, in-progress, pre-commit, aborted, timed-out, cancelled,
+          or other provisional provenance. It adds no stronger requirement and omits none.
         differences: []
   claim:L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance:
     kind: claim
