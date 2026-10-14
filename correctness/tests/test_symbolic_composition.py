@@ -628,14 +628,15 @@ class SymbolicCompositionTests(unittest.TestCase):
         self.assertEqual(rc, 0)
         self.assertIn(f"{C12_TARGET}  [MACHINE-CHECKED]", rendered)
         self.assertIn(f"{C14_TARGET}  [MACHINE-CHECKED]", rendered)
+        self.assertIn("C13_idempotency_key_is_temporally_unique  [MACHINE-CHECKED]", rendered)
         self.assertIn("SMT counterexample query:", rendered)
         self.assertIn("Solver: UNSAT → ENTAILED", rendered)
         self.assertIn("Mutation sensitivity:", rendered)
-        self.assertNotIn("C13_idempotency_key_is_temporally_unique", rendered)
+        self.assertNotIn("C10_catchup_represents_exact_missing_suffix", rendered)
 
     def test_symbolic_report_rejects_non_machine_checked_node(self):
         args = SimpleNamespace(
-            node=["C13_idempotency_key_is_temporally_unique"],
+            node=["C10_catchup_represents_exact_missing_suffix"],
             model=str(BRIDGE_PATH),
             assurance=str(ASSURANCE_PATH),
             format="text",
