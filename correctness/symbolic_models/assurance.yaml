@@ -6700,3 +6700,49 @@ records:
           consequence of the per-state invariant, and no quantifier, scope, cardinality, or exclusion boundary is weakened
           or strengthened.'
         differences: []
+  claim:L33_committed_append_preserves_existing_revision_prefix:
+    kind: claim
+    subject_id: L33_committed_append_preserves_existing_revision_prefix
+    subject_signature: 32c51928ed795c35c76a5b5424c6c421d24d719242e3e8b3c208d36466601033
+    roundtrip:
+      subject_signature: 32c51928ed795c35c76a5b5424c6c421d24d719242e3e8b3c208d36466601033
+      status: TRANSLATED
+      natural_language: 'For every authoritative state before, every authoritative state after, every document d, and every
+        revision r, if both of the following hold: (1) after is the immediate successor of before under one committed authoritative
+        protocol transition, meaning that transition''s full authoritative effect separates the two states and no intermediate
+        authoritative state exists between them, where aborted, rolled-back, or never-committed work creates no such step
+        and no successor authoritative state; and (2) that authoritative step from before to after is a committed canonical
+        accepted-change append for document d whose one new canonical accepted change is at revision r, meaning the step''s
+        transition commits exactly that one canonical accepted change for d and no other accepted-history change for d; then
+        across the authoritative step from before to after, document d''s logical accepted history in after equals d''s logical
+        accepted history in before followed by exactly one new canonical accepted change at revision r, meaning every revision
+        accepted in before remains represented in after by the same logical accepted change, no pre-existing revision''s change
+        is rewritten, replaced, or removed, and no other revision is added, where the comparison is between logical histories
+        so semantics-preserving compaction does not count as a change.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 32c51928ed795c35c76a5b5424c6c421d24d719242e3e8b3c208d36466601033
+        verdict: EQUIVALENT
+        reason: The antecedent exactly captures a committed canonical accepted-change append at revision r as a single authoritative
+          step, and the consequent predicate exactly encodes post-state logical history equal to pre-state history followed
+          by exactly one new canonical change at r, with every pre-existing revision represented by the same logical change
+          and no rewrite, replacement, removal, or additional revision.
+        differences: []
+      strengthening:
+        subject_signature: 32c51928ed795c35c76a5b5424c6c421d24d719242e3e8b3c208d36466601033
+        verdict: EQUIVALENT
+        reason: The universal implication over before/after/d/r guarded by an authoritative step that commits exactly one
+          canonical accepted-change append at r exactly matches the source precondition, and the consequent predicate restates
+          the post-history equals pre-history plus exactly one new change at r, with every pre-existing revision preserved
+          unchanged and no other revision added, on the logical-history level.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 32c51928ed795c35c76a5b5424c6c421d24d719242e3e8b3c208d36466601033
+        verdict: EQUIVALENT
+        reason: The rendering preserves the committed-append scope, the exactly-one new canonical accepted change at revision
+          r, and the requirement that every pre-existing revision remain represented by the same logical accepted change without
+          rewrite, replacement, or other alteration; its explicit state-transition and logical-history wording does not add
+          or remove a guarantee.
+        differences: []
