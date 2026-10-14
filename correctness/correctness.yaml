@@ -1232,7 +1232,10 @@ claims:
       require this ordinary retry/reconnect classification evidence to remain available after the identity
       has expired from that horizon. The accepted-key gate makes its decision by reading the authoritative
       state, so the evidence preserved in that state is exactly what a later transition's gate decision
-      observes as the key already being accepted.
+      observes as the key already being accepted. A creating transition produces its acceptance as the
+      outcome of its gate decision, complete when that decision completes, because the gate's decision
+      and its create are a single atomic gate operation; any gate decision that begins after a creating
+      transition's gate decision has completed is therefore later than that acceptance event itself.
     verification:
       verifiers:
         - kind: state_machine
