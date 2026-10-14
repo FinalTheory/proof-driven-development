@@ -4575,6 +4575,11 @@ claims:
                   args:
                   - var: t
                   - var: a
+              - call:
+                  fn: accepted_terminal_binding_identity_matches
+                  args:
+                  - var: t
+                  - var: a
             - call:
                 fn: accepted_terminal_matching_acceptance_committed
                 args:

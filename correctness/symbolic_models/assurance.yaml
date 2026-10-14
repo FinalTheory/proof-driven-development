@@ -4123,113 +4123,105 @@ records:
   claim:L197_accepted_terminal_result_captures_same_acceptance_producer:
     kind: claim
     subject_id: L197_accepted_terminal_result_captures_same_acceptance_producer
-    subject_signature: a0e78710193c4577ef0eb6d9f1681008b0aa07dc5b7eaf519fff12bb3d118a33
+    subject_signature: 312289726547fa815ff47098797c3fa4870ebdc3cb281b8c791a46c0d093de3f
     roundtrip:
-      subject_signature: a0e78710193c4577ef0eb6d9f1681008b0aa07dc5b7eaf519fff12bb3d118a33
+      subject_signature: 312289726547fa815ff47098797c3fa4870ebdc3cb281b8c791a46c0d093de3f
       status: TRANSLATED
-      natural_language: 'Both of the following hold. First, for every TerminalResultRecord t, if t is an authoritative ACCEPTED
-        terminal result at the acceptance-linearization creation boundary for one full identity and logical terminal outcome,
-        there exists a CanonicalAcceptance a such that t and a are the matching terminal-result creation and canonical accepted-change
-        creation for one logical acceptance. Second, for every TerminalResultRecord t and every CanonicalAcceptance a, if
-        t is such an authoritative origin record and t and a form such a matching creation pair, then all three conditions
-        hold: the canonical result placed into t was produced by the same acceptance execution that produced a for the producer
-        binding under audit, rather than by another request, document, acceptance execution, or a merely extensionally equal
-        substitute; t and a carry the same full (document_id, client_change_id) identity; and a is the matching canonical_accepted_change
-        record created by the acceptance execution referenced by that producer binding. Here a canonical_accepted_change is
-        the server-authoritative representation of an edit after any required OT transformation and the decision to accept
-        it. The existence requirement does not assert uniqueness of a, and the second requirement applies to every matching
-        creation pair satisfying its guard. Origin classification is independent of whether a later representation is classified
-        by L211 and does not assert normal-retry eligibility at the origin or current horizon eligibility of t. The matching
-        creation relation itself identifies only the creation pair. These requirements do not assert transaction atomicity
-        or co-commit, a commit outcome, an implementation-path choice, when binding metadata was materialized, provenance-reachability
-        from an acceptance origin, or preservation through later lifecycle rewrites.'
+      natural_language: 'The conjunction of the following two statements holds. (1) For every TerminalResultRecord t, if t
+        is an authoritative ACCEPTED terminal result at the acceptance-linearization creation boundary for one full identity
+        and one logical terminal outcome — a classification that by itself does not depend on whether a later representation
+        is being classified by L211, does not assert normal-retry eligibility at the origin event or current horizon eligibility
+        of t, and does not itself prove matching-producer provenance, transaction co-commit, or later lifecycle preservation
+        — then there exists a CanonicalAcceptance a such that t and a are the ACCEPTED terminal-result creation and its matching
+        canonical accepted-change creation for one logical acceptance, where that matching-creation-pair relation identifies
+        the matching creation pair only and identity equality, producer provenance, transaction atomicity, commit outcome,
+        and implementation-path choice are separate obligations. And (2) for every TerminalResultRecord t and every CanonicalAcceptance
+        a, if t satisfies that same origin predicate and t and a satisfy that same matching-creation-pair relation, then all
+        three of the following hold: t carries a canonical result produced by the same acceptance execution that produced
+        canonical acceptance a for the producer binding under audit, rather than a result from another request, document,
+        acceptance execution, or merely extensionally equal substitute — applied to any representation of the same logical
+        terminal outcome, this relation classifies that representation by the same test, and this relation alone does not
+        assert that a committed, when binding metadata was materialized, or that t is provenance-reachable from an acceptance
+        origin, those being separate proof obligations; t and a carry the same full (document_id, client_change_id) identity;
+        and a is the matching canonical_accepted_change record created by the acceptance execution referenced by the producer
+        binding under audit.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: a0e78710193c4577ef0eb6d9f1681008b0aa07dc5b7eaf519fff12bb3d118a33
+        subject_signature: 312289726547fa815ff47098797c3fa4870ebdc3cb281b8c791a46c0d093de3f
         verdict: EQUIVALENT
-        reason: Each authoritative ACCEPTED terminal-result creation at acceptance linearization must have a matching canonical
-          accepted-change creation. Every matching pair must share the full (document_id, client_change_id) identity and bind
-          the terminal result to the acceptance execution that produced that accepted change. The binding predicate explicitly
-          excludes substitution from another request, document, or execution, including extensionally equal results. The formula
-          adds no uniqueness, co-commit, retry-eligibility, or later-lifecycle requirement.
+        reason: The formula scopes to authoritative ACCEPTED terminal results at acceptance linearization via the origin predicate,
+          requires a matching canonical accepted-change creation for the same full (document_id, client_change_id) identity,
+          and via terminal_result_bound_to_acceptance_execution requires the result placed in t to come from that same acceptance
+          execution rather than another request, document, execution, or extensionally equal substitute, preserving the source
+          provenance and identity requirements without adding material obligations.
         differences: []
       strengthening:
-        subject_signature: a0e78710193c4577ef0eb6d9f1681008b0aa07dc5b7eaf519fff12bb3d118a33
+        subject_signature: 312289726547fa815ff47098797c3fa4870ebdc3cb281b8c791a46c0d093de3f
         verdict: EQUIVALENT
-        reason: The formula requires a matching canonical acceptance for every authoritative ACCEPTED terminal result created
-          at acceptance linearization, and requires every matching creation pair to share the full document/client-change
-          identity and acceptance-execution provenance. The supplied provenance meaning explicitly excludes results substituted
-          from another request, document, or execution, including extensionally equal substitutes. It adds no uniqueness,
-          transaction atomicity, commit-outcome, or later-lifecycle guarantee.
+        reason: The origin-guarded formula requires a matching creation pair and, for that pair, same-execution producer binding,
+          full (document_id, client_change_id) identity match, and matching canonical acceptance, exactly capturing the source's
+          no-substitution provenance guarantee at acceptance linearization without extending scope, cardinality, or lifecycle.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: a0e78710193c4577ef0eb6d9f1681008b0aa07dc5b7eaf519fff12bb3d118a33
+        subject_signature: 312289726547fa815ff47098797c3fa4870ebdc3cb281b8c791a46c0d093de3f
         verdict: EQUIVALENT
-        reason: The rendering preserves the acceptance-linearization creation boundary, existence of a matching canonical
-          accepted-change creation, full document/client-change identity, and same-execution result provenance, including
-          the prohibition on extensionally equal substitutes. Applying the provenance requirement to every matching creation
-          pair does not impose uniqueness. The explicit exclusions leave unstated lifecycle, atomicity, and implementation
-          guarantees outside the contract without removing any source requirement.
+        reason: The rendering preserves the origin precondition, the same-full-identity requirement, and the provenance requirement
+          that the terminal result be produced by the same acceptance execution as the matching canonical_accepted_change,
+          including exclusion of results from another request, document, or execution and of merely extensionally equal substitutes.
+          Its separate-obligations disclaimers add no commit, eligibility, or lifecycle guarantee beyond the source.
         differences: []
   claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance:
     kind: claim
     subject_id: L163_accepted_terminal_outcome_commits_with_canonical_acceptance
-    subject_signature: f43bad1368e55fcd4e1b7aa7e502091e95790f272b9e9aa4bc4faef74c7cab70
+    subject_signature: 466809d958f49a856826da68e89ba4f5b7e40d445be60ba1077f3c793d5546e2
     roundtrip:
-      subject_signature: f43bad1368e55fcd4e1b7aa7e502091e95790f272b9e9aa4bc4faef74c7cab70
+      subject_signature: 466809d958f49a856826da68e89ba4f5b7e40d445be60ba1077f3c793d5546e2
       status: TRANSLATED
-      natural_language: 'For every t, if t is the authoritative creation of an ACCEPTED terminal_result for one eligible full
-        idempotency identity, then there exists an a such that t and a are the terminal-result creation and the matching canonical
-        accepted-change creation for one logical acceptance. This pairing by itself carries no identity, provenance, atomicity,
-        commit, path, producer, or transaction semantics beyond being that matching pair.
-
-        For every t and a, if t and a form such a pair, then all of the following hold: they have the same full idempotency
-        identity, concretely the same document_id and client_change_id, with same-key semantics only; their matching creations
-        share one authoritative transaction boundary and commit or roll back together, so no reachable post-boundary state
-        contains exactly one side; and a is the matching canonical acceptance committed as the acceptance side of the same
-        authoritative transaction that created the corresponding ACCEPTED terminal outcome. The committed condition adds no
-        path or producer provenance.'
+      natural_language: 'All three of the following hold. (1) For every terminal-result record t, if t is the authoritative
+        creation of an ACCEPTED terminal_result for one eligible full idempotency identity, then there exists a canonical
+        acceptance a such that t and a are the ACCEPTED terminal-result creation and its matching canonical accepted-change
+        creation for one logical acceptance; this matching-pair relation by itself does not assert identity equality, producer
+        provenance, transaction atomicity, commit outcome, or implementation-path choice. (2) For every terminal-result record
+        t and every canonical acceptance a, if either (t is the authoritative creation of an ACCEPTED terminal_result for
+        one eligible full idempotency identity and t and a form that matching creation pair) or (a is the canonical accepted-change
+        creation for one eligible full idempotency identity whose terminal_result becomes ACCEPTED and t and a form that matching
+        creation pair), then both of the following hold: t and a carry the same full idempotency identity, concretely the
+        same (document_id, client_change_id); and the matching ACCEPTED terminal-result creation t and canonical accepted-change
+        creation a share one authoritative transaction boundary and therefore commit or roll back together, so that no reachable
+        authoritative post-boundary state for that pair contains exactly one side, this co-commit relation asserting atomicity
+        only and not producer provenance or a particular named transaction implementation. (3) For every canonical acceptance
+        a, if a is the canonical accepted-change creation for one eligible full idempotency identity whose terminal_result
+        becomes ACCEPTED, then there exists a terminal-result record t such that t and a form the matching creation pair described
+        above.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: f43bad1368e55fcd4e1b7aa7e502091e95790f272b9e9aa4bc4faef74c7cab70
+        subject_signature: 466809d958f49a856826da68e89ba4f5b7e40d445be60ba1077f3c793d5546e2
         verdict: EQUIVALENT
-        reason: 'The formula preserves the canonical obligation for every eligible full idempotency identity that reaches
-          an ACCEPTED terminal result: a matching canonical accepted-change creation must exist, share the same document_id+client_change_id
-          identity, and be created within the same authoritative transaction boundary. Its co-commit clause preserves the
-          required all-or-nothing commit/rollback behavior and excludes reachable post-boundary authoritative states containing
-          only one side. Requiring the matching acceptance to be committed as the acceptance side of that same transaction
-          is already entailed when the ACCEPTED terminal result becomes authoritative under the canonical atomic boundary.
-          The explicit notes that the pair classifier contributes no hidden semantics, same_key contributes only identity,
-          co_commit only atomicity, and committed only the acceptance fact do not weaken or strengthen the invariant.'
+        reason: The formula requires a matching creation pair in both directions for eligible ACCEPTED terminal results and
+          eligible canonical accepted changes, and for any such pair requires full idempotency-identity equality and co-commits,
+          whose meaning is exactly sharing one authoritative transaction boundary, committing or rolling back together, and
+          no reachable post-boundary state containing exactly one side.
         differences: []
       strengthening:
-        subject_signature: f43bad1368e55fcd4e1b7aa7e502091e95790f272b9e9aa4bc4faef74c7cab70
+        subject_signature: 466809d958f49a856826da68e89ba4f5b7e40d445be60ba1077f3c793d5546e2
         verdict: EQUIVALENT
-        reason: 'The formula preserves the canonical invariant without adding a producer, path, provenance, or uniqueness
-          constraint. For each eligible full idempotency identity with an ACCEPTED terminal creation, it requires a matching
-          canonical accepted-change creation under the same full document_id+client_change_id identity, and requires both
-          creations to share one authoritative transaction boundary with joint commit/rollback and no reachable one-sided
-          post-boundary state. Requiring the matching acceptance to be committed as the acceptance side of that same transaction
-          does not strengthen the canonical contract: once the ACCEPTED terminal result has become authoritative, the canonical
-          co-commit requirement entails that the matching accepted change committed in the same transaction. The explicit
-          classifier/function disclaimers also prevent hidden semantics from being smuggled into matching, identity, atomicity,
-          commit, or path predicates.'
+        reason: The formula bidirectionally pairs every eligible ACCEPTED terminal-result creation with a matching canonical
+          accepted-change creation and vice versa, requires the pair to carry the same full idempotency identity, and requires
+          co-committal within one authoritative transaction boundary, matching the source's same-boundary atomicity and no-one-without-the-other
+          guarantee without adding uniqueness, provenance, or implementation constraints.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: f43bad1368e55fcd4e1b7aa7e502091e95790f272b9e9aa4bc4faef74c7cab70
+        subject_signature: 466809d958f49a856826da68e89ba4f5b7e40d445be60ba1077f3c793d5546e2
         verdict: EQUIVALENT
-        reason: "The rendering preserves the source quantifier and applicability boundary by ranging over authoritative creations\
-          \ of ACCEPTED terminal results for eligible full idempotency identities, and it requires a matching canonical accepted-change\
-          \ creation for each such acceptance. Its explicit same-document_id/client_change_id condition is a faithful expansion\
-          \ of the canonical idempotency_key vocabulary and of \u201Cmatching,\u201D not an added cross-claim bridge. It preserves\
-          \ the same authoritative transaction-boundary atomicity, joint commit-or-rollback consequence, and exclusion of\
-          \ reachable one-sided authoritative states. It adds no uniqueness, producer/path provenance, or broader temporal\
-          \ guarantee, and the existential pairing does not weaken the source\u2019s requirement for the matching accepted\
-          \ change."
+        reason: Both quantify over eligible full (document_id, client_change_id) identities whose terminal result is ACCEPTED,
+          guarantee bidirectional existence of the matching ACCEPTED terminal-result and canonical accepted-change creations,
+          require the same full identity for the pair, and require a shared authoritative transaction boundary with joint
+          commit or rollback and no one-sided reachable authoritative state, without adding provenance or implementation-path
+          requirements.
         differences: []
   claim:L199_accepted_terminal_provenance_survives_persistence_and_restore:
     kind: claim
@@ -4587,4 +4579,64 @@ records:
           exactly one of the same three architecture-supported categories, and excludes other initialization, import, repair,
           rewrite, or representation writers from that surface; the reverse inclusions and descriptive category edges are
           definitional consequences of the supported categories and add no extra temporal, identity, or provenance requirement.
+        differences: []
+  claim:C46_accepted_terminal_result_preserves_acceptance_provenance:
+    kind: claim
+    subject_id: C46_accepted_terminal_result_preserves_acceptance_provenance
+    subject_signature: cdb674d3c02b0671bbc3fbe83cc862c64ed3e9def9ba4c64c9bf73d51ed89ca3
+    roundtrip:
+      subject_signature: cdb674d3c02b0671bbc3fbe83cc862c64ed3e9def9ba4c64c9bf73d51ed89ca3
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following two statements holds. (1) For every TerminalResultRecord before,
+        every TerminalResultRecord after, and every CanonicalAcceptance producer: if after is reachable from before by the
+        transitive closure of accepted_terminal_lifecycle_edge — where a single such edge is one authoritative in-horizon
+        ACCEPTED terminal-result representation transition that preserves the same already-linearized logical terminal outcome
+        and the same full (document_id, client_change_id) identity, is for that reason non-terminal in the lifecycle sense
+        used here, does not classify the transition into a concrete architecture lifecycle category, and by itself asserts
+        no producer-binding preservation — and before is terminal_result_bound_to_acceptance_execution to producer, meaning
+        before carries a canonical result produced by the same acceptance execution that produced producer for the producer
+        binding under audit, and before and producer satisfy accepted_terminal_binding_identity_matches, meaning they carry
+        the same full (document_id, client_change_id) identity, then after is also terminal_result_bound_to_acceptance_execution
+        to producer and after and producer also satisfy accepted_terminal_binding_identity_matches. (2) For every TerminalResultRecord
+        t: if t satisfies accepted_terminal_result_record, meaning t is an authoritative ACCEPTED (canonical result) outcome,
+        and t satisfies accepted_terminal_result_within_retry_horizon, meaning the full identity t carries is still a normal_retry_eligible_identity
+        within the normal retry eligibility horizon in which producer provenance must be retained, with that predicate classifying
+        horizon membership only, then there exists a CanonicalAcceptance a such that all of the following hold: t is terminal_result_bound_to_acceptance_execution
+        to a, meaning t carries a canonical result produced by the same acceptance execution that produced a for the producer
+        binding under audit; t and a satisfy accepted_terminal_binding_identity_matches, meaning they carry the same full
+        (document_id, client_change_id) identity; a satisfies accepted_terminal_matching_canonical_acceptance, meaning a is
+        the matching canonical_accepted_change record created by the acceptance execution referenced by the producer binding
+        under audit; and a satisfies accepted_terminal_matching_acceptance_committed, meaning the matching canonical acceptance
+        a is committed for the corresponding ACCEPTED terminal outcome and the execution that committed a is the acceptance
+        execution that produced a.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: cdb674d3c02b0671bbc3fbe83cc862c64ed3e9def9ba4c64c9bf73d51ed89ca3
+        verdict: EQUIVALENT
+        reason: The formula requires, for every authoritative ACCEPTED terminal result within the retry horizon, an existing
+          matching committed canonical acceptance with the same full (document_id, client_change_id) identity and a producer
+          binding to the same acceptance execution, and separately propagates that binding and identity across the transitive
+          closure of in-horizon lifecycle edges preserving the same logical outcome. This captures the provenance, identity,
+          horizon, non-substitution, and lifecycle-preservation requirements without adding or omitting material requirements.
+        differences: []
+      strengthening:
+        subject_signature: cdb674d3c02b0671bbc3fbe83cc862c64ed3e9def9ba4c64c9bf73d51ed89ca3
+        verdict: EQUIVALENT
+        reason: The formula requires, for every in-horizon authoritative ACCEPTED terminal result, existence of a matching
+          committed canonical acceptance with the same full (document_id, client_change_id) identity whose producing execution
+          also produced the stored result, and separately preserves that binding and identity across the transitive closure
+          of authoritative in-horizon lifecycle edges preserving the same logical outcome. This matches the source scope,
+          provenance direction, anti-substitution content implicit in the binding relation, and post-horizon exclusion without
+          adding or omitting requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: cdb674d3c02b0671bbc3fbe83cc862c64ed3e9def9ba4c64c9bf73d51ed89ca3
+        verdict: EQUIVALENT
+        reason: Both renderings require, only within the normal retry horizon, an authoritative ACCEPTED terminal result to
+          be producer-bound to the matching committed canonical_accepted_change for the same full (document_id, client_change_id)
+          identity by the same acceptance execution, and require that binding and identity to be preserved across authoritative
+          in-horizon lifecycle representation transitions preserving the same logical terminal outcome; neither imposes provenance
+          retention after the horizon, and producer binding excludes substitution by mere extensional equality.
         differences: []
