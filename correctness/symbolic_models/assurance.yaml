@@ -4379,59 +4379,64 @@ records:
   claim:L211_accepted_terminal_result_origin_is_authoritative:
     kind: claim
     subject_id: L211_accepted_terminal_result_origin_is_authoritative
-    subject_signature: baf8171b2af52a8fc901069e330e82f33f31e2f2c69d468ed8368c6e397726f4
+    subject_signature: 40fe45b2532def6a8f33588e7723fb735d227d474a73b5572829f374f4018101
     roundtrip:
-      subject_signature: baf8171b2af52a8fc901069e330e82f33f31e2f2c69d468ed8368c6e397726f4
+      subject_signature: 40fe45b2532def6a8f33588e7723fb735d227d474a73b5572829f374f4018101
       status: TRANSLATED
-      natural_language: 'For every TerminalResultRecord t, if t is an authoritative ACCEPTED (canonical result) outcome and
-        t is within the normal retry eligibility horizon (meaning the full identity t carries is still a normal_retry_eligible_identity,
-        the horizon in which producer provenance must be retained; this horizon predicate classifies horizon membership only
-        and does not itself assert producer provenance, origin authority, or lifecycle preservation), then there exists a
-        TerminalResultRecord t0 such that all of the following hold: (1) t0 is an authoritative ACCEPTED terminal result at
-        the acceptance-linearization creation boundary for one full identity and logical terminal outcome (this classifies
-        that authoritative origin only; it does not depend on whether a later representation is being classified, does not
-        assert normal-retry eligibility at the origin event or current horizon eligibility of t0, and does not itself prove
-        matching-producer provenance, transaction co-commit, or later lifecycle preservation); (2) t0 is the initial authoritative
-        ACCEPTED terminal-result representation whose authoritative creation at the acceptance-linearization boundary is performed
-        by the acceptance transaction (this classifies only the origin writer for t0; it does not identify or quantify a matching
-        CanonicalAcceptance, assert producer-result provenance, full-identity equality, transaction co-commit, or later lifecycle
-        preservation); and (3) either t0 is equal to t, or both of the following hold: t is a later durable authoritative
-        terminal-result representation of the same already-linearized logical terminal outcome (durability is a semantic persistence
-        requirement and does not require one particular physical store, layout, or concrete lifecycle category, and this predicate
-        does not classify the initial acceptance-linearization result), and t is reachable from t0 via the transitive closure
-        of the supported-lifecycle-edge relation, where each such edge before->after is one architecture-supported authoritative
-        in-horizon ACCEPTED terminal-result representation transition that preserves the same already-linearized logical terminal
-        outcome and the full (document_id, client_change_id) identity, is non-terminal in the lifecycle sense because it preserves
-        rather than creates, replaces, or reclassifies that logical terminal outcome (non-terminal not being an additional
-        applicability filter), establishes membership in the supported lifecycle surface, and leaves the concrete persistence/recovery,
-        compaction/retention, or representation-migration category unspecified.'
+      natural_language: 'For every TerminalResultRecord t, if t is an authoritative ACCEPTED (canonical result) terminal-result
+        outcome, and t is within the normal retry eligibility horizon — meaning the full identity carried by t is still a
+        normal_retry_eligible_identity, which is the horizon in which producer provenance must be retained, this predicate
+        classifying horizon membership only and not itself asserting producer provenance, origin authority, or lifecycle preservation
+        — then there exists a TerminalResultRecord t0 such that all of the following hold for that same t0: (1) t0 is an authoritative
+        ACCEPTED terminal result at the acceptance-linearization creation boundary for one full identity and one logical terminal
+        outcome, classifying that authoritative origin only, without depending on whether a later representation is being
+        classified by L211, without asserting normal-retry eligibility at the origin event or current horizon eligibility
+        of t, and without itself proving matching-producer provenance, transaction co-commit, or later lifecycle preservation;
+        (2) t0 is the initial authoritative ACCEPTED terminal-result representation whose authoritative creation at the acceptance-linearization
+        boundary is performed by acceptance_transaction, classifying only the origin writer for t0 and not identifying or
+        quantifying a matching CanonicalAcceptance, asserting producer-result provenance, full-identity equality, transaction
+        co-commit, or later lifecycle preservation; (3) t0 is the authoritative creation of an ACCEPTED terminal_result for
+        one eligible full idempotency identity, naming that qualifying creation event only and not constraining which implementation
+        path produced it, which acceptance execution supplied its payload, or which transaction mechanism commits the matching
+        canonical accepted change; and (4) either t0 is equal to t, or both t is a later durable authoritative terminal-result
+        representation of the same already-linearized logical terminal outcome — durability being the semantic persistence
+        requirement of L211 and not requiring one particular physical store, layout, or concrete lifecycle category, and this
+        predicate not classifying the initial acceptance-linearization result — and t is reachable from t0 through the transitive
+        closure of accepted_terminal_supported_lifecycle_edge, where each such edge is one architecture-supported authoritative
+        in-horizon ACCEPTED terminal-result representation transition from a before record to an after record that preserves
+        the same already-linearized logical terminal outcome and the same full (document_id, client_change_id) identity, is
+        non-terminal in the lifecycle sense used by L211 because it preserves rather than creates, replaces, or reclassifies
+        that logical terminal outcome (non-terminal not being an additional applicability filter), and establishes membership
+        in the supported lifecycle surface while leaving the concrete persistence/recovery, compaction/retention, or representation-migration
+        category unspecified.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: baf8171b2af52a8fc901069e330e82f33f31e2f2c69d468ed8368c6e397726f4
+        subject_signature: 40fe45b2532def6a8f33588e7723fb735d227d474a73b5572829f374f4018101
         verdict: EQUIVALENT
-        reason: The formula applies to exactly authoritative ACCEPTED terminal results within the normal retry horizon, requires
-          an acceptance-transaction-created linearization origin, and permits either equality with that origin or a durable
-          later representation reachable through the transitive closure of authoritative in-horizon lifecycle edges preserving
-          the same full identity and logical terminal outcome; this exactly encodes the stated lineage and excludes any independent
-          provenance root, without adding a concrete lifecycle-category or other extra requirement.
+        reason: The formula quantifies over exactly authoritative ACCEPTED records within the normal retry horizon and requires
+          either identity with an acceptance-transaction-created acceptance-linearization origin for an eligible full identity,
+          or a later durable representation reachable from that origin through the transitive closure of authoritative in-horizon
+          lifecycle edges preserving the same full (document_id, client_change_id) identity and logical terminal outcome,
+          thereby encoding the stated lineage and excluding any independent provenance root.
         differences: []
       strengthening:
-        subject_signature: baf8171b2af52a8fc901069e330e82f33f31e2f2c69d468ed8368c6e397726f4
+        subject_signature: 40fe45b2532def6a8f33588e7723fb735d227d474a73b5572829f374f4018101
         verdict: EQUIVALENT
-        reason: The formula quantifies exactly over authoritative ACCEPTED records within the retry horizon and requires existence
-          of an acceptance-transaction-created linearization origin t0 for the same identity/outcome, with t either equal
-          to t0 or a durable representation reachable via the transitive closure of identity- and outcome-preserving in-horizon
-          lifecycle edges, thereby also excluding any independent provenance root.
+        reason: The formula quantifies over exactly the in-horizon authoritative ACCEPTED records and requires each to equal
+          an acceptance-transaction-created linearization origin for an eligible identity or to be a later durable representation
+          reachable from such an origin via the transitive closure of authoritative in-horizon lifecycle edges preserving
+          the full (document_id, client_change_id) identity and logical terminal outcome, which encodes the claimed reflexive-transitive
+          provenance lineage and excludes any independent authoritative introduction root.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: baf8171b2af52a8fc901069e330e82f33f31e2f2c69d468ed8368c6e397726f4
+        subject_signature: 40fe45b2532def6a8f33588e7723fb735d227d474a73b5572829f374f4018101
         verdict: EQUIVALENT
-        reason: The rendering preserves the same universal in-horizon scope, acceptance-transaction origin, reflexive-or-descendant
-          structure, finite supported transitive lineage, and preservation of the full (document_id, client_change_id) identity
-          and logical terminal outcome, thereby also excluding any independent authoritative introduction root; the predicate
-          disclaimers add no extra bridge or requirement.
+        reason: 'The rendering preserves the scope, identity and outcome coordinates, provenance direction, and reflexive-transitive
+          lineage: every in-horizon authoritative ACCEPTED representation either equals the acceptance-transaction-created
+          origin or is reachable from it through in-horizon non-terminal lifecycle transitions preserving the same full identity
+          and logical terminal outcome, leaving no independent introduction root and adding no extra requirement.'
         differences: []
   claim:C47_accepted_terminal_result_provenance_survives_lifecycle:
     kind: claim
