@@ -8598,40 +8598,6 @@ claims:
       - forall:
           vars:
             t: TerminalResultRecord
-            a: CanonicalAcceptance
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: accepted_terminal_created_for_eligible_identity
-                  args:
-                  - var: t
-              - or:
-                - call:
-                    fn: accepted_terminal_linearization_origin_record
-                    args:
-                    - var: t
-                - call:
-                    fn: accepted_terminal_result_record
-                    args:
-                    - var: t
-              - call:
-                  fn: accepted_terminal_matching_creation_pair
-                  args:
-                  - var: t
-                  - var: a
-              - call:
-                  fn: accepted_terminal_creation_pair_co_commits
-                  args:
-                  - var: t
-                  - var: a
-            - call:
-                fn: accepted_terminal_matching_acceptance_committed
-                args:
-                - var: a
-      - forall:
-          vars:
-            t: TerminalResultRecord
           body:
             implies:
             - call:
