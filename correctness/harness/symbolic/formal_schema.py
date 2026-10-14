@@ -38,6 +38,19 @@ FORMULA_SCHEMA: dict[str, Any] = {
             },
             ("call",),
         ),
+        _closed(
+            {
+                "transitive_closure": _closed(
+                    {
+                        "fn": SYMBOLIC_NAME,
+                        "from": {"$ref": "#/$defs/formula"},
+                        "to": {"$ref": "#/$defs/formula"},
+                    },
+                    ("fn", "from", "to"),
+                )
+            },
+            ("transitive_closure",),
+        ),
         *[
             _closed(
                 {

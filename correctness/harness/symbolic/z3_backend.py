@@ -4,7 +4,21 @@ from dataclasses import dataclass
 from typing import Any
 
 from .dsl import ParsedProgram
-from .ir import And, BoolConst, Call, Eq, Exists, Expr, ForAll, Implies, Neq, Not, Or, Var
+from .ir import (
+    And,
+    BoolConst,
+    Call,
+    Eq,
+    Exists,
+    Expr,
+    ForAll,
+    Implies,
+    Neq,
+    Not,
+    Or,
+    TransitiveClosure,
+    Var,
+)
 
 try:
     import z3  # type: ignore
@@ -48,6 +62,9 @@ class _Compiler:
         if isinstance(expr, Call):
             fn = self.functions[expr.function.name]
             return fn(*(self.expr(arg, env) for arg in expr.args))
+        if isinstance(expr, TransitiveClosure):
+            relation = z3.TransitiveClosure(self.functions[expr.relation.name])
+            return relation(self.expr(expr.left, env), self.expr(expr.right, env))
         if isinstance(expr, Eq):
             return self.expr(expr.left, env) == self.expr(expr.right, env)
         if isinstance(expr, Neq):

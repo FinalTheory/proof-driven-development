@@ -200,7 +200,7 @@ refinement:
     G5_retry_resolves_idempotently:
       status: stable
       blocked_by: []
-      signature: f8a24f2f0d74769c28250db075afa10e68596c47d0b1dd6d4abce7436fb16318
+      signature: 2d67370f0d0281d4e31c7202b1a95420be54c34df2bf9b22e1ee72aaa7c0ec7b
     C7_revision_frontier_is_linear:
       status: stable
       blocked_by: []
@@ -736,7 +736,7 @@ refinement:
     C46_accepted_terminal_result_preserves_acceptance_provenance:
       status: stable
       blocked_by: []
-      signature: db345dbfea4f0a6e324da413cb95e1031f07ba401a2bbb0e4d46040f93a3bfe3
+      signature: 66e8c31a288c9ddd280b03164ba88dc843e6e453e888c5fed30f8327cfc73487
     L197_accepted_terminal_result_captures_same_acceptance_producer:
       status: stable
       blocked_by: []
@@ -793,6 +793,14 @@ refinement:
       status: stable
       blocked_by: []
       signature: c1304f5c24d522254534b2ab2ada7aa5d1c3ac030094d7a0214dd3ba812652f2
+    L211_accepted_terminal_result_origin_is_authoritative:
+      status: stable
+      blocked_by: []
+      signature: a4bb31a10876562d04b5f889495bc384d89ee092087ebc80ac3b1aee0c7ed2de
+    L212_accepted_terminal_lifecycle_categories_are_exhaustive:
+      status: stable
+      blocked_by: []
+      signature: 177e13adf27abfb1827ffbf4a343db8ef9082d3d232f9a73686db2207e452d2b
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -4377,6 +4385,8 @@ claims:
       - L197_accepted_terminal_result_captures_same_acceptance_producer
       - C47_accepted_terminal_result_provenance_survives_lifecycle
       - L163_accepted_terminal_outcome_commits_with_canonical_acceptance
+      - L211_accepted_terminal_result_origin_is_authoritative
+      - L212_accepted_terminal_lifecycle_categories_are_exhaustive
   L197_accepted_terminal_result_captures_same_acceptance_producer:
     statement: When an authoritative ACCEPTED terminal_result for (document_id=D,
       client_change_id=k) is created at acceptance linearization, the canonical result placed into
@@ -4782,6 +4792,65 @@ claims:
             entering new-owner recovery or without a distinct fresh generation at
             authority/acceptance publication; require both executions to be unreachable while
             allowing attempts to abort at any earlier stage.
+    kind: leaf
+  L211_accepted_terminal_result_origin_is_authoritative:
+    statement: 'Every authoritative ACCEPTED terminal_result for a normal-retry-eligible identity within
+      the normal retry eligibility horizon is provenance-reachable from the acceptance-linearization result
+      created by acceptance_transaction for that same full (document_id, client_change_id) identity and
+      already-linearized logical terminal outcome: it is either that initial authoritative ACCEPTED result
+      itself, or a later durable representation descended from it through a finite sequence of authoritative
+      in-horizon non-terminal lifecycle representation transitions that preserve that same full identity
+      and logical terminal outcome. No initialization, import, repair, recovery, restoration, migration,
+      or other authoritative writer may introduce an in-horizon ACCEPTED terminal representation as an
+      independent provenance root outside that lineage. Which concrete lifecycle category each transition
+      belongs to is a separate proof obligation.'
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - acceptance_transaction
+      - durable_terminal_outcome_store
+    formal_intent: The set of in-horizon authoritative ACCEPTED terminal-result representations is
+      the reflexive-transitive closure of acceptance-transaction creation under the supported
+      non-terminal lifecycle transformation classes; there is no third authoritative introduction
+      edge for ACCEPTED terminal state.
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Enumerate every writer, initialization/import/repair path, recovery/restoration
+            path, and representation-migration path that can make an ACCEPTED terminal_result
+            authoritative, and prove each path either is the acceptance_transaction creation
+            boundary or consumes an already-authoritative same-outcome terminal representation
+            through a supported non-terminal lifecycle transformation.
+        - kind: state_machine
+          intent: Model initialization, acceptance commit, crash/recovery, compaction/retention,
+            representation migration, and repair/import boundaries and reject any reachable
+            in-horizon ACCEPTED terminal representation with no acceptance-linearization provenance
+            origin.
+    kind: leaf
+  L212_accepted_terminal_lifecycle_categories_are_exhaustive:
+    statement: 'Every authoritative in-horizon ACCEPTED terminal_result representation transition that
+      preserves the same full (document_id, client_change_id) identity and the same already-linearized
+      logical terminal outcome is classified as exactly one of the architecture-supported lifecycle categories:
+      durable persistence or recovery/restoration, compaction or retention rewrite, or representation
+      migration. No other authoritative non-terminal initialization, import, repair, rewrite, or representation
+      writer is admitted on this in-horizon ACCEPTED lifecycle surface.'
+    source_refs:
+      - accepted_change_log
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    mechanisms:
+      - durable_terminal_outcome_store
+    verification:
+      verifiers:
+        - kind: control_flow
+          intent: Enumerate every authoritative writer or representation-transform path for an
+            already-linearized in-horizon ACCEPTED terminal_result and prove each path is classified
+            into exactly one approved lifecycle category, with no bypass writer or unclassified
+            transition.
     kind: leaf
 catalog:
   terms:
@@ -6129,7 +6198,7 @@ id_allocator:
     A: 7
     G: 13
     C: 48
-    L: 211
+    L: 213
     D: 15
     T: 3
 assurance:
@@ -6468,6 +6537,10 @@ assurance:
       status: planned
     L210_new_owner_recovery_boundary_is_attempt_scoped:
       status: planned
+    L211_accepted_terminal_result_origin_is_authoritative:
+      status: planned
+    L212_accepted_terminal_lifecycle_categories_are_exhaustive:
+      status: planned
 formalization:
   claims:
     G0_acked_edit_survives_failover:
@@ -6777,6 +6850,10 @@ formalization:
     L209_accepted_reconciliation_terminalizes_speculative_lifecycle:
       mode: symbolic
     L210_new_owner_recovery_boundary_is_attempt_scoped:
+      mode: symbolic
+    L211_accepted_terminal_result_origin_is_authoritative:
+      mode: symbolic
+    L212_accepted_terminal_lifecycle_categories_are_exhaustive:
       mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:

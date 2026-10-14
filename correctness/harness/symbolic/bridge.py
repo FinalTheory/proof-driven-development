@@ -540,20 +540,43 @@ class SymbolicBridge:
                     f"{claim_id} symbolic claim-contract coverage mismatch: "
                     f"missing={missing}, extra={extra}"
                 )
-            expected_symbols: set[str] = (
-                set()
-                if mapping.formula_from_contracts and mapping.residual_formula is None
-                else set(_direct_claim_catalog_symbols(claim, known_catalog_symbols))
+            direct_symbols = set(
+                _direct_claim_catalog_symbols(claim, known_catalog_symbols)
             )
+            contract_symbols: set[str] = set()
             for contract_id in mapping.contract_ids:
-                expected_symbols.update(self.contracts[contract_id].catalog_symbols)
-            if mapping.catalog_symbols != frozenset(expected_symbols):
-                missing = sorted(expected_symbols - set(mapping.catalog_symbols))
-                extra = sorted(set(mapping.catalog_symbols) - expected_symbols)
-                raise SymbolicBridgeError(
-                    f"{claim_id} symbolic claim catalog coverage mismatch: "
-                    f"missing={missing}, extra={extra}"
-                )
+                contract_symbols.update(self.contracts[contract_id].catalog_symbols)
+
+            if mapping.formula_from_contracts:
+                # Contract-derived mappings materialize the complete declared contract
+                # formulas, so their catalog surface must remain exact. A residual
+                # formula additionally has to preserve every canonical symbol stated
+                # directly by the claim.
+                expected_symbols = set(contract_symbols)
+                if mapping.residual_formula is not None:
+                    expected_symbols.update(direct_symbols)
+                if mapping.catalog_symbols != frozenset(expected_symbols):
+                    missing = sorted(expected_symbols - set(mapping.catalog_symbols))
+                    extra = sorted(set(mapping.catalog_symbols) - expected_symbols)
+                    raise SymbolicBridgeError(
+                        f"{claim_id} symbolic claim catalog coverage mismatch: "
+                        f"missing={missing}, extra={extra}"
+                    )
+            else:
+                # An explicit claim formula is a claim-local projection. It must not
+                # anonymize vocabulary stated directly by the claim, but it need not
+                # materialize every symbol of every reusable contract that the claim
+                # references. Any contract vocabulary it does use must come from one
+                # of those declared contracts; unrelated catalog symbols remain illegal.
+                actual_symbols = set(mapping.catalog_symbols)
+                allowed_symbols = direct_symbols | contract_symbols
+                missing = sorted(direct_symbols - actual_symbols)
+                extra = sorted(actual_symbols - allowed_symbols)
+                if missing or extra:
+                    raise SymbolicBridgeError(
+                        f"{claim_id} symbolic claim catalog coverage mismatch: "
+                        f"missing={missing}, extra={extra}"
+                    )
 
     def validate_formula_anchors(
         self,
@@ -720,6 +743,12 @@ def _formula_function_names(node: Any) -> set[str]:
     if isinstance(node, dict):
         if set(node) == {"call"} and isinstance(node["call"], dict):
             fn = node["call"].get("fn")
+            if isinstance(fn, str):
+                result.add(fn)
+        if set(node) == {"transitive_closure"} and isinstance(
+            node["transitive_closure"], dict
+        ):
+            fn = node["transitive_closure"].get("fn")
             if isinstance(fn, str):
                 result.add(fn)
         for value in node.values():

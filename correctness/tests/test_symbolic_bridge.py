@@ -134,6 +134,66 @@ class SymbolicBridgeTests(unittest.TestCase):
         self.assertIn("document_current_epoch", message)
         self.assertIn("owner_epoch", message)
 
+    def test_explicit_claim_projection_may_use_subset_of_declared_contract_vocabulary(self):
+        graph_doc = copy.deepcopy(self.graph.doc)
+        claim_id = "T999_partial_contract_projection"
+        graph_doc["claims"][claim_id] = {
+            "kind": "leaf",
+            "statement": "terminal_result remains authoritative.",
+            "formal_intent": "Preserve terminal_result semantics in this local projection.",
+            "semantic_contracts": ["accepted_terminal_result_binding"],
+            "verification": {"kind": "test", "description": "synthetic fixture"},
+        }
+        graph = Graph(graph_doc)
+
+        raw = yaml.load(BRIDGE_PATH.read_text(), Loader=UniqueKeyLoader)
+        projected = copy.deepcopy(raw)
+        projected["claims"][claim_id] = {
+            "contracts": ["accepted_terminal_result_binding"],
+            "formula": forall(
+                {"t": "TerminalResultRecord"},
+                call("accepted_terminal_result_record", var("t")),
+            ),
+        }
+        bridge = SymbolicBridge.from_data(projected)
+        bridge.validate_against_graph(graph)
+
+    def test_explicit_claim_projection_rejects_unrelated_extra_catalog_symbol(self):
+        graph_doc = copy.deepcopy(self.graph.doc)
+        claim_id = "T999_partial_contract_projection"
+        graph_doc["claims"][claim_id] = {
+            "kind": "leaf",
+            "statement": "terminal_result remains authoritative.",
+            "formal_intent": "Preserve terminal_result semantics in this local projection.",
+            "semantic_contracts": ["accepted_terminal_result_binding"],
+            "verification": {"kind": "test", "description": "synthetic fixture"},
+        }
+        graph = Graph(graph_doc)
+
+        raw = yaml.load(BRIDGE_PATH.read_text(), Loader=UniqueKeyLoader)
+        broken = copy.deepcopy(raw)
+        broken["functions"]["synthetic_unrelated_owner_epoch"] = {
+            "args": [],
+            "returns": "Bool",
+            "catalog_symbols": ["owner_epoch"],
+            "meaning": "Synthetic unrelated vocabulary used only by this regression fixture.",
+            "semantic_anchors": [f"claim:{claim_id}"],
+        }
+        broken["claims"][claim_id] = {
+            "contracts": ["accepted_terminal_result_binding"],
+            "formula": and_(
+                forall(
+                    {"t": "TerminalResultRecord"},
+                    call("accepted_terminal_result_record", var("t")),
+                ),
+                call("synthetic_unrelated_owner_epoch"),
+            ),
+        }
+        bridge = SymbolicBridge.from_data(broken)
+        with self.assertRaises(SymbolicBridgeError) as ctx:
+            bridge.validate_against_graph(graph)
+        self.assertIn("extra=['owner_epoch']", str(ctx.exception))
+
     def test_bridge_rejects_dimension_collapse_for_canonical_state(self):
         raw = yaml.load(BRIDGE_PATH.read_text(), Loader=UniqueKeyLoader)
         broken = copy.deepcopy(raw)

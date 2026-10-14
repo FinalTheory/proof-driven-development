@@ -30,6 +30,20 @@ def and_(*values):
     return {"and": list(values)}
 
 
+def not_(value):
+    return {"not": value}
+
+
+def transitive_closure(fn: str, left, right):
+    return {
+        "transitive_closure": {
+            "fn": fn,
+            "from": left,
+            "to": right,
+        }
+    }
+
+
 def forall(vars_: dict[str, str], body):
     return {"forall": {"vars": vars_, "body": body}}
 
@@ -137,6 +151,41 @@ class SymbolicKernelTests(unittest.TestCase):
         with self.assertRaises(SymbolicSchemaError) as ctx:
             parse_program(spec)
         self.assertIn("expects Overlay, got ClientState", str(ctx.exception))
+
+    def test_transitive_closure_rejects_non_binary_relation(self):
+        spec = {
+            "sorts": ["Node"],
+            "functions": {
+                "unary": {"args": ["Node"], "returns": "Bool"},
+            },
+            "constraints": [],
+            "query": exists(
+                {"x": "Node"},
+                transitive_closure("unary", var("x"), var("x")),
+            ),
+        }
+        with self.assertRaises(SymbolicSchemaError) as ctx:
+            parse_program(spec)
+        self.assertIn("binary Bool relation", str(ctx.exception))
+
+    @unittest.skipUnless(Z3_AVAILABLE, "z3-solver is not installed")
+    def test_transitive_closure_contains_two_step_path(self):
+        spec = {
+            "sorts": ["Node"],
+            "functions": {
+                "edge": {"args": ["Node", "Node"], "returns": "Bool"},
+            },
+            "constraints": [],
+            "query": exists(
+                {"x": "Node", "y": "Node", "z": "Node"},
+                and_(
+                    call("edge", var("x"), var("y")),
+                    call("edge", var("y"), var("z")),
+                    not_(transitive_closure("edge", var("x"), var("z"))),
+                ),
+            ),
+        }
+        self.assertEqual(check_program(parse_program(spec)).status, "unsat")
 
     @unittest.skipUnless(Z3_AVAILABLE, "z3-solver is not installed")
     def test_cross_document_overlay_is_sat_before_repair_and_unsat_after(self):

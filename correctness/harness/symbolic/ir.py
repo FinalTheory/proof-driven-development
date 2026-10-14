@@ -88,6 +88,31 @@ def _require_bool(expr: Expr, where: str) -> None:
 
 
 @dataclass(frozen=True)
+class TransitiveClosure(Expr):
+    relation: Function
+    left: Expr
+    right: Expr
+
+    def __post_init__(self) -> None:
+        if self.relation.result != BOOL or len(self.relation.args) != 2:
+            raise SymbolicTypeError("transitive_closure requires a binary Bool relation")
+        if self.relation.args[0] != self.relation.args[1]:
+            raise SymbolicTypeError(
+                "transitive_closure relation arguments must have the same sort"
+            )
+        expected = self.relation.args[0]
+        if self.left.sort != expected or self.right.sort != expected:
+            raise SymbolicTypeError(
+                "transitive_closure endpoints must match relation argument sort "
+                f"{expected.name}"
+            )
+
+    @property
+    def sort(self) -> Sort:
+        return BOOL
+
+
+@dataclass(frozen=True)
 class Eq(Expr):
     left: Expr
     right: Expr

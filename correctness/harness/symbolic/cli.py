@@ -562,6 +562,7 @@ def _cmd_symbolic_compose(graph: Graph, args: argparse.Namespace) -> int:
         "trusted_required": not args.allow_untrusted,
         "composition_signature": result.composition_signature,
         "solver_status": result.solver_result.status,
+        "proof_rule": result.proof_rule,
         "verdict": result.verdict,
         "machine_checked": result.machine_checked,
         "counterexample_model": (
@@ -576,6 +577,7 @@ def _cmd_symbolic_compose(graph: Graph, args: argparse.Namespace) -> int:
         print(
             f"node={result.node_id} verdict={result.verdict} "
             f"solver={result.solver_result.status} "
+            f"proof_rule={result.proof_rule} "
             f"premises={','.join(result.premise_ids)} "
             f"trusted_required={str(not args.allow_untrusted).lower()}"
         )
@@ -663,12 +665,27 @@ def _cmd_symbolic_report(graph: Graph, args: argparse.Namespace) -> int:
                 "premises": premise_reports,
                 "query_semantics": (
                     " AND ".join(result.premise_ids) + f" AND NOT({node_id})"
+                    if result.proof_rule == "direct_smt"
+                    else (
+                        "SMT checks all non-transitive target clauses plus the one-step "
+                        "form of each recognized finite transitive invariant; the verifier "
+                        "then lifts one-step preservation over finite non-empty paths."
+                    )
                 ),
                 "solver_status": result.solver_result.status,
+                "proof_rule": result.proof_rule,
                 "verdict": result.verdict,
                 "meaning": (
-                    "No counterexample model exists: all direct premises can be true "
-                    "only if the target is also true."
+                    (
+                        "No counterexample model exists: all direct premises can be true "
+                        "only if the target is also true."
+                        if result.proof_rule == "direct_smt"
+                        else (
+                            "No one-step counterexample exists, and every transitive target "
+                            "is an alpha-equivalent invariant lifted soundly over finite "
+                            "non-empty paths."
+                        )
+                    )
                     if result.solver_result.status == "unsat"
                     else "A counterexample model exists under the current symbolic abstraction."
                 ),
@@ -699,6 +716,7 @@ def _cmd_symbolic_report(graph: Graph, args: argparse.Namespace) -> int:
                 f"  - {premise['id']} [{premise['translation_status']}]: "
                 f"{premise['statement']}"
             )
+        print(f"Proof rule: {report['proof_rule']}")
         print(f"SMT counterexample query: {report['query_semantics']}")
         print(f"Solver: {report['solver_status'].upper()} → {report['verdict']}")
         print(f"Meaning: {report['meaning']}")

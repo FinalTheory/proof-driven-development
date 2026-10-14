@@ -32,6 +32,23 @@ class FormalSchemaTests(unittest.TestCase):
             with self.subTest(name=name):
                 Draft202012Validator.check_schema(schema)
 
+    def test_bridge_formula_schema_accepts_transitive_closure(self) -> None:
+        bridge_schema = FORMAL_SCHEMAS["bridge"]
+        formula_schema = {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$ref": "#/$defs/formula",
+            "$defs": bridge_schema["$defs"],
+        }
+        formula = {
+            "transitive_closure": {
+                "fn": "edge",
+                "from": {"var": "x"},
+                "to": {"var": "y"},
+            }
+        }
+        errors = list(Draft202012Validator(formula_schema).iter_errors(formula))
+        self.assertEqual(errors, [])
+
     def test_current_persisted_formal_yaml_matches_closed_schemas(self) -> None:
         cases = {
             "bridge": ROOT / "symbolic_models" / "bridge.yaml",

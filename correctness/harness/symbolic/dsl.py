@@ -18,6 +18,7 @@ from .ir import (
     Or,
     Sort,
     SymbolicTypeError,
+    TransitiveClosure,
     Var,
 )
 
@@ -77,6 +78,25 @@ def _parse_expr(
             for arg in args
         ]
         return functions[fn_name].call(*parsed)
+
+    if op == "transitive_closure":
+        closure = _expect_mapping(payload, "transitive_closure")
+        if set(closure) != {"fn", "from", "to"}:
+            raise SymbolicSchemaError(
+                "transitive_closure must contain exactly fn, from, and to"
+            )
+        fn_name = closure.get("fn")
+        if not isinstance(fn_name, str) or fn_name not in functions:
+            raise SymbolicSchemaError(
+                f"unknown transitive_closure function {fn_name!r}"
+            )
+        left = _parse_expr(
+            closure.get("from"), sorts=sorts, functions=functions, env=env
+        )
+        right = _parse_expr(
+            closure.get("to"), sorts=sorts, functions=functions, env=env
+        )
+        return TransitiveClosure(functions[fn_name], left, right)
 
     if op in {"eq", "neq", "implies"}:
         if not isinstance(payload, list) or len(payload) != 2:

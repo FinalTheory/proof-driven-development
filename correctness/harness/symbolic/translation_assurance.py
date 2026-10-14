@@ -865,6 +865,12 @@ def _formula_function_names(node: Any) -> set[str]:
             fn = node["call"].get("fn")
             if isinstance(fn, str):
                 names.add(fn)
+        if set(node) == {"transitive_closure"} and isinstance(
+            node["transitive_closure"], dict
+        ):
+            fn = node["transitive_closure"].get("fn")
+            if isinstance(fn, str):
+                names.add(fn)
         for value in node.values():
             names.update(_formula_function_names(value))
     elif isinstance(node, list):
