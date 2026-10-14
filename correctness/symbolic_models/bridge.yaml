@@ -4892,6 +4892,10 @@ claims:
                   args:
                   - var: t
               - call:
+                  fn: accepted_terminal_linearization_origin_record
+                  args:
+                  - var: t
+              - call:
                   fn: accepted_terminal_matching_creation_pair
                   args:
                   - var: t
