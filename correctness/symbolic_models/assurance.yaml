@@ -5201,50 +5201,48 @@ records:
   claim:L169_persistence_lifecycle_preserves_terminal_outcomes:
     kind: claim
     subject_id: L169_persistence_lifecycle_preserves_terminal_outcomes
-    subject_signature: 066d21431728990b8ff250c24747329d000f9f6d4f38cf149c6dcc3a2cddc099
+    subject_signature: be5daead81dbb785ca4b781b5310c10c1ddde23281e75e35cb546836f2a94d9a
     roundtrip:
-      subject_signature: 066d21431728990b8ff250c24747329d000f9f6d4f38cf149c6dcc3a2cddc099
+      subject_signature: be5daead81dbb785ca4b781b5310c10c1ddde23281e75e35cb546836f2a94d9a
       status: TRANSLATED
-      natural_language: 'The proposition is a conjunction of two universally quantified statements. First, for every ProtocolTransition
-        x, every AuthoritativeState s, and every IdempotencyKey k, if x is an authoritative persistence lifecycle transition
-        applied at state s (a deletion, expiry, retention-GC, or cleanup-class operation on durable state), and in state s
-        key k is a normal-retry-eligible identity (the logical edit it identifies remains within the normal retry/reconnect
-        eligibility boundary), and state s contains a terminal_result for the exact full idempotency identity k in its idempotency_terminal_outcomes
-        store (this asserts presence only, with the outcome''s value and provenance being separate), then x preserves the
-        terminal outcome for k at s: the terminal_result for k after x is identical in value and identity to the one in s,
-        and if s contains no terminal_result for k then x does not create one for k as a side effect of this preservation-class
-        transition. Second, for every ProtocolTransition x, every AuthoritativeState s, and every IdempotencyKey k, if in
-        state s key k is a normal-retry-eligible identity and state s contains a terminal outcome for k, then it is not the
-        case that x is a terminal-outcome removal transition for k at s, that is, x is not a deletion, expiry, retention-GC,
-        or cleanup path whose effect at state s removes key k''s terminal outcome from idempotency_terminal_outcomes.'
+      natural_language: 'For all protocol transitions x, authoritative states s, and idempotency keys k, if x is an authoritative
+        persistence lifecycle transition applied at s — that is, a deletion, expiry, retention-GC, or cleanup-class operation
+        on durable state — and in s key k is a normal-retry-eligible identity, meaning the logical edit it identifies remains
+        within the normal retry/reconnect eligibility boundary, and s contains a terminal_result for the exact full idempotency
+        identity k in its idempotency_terminal_outcomes store, then x preserves the exact logical terminal outcome for k:
+        the terminal_result for k after x is identical in value and identity to the one in s. And, for all protocol transitions
+        x, authoritative states s, and idempotency keys k, if in s key k is a normal-retry-eligible identity and s contains
+        a terminal outcome for k, then x is not a terminal outcome removal transition for k at s, that is, x is not a deletion,
+        expiry, retention-GC, or cleanup path whose effect at s removes key k''s terminal outcome from idempotency_terminal_outcomes.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 066d21431728990b8ff250c24747329d000f9f6d4f38cf149c6dcc3a2cddc099
+        subject_signature: be5daead81dbb785ca4b781b5310c10c1ddde23281e75e35cb546836f2a94d9a
         verdict: EQUIVALENT
-        reason: The formula forbids, for any state where the key is normal-retry eligible and a terminal outcome is present,
-          any deletion/expiry/retention-GC/cleanup transition classified as removing that outcome, and requires persistence-lifecycle
-          transitions in that state to preserve the exact logical terminal outcome. This matches the source's unreachability
-          of removal while eligible, with eligibility and presence evaluated at the pre-state, exact key identity preserved,
-          and value-preserving representation rewrites neither required nor forbidden beyond logical preservation.
+        reason: The formula jointly prohibits any terminal-outcome removal transition for a key that is present in the authoritative
+          store and normal-retry eligible at that state, which is exactly the contrapositive of removal becoming permitted
+          only after eligibility ends, and requires lifecycle transitions in that case to preserve the exact logical terminal
+          outcome. It does not forbid value-preserving representation rewrites, since preservation is stated for logical value
+          and identity, not representation.
         differences: []
       strengthening:
-        subject_signature: 066d21431728990b8ff250c24747329d000f9f6d4f38cf149c6dcc3a2cddc099
+        subject_signature: be5daead81dbb785ca4b781b5310c10c1ddde23281e75e35cb546836f2a94d9a
         verdict: EQUIVALENT
-        reason: 'Both conjuncts encode exactly non-removal of a present terminal outcome while the key remains normal-retry
-          eligible: lifecycle transitions must preserve its logical value and identity, and no transition may be a terminal-outcome
-          removal transition under those guards. The guards match the already-linearized/present and eligibility boundaries,
-          removal after leaving eligibility is neither required nor forbidden, and value-preserving representation rewrites
-          are not prohibited because preservation is defined at the logical outcome level.'
+        reason: 'Both conjuncts are guarded by normal-retry eligibility and presence of a terminal outcome at the same state:
+          the first requires authoritative persistence-lifecycle transitions to preserve the exact outcome (which, given lifecycle
+          transitions only remove or leave data unchanged, forbids removal), and the second directly forbids any deletion/expiry/retention-GC/cleanup
+          removal transition for that key. No prohibition is imposed after eligibility ends, and value-preserving representation
+          rewrites still satisfy preservation of value and identity, matching the stated exclusion.'
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 066d21431728990b8ff250c24747329d000f9f6d4f38cf149c6dcc3a2cddc099
+        subject_signature: be5daead81dbb785ca4b781b5310c10c1ddde23281e75e35cb546836f2a94d9a
         verdict: EQUIVALENT
-        reason: Both formulations forbid authoritative deletion, expiry, retention-GC, and cleanup from removing a terminal
-          outcome in idempotency_terminal_outcomes for the exact identity while that identity remains normal-retry eligible;
-          the rendering's preservation and non-removal conjuncts state the same boundary, without governing value-preserving
-          representation rewrites or adding a creation, provenance, or cross-identity bridge.
+        reason: 'The rendering restates exactly the original constraint: while the full identity remains normal-retry eligible
+          and a terminal result is present, no deletion, expiry, retention-GC, or cleanup transition removes that terminal
+          outcome from idempotency_terminal_outcomes, and such lifecycle transitions preserve the logical terminal outcome.
+          It adds no permission or requirement after eligibility ends and its logical-value preservation does not forbid value-preserving
+          representation rewrites, matching the original exclusion.'
         differences: []
   claim:C45_terminal_outcome_publication_matches_canonical_acceptance:
     kind: claim

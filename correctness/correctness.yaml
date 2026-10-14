@@ -6332,7 +6332,13 @@ assurance:
     C41_pending_identity_revision_evidence_survives_lifecycle:
       status: unaudited
     C42_nonterminal_lifecycle_preserves_terminal_outcomes:
-      status: unaudited
+      status: machine_checked
+      rationale: Trusted symbolic translations exist for C42 and all three direct premises L169,
+        L170 and L171. The composition check (direct SMT) found the premises together with NOT(C42)
+        UNSAT. Independent mutation tests that replace any one of the three premises with True each
+        become SAT with a concrete counterexample, demonstrating that every direct premise is
+        necessary to establish the target.
+      signature: 7782d51082e9dd4c7a2dd5f9ccc392fd1c8f473e85a0882b102c1190dc54d41e
     C43_terminal_outcome_entry_state_is_coherent:
       status: unaudited
     C44_terminal_outcome_entry_matches_canonical_acceptance:
