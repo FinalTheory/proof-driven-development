@@ -2760,6 +2760,7 @@ functions:
     - claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance
     - claim:L197_accepted_terminal_result_captures_same_acceptance_producer
     - claim:L211_accepted_terminal_result_origin_is_authoritative
+    - claim:C46_accepted_terminal_result_preserves_acceptance_provenance
   accepted_terminal_matching_creation_identity_matches:
     args:
     - TerminalResultRecord
@@ -2781,6 +2782,7 @@ functions:
     meaning: The matching ACCEPTED terminal-result creation t and canonical accepted-change creation a share one authoritative transaction boundary and therefore commit or roll back together; no reachable authoritative post-boundary state for that pair contains exactly one side. This relation asserts atomicity only and does not assert producer provenance or require a particular named transaction implementation.
     semantic_anchors:
     - claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance
+    - claim:C46_accepted_terminal_result_preserves_acceptance_provenance
   accepted_terminal_contract_acceptance_assembly_pair:
     args:
     - TerminalResultRecord
@@ -2872,7 +2874,7 @@ functions:
     - CanonicalAcceptance
     returns: Bool
     catalog_symbols: []
-    meaning: Canonical acceptance a is a committed canonical accepted-change record, and the acceptance execution that committed a is the same acceptance execution that produced a. This predicate asserts that committed fact and its committing execution only; it does not assert a shared transaction boundary with the creation of a terminal outcome, producer provenance of a stored result by itself, one named implementation path, or when any binding metadata was materialized.
+    meaning: Matching canonical acceptance a committed as the acceptance side of the same authoritative transaction boundary that created the corresponding ACCEPTED terminal outcome. This predicate asserts the committed matching-acceptance fact only; it does not require one named implementation path or assert producer provenance.
     semantic_anchors:
     - claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance
     - claim:C46_accepted_terminal_result_preserves_acceptance_provenance
@@ -2922,6 +2924,7 @@ functions:
     semantic_anchors:
     - claim:L211_accepted_terminal_result_origin_is_authoritative
     - claim:L197_accepted_terminal_result_captures_same_acceptance_producer
+    - claim:C46_accepted_terminal_result_preserves_acceptance_provenance
   accepted_terminal_origin_created_by_acceptance_transaction:
     args:
     - TerminalResultRecord
@@ -4471,8 +4474,27 @@ claims:
             - exists:
                 vars:
                   a: CanonicalAcceptance
+                  t0: TerminalResultRecord
                 body:
                   and:
+                  - call:
+                      fn: accepted_terminal_linearization_origin_record
+                      args:
+                      - var: t0
+                  - call:
+                      fn: accepted_terminal_matching_creation_pair
+                      args:
+                      - var: t0
+                      - var: a
+                  - call:
+                      fn: accepted_terminal_creation_pair_co_commits
+                      args:
+                      - var: t0
+                      - var: a
+                  - call:
+                      fn: accepted_terminal_matching_canonical_acceptance
+                      args:
+                      - var: a
                   - call:
                       fn: terminal_result_bound_to_acceptance_execution
                       args:
@@ -4483,14 +4505,16 @@ claims:
                       args:
                       - var: t
                       - var: a
-                  - call:
-                      fn: accepted_terminal_matching_canonical_acceptance
-                      args:
-                      - var: a
-                  - call:
-                      fn: accepted_terminal_matching_acceptance_committed
-                      args:
-                      - var: a
+                  - or:
+                    - eq:
+                      - var: t0
+                      - var: t
+                    - transitive_closure:
+                        fn: accepted_terminal_supported_lifecycle_edge
+                        from:
+                          var: t0
+                        to:
+                          var: t
   C47_accepted_terminal_result_provenance_survives_lifecycle:
     contracts: []
     formula:
