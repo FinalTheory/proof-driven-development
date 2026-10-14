@@ -5776,3 +5776,43 @@ records:
           single acceptance execution whose one atomic transaction commits both that result and its matching canonical accepted
           change. No source requirement is omitted and no material requirement is added.'
         differences: []
+  claim:L190_authoritative_terminal_publication_surfaces_are_exhaustive:
+    kind: claim
+    subject_id: L190_authoritative_terminal_publication_surfaces_are_exhaustive
+    subject_signature: cbb1d67ad89ef5b68c775802171e11b19ed06418c5fc9a935c684aef6eb6c7fe
+    roundtrip:
+      subject_signature: cbb1d67ad89ef5b68c775802171e11b19ed06418c5fc9a935c684aef6eb6c7fe
+      status: TRANSLATED
+      natural_language: 'Both of the following hold: (1) For every protocol transition x and every terminal result record
+        t, if x exposes t to a protocol consumer and t is a terminal result for a normal_retry_eligible_identity — that is,
+        a logical edit identity (document_id, client_change_id) whose pending/retry age is no more than 30 days and therefore
+        remains inside the normal retry/reconnect protocol boundary defined by A6 — then x exposes t through the terminal_outcome_publication_gate.
+        And (2) for every terminal result record t, if t is exposed to a protocol consumer through an authoritative publication
+        path for its identity and t is a terminal result for a normal_retry_eligible_identity as defined above, then t is
+        exposed to a protocol consumer through the terminal_outcome_publication_gate.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: cbb1d67ad89ef5b68c775802171e11b19ed06418c5fc9a935c684aef6eb6c7fe
+        verdict: EQUIVALENT
+        reason: 'Both conjuncts preserve the source: any transition exposing a terminal result for a normal_retry_eligible_identity
+          must expose it through terminal_outcome_publication_gate, and any such published terminal result must be published
+          through the gate, which excludes every bypass publication path, including store-sourced handler bypasses.'
+        differences: []
+      strengthening:
+        subject_signature: cbb1d67ad89ef5b68c775802171e11b19ed06418c5fc9a935c684aef6eb6c7fe
+        verdict: EQUIVALENT
+        reason: The formula universally requires every transition exposing a terminal result for a normal_retry_eligible_identity
+          to expose it through terminal_outcome_publication_gate, and likewise every such published result to be published
+          through the gate, matching the claim's exhaustive gate requirement and prohibition on bypass publication by any
+          handler without adding scope, cardinality, or provenance constraints.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: cbb1d67ad89ef5b68c775802171e11b19ed06418c5fc9a935c684aef6eb6c7fe
+        verdict: EQUIVALENT
+        reason: The rendering universally requires every exposure of a terminal result for a normal_retry_eligible_identity,
+          with the same identity coordinates and eligibility boundary, to a protocol consumer to occur through terminal_outcome_publication_gate;
+          this subsumes the enumerated handlers and the prohibition on publishing from durable_terminal_outcome_store through
+          a bypass, and the second clause adds no requirement beyond that universal gate requirement.
+        differences: []

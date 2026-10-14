@@ -6357,7 +6357,15 @@ assurance:
         is necessary to establish the target.
       signature: 83bd279ba07c71d027abb1348776da837aa995a59d6aea7862ab7eb1f8941697
     C45_terminal_outcome_publication_matches_canonical_acceptance:
-      status: unaudited
+      status: machine_checked
+      rationale: "Trusted symbolic translations exist for C45 and all four direct premises L190, L192,
+        L195 and L163. The composition check (direct SMT) found the premises together with NOT(C45) UNSAT.
+        Independent mutation tests that replace L190, L192 or L195 with True each become SAT with a concrete
+        counterexample, demonstrating those three premises are necessary. Replacing L163 with True leaves
+        the target entailed: L163 is a declared premise but is not load-bearing for this composition,
+        because L192's certified store-identity package already supplies the same-transaction committedness
+        content for stored records."
+      signature: 25422d9fb6721206918823e4de977f5d56ddf7b68106ed8b70b67fbc39221928
     C46_accepted_terminal_result_preserves_acceptance_provenance:
       status: machine_checked
       rationale: Trusted symbolic translations exist for C46 and all five direct premises L197, C47,
