@@ -4141,6 +4141,7 @@ functions:
     - claim:C45_terminal_outcome_publication_matches_canonical_acceptance
     - claim:C44_terminal_outcome_entry_matches_canonical_acceptance
     - claim:C43_terminal_outcome_entry_state_is_coherent
+    - claim:L192_terminal_publication_preserves_store_identity_provenance
   identity_fresh_in_state:
     args:
     - AuthoritativeState
@@ -7922,10 +7923,15 @@ claims:
             r: TerminalResultRecord
           body:
             implies:
-            - call:
-                fn: accepted_terminal_result_record
-                args:
-                - var: r
+            - and:
+              - call:
+                  fn: accepted_terminal_result_record
+                  args:
+                  - var: r
+              - call:
+                  fn: accepted_terminal_created_for_eligible_identity
+                  args:
+                  - var: r
             - and:
               - call:
                   fn: accepted_terminal_created_for_eligible_identity
@@ -7955,6 +7961,10 @@ claims:
                         args:
                         - var: r
                         - var: a
+                    - call:
+                        fn: terminal_result_has_matching_canonical_acceptance
+                        args:
+                        - var: r
   L195_rejected_terminal_publication_excludes_canonical_acceptance:
     capability: relational
     contracts: []
@@ -8035,6 +8045,10 @@ claims:
                       args:
                       - var: t
                       - var: a
+                  - call:
+                      fn: terminal_result_has_matching_canonical_acceptance
+                      args:
+                      - var: t
       - forall:
           vars:
             t: TerminalResultRecord
@@ -8204,6 +8218,10 @@ claims:
                       args:
                       - var: t
                       - var: a
+                  - call:
+                      fn: terminal_result_has_matching_canonical_acceptance
+                      args:
+                      - var: t
       - forall:
           vars:
             t: TerminalResultRecord
@@ -8419,6 +8437,10 @@ claims:
                       args:
                       - var: t
                       - var: a
+                  - call:
+                      fn: terminal_result_has_matching_canonical_acceptance
+                      args:
+                      - var: t
       - forall:
           vars:
             t: TerminalResultRecord
