@@ -4782,3 +4782,53 @@ records:
           accepted, and creates none when already accepted, covering overlapping, sequential, owner-recovery and lifecycle-change
           retries without adding or omitting a guarantee.'
         differences: []
+  claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail:
+    kind: claim
+    subject_id: C15_snapshot_catchup_returns_checkpoint_and_exact_tail
+    subject_signature: 749ba25c6010b0bccb61ef3e93c47ee59513645c9efe47d5f556c8a6abdcddee
+    roundtrip:
+      subject_signature: 749ba25c6010b0bccb61ef3e93c47ee59513645c9efe47d5f556c8a6abdcddee
+      status: TRANSLATED
+      natural_language: 'For every catch-up response r, every revision s, and every revision h, if r is a snapshot-replacement-mode
+        catch-up response, s is the frontier coordinate of the checkpoint that catch-up selected for r, and h is the authoritative
+        response head captured for r, then both of the following hold: r identifies exactly the checkpoint (content and frontier)
+        that catch-up selected for it, with the checkpoint identity carried by r being that one selected checkpoint and not
+        another checkpoint or a mixture of checkpoints; and r specifies that its checkpoint content replaces the client''s
+        prior document state rather than being appended or patched onto it. In addition, for every such r, s, and h, for every
+        canonical accepted change a and every revision v, if r is snapshot-mode, s is the frontier of the checkpoint selected
+        for r, h is the head captured for r, v is the canonical revision assigned to a, and v lies in the checkpoint tail
+        range (s, h] (that is, s < v and v <= h), then a is one of the changes returned in the tail portion of r. Conversely,
+        for every such r, s, and h, for every canonical accepted change a and every revision v, if r is snapshot-mode, s is
+        the frontier of the checkpoint selected for r, h is the head captured for r, a is one of the changes returned in the
+        tail portion of r, and v is the canonical revision assigned to a, then v lies in the checkpoint tail range (s, h]
+        (that is, s < v and v <= h). Finally, for every such r, s, and h, if r is snapshot-mode, s is the frontier of the
+        checkpoint selected for r, and h is the head captured for r, then within the tail returned by r for the range (s,
+        h], no canonical accepted change appears more than once and the returned changes are arranged in increasing revision
+        order.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 749ba25c6010b0bccb61ef3e93c47ee59513645c9efe47d5f556c8a6abdcddee
+        verdict: EQUIVALENT
+        reason: The formula's antecedent (snapshot mode, selected checkpoint frontier s, authoritative head h) exactly matches
+          the source precondition. Its consequents require replacement semantics and identification of exactly the selected
+          checkpoint, bidirectional tail membership for canonical changes whose unique revision lies in (s,h] (every and only
+          S+1..H), and the exactly-once-in-increasing-order predicate, which together preserve identity, cardinality, range,
+          and order without added or omitted requirements.
+        differences: []
+      strengthening:
+        subject_signature: 749ba25c6010b0bccb61ef3e93c47ee59513645c9efe47d5f556c8a6abdcddee
+        verdict: EQUIVALENT
+        reason: The formula exactly captures snapshot-mode applicability with selected frontier S and head H, replacement
+          semantics and identification of that one checkpoint, bidirectional tail membership for canonical changes with revisions
+          in (S,H], and exactly-once increasing-order via the dedicated predicate combined with the membership clauses.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 749ba25c6010b0bccb61ef3e93c47ee59513645c9efe47d5f556c8a6abdcddee
+        verdict: EQUIVALENT
+        reason: The rendering preserves the snapshot-replacement precondition, the selected checkpoint's content and frontier
+          identity as exactly one unmixed checkpoint, replacement rather than append/patch semantics, and the tail set equality
+          for S+1..H via both completeness and converse range restriction, together with exactly-once occurrence and increasing
+          revision order.
+        differences: []

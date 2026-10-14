@@ -6255,7 +6255,12 @@ assurance:
         direct premises are necessary to establish the target.
       signature: a5cfab07b9077903605c2d609eadf4999cf28070d24b5892e0696805ca96a649
     C15_snapshot_catchup_returns_checkpoint_and_exact_tail:
-      status: unaudited
+      status: machine_checked
+      rationale: Trusted symbolic translations exist for C15 and both direct premises L25 and L26.
+        Z3 checked L25 AND L26 AND NOT(C15) as UNSAT (direct_smt). Independent mutation tests that
+        replace either L25 or L26 with True each become SAT with a concrete counterexample,
+        demonstrating that both direct premises are necessary to establish the target.
+      signature: 28b22e7e2a2fb006dd6a3a777e3c0d8688b9fe9cf28f5164173e52db4f81a135
     C16_non_append_lifecycle_preserves_logical_revision_prefix:
       status: unaudited
     C17_snapshot_mode_selects_checkpoint_not_after_head:
