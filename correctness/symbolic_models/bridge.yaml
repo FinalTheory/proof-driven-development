@@ -1731,6 +1731,9 @@ functions:
     meaning: Transition t is an authoritative ownership handoff for document d.
     semantic_anchors:
     - claim:G2_canonical_history_is_linear_and_fenced
+    - claim:L156_owner_handoff_installs_fresh_epoch
+    - claim:L168_owner_handoff_installs_fresh_generation
+    - claim:C8_stale_owner_is_fenced
   handoff_installs_strictly_new_generation:
     args:
     - ProtocolTransition
@@ -1751,6 +1754,8 @@ functions:
       d has become authoritative again.
     semantic_anchors:
     - claim:G2_canonical_history_is_linear_and_fenced
+    - claim:L28_authoritative_epoch_never_regresses_or_reuses
+    - claim:C8_stale_owner_is_fenced
   canonical_append_for_document:
     args:
     - ProtocolTransition
@@ -1762,6 +1767,9 @@ functions:
     semantic_anchors:
     - claim:G2_canonical_history_is_linear_and_fenced
     - contract:owner_generation_authorization_binding
+    - claim:L5_append_requires_current_epoch
+    - claim:L159_owner_append_authorization_is_generation_bound
+    - claim:C8_stale_owner_is_fenced
   append_uses_exact_current_document_generation:
     args:
     - ProtocolTransition
@@ -1774,6 +1782,8 @@ functions:
     semantic_anchors:
     - claim:G2_canonical_history_is_linear_and_fenced
     - contract:owner_generation_authorization_binding
+    - claim:L159_owner_append_authorization_is_generation_bound
+    - claim:C8_stale_owner_is_fenced
   accepted_terminal_result_record:
     args:
     - TerminalResultRecord
@@ -2881,6 +2891,7 @@ functions:
     - contract:owner_generation_authorization_binding
     - claim:L159_owner_append_authorization_is_generation_bound
     - source:owner_failover
+    - claim:C8_stale_owner_is_fenced
   append_tuple_bound_to_executing_document_generation:
     args:
     - Document
@@ -2903,6 +2914,7 @@ functions:
     - contract:owner_generation_authorization_binding
     - claim:L159_owner_append_authorization_is_generation_bound
     - source:owner_failover
+    - claim:C8_stale_owner_is_fenced
     dimensions:
     - document
     - observation
@@ -4949,6 +4961,7 @@ functions:
       revision r became when it committed as a canonical accepted change.'
     semantic_anchors:
     - claim:L4_append_requires_previous_frontier
+    - claim:L5_append_requires_current_epoch
   candidate_commit_prestate_latest_revision:
     args:
     - CanonicalAcceptance
@@ -5023,6 +5036,109 @@ functions:
     semantic_anchors:
     - claim:L140_initial_authoritative_history_is_gap_free
     - claim:C39_authoritative_history_state_is_gap_free
+  handoff_installs_strictly_greater_epoch:
+    args:
+    - ProtocolTransition
+    - Document
+    returns: Bool
+    dimensions:
+    - document
+    - observation
+    catalog_symbols:
+    - document_current_epoch
+    meaning: Ownership handoff t for document d commits document_current_epoch to
+      a strictly greater value than the superseded generation's epoch, with the epoch
+      advance occurring before or atomically with the new generation becoming authoritative
+      and acceptance-eligible; the new generation does not reuse the superseded generation's
+      epoch. This predicate is the epoch half of the handoff installation requirement;
+      the fresh generation-identity half is stated separately.
+    semantic_anchors:
+    - claim:L156_owner_handoff_installs_fresh_epoch
+    - claim:C8_stale_owner_is_fenced
+  handoff_installs_fresh_generation_id:
+    args:
+    - ProtocolTransition
+    - Document
+    returns: Bool
+    catalog_symbols:
+    - document_owner_generation_id
+    meaning: Ownership handoff t for document d commits a fresh document_owner_generation_id,
+      different from the superseded generation's identity, before or atomically with
+      the new generation becoming authoritative and acceptance-eligible; the new generation
+      is not published or enabled while the authoritative generation identity still
+      names the superseded tenure. This predicate is the generation-identity half
+      of the handoff installation requirement; the strictly-greater-epoch half is
+      stated separately.
+    semantic_anchors:
+    - claim:L168_owner_handoff_installs_fresh_generation
+    - claim:C8_stale_owner_is_fenced
+  acceptance_append_supplied_epoch_matches_current:
+    args:
+    - CanonicalAcceptance
+    - Document
+    returns: Bool
+    dimensions:
+    - document
+    - observation
+    catalog_symbols:
+    - owner_epoch
+    - current_epoch
+    - document_current_epoch
+    meaning: 'Canonical acceptance a for document d resulted from a candidate_canonical_change
+      append whose supplied owner_epoch equaled the authoritative document_current_epoch
+      of d at commit: the pre-commit current_epoch observed by the acceptance transaction''s
+      epoch guard was exactly the supplied owner_epoch. An append whose supplied owner_epoch
+      differed from the authoritative current epoch at commit does not satisfy this
+      predicate for its acceptance.'
+    semantic_anchors:
+    - claim:L5_append_requires_current_epoch
+  append_commit_supplied_epoch_matches_current:
+    args:
+    - ProtocolTransition
+    - Document
+    returns: Bool
+    dimensions:
+    - document
+    - observation
+    catalog_symbols:
+    - owner_epoch
+    - document_current_epoch
+    meaning: 'Canonical append transition t for document d committed with its supplied
+      owner_epoch equal to d''s authoritative document_current_epoch at commit: the
+      epoch fencing guard inside the acceptance transaction passed with equality,
+      so no stale-owner append committed. This is the transition-level form of the
+      candidate-append epoch guard.'
+    semantic_anchors:
+    - claim:L5_append_requires_current_epoch
+    - claim:C8_stale_owner_is_fenced
+  authoritative_lifecycle_transition_for_document:
+    args:
+    - ProtocolTransition
+    - Document
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Transition t is an authoritative lifecycle transition for document d:
+      an authoritative recovery, restart, delayed metadata publication, ownership
+      handoff, or other authoritative transition in d''s lifecycle, as opposed to
+      a client-side or speculative action.'
+    semantic_anchors:
+    - claim:L28_authoritative_epoch_never_regresses_or_reuses
+  lifecycle_transition_never_decreases_or_restores_epoch:
+    args:
+    - ProtocolTransition
+    - Document
+    returns: Bool
+    dimensions:
+    - document
+    - observation
+    catalog_symbols:
+    - document_current_epoch
+    meaning: 'Across authoritative lifecycle transition t for document d, d''s document_current_epoch
+      never decreases and no superseded epoch value for d is restored as current:
+      the transition leaves the current epoch at or above its prior value and never
+      makes a previously superseded value authoritative again.'
+    semantic_anchors:
+    - claim:L28_authoritative_epoch_never_regresses_or_reuses
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -11778,6 +11894,208 @@ claims:
                 args:
                 - var: after
                 - var: d
+  L5_append_requires_current_epoch:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            a: CanonicalAcceptance
+            d: Document
+            r: Revision
+          body:
+            implies:
+            - call:
+                fn: candidate_change_commits_as_acceptance
+                args:
+                - var: a
+                - var: r
+            - call:
+                fn: acceptance_append_supplied_epoch_matches_current
+                args:
+                - var: a
+                - var: d
+      - forall:
+          vars:
+            t: ProtocolTransition
+            d: Document
+          body:
+            implies:
+            - call:
+                fn: canonical_append_for_document
+                args:
+                - var: t
+                - var: d
+            - call:
+                fn: append_commit_supplied_epoch_matches_current
+                args:
+                - var: t
+                - var: d
+  L28_authoritative_epoch_never_regresses_or_reuses:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            t: ProtocolTransition
+            d: Document
+          body:
+            implies:
+            - call:
+                fn: authoritative_lifecycle_transition_for_document
+                args:
+                - var: t
+                - var: d
+            - call:
+                fn: lifecycle_transition_never_decreases_or_restores_epoch
+                args:
+                - var: t
+                - var: d
+      - forall:
+          vars:
+            s: AuthoritativeState
+            d: Document
+          body:
+            not:
+              call:
+                fn: superseded_generation_is_authoritative
+                args:
+                - var: s
+                - var: d
+  L156_owner_handoff_installs_fresh_epoch:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          t: ProtocolTransition
+          d: Document
+        body:
+          implies:
+          - call:
+              fn: authoritative_handoff_for_document
+              args:
+              - var: t
+              - var: d
+          - call:
+              fn: handoff_installs_strictly_greater_epoch
+              args:
+              - var: t
+              - var: d
+  L168_owner_handoff_installs_fresh_generation:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          t: ProtocolTransition
+          d: Document
+        body:
+          implies:
+          - call:
+              fn: authoritative_handoff_for_document
+              args:
+              - var: t
+              - var: d
+          - call:
+              fn: handoff_installs_fresh_generation_id
+              args:
+              - var: t
+              - var: d
+  C8_stale_owner_is_fenced:
+    capability: relational
+    contracts:
+    - owner_generation_authorization_binding
+    formula:
+      and:
+      - forall:
+          vars:
+            t: ProtocolTransition
+            d: Document
+          body:
+            implies:
+            - call:
+                fn: authoritative_handoff_for_document
+                args:
+                - var: t
+                - var: d
+            - and:
+              - call:
+                  fn: handoff_installs_strictly_greater_epoch
+                  args:
+                  - var: t
+                  - var: d
+              - call:
+                  fn: handoff_installs_fresh_generation_id
+                  args:
+                  - var: t
+                  - var: d
+      - forall:
+          vars:
+            s: AuthoritativeState
+            d: Document
+          body:
+            not:
+              call:
+                fn: superseded_generation_is_authoritative
+                args:
+                - var: s
+                - var: d
+      - forall:
+          vars:
+            t: ProtocolTransition
+            d: Document
+          body:
+            implies:
+            - call:
+                fn: canonical_append_attempt_for_document
+                args:
+                - var: t
+                - var: d
+            - call:
+                fn: append_tuple_bound_to_executing_document_generation
+                args:
+                - var: d
+                - var: t
+      - forall:
+          vars:
+            t: ProtocolTransition
+            d: Document
+          body:
+            implies:
+            - call:
+                fn: canonical_append_for_document
+                args:
+                - var: t
+                - var: d
+            - call:
+                fn: append_uses_exact_current_document_generation
+                args:
+                - var: t
+                - var: d
+      - forall:
+          vars:
+            t: ProtocolTransition
+            d: Document
+          body:
+            implies:
+            - call:
+                fn: canonical_append_for_document
+                args:
+                - var: t
+                - var: d
+            - call:
+                fn: append_commit_supplied_epoch_matches_current
+                args:
+                - var: t
+                - var: d
+  L159_owner_append_authorization_is_generation_bound:
+    capability: relational
+    contracts:
+    - owner_generation_authorization_binding
+    formula_from_contracts: true
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
