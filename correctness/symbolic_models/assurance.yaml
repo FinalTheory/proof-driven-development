@@ -6183,3 +6183,160 @@ records:
           the same r is preserved with the exact included-through-head semantics r <= H, with physical representation change
           or row deletion under a replacement not dropping that binding. No requirement is omitted or added beyond that guarantee.
         differences: []
+  claim:L124_pending_identity_classifier_uses_same_identity_and_response_head:
+    kind: claim
+    subject_id: L124_pending_identity_classifier_uses_same_identity_and_response_head
+    subject_signature: 15302eaa64c6164a112cbc56b75e49b31f98055d6183692c0bce61580d0a241d
+    roundtrip:
+      subject_signature: 15302eaa64c6164a112cbc56b75e49b31f98055d6183692c0bce61580d0a241d
+      status: TRANSLATED
+      natural_language: 'For all catch-up responses c, logical edit identities e, documents d, client change identifiers k,
+        revisions h, and revisions r, if d is the document_id component of e and k is the client_change_id coordinate carried
+        by e, and exact logical edit identity e=(d,k) is pending at the start of resync c for that same resync document d
+        (a pending identity for another document does not satisfy this), and pending identity e is within the normal 30-day
+        reconnect eligibility horizon for resync c, and revision h is the authoritative response head captured for response
+        c (this relation names c''s head only and does not by itself assert what c returns for that head), then both of the
+        following hold: (1) the response classifier for catch-up response c reports pending identity e as accepted at revision
+        r if and only if a canonical acceptance for the exact full identity e commits at canonical revision r and r is at
+        or before h in the canonical revision order; and (2) the response classifier for catch-up response c reports pending
+        identity e as unresolved through c''s captured response head if and only if there does not exist any revision r2 such
+        that a canonical acceptance for the exact full identity e commits at canonical revision r2 and r2 is at or before
+        h in the canonical revision order.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 15302eaa64c6164a112cbc56b75e49b31f98055d6183692c0bce61580d0a241d
+        verdict: EQUIVALENT
+        reason: The formula scopes to pending identities within the normal horizon for response c with captured head h, decomposes
+          e into its full (document_id, client_change_id) coordinates, and encodes biconditionals tying accepted-at-r exactly
+          to a canonical acceptance for that same e at r with r <= h, and unresolved exactly to the absence of any such acceptance
+          at or before h; acceptances for a different identity or after h therefore cannot satisfy or suppress the classification,
+          and no guarantee is asserted outside the horizon.
+        differences: []
+      strengthening:
+        subject_signature: 15302eaa64c6164a112cbc56b75e49b31f98055d6183692c0bce61580d0a241d
+        verdict: EQUIVALENT
+        reason: The formula guards on the same full identity (D,k), pending status, normal 30-day horizon, and captured head
+          H_D, and encodes exactly the biconditionals that accepted-at-r holds iff a canonical acceptance for that same identity
+          exists at r <= H_D, and unresolved holds iff no such acceptance exists; acceptances for other documents or after
+          H_D therefore cannot satisfy it, and no guarantee is made outside the horizon.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 15302eaa64c6164a112cbc56b75e49b31f98055d6183692c0bce61580d0a241d
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the exact full identity (d,k), the 30-day eligibility precondition tied to the same
+          document''s catch-up response, and the captured head bound: accepted at r iff a canonical acceptance for that exact
+          identity commits at r <= h, and unresolved through h iff no such acceptance exists at or before h, which excludes
+          other-document and post-head acceptances and makes no claim outside the eligibility horizon.'
+        differences: []
+  claim:C41_pending_identity_revision_evidence_survives_lifecycle:
+    kind: claim
+    subject_id: C41_pending_identity_revision_evidence_survives_lifecycle
+    subject_signature: 9b65e452e3b78216b757bd241a75b82091c429a35de296680fdede6320e132fe
+    roundtrip:
+      subject_signature: 9b65e452e3b78216b757bd241a75b82091c429a35de296680fdede6320e132fe
+      status: TRANSLATED
+      natural_language: 'For every logical edit identity e and every revision r, if there is a canonical acceptance for the
+        exact full identity e that commits at canonical revision r, where r is the canonical revision of that acceptance,
+        and e is a normal_retry_eligible_identity (the logical edit identified by e remains within the normal retry/reconnect
+        eligibility boundary), then both of the following hold. First, for every protocol transition t, if t is a durable
+        retention transition (a snapshotting, compaction, cleanup, or other durable retention transition) and t occurs after
+        the canonical acceptance of identity e and while e remains within the normal retry/reconnect eligibility boundary,
+        then across t the logical accepted_identity_frontier_evidence binding of identity e to revision r is preserved: after
+        t the authoritative evidence still binds the same full identity e to the same revision r with the exact included-through-head
+        query semantics (e is included through head H if and only if r <= H); physical representation may change and physical
+        rows may be deleted under a replacement representation, but the logical binding is not dropped, relabeled, or reinterpreted.
+        Second, for every protocol transition t, if t is a completed recovery/restart reconstruction transition and t occurs
+        after the canonical acceptance of identity e and while e remains within the normal retry/reconnect eligibility boundary,
+        then across t the logical accepted_identity_frontier_evidence binding of identity e to revision r is preserved in
+        exactly the same sense: after t the authoritative evidence still binds the same full identity e to the same revision
+        r with the exact included-through-head query semantics (e is included through head H if and only if r <= H), with
+        physical representation allowed to change and physical rows allowed to be deleted under a replacement representation,
+        but without the logical binding being dropped, relabeled, or reinterpreted.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 9b65e452e3b78216b757bd241a75b82091c429a35de296680fdede6320e132fe
+        verdict: EQUIVALENT
+        reason: The formula separately requires, for every durable-retention transition and every completed recovery/restart
+          transition occurring after canonical acceptance while the same full identity remains within the normal retry/reconnect
+          eligibility window, preservation of the authoritative frontier-evidence binding to the same revision r, including
+          the exact included-through-head semantics (included through H iff r <= H) despite physical representation changes.
+          It imposes no classification-evidence or immediate-cleanup requirement after the identity leaves that boundary,
+          matching the source scope.
+        differences: []
+      strengthening:
+        subject_signature: 9b65e452e3b78216b757bd241a75b82091c429a35de296680fdede6320e132fe
+        verdict: EQUIVALENT
+        reason: 'The formula matches the source: given canonical acceptance of the full identity e at revision r and normal
+          retry eligibility, it requires preservation of the authoritative frontier-evidence binding to the same r, with exact
+          included-through-H semantics r <= H, for both durable-retention and completed recovery/restart transitions, guarded
+          by the transition occurring within the identity eligibility window. It adds no requirement after the identity leaves
+          that boundary and imposes no classification-evidence or physical-cleanup obligation.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 9b65e452e3b78216b757bd241a75b82091c429a35de296680fdede6320e132fe
+        verdict: EQUIVALENT
+        reason: The rendering preserves the acceptance-at-r precondition, the normal-retry-eligibility boundary for both durable-retention
+          and completed recovery/restart transitions, the same full identity binding to r, allowance for physical representation
+          change, and the exact included-through-H iff r <= H query semantics, without adding or omitting any positive guarantee;
+          the original's post-boundary non-requirement is preserved by limiting all guarantees to while eligibility remains.
+        differences: []
+  claim:C37_pending_identity_resolution_is_bound_to_response_head:
+    kind: claim
+    subject_id: C37_pending_identity_resolution_is_bound_to_response_head
+    subject_signature: ed039c9da30c48b7876d4d379c30b80d722db1e7afd784ba6e23352e35618c25
+    roundtrip:
+      subject_signature: ed039c9da30c48b7876d4d379c30b80d722db1e7afd784ba6e23352e35618c25
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following two statements holds. (1) For all catch-up responses c, logical
+        edit identities e, documents d, client change ids k, revisions h, and revisions r, if all of the following hold: the
+        document_id component of e is equal to d, the client_change_id coordinate carried by e is equal to k, the exact full
+        logical edit identity e = (d, k) is pending at the start of resync c for that same resync document d (a pending identity
+        for another document does not satisfy this), e is within the normal 30-day reconnect eligibility horizon for resync
+        c, and revision h is the authoritative response head captured for response c (this relation names c''s head only and
+        does not by itself assert what c returns for that head); then both of the following biconditional conditions hold.
+        First, the response classifier for catch-up response c reports pending identity e as accepted at revision r if and
+        only if a canonical acceptance for the exact full identity e commits at canonical revision r and revision r is at
+        or before revision h in the canonical revision order (r <= h); that is, classifier acceptance at r implies both that
+        canonical commitment at r and r <= h, and that canonical commitment at r together with r <= h implies classifier acceptance
+        at r. Second, the response classifier for catch-up response c reports pending identity e as unresolved through c''s
+        captured response head if and only if there does not exist any revision r2 such that a canonical acceptance for the
+        exact full identity e commits at canonical revision r2 and r2 is at or before h (r2 <= h); that is, reporting unresolved
+        through the head implies the absence of any such r2, and the absence of any such r2 implies reporting unresolved through
+        the head. (2) For all catch-up responses c and logical edit identities e, if e is pending at the start of resync c
+        and e is within the normal 30-day reconnect eligibility horizon for resync c, then for resync c and identity e, snapshotting,
+        compaction, cleanup, and recovery transitions preserve enough same-identity accepted revision or equivalent frontier
+        evidence throughout e''s normal eligibility horizon to make the head-bound classification of e.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: ed039c9da30c48b7876d4d379c30b80d722db1e7afd784ba6e23352e35618c25
+        verdict: EQUIVALENT
+        reason: 'The formula preserves the full (document_id, client_change_id) identity, pending-at-resync and 30-day horizon
+          guards, and the authoritative head bound: accepted-at-r holds iff a canonical acceptance for that exact identity
+          commits at r <= h, unresolved holds iff no such acceptance exists through h, cross-document acceptances cannot satisfy
+          the exact-identity predicates, evidence preservation is required throughout the horizon for pending in-horizon identities,
+          and expired/out-of-horizon identities receive no classification guarantee.'
+        differences: []
+      strengthening:
+        subject_signature: ed039c9da30c48b7876d4d379c30b80d722db1e7afd784ba6e23352e35618c25
+        verdict: EQUIVALENT
+        reason: The formula scopes to the same full pending identity within the normal horizon under the captured response
+          head, encodes accepted-at-r and unresolved-through-head as exact biconditionals against a canonical acceptance for
+          that same identity at or before the head, thereby excluding cross-document satisfaction, and separately requires
+          same-identity classification evidence preservation throughout the horizon.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: ed039c9da30c48b7876d4d379c30b80d722db1e7afd784ba6e23352e35618c25
+        verdict: EQUIVALENT
+        reason: 'The round-trip rendering preserves the original scope and classification: it binds the pending identity as
+          the exact full (document, client change) pair within the 30-day horizon to the response''s authoritative head, makes
+          acceptance at r biconditional on canonical acceptance of that same identity at r <= head, makes unresolved biconditional
+          on the absence of any such acceptance through the head, thereby also excluding cross-document acceptance, and preserves
+          the snapshot/compaction/cleanup/recovery evidence-preservation requirement throughout the eligibility horizon, with
+          expired identities remaining outside the conditioned scope.'
+        differences: []
