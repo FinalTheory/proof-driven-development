@@ -246,6 +246,116 @@ functions:
     meaning: The raw edit carried by request r is the edit authored against the canonical client content in source state s.
     semantic_anchors:
     - contract:request_authoring_frontier_binding
+  catchup_response_is_snapshot_mode:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Response r is a snapshot-replacement-mode catch-up response: catch-up
+      selected a checkpoint for r and r is to be constructed by snapshot replacement
+      rather than by delta/range application. This predicate classifies r''s mode only;
+      it does not assert which checkpoint was selected or what r returns.'
+    semantic_anchors:
+    - claim:L25_snapshot_catchup_uses_selected_checkpoint_replacement
+    - claim:L26_snapshot_catchup_returns_exact_canonical_tail
+    - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
+  catchup_response_selected_checkpoint_frontier:
+    args:
+    - CatchupResponse
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: Revision s is the frontier coordinate of the checkpoint (content, s) that
+      catch-up selected for response r. This relation names the selected checkpoint's
+      frontier only; it does not assert that r identifies that checkpoint or what r
+      returns.
+    semantic_anchors:
+    - claim:L26_snapshot_catchup_returns_exact_canonical_tail
+    - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
+  catchup_response_head_is:
+    args:
+    - CatchupResponse
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: Revision h is the authoritative response head captured for response r.
+      This relation names r's head only; it does not assert what r returns for that
+      head.
+    semantic_anchors:
+    - claim:L26_snapshot_catchup_returns_exact_canonical_tail
+    - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
+  catchup_response_identifies_selected_checkpoint:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Response r identifies exactly the checkpoint (content and frontier) that
+      catch-up selected for it: the checkpoint identity carried by r is that one selected
+      checkpoint, not another checkpoint and not a mixture of checkpoints.'
+    semantic_anchors:
+    - claim:L25_snapshot_catchup_uses_selected_checkpoint_replacement
+    - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
+  catchup_response_uses_replacement_semantics:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: Response r specifies that its checkpoint content replaces the client's
+      prior document state rather than being appended or patched onto it.
+    semantic_anchors:
+    - claim:L25_snapshot_catchup_uses_selected_checkpoint_replacement
+    - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
+  catchup_response_tail_contains_change:
+    args:
+    - CatchupResponse
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    meaning: Canonical accepted change a is one of the changes returned in the tail
+      portion of catch-up response r. This relation records tail membership only; it
+      does not assert that a's revision lies in any particular range or how many times
+      a appears.
+    semantic_anchors:
+    - claim:L26_snapshot_catchup_returns_exact_canonical_tail
+    - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
+  canonical_acceptance_revision_is:
+    args:
+    - CanonicalAcceptance
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: Revision v is the canonical revision assigned to canonical accepted change
+      a. Each canonical accepted change has exactly one assigned revision; this relation
+      names it and asserts nothing about any response.
+    semantic_anchors:
+    - claim:L26_snapshot_catchup_returns_exact_canonical_tail
+    - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
+  revision_in_checkpoint_tail_range:
+    args:
+    - Revision
+    - Revision
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Revision v lies in the checkpoint tail range (s, h]: s < v and v <= h,
+      so v is one of the revisions s+1..h. This predicate is the range relation only.'
+    semantic_anchors:
+    - claim:L26_snapshot_catchup_returns_exact_canonical_tail
+    - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
+  catchup_response_tail_exactly_once_in_order:
+    args:
+    - CatchupResponse
+    - Revision
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: Within the tail returned by response r for the range (s, h], no canonical
+      accepted change appears more than once and the returned changes are arranged in
+      increasing revision order. This predicate asserts the tail's multiplicity and
+      ordering only; which changes belong to the range is asserted separately.
+    semantic_anchors:
+    - claim:L26_snapshot_catchup_returns_exact_canonical_tail
+    - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
   eligible_catchup_response:
     args:
     - CatchupResponse
@@ -5542,6 +5652,282 @@ claims:
                   - var: e
                   - var: l
                   - var: o
+  L25_snapshot_catchup_uses_selected_checkpoint_replacement:
+    contracts: []
+    formula:
+      forall:
+        vars:
+          r: CatchupResponse
+        body:
+          implies:
+          - call:
+              fn: catchup_response_is_snapshot_mode
+              args:
+              - var: r
+          - and:
+            - call:
+                fn: catchup_response_identifies_selected_checkpoint
+                args:
+                - var: r
+            - call:
+                fn: catchup_response_uses_replacement_semantics
+                args:
+                - var: r
+  L26_snapshot_catchup_returns_exact_canonical_tail:
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            r: CatchupResponse
+            s: Revision
+            h: Revision
+            a: CanonicalAcceptance
+            v: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_selected_checkpoint_frontier
+                  args:
+                  - var: r
+                  - var: s
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+              - call:
+                  fn: canonical_acceptance_revision_is
+                  args:
+                  - var: a
+                  - var: v
+              - call:
+                  fn: revision_in_checkpoint_tail_range
+                  args:
+                  - var: v
+                  - var: s
+                  - var: h
+            - call:
+                fn: catchup_response_tail_contains_change
+                args:
+                - var: r
+                - var: a
+      - forall:
+          vars:
+            r: CatchupResponse
+            s: Revision
+            h: Revision
+            a: CanonicalAcceptance
+            v: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_selected_checkpoint_frontier
+                  args:
+                  - var: r
+                  - var: s
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+              - call:
+                  fn: catchup_response_tail_contains_change
+                  args:
+                  - var: r
+                  - var: a
+              - call:
+                  fn: canonical_acceptance_revision_is
+                  args:
+                  - var: a
+                  - var: v
+            - call:
+                fn: revision_in_checkpoint_tail_range
+                args:
+                - var: v
+                - var: s
+                - var: h
+      - forall:
+          vars:
+            r: CatchupResponse
+            s: Revision
+            h: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_selected_checkpoint_frontier
+                  args:
+                  - var: r
+                  - var: s
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+            - call:
+                fn: catchup_response_tail_exactly_once_in_order
+                args:
+                - var: r
+                - var: s
+                - var: h
+  C15_snapshot_catchup_returns_checkpoint_and_exact_tail:
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            r: CatchupResponse
+            s: Revision
+            h: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_selected_checkpoint_frontier
+                  args:
+                  - var: r
+                  - var: s
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+            - and:
+              - call:
+                  fn: catchup_response_identifies_selected_checkpoint
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_uses_replacement_semantics
+                  args:
+                  - var: r
+      - forall:
+          vars:
+            r: CatchupResponse
+            s: Revision
+            h: Revision
+            a: CanonicalAcceptance
+            v: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_selected_checkpoint_frontier
+                  args:
+                  - var: r
+                  - var: s
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+              - call:
+                  fn: canonical_acceptance_revision_is
+                  args:
+                  - var: a
+                  - var: v
+              - call:
+                  fn: revision_in_checkpoint_tail_range
+                  args:
+                  - var: v
+                  - var: s
+                  - var: h
+            - call:
+                fn: catchup_response_tail_contains_change
+                args:
+                - var: r
+                - var: a
+      - forall:
+          vars:
+            r: CatchupResponse
+            s: Revision
+            h: Revision
+            a: CanonicalAcceptance
+            v: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_selected_checkpoint_frontier
+                  args:
+                  - var: r
+                  - var: s
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+              - call:
+                  fn: catchup_response_tail_contains_change
+                  args:
+                  - var: r
+                  - var: a
+              - call:
+                  fn: canonical_acceptance_revision_is
+                  args:
+                  - var: a
+                  - var: v
+            - call:
+                fn: revision_in_checkpoint_tail_range
+                args:
+                - var: v
+                - var: s
+                - var: h
+      - forall:
+          vars:
+            r: CatchupResponse
+            s: Revision
+            h: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_selected_checkpoint_frontier
+                  args:
+                  - var: r
+                  - var: s
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+            - call:
+                fn: catchup_response_tail_exactly_once_in_order
+                args:
+                - var: r
+                - var: s
+                - var: h
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
