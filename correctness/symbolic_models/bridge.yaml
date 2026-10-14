@@ -3338,6 +3338,7 @@ functions:
     - claim:C44_terminal_outcome_entry_matches_canonical_acceptance
     - claim:C43_terminal_outcome_entry_state_is_coherent
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
+    - claim:L192_terminal_publication_preserves_store_identity_provenance
   accepted_terminal_matching_creation_identity_matches:
     args:
     - TerminalResultRecord
@@ -3507,6 +3508,7 @@ functions:
     - claim:C44_terminal_outcome_entry_matches_canonical_acceptance
     - claim:C43_terminal_outcome_entry_state_is_coherent
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
+    - claim:L192_terminal_publication_preserves_store_identity_provenance
   accepted_terminal_matching_canonical_acceptance:
     args:
     - CanonicalAcceptance
@@ -4208,6 +4210,23 @@ functions:
       terminal outcome store forward.
     semantic_anchors:
     - claim:L170_recovery_preserves_terminal_outcomes
+  accepted_terminal_creation_pair_atomically_commits:
+    args:
+    - TerminalResultRecord
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols:
+    - terminal_result
+    semantic_anchors:
+    - claim:L192_terminal_publication_preserves_store_identity_provenance
+    - claim:C45_terminal_outcome_publication_matches_canonical_acceptance
+    - claim:C44_terminal_outcome_entry_matches_canonical_acceptance
+    - claim:C43_terminal_outcome_entry_state_is_coherent
+    meaning: The matching ACCEPTED terminal-result creation t and canonical accepted-change
+      creation a share one authoritative transaction boundary and therefore commit
+      or roll back together; no reachable authoritative post-boundary state for that
+      pair contains exactly one side. This relation asserts atomicity only and does
+      not assert producer provenance or require a particular named transaction implementation.
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -7898,6 +7917,39 @@ claims:
                 fn: accepted_terminal_created_for_eligible_identity
                 args:
                 - var: t
+      - forall:
+          vars:
+            r: TerminalResultRecord
+          body:
+            implies:
+            - call:
+                fn: accepted_terminal_result_record
+                args:
+                - var: r
+            - and:
+              - call:
+                  fn: accepted_terminal_created_for_eligible_identity
+                  args:
+                  - var: r
+              - exists:
+                  vars:
+                    a: CanonicalAcceptance
+                  body:
+                    and:
+                    - call:
+                        fn: accepted_terminal_matching_creation_pair
+                        args:
+                        - var: r
+                        - var: a
+                    - call:
+                        fn: accepted_terminal_creation_pair_atomically_commits
+                        args:
+                        - var: r
+                        - var: a
+                    - call:
+                        fn: accepted_terminal_matching_acceptance_committed
+                        args:
+                        - var: a
   L195_rejected_terminal_publication_excludes_canonical_acceptance:
     capability: relational
     contracts: []
@@ -7967,6 +8019,11 @@ claims:
                   - call:
                       fn: accepted_terminal_matching_acceptance_committed
                       args:
+                      - var: a
+                  - call:
+                      fn: accepted_terminal_creation_pair_atomically_commits
+                      args:
+                      - var: t
                       - var: a
       - forall:
           vars:
@@ -8126,6 +8183,11 @@ claims:
                   - call:
                       fn: accepted_terminal_matching_acceptance_committed
                       args:
+                      - var: a
+                  - call:
+                      fn: accepted_terminal_creation_pair_atomically_commits
+                      args:
+                      - var: t
                       - var: a
       - forall:
           vars:
@@ -8331,6 +8393,11 @@ claims:
                   - call:
                       fn: accepted_terminal_matching_acceptance_committed
                       args:
+                      - var: a
+                  - call:
+                      fn: accepted_terminal_creation_pair_atomically_commits
+                      args:
+                      - var: t
                       - var: a
       - forall:
           vars:
