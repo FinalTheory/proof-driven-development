@@ -5246,3 +5246,272 @@ records:
           the rendering's preservation and non-removal conjuncts state the same boundary, without governing value-preserving
           representation rewrites or adding a creation, provenance, or cross-identity bridge.
         differences: []
+  claim:C45_terminal_outcome_publication_matches_canonical_acceptance:
+    kind: claim
+    subject_id: C45_terminal_outcome_publication_matches_canonical_acceptance
+    subject_signature: 709b732bc93da962b1a7f7f786d887e2339ebfe9e951954f4ee0bcd75e56ace5
+    roundtrip:
+      subject_signature: 709b732bc93da962b1a7f7f786d887e2339ebfe9e951954f4ee0bcd75e56ace5
+      status: TRANSLATED
+      natural_language: 'Both of the following hold. (1) For every terminal result record t: if t is published (exposed to
+        a protocol consumer through an authoritative publication path for its identity), and t is a terminal_result for a
+        normal_retry_eligible_identity (a logical edit identity (document_id, client_change_id) whose pending/retry age is
+        no more than 30 days and therefore remains inside the normal retry/reconnect protocol boundary), and t is an authoritative
+        ACCEPTED (canonical result) terminal outcome, then there exists a canonical acceptance a such that all of the following
+        hold: t and a are the ACCEPTED terminal-result creation and its matching canonical accepted-change creation for one
+        logical acceptance (this identifies the matching creation pair only); the matching canonical acceptance a is committed
+        for the corresponding ACCEPTED terminal outcome, and the execution that committed a is the acceptance execution that
+        produced a; the matching ACCEPTED terminal-result creation t and canonical accepted-change creation a share one authoritative
+        transaction boundary and therefore commit or roll back together, with no reachable authoritative post-boundary state
+        for that pair containing exactly one side (this asserts atomicity only, not producer provenance and not a particular
+        named transaction implementation); and the accepted terminal result representation t carries a canonical result produced
+        by the same acceptance execution that produced canonical acceptance a for the producer binding under audit, in that
+        the result placed into t comes from that same execution rather than another request, document, acceptance execution,
+        or merely extensionally equal substitute, a test that applies to any representation of the same logical terminal outcome.
+        (2) For every terminal result record t: if t is published, and t is a terminal_result for a normal_retry_eligible_identity
+        as defined above, and t is an authoritative REJECTED (definitive rejection reason) terminal outcome, then it is not
+        the case that the matching canonical accepted change for t''s full identity is present in canonical accepted history.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 709b732bc93da962b1a7f7f786d887e2339ebfe9e951954f4ee0bcd75e56ace5
+        verdict: EQUIVALENT
+        reason: 'The formula covers both publication cases under the same published and eligible-identity guards: for ACCEPTED
+          results it requires a matching creation pair that is committed, atomically committed with the result, and bound
+          to the same acceptance execution, matching the created-together, same-execution, single-transaction and history-pair
+          requirements; for REJECTED results it requires the absence of a matching canonical acceptance for the full identity.'
+        differences: []
+      strengthening:
+        subject_signature: 709b732bc93da962b1a7f7f786d887e2339ebfe9e951954f4ee0bcd75e56ace5
+        verdict: EQUIVALENT
+        reason: The formula preserves the publication and eligible-identity guards, requires for ACCEPTED results a matching
+          creation pair that is committed, atomically co-committed in one transaction, and bound to the same acceptance execution,
+          and for REJECTED results requires absence of a matching canonical acceptance for the full identity, with no added
+          or omitted condition.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 709b732bc93da962b1a7f7f786d887e2339ebfe9e951954f4ee0bcd75e56ace5
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the publication precondition, identity scope, and both branches: ACCEPTED requires
+          the matching canonical change created by the same acceptance execution and atomically committed with the terminal
+          result, with the result''s provenance bound to that execution; REJECTED requires no canonical acceptance for the
+          same full identity in canonical accepted history. No requirement is omitted, added, or materially altered.'
+        differences: []
+  claim:L171_terminal_outcome_representation_migration_preserves_mapping:
+    kind: claim
+    subject_id: L171_terminal_outcome_representation_migration_preserves_mapping
+    subject_signature: 9b77c0b598d449fd2b15eecde8f53a5a03a2393b9ddb7931438703246d57cfe1
+    roundtrip:
+      subject_signature: 9b77c0b598d449fd2b15eecde8f53a5a03a2393b9ddb7931438703246d57cfe1
+      status: TRANSLATED
+      natural_language: 'The conjunction of both of the following holds. (1) For every protocol transition x, authoritative
+        state s, and idempotency key k: if x is a representation migration transition at s (that is, a non-terminal representation
+        replacement, schema/index migration, or equivalent transformation of the authoritative terminal outcome store applied
+        at s, which does not linearize a new terminal outcome), and k is normal-retry-eligible in s (that is, the logical
+        edit identified by k remains within the normal retry/reconnect eligibility boundary in s), and s contains a terminal
+        outcome for the exact full idempotency identity k in its idempotency_terminal_outcomes store (presence only, irrespective
+        of that outcome''s value and provenance), then transition x, applied at s, preserves the exact logical terminal outcome
+        for k, meaning the terminal_result for k after x is identical in value and identity to the one in s. (2) For every
+        protocol transition x, authoritative state s, terminal result record t, and idempotency key k: if x is a representation
+        migration transition at s, and t is the terminal_result contained in the terminal outcome store in s for the exact
+        full idempotency identity k, and the full idempotency_key carried by t is equal to k, and k is normal-retry-eligible
+        in s, then the representation migration transition x preserves the store entry of terminal result record t for key
+        k, meaning t remains in idempotency_terminal_outcomes bound to the same key k, and is not dropped, duplicated, or
+        cross-bound to another key.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 9b77c0b598d449fd2b15eecde8f53a5a03a2393b9ddb7931438703246d57cfe1
+        verdict: EQUIVALENT
+        reason: 'Both conjuncts together cover the source: for every representation-migration transition at a state, every
+          normal-retry-eligible key with a terminal outcome must have its exact terminal_result preserved in value and identity,
+          and every terminal record bound to its full key must remain bound to that same key, not dropped, duplicated, or
+          cross-bound. This matches the one-to-one mapping preservation and the no-drop/no-duplicate/no-cross-binding/no-ACCEPTED-REJECTED-meaning-change
+          requirements, with no added or omitted condition.'
+        differences: []
+      strengthening:
+        subject_signature: 9b77c0b598d449fd2b15eecde8f53a5a03a2393b9ddb7931438703246d57cfe1
+        verdict: EQUIVALENT
+        reason: The formula scopes both conjuncts to representation-migration transitions on eligible keys with an existing
+          terminal outcome, requires the outcome's value and identity to be preserved, and requires each terminal record to
+          remain bound to the same full key without being dropped, duplicated, or cross-bound, matching the source's one-to-one
+          same-result preservation without added or omitted requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 9b77c0b598d449fd2b15eecde8f53a5a03a2393b9ddb7931438703246d57cfe1
+        verdict: EQUIVALENT
+        reason: The rendering preserves the same scope (non-terminal representation replacements, schema/index migrations,
+          or equivalent transformations of the authoritative terminal-outcome store), restricted to normal-retry-eligible
+          full idempotency keys present in the prior state. Clause (1) preserves exactly the same terminal_result in value
+          and identity, which includes unchanged ACCEPTED/REJECTED meaning, and clause (2) preserves the per-key store binding
+          without dropping, duplicating, or cross-binding. Together they preserve the one-to-one key-to-terminal_result mapping
+          without adding or omitting any guarantee.
+        differences: []
+  claim:C42_nonterminal_lifecycle_preserves_terminal_outcomes:
+    kind: claim
+    subject_id: C42_nonterminal_lifecycle_preserves_terminal_outcomes
+    subject_signature: 11130ac72d76780f3894c97be525ea3feee0aecb0130ce426631ff7d996896ab
+    roundtrip:
+      subject_signature: 11130ac72d76780f3894c97be525ea3feee0aecb0130ce426631ff7d996896ab
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following three universally quantified implications holds. In each, x is a
+        ProtocolTransition, s is an AuthoritativeState, and k is an IdempotencyKey. First: for all x, s, and k, if x is a
+        persistence lifecycle transition applied at s, meaning an authoritative deletion, expiry, retention-GC, or cleanup-class
+        operation on durable state; and in s, k is normal-retry-eligible, meaning the logical edit identity identified by
+        k, namely (document_id, client_change_id), has a pending/retry age of no more than 30 days and therefore remains within
+        the normal retry/reconnect eligibility boundary; and s contains a terminal outcome for k, meaning s contains a terminal_result
+        for the exact full idempotency identity k in its idempotency_terminal_outcomes store, where a terminal_result is an
+        authoritative terminal outcome for one idempotency_key within the normal retry horizon, either an accepted canonical
+        result or a definitive rejected result, scoped to a document, and this containment asserts presence only; then x,
+        applied at s, preserves the terminal outcome for k, meaning the terminal_result for k after x is identical in value
+        and identity to the one in s. Second: for all x, s, and k, if x is a recovery transition at s, meaning a completed
+        crash/restart or owner-recovery transition whose pre-recovery authoritative state is s, after which idempotency arbitration
+        resumes against the recovered terminal outcome store; and in s, k is normal-retry-eligible as defined above; and s
+        contains a terminal outcome for k as defined above; then x, applied at s, preserves the terminal outcome for k as
+        defined above. Third: for all x, s, and k, if x is a representation migration transition applied at s, meaning a non-terminal
+        representation replacement, schema/index migration, or equivalent transformation of the authoritative terminal outcome
+        store that does not linearize a new terminal outcome; and in s, k is normal-retry-eligible as defined above; and s
+        contains a terminal outcome for k as defined above; then x, applied at s, preserves the terminal outcome for k as
+        defined above.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 11130ac72d76780f3894c97be525ea3feee0aecb0130ce426631ff7d996896ab
+        verdict: EQUIVALENT
+        reason: The formula covers all three lifecycle classes named in the source — persistence, recovery/restart, and representation
+          replacement/migration — and for each, under the same guards of normal-retry eligibility and a terminal outcome already
+          present (i.e. linearized) in the pre-transition state for the exact key, requires transition_preserves_terminal_outcome,
+          whose meaning is identity of value and identity after the transition, which subsumes the bans on erasing, replacing,
+          relabeling, or reinterpreting the ACCEPTED/REJECTED value. No guard, identity component, or requirement is dropped
+          or added.
+        differences: []
+      strengthening:
+        subject_signature: 11130ac72d76780f3894c97be525ea3feee0aecb0130ce426631ff7d996896ab
+        verdict: EQUIVALENT
+        reason: The formula covers exactly the three lifecycle classes named in the statement (persistence, recovery/restart,
+          and representation replacement/migration), each guarded by normal-retry eligibility and presence of a terminal outcome
+          in the pre-transition authoritative state, which encodes an already-linearized outcome, and requires transition_preserves_terminal_outcome,
+          i.e. preservation of the exact logical ACCEPTED/REJECTED value for that key. No scope, guard, identity, or preservation
+          requirement is added or omitted.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 11130ac72d76780f3894c97be525ea3feee0aecb0130ce426631ff7d996896ab
+        verdict: EQUIVALENT
+        reason: The rendering covers exactly the three lifecycle classes named in the original (persistence lifecycle, recovery/restart,
+          and representation replacement/migration), all as authoritative non-terminal transitions, under the same preconditions
+          of normal-retry eligibility (pending/retry age no more than 30 days for the (document_id, client_change_id) identity)
+          and an already-present linearized terminal outcome for the exact key, and requires preservation identical in value
+          and identity, which subsumes the prohibitions on erasing, replacing, relabeling, or reinterpreting the ACCEPTED
+          or REJECTED outcome without adding or omitting any guarantee.
+        differences: []
+  claim:L162_terminal_state_transition_preserves_single_outcome:
+    kind: claim
+    subject_id: L162_terminal_state_transition_preserves_single_outcome
+    subject_signature: ace73db580e68abc0ce904e8dcf449bec704311fc1e3dfcfe4d1c20483990e5a
+    roundtrip:
+      subject_signature: ace73db580e68abc0ce904e8dcf449bec704311fc1e3dfcfe4d1c20483990e5a
+      status: TRANSLATED
+      natural_language: 'All of the following hold, where an idempotency key k is always the exact full composite identity
+        (document_id, client_change_id), so equal client_change_id values in different document namespaces are distinct identities.
+        (1) For every authoritative state s and every idempotency key k, if s is reachable under the canonical server protocol
+        and failure model and k is within the configured normal retry eligibility horizon in s (with no fixed duration assumed),
+        then both: it is not the case that the terminal outcome contained in s for k is both ACCEPTED (canonical result) and
+        REJECTED (definitive rejection reason); and the terminal outcome for k in s is immutable, meaning that once a terminal
+        outcome for k has linearized, every later acceptance or definitive-rejection transition for that same identity whose
+        resulting authoritative state remains within the configured normal retry eligibility horizon for k preserves the same
+        single-valued outcome, while post-horizon transitions or re-submissions are outside this immutability predicate and
+        no progress requirement is added. (2) For every authoritative state s and every idempotency key k, if s is reachable,
+        k is within the normal retry eligibility horizon in s, and s contains a terminal_result for k in its idempotency_terminal_outcomes
+        store (presence only, irrespective of the outcome''s value and provenance), then s contains at most one durable terminal
+        result for k. (3) For every protocol transition x, authoritative state s, and idempotency key k, if x is an authoritative
+        terminal-state transition applied at s — that is, a transition that linearizes, attempts to linearize, or is arbitrated
+        against the per-key terminal outcome state in s, namely the acceptance and definitive-rejection transitions of the
+        terminal state machine, and not a non-terminal lifecycle, recovery, or representation-migration transition — and s
+        is reachable, k is within the normal retry eligibility horizon in s, and the terminal outcome contained in s for k
+        is REJECTED (definitive rejection reason), then x does not create a canonical acceptance for k. (4) For every protocol
+        transition x, authoritative state s, and idempotency key k, if x is an authoritative terminal-state transition applied
+        at s (with the same meaning as in (3)), s is reachable, k is within the normal retry eligibility horizon in s, and
+        s contains a terminal_result for k, then x preserves the exact logical terminal outcome for k: the terminal_result
+        for k after x is identical in value and identity to the one in s; this preservation assertion concerns an existing
+        outcome and does not itself govern whether x may create an outcome for a key that has none.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: ace73db580e68abc0ce904e8dcf449bec704311fc1e3dfcfe4d1c20483990e5a
+        verdict: EQUIVALENT
+        reason: The formula preserves the source scope (eligible/full composite key within the retry horizon, reachable authoritative
+          states), asserts ACCEPTED/REJECTED mutual exclusivity and at-most-one outcome, requires every authoritative terminal-state
+          transition from a state containing an outcome to preserve that exact outcome, and forbids acceptance creation from
+          a REJECTED state, with no material added or omitted requirement.
+        differences: []
+      strengthening:
+        subject_signature: ace73db580e68abc0ce904e8dcf449bec704311fc1e3dfcfe4d1c20483990e5a
+        verdict: EQUIVALENT
+        reason: 'The formula matches the source: preservation is required for every later authoritative terminal-state transition
+          at a reachable state within the retry horizon containing a terminal outcome, ACCEPTED/REJECTED mutual exclusivity
+          and at-most-one outcome are asserted within the same reachable/horizon scope, and a state with a REJECTED outcome
+          forbids any terminal-state transition creating a canonical acceptance for the same full composite key. No requirement
+          is added outside the stated horizon, identity, or transition scope, and no source requirement is omitted.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: ace73db580e68abc0ce904e8dcf449bec704311fc1e3dfcfe4d1c20483990e5a
+        verdict: EQUIVALENT
+        reason: The rendering preserves the original's quantifiers, composite key identity, eligibility/retry-horizon scope,
+          mutual exclusivity of ACCEPTED and REJECTED, at-most-one terminal outcome, preservation of the exact existing outcome
+          by later authoritative terminal-state transitions, and the bar on canonical acceptance after a REJECTED outcome,
+          without adding or omitting a guarantee.
+        differences: []
+  claim:L170_recovery_preserves_terminal_outcomes:
+    kind: claim
+    subject_id: L170_recovery_preserves_terminal_outcomes
+    subject_signature: e11a49e5f8865a3c08f566f38c5df05707ca5680cf5cae38c79c1a5820c49052
+    roundtrip:
+      subject_signature: e11a49e5f8865a3c08f566f38c5df05707ca5680cf5cae38c79c1a5820c49052
+      status: TRANSLATED
+      natural_language: 'This is a conjunction of three universally quantified implications. First, for every protocol transition
+        x, every authoritative state s, and every idempotency key k, if x is a completed crash/restart or owner-recovery transition
+        whose pre-recovery authoritative state is s (after x completes, idempotency arbitration resumes against the recovered
+        terminal outcome store), and in s key k is a normal-retry-eligible identity (the logical edit it identifies remains
+        within the normal retry/reconnect eligibility boundary), and s contains a terminal_result for the exact full idempotency
+        identity k in its idempotency_terminal_outcomes store, then x preserves the exact logical terminal outcome for k:
+        the terminal_result for k after x is identical in value and identity to the one in s. Second, for every authoritative
+        state s and every idempotency key k, if in s key k is a normal-retry-eligible identity and s contains a terminal_result
+        for the exact full idempotency identity k in its idempotency_terminal_outcomes store, then the terminal_result for
+        k in s is held in the durable_terminal_outcome_store, independently of volatile owner state. Third, for every protocol
+        transition x, every authoritative state s, and every idempotency key k, if x is a completed crash/restart or owner-recovery
+        transition whose pre-recovery authoritative state is s, and in s key k is a normal-retry-eligible identity, and s
+        contains a terminal_result for the exact full idempotency identity k in its idempotency_terminal_outcomes store, then
+        it is not the case that x derives terminal outcomes solely by reconstructing them from snapshot plus accepted history,
+        without carrying the authoritative terminal outcome store forward.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: e11a49e5f8865a3c08f566f38c5df05707ca5680cf5cae38c79c1a5820c49052
+        verdict: EQUIVALENT
+        reason: 'The formula covers all source requirements with matching guards: for eligible keys with a pre-recovery terminal
+          outcome it requires exact preservation across completed recovery transitions, requires the outcome to be in the
+          durable store independently of volatile owner state, and forbids recovery transitions that reconstruct outcomes
+          solely from snapshot plus accepted history. Preservation of the exact terminal_result covers both ACCEPTED and REJECTED
+          values, including non-omission and non-substitution.'
+        differences: []
+      strengthening:
+        subject_signature: e11a49e5f8865a3c08f566f38c5df05707ca5680cf5cae38c79c1a5820c49052
+        verdict: EQUIVALENT
+        reason: 'The three conjuncts match the source scope of normal-retry-eligible keys with a pre-recovery authoritative
+          terminal outcome: exact value/identity preservation across completed recovery transitions, placement in the durable
+          store independent of volatile owner state with arbitration resuming against the recovered store, and prohibition
+          on solely snapshot-plus-accepted-history reconstruction. No requirement is added or omitted.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: e11a49e5f8865a3c08f566f38c5df05707ca5680cf5cae38c79c1a5820c49052
+        verdict: EQUIVALENT
+        reason: The rendering preserves the same eligible per-key scope, pre-recovery provenance, durable storage independent
+          of volatile owner state, exact identical ACCEPTED or REJECTED outcome after completed recovery with arbitration
+          resuming against the recovered store, and the prohibition on solely reconstructing outcomes from snapshot plus accepted
+          history, with no requirement added or omitted.
+        differences: []
