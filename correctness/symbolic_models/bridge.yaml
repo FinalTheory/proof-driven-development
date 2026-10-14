@@ -12351,16 +12351,28 @@ claims:
                     var: before
                   to:
                     var: after
+              - implies:
+                - call:
+                    fn: state_denotes_accepted_history_for_document
+                    args:
+                    - var: after
+                    - var: d
+                - call:
+                    fn: canonical_history_gap_free_for_document
+                    args:
+                    - var: before
+                    - var: d
+            - implies:
+              - call:
+                  fn: state_denotes_accepted_history_for_document
+                  args:
+                  - var: after
+                  - var: d
               - call:
                   fn: canonical_history_gap_free_for_document
                   args:
-                  - var: before
+                  - var: after
                   - var: d
-            - call:
-                fn: canonical_history_gap_free_for_document
-                args:
-                - var: after
-                - var: d
   L5_append_requires_current_epoch:
     capability: relational
     contracts: []
