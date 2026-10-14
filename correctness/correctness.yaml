@@ -6338,7 +6338,14 @@ assurance:
     C40_terminal_outcome_is_single_valued_per_idempotency_key:
       status: unaudited
     C41_pending_identity_revision_evidence_survives_lifecycle:
-      status: unaudited
+      status: machine_checked
+      rationale: "Trusted symbolic translations exist for C41 and both direct premises L165 and L166.
+        The composition check (direct SMT) found the premises together with NOT(C41) UNSAT. Independent
+        mutation tests that replace either L165 or L166 with True become SAT with a concrete counterexample,
+        demonstrating that both premises are necessary: L165 alone supplies preservation across durable
+        retention transitions, and L166 alone supplies preservation across completed recovery/restart
+        transitions, each scoped to the identity's normal eligibility window."
+      signature: 8f43d039dd4cbb85840c71ce98b7e2f0a753dd09dd8e1f0488a130738423eaa2
     C42_nonterminal_lifecycle_preserves_terminal_outcomes:
       status: machine_checked
       rationale: Trusted symbolic translations exist for C42 and all three direct premises L169,
