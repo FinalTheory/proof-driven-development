@@ -5816,3 +5816,47 @@ records:
           this subsumes the enumerated handlers and the prohibition on publishing from durable_terminal_outcome_store through
           a bypass, and the second clause adds no requirement beyond that universal gate requirement.
         differences: []
+  claim:L164_terminal_paths_share_per_key_arbitration:
+    kind: claim
+    subject_id: L164_terminal_paths_share_per_key_arbitration
+    subject_signature: f07a667f01db59cbad4e63617d1bba52bf309ad0a1d17b7e38c19fda5d096c7c
+    roundtrip:
+      subject_signature: f07a667f01db59cbad4e63617d1bba52bf309ad0a1d17b7e38c19fda5d096c7c
+      status: TRANSLATED
+      natural_language: 'For every protocol transition/path x and every idempotency key k, where k is the authoritative deduplication
+        identity for a logical edit, concretely document_id plus client_change_id, both of the following hold: (1) if x is
+        a path that can create a canonical acceptance or an authoritative definitive rejection for the exact full idempotency
+        identity k, and k is eligible, meaning the logical edit identity it denotes is a normal-retry-eligible identity within
+        the protocol''s eligibility boundary, then x passes through the same single per-key terminal-outcome arbitration gate
+        used by every acceptance and definitive-rejection path for the exact full idempotency identity k, before its terminal
+        decision can become authoritative, and there is no bypass around that gate for x; and (2) if x is a path that can
+        publish or commit a terminal decision for the exact full idempotency identity k, whether or not x itself creates the
+        acceptance or rejection, and k is eligible as above, then x passes through the same single per-key terminal-outcome
+        arbitration gate used by every acceptance and definitive-rejection path for the exact full idempotency identity k,
+        before its terminal decision can become authoritative, and there is no bypass around that gate for x.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: f07a667f01db59cbad4e63617d1bba52bf309ad0a1d17b7e38c19fda5d096c7c
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over paths and exact full idempotency keys, guards both conjuncts by the
+          stated eligibility condition, requires acceptance/definitive-rejection creation paths to pass the shared per-key
+          arbitration gate, and separately requires any publish-or-commit terminal-decision path to pass the same gate, exactly
+          capturing the no-bypass clause without adding or omitting requirements.
+        differences: []
+      strengthening:
+        subject_signature: f07a667f01db59cbad4e63617d1bba52bf309ad0a1d17b7e38c19fda5d096c7c
+        verdict: EQUIVALENT
+        reason: 'The formula preserves both source clauses under the same eligibility guard and exact per-key identity: creation
+          paths for canonical acceptance or authoritative definitive rejection must pass the shared per-key arbitration gate,
+          and publish/commit paths for a terminal decision likewise have no bypass outside that gate.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: f07a667f01db59cbad4e63617d1bba52bf309ad0a1d17b7e38c19fda5d096c7c
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves scope, eligibility, exact full idempotency identity (document_id plus client_change_id),
+          the single shared per-key gate, and pre-authoritative ordering. Its split into creator paths and publish/commit
+          paths matches the original: the second clause is already entailed by the original no-bypass prohibition on publishing
+          or committing a terminal decision outside the gate, so nothing is added or omitted.'
+        differences: []
