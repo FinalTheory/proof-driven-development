@@ -5247,54 +5247,57 @@ records:
   claim:C45_terminal_outcome_publication_matches_canonical_acceptance:
     kind: claim
     subject_id: C45_terminal_outcome_publication_matches_canonical_acceptance
-    subject_signature: 709b732bc93da962b1a7f7f786d887e2339ebfe9e951954f4ee0bcd75e56ace5
+    subject_signature: 507bafd930df9f662971888b6032d3eaa4abb7d3357e2c0a640c38ef571760e6
     roundtrip:
-      subject_signature: 709b732bc93da962b1a7f7f786d887e2339ebfe9e951954f4ee0bcd75e56ace5
+      subject_signature: 507bafd930df9f662971888b6032d3eaa4abb7d3357e2c0a640c38ef571760e6
       status: TRANSLATED
-      natural_language: 'Both of the following hold. (1) For every terminal result record t: if t is published (exposed to
-        a protocol consumer through an authoritative publication path for its identity), and t is a terminal_result for a
-        normal_retry_eligible_identity (a logical edit identity (document_id, client_change_id) whose pending/retry age is
-        no more than 30 days and therefore remains inside the normal retry/reconnect protocol boundary), and t is an authoritative
-        ACCEPTED (canonical result) terminal outcome, then there exists a canonical acceptance a such that all of the following
-        hold: t and a are the ACCEPTED terminal-result creation and its matching canonical accepted-change creation for one
-        logical acceptance (this identifies the matching creation pair only); the matching canonical acceptance a is committed
-        for the corresponding ACCEPTED terminal outcome, and the execution that committed a is the acceptance execution that
-        produced a; the matching ACCEPTED terminal-result creation t and canonical accepted-change creation a share one authoritative
-        transaction boundary and therefore commit or roll back together, with no reachable authoritative post-boundary state
-        for that pair containing exactly one side (this asserts atomicity only, not producer provenance and not a particular
-        named transaction implementation); and the accepted terminal result representation t carries a canonical result produced
-        by the same acceptance execution that produced canonical acceptance a for the producer binding under audit, in that
-        the result placed into t comes from that same execution rather than another request, document, acceptance execution,
-        or merely extensionally equal substitute, a test that applies to any representation of the same logical terminal outcome.
-        (2) For every terminal result record t: if t is published, and t is a terminal_result for a normal_retry_eligible_identity
+      natural_language: 'For every terminal result record t, both of the following hold. First, if t is published (exposed
+        to a protocol consumer through an authoritative publication path for its identity), t is a terminal result for a normal_retry_eligible_identity
+        (a logical edit identity (document_id, client_change_id) whose pending/retry age is no more than 30 days and therefore
+        remains inside the normal retry/reconnect protocol boundary), and t is an authoritative ACCEPTED (canonical result)
+        terminal outcome, then there exists a canonical acceptance a such that all of the following hold: (1) t and a are
+        the ACCEPTED terminal-result creation and its matching canonical accepted-change creation for one logical acceptance,
+        this relation identifying the matching creation pair only; (2) the matching canonical acceptance a is committed for
+        the corresponding ACCEPTED terminal outcome, and the execution that committed a is the acceptance execution that produced
+        a; (3) the matching ACCEPTED terminal-result creation t and canonical accepted-change creation a share one authoritative
+        transaction boundary and therefore commit or roll back together, so no reachable authoritative post-boundary state
+        for that pair contains exactly one side, this asserting atomicity only; (4) t is bound to the acceptance execution
+        for a, meaning the accepted terminal result representation t carries a canonical result produced by the same acceptance
+        execution that produced canonical acceptance a for the producer binding under audit, rather than a result from another
+        request, document, acceptance execution, or merely extensionally equal substitute, and this same test classifies any
+        representation of the same logical terminal outcome; and (5) the matching canonical accepted change for t''s full
+        identity is present in canonical accepted history. Second, if t is published, t is a terminal result for a normal_retry_eligible_identity
         as defined above, and t is an authoritative REJECTED (definitive rejection reason) terminal outcome, then it is not
         the case that the matching canonical accepted change for t''s full identity is present in canonical accepted history.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 709b732bc93da962b1a7f7f786d887e2339ebfe9e951954f4ee0bcd75e56ace5
+        subject_signature: 507bafd930df9f662971888b6032d3eaa4abb7d3357e2c0a640c38ef571760e6
         verdict: EQUIVALENT
-        reason: 'The formula covers both publication cases under the same published and eligible-identity guards: for ACCEPTED
-          results it requires a matching creation pair that is committed, atomically committed with the result, and bound
-          to the same acceptance execution, matching the created-together, same-execution, single-transaction and history-pair
-          requirements; for REJECTED results it requires the absence of a matching canonical acceptance for the full identity.'
+        reason: For every published eligible ACCEPTED result the formula requires a witness that is its matching creation
+          pair, is committed, commits atomically with it in one transaction, is bound to the same acceptance execution, and
+          is present as the matching change in canonical accepted history; for every published eligible REJECTED result it
+          requires that no matching canonical acceptance for the same full identity be present. This matches the source's
+          publication scope, identity, provenance, atomicity, and rejected-side exclusion without addition or omission.
         differences: []
       strengthening:
-        subject_signature: 709b732bc93da962b1a7f7f786d887e2339ebfe9e951954f4ee0bcd75e56ace5
+        subject_signature: 507bafd930df9f662971888b6032d3eaa4abb7d3357e2c0a640c38ef571760e6
         verdict: EQUIVALENT
-        reason: The formula preserves the publication and eligible-identity guards, requires for ACCEPTED results a matching
-          creation pair that is committed, atomically co-committed in one transaction, and bound to the same acceptance execution,
-          and for REJECTED results requires absence of a matching canonical acceptance for the full identity, with no added
-          or omitted condition.
+        reason: 'The formula''s accepted branch conjoins exactly the source requirements: a matching creation pair for the
+          published eligible ACCEPTED result, that acceptance committed, atomic co-commit of the pair in one transaction,
+          binding to the same acceptance execution, and presence of the matching change in canonical accepted history. Its
+          rejected branch requires exactly the absence of a matching canonical acceptance for the same full identity. No scope,
+          identity, provenance, cardinality, or applicability condition is added or omitted.'
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 709b732bc93da962b1a7f7f786d887e2339ebfe9e951954f4ee0bcd75e56ace5
+        subject_signature: 507bafd930df9f662971888b6032d3eaa4abb7d3357e2c0a640c38ef571760e6
         verdict: EQUIVALENT
-        reason: 'The rendering preserves the publication precondition, identity scope, and both branches: ACCEPTED requires
-          the matching canonical change created by the same acceptance execution and atomically committed with the terminal
-          result, with the result''s provenance bound to that execution; REJECTED requires no canonical acceptance for the
-          same full identity in canonical accepted history. No requirement is omitted, added, or materially altered.'
+        reason: Both versions condition on authoritative publication of a terminal result for a normal_retry_eligible_identity
+          and require, for ACCEPTED, the matching creation-pair canonical accepted change produced by the same acceptance
+          execution, committed atomically with the result in a single transaction, and present in canonical accepted history
+          as that pair; for REJECTED, both require that no canonical acceptance/accepted change for the same full identity
+          be present. No quantifier, identity, provenance, atomicity, or observation-scope condition is added or omitted.
         differences: []
   claim:L171_terminal_outcome_representation_migration_preserves_mapping:
     kind: claim

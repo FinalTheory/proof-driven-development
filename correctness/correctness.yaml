@@ -6339,9 +6339,21 @@ assurance:
         necessary to establish the target.
       signature: 7782d51082e9dd4c7a2dd5f9ccc392fd1c8f473e85a0882b102c1190dc54d41e
     C43_terminal_outcome_entry_state_is_coherent:
-      status: unaudited
+      status: machine_checked
+      rationale: Trusted symbolic translations exist for C43 and both direct premises L184 and C44.
+        The composition check (direct SMT) found the premises together with NOT(C43) UNSAT.
+        Independent mutation tests that replace either premise with True each become SAT with a
+        concrete counterexample, demonstrating that both direct premises are necessary to establish
+        the target.
+      signature: 39987044afbc21d0a56e66e9a9bf8cf997b1180b46b53361c5ca2534c7549c37
     C44_terminal_outcome_entry_matches_canonical_acceptance:
-      status: unaudited
+      status: machine_checked
+      rationale: Trusted symbolic translations exist for C44 and all four direct premises L186,
+        L187, L188 and C45. The composition check (direct SMT) found the premises together with
+        NOT(C44) UNSAT. Independent mutation tests that replace any one of the four premises with
+        True each become SAT with a concrete counterexample, demonstrating that every direct premise
+        is necessary to establish the target.
+      signature: 83bd279ba07c71d027abb1348776da837aa995a59d6aea7862ab7eb1f8941697
     C45_terminal_outcome_publication_matches_canonical_acceptance:
       status: unaudited
     C46_accepted_terminal_result_preserves_acceptance_provenance:
