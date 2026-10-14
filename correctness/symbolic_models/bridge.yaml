@@ -7977,11 +7977,17 @@ claims:
                 fn: rejected_terminal_result_record
                 args:
                 - var: t
-          - not:
-              call:
-                fn: terminal_result_has_matching_canonical_acceptance
-                args:
-                - var: t
+          - and:
+            - not:
+                call:
+                  fn: terminal_result_has_matching_canonical_acceptance
+                  args:
+                  - var: t
+            - not:
+                call:
+                  fn: canonical_acceptance_present_for_result_identity
+                  args:
+                  - var: t
   C45_terminal_outcome_publication_matches_canonical_acceptance:
     capability: relational
     contracts: []
