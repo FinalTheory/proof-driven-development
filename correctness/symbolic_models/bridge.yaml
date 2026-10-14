@@ -2874,7 +2874,7 @@ functions:
     - CanonicalAcceptance
     returns: Bool
     catalog_symbols: []
-    meaning: Matching canonical acceptance a committed as the acceptance side of the authoritative acceptance transaction for the corresponding ACCEPTED terminal outcome; the execution that commits a in that transaction is the acceptance execution that produced a. This predicate asserts the committed matching-acceptance fact and its committing execution only; it does not require one named implementation path or assert producer provenance of a stored result by itself.
+    meaning: Matching canonical acceptance a is committed for the corresponding ACCEPTED terminal outcome, and the execution that committed a is the acceptance execution that produced a. This predicate asserts the committed matching-acceptance fact and its committing execution only; it does not require one named implementation path or assert producer provenance of a stored result by itself.
     semantic_anchors:
     - claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance
     - claim:C46_accepted_terminal_result_preserves_acceptance_provenance
@@ -4572,11 +4572,16 @@ claims:
             a: CanonicalAcceptance
           body:
             implies:
-            - call:
-                fn: accepted_terminal_matching_creation_pair
-                args:
-                - var: t
-                - var: a
+            - and:
+              - call:
+                  fn: accepted_terminal_created_for_eligible_identity
+                  args:
+                  - var: t
+              - call:
+                  fn: accepted_terminal_matching_creation_pair
+                  args:
+                  - var: t
+                  - var: a
             - and:
               - call:
                   fn: accepted_terminal_matching_creation_identity_matches
@@ -4595,10 +4600,15 @@ claims:
           body:
             implies:
             - and:
-              - call:
-                  fn: accepted_terminal_linearization_origin_record
-                  args:
-                  - var: t
+              - or:
+                - call:
+                    fn: accepted_terminal_created_for_eligible_identity
+                    args:
+                    - var: t
+                - call:
+                    fn: accepted_terminal_linearization_origin_record
+                    args:
+                    - var: t
               - call:
                   fn: accepted_terminal_matching_creation_pair
                   args:
