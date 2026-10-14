@@ -5513,3 +5513,46 @@ records:
           resuming against the recovered store, and the prohibition on solely reconstructing outcomes from snapshot plus accepted
           history, with no requirement added or omitted.
         differences: []
+  claim:L195_rejected_terminal_publication_excludes_canonical_acceptance:
+    kind: claim
+    subject_id: L195_rejected_terminal_publication_excludes_canonical_acceptance
+    subject_signature: 33d793f56061e46dc8d4d0c3760e288cef392ac1985e6ef0bd09df27e0c8d5cb
+    roundtrip:
+      subject_signature: 33d793f56061e46dc8d4d0c3760e288cef392ac1985e6ef0bd09df27e0c8d5cb
+      status: TRANSLATED
+      natural_language: 'For every terminal result record t, if all of the following hold: (1) t is exposed to a protocol
+        consumer through the terminal_outcome_publication_gate, where this condition asserts gate exposure only; (2) t is
+        a terminal result for a normal_retry_eligible_identity, meaning a logical edit identity (document_id, client_change_id)
+        whose pending/retry age is no more than 30 days and therefore remains inside the normal retry/reconnect protocol boundary
+        defined by A6; and (3) t is an authoritative REJECTED outcome with a definitive rejection reason; then both of the
+        following hold: (a) the matching canonical accepted change for t''s full identity is not present in canonical accepted
+        history; and (b) canonical accepted history does not contain a canonical acceptance for the exact full (document_id,
+        client_change_id) identity carried by t.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 33d793f56061e46dc8d4d0c3760e288cef392ac1985e6ef0bd09df27e0c8d5cb
+        verdict: EQUIVALENT
+        reason: The antecedent conjoins gate publication, normal-retry-eligible identity, and authoritative REJECTED status
+          for every terminal result record, and the consequent negates canonical acceptance in canonical accepted history
+          for the exact full (document_id, client_change_id) identity carried by that record. The additional negated matching-acceptance
+          predicate is, by its supplied meaning, the same identity-indexed presence in the same history, so it is a coextensive
+          restatement adding no distinct requirement and omitting none.
+        differences: []
+      strengthening:
+        subject_signature: 33d793f56061e46dc8d4d0c3760e288cef392ac1985e6ef0bd09df27e0c8d5cb
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over terminal result records gated by publication through the terminal_outcome_publication_gate,
+          normal_retry_eligible_identity applicability, and authoritative REJECTED status, and concludes absence of canonical
+          acceptance for the exact full (document_id, client_change_id) identity carried by that record, matching the canonical
+          statement's scope, preconditions, identity coordinates, and consequent without added or omitted requirements; the
+          two negated acceptance predicates both restate that same absence.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 33d793f56061e46dc8d4d0c3760e288cef392ac1985e6ef0bd09df27e0c8d5cb
+        verdict: EQUIVALENT
+        reason: The rendering preserves the gate-observation scope, the normal-retry-eligible identity precondition, the authoritative
+          REJECTED trigger, and the exclusion of any canonical acceptance for the exact full (document_id, client_change_id)
+          identity; the two consequent clauses state the same exclusion without adding or omitting a requirement.
+        differences: []
