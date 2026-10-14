@@ -5523,6 +5523,420 @@ claims:
                   fn: transition_creates_acceptance
                   args:
                   - var: t
+  L110_client_retires_matching_speculative_overlay_before_canonical_publication:
+    contracts:
+    - visible_canonical_speculative_exclusion
+    formula:
+      and:
+      - forall:
+          vars:
+            s: ClientState
+            o: Overlay
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: visible_canonical_speculative_observation_state
+                  args:
+                  - var: s
+              - call:
+                  fn: canonical_contains_same_edit
+                  args:
+                  - var: s
+                  - var: o
+            - not:
+                call:
+                  fn: visible_overlay
+                  args:
+                  - var: s
+                  - var: o
+      - forall:
+          vars:
+            e: ClientState
+            l: ClientState
+            o: Overlay
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: later_reachable_client_state
+                  args:
+                  - var: e
+                  - var: l
+              - call:
+                  fn: visible_canonical_speculative_observation_state
+                  args:
+                  - var: l
+              - not:
+                  call:
+                    fn: canonical_contains_same_edit
+                    args:
+                    - var: e
+                    - var: o
+              - call:
+                  fn: canonical_contains_same_edit
+                  args:
+                  - var: l
+                  - var: o
+            - not:
+                call:
+                  fn: visible_overlay
+                  args:
+                  - var: l
+                  - var: o
+      - forall:
+          vars:
+            e: ClientState
+            l: ClientState
+            o: Overlay
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: later_reachable_client_state
+                  args:
+                  - var: e
+                  - var: l
+              - call:
+                  fn: visible_canonical_speculative_observation_state
+                  args:
+                  - var: l
+              - call:
+                  fn: canonical_contains_same_edit
+                  args:
+                  - var: e
+                  - var: o
+              - call:
+                  fn: canonical_contains_same_edit
+                  args:
+                  - var: l
+                  - var: o
+            - not:
+                call:
+                  fn: visible_overlay
+                  args:
+                  - var: l
+                  - var: o
+      - forall:
+          vars:
+            e: ClientState
+            l: ClientState
+            o: Overlay
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: later_reachable_client_state
+                  args:
+                  - var: e
+                  - var: l
+              - call:
+                  fn: visible_canonical_speculative_observation_state
+                  args:
+                  - var: e
+              - call:
+                  fn: visible_canonical_speculative_observation_state
+                  args:
+                  - var: l
+              - call:
+                  fn: canonical_contains_same_edit
+                  args:
+                  - var: e
+                  - var: o
+              - call:
+                  fn: canonical_contains_same_edit
+                  args:
+                  - var: l
+                  - var: o
+              - not:
+                  call:
+                    fn: visible_overlay
+                    args:
+                    - var: e
+                    - var: o
+            - not:
+                call:
+                  fn: client_transition_recreates_speculative_overlay
+                  args:
+                  - var: e
+                  - var: l
+                  - var: o
+  L25_snapshot_catchup_uses_selected_checkpoint_replacement:
+    contracts: []
+    formula:
+      forall:
+        vars:
+          r: CatchupResponse
+        body:
+          implies:
+          - call:
+              fn: catchup_response_is_snapshot_mode
+              args:
+              - var: r
+          - and:
+            - call:
+                fn: catchup_response_identifies_selected_checkpoint
+                args:
+                - var: r
+            - call:
+                fn: catchup_response_uses_replacement_semantics
+                args:
+                - var: r
+  L26_snapshot_catchup_returns_exact_canonical_tail:
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            r: CatchupResponse
+            s: Revision
+            h: Revision
+            a: CanonicalAcceptance
+            v: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_selected_checkpoint_frontier
+                  args:
+                  - var: r
+                  - var: s
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+              - call:
+                  fn: canonical_acceptance_revision_is
+                  args:
+                  - var: a
+                  - var: v
+              - call:
+                  fn: revision_in_checkpoint_tail_range
+                  args:
+                  - var: v
+                  - var: s
+                  - var: h
+            - call:
+                fn: catchup_response_tail_contains_change
+                args:
+                - var: r
+                - var: a
+      - forall:
+          vars:
+            r: CatchupResponse
+            s: Revision
+            h: Revision
+            a: CanonicalAcceptance
+            v: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_selected_checkpoint_frontier
+                  args:
+                  - var: r
+                  - var: s
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+              - call:
+                  fn: catchup_response_tail_contains_change
+                  args:
+                  - var: r
+                  - var: a
+              - call:
+                  fn: canonical_acceptance_revision_is
+                  args:
+                  - var: a
+                  - var: v
+            - call:
+                fn: revision_in_checkpoint_tail_range
+                args:
+                - var: v
+                - var: s
+                - var: h
+      - forall:
+          vars:
+            r: CatchupResponse
+            s: Revision
+            h: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_selected_checkpoint_frontier
+                  args:
+                  - var: r
+                  - var: s
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+            - call:
+                fn: catchup_response_tail_exactly_once_in_order
+                args:
+                - var: r
+                - var: s
+                - var: h
+  C15_snapshot_catchup_returns_checkpoint_and_exact_tail:
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            r: CatchupResponse
+            s: Revision
+            h: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_selected_checkpoint_frontier
+                  args:
+                  - var: r
+                  - var: s
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+            - and:
+              - call:
+                  fn: catchup_response_identifies_selected_checkpoint
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_uses_replacement_semantics
+                  args:
+                  - var: r
+      - forall:
+          vars:
+            r: CatchupResponse
+            s: Revision
+            h: Revision
+            a: CanonicalAcceptance
+            v: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_selected_checkpoint_frontier
+                  args:
+                  - var: r
+                  - var: s
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+              - call:
+                  fn: canonical_acceptance_revision_is
+                  args:
+                  - var: a
+                  - var: v
+              - call:
+                  fn: revision_in_checkpoint_tail_range
+                  args:
+                  - var: v
+                  - var: s
+                  - var: h
+            - call:
+                fn: catchup_response_tail_contains_change
+                args:
+                - var: r
+                - var: a
+      - forall:
+          vars:
+            r: CatchupResponse
+            s: Revision
+            h: Revision
+            a: CanonicalAcceptance
+            v: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_selected_checkpoint_frontier
+                  args:
+                  - var: r
+                  - var: s
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+              - call:
+                  fn: catchup_response_tail_contains_change
+                  args:
+                  - var: r
+                  - var: a
+              - call:
+                  fn: canonical_acceptance_revision_is
+                  args:
+                  - var: a
+                  - var: v
+            - call:
+                fn: revision_in_checkpoint_tail_range
+                args:
+                - var: v
+                - var: s
+                - var: h
+      - forall:
+          vars:
+            r: CatchupResponse
+            s: Revision
+            h: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_selected_checkpoint_frontier
+                  args:
+                  - var: r
+                  - var: s
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+            - call:
+                fn: catchup_response_tail_exactly_once_in_order
+                args:
+                - var: r
+                - var: s
+                - var: h
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
