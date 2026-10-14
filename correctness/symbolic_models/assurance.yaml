@@ -5556,3 +5556,157 @@ records:
           REJECTED trigger, and the exclusion of any canonical acceptance for the exact full (document_id, client_change_id)
           identity; the two consequent clauses state the same exclusion without adding or omitting a requirement.
         differences: []
+  claim:C44_terminal_outcome_entry_matches_canonical_acceptance:
+    kind: claim
+    subject_id: C44_terminal_outcome_entry_matches_canonical_acceptance
+    subject_signature: 0a4939f6ef269490ff7f9762e051d05ef97e6b029ee5964c585984264d9a224e
+    roundtrip:
+      subject_signature: 0a4939f6ef269490ff7f9762e051d05ef97e6b029ee5964c585984264d9a224e
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following eight universally quantified statements, where a normal_retry_eligible_identity
+        is a logical edit identity (document_id, client_change_id) whose pending/retry age is no more than 30 days and therefore
+        remains inside the normal retry/reconnect protocol boundary defined by A6, and a terminal_result is the authoritative
+        terminal outcome for one idempotency_key within the normal retry horizon, scoped by document, either an accepted canonical
+        result or a definitive rejected result: (1) For every terminal result record t, if t is the terminal_result exposed
+        at an authoritative initialization boundary that makes a normal_retry_eligible_identity observable to the idempotency
+        protocol, and t is a terminal_result for a normal_retry_eligible_identity, and t is an authoritative ACCEPTED(canonical
+        result) outcome, then the matching canonical accepted change for t''s full identity is present in canonical accepted
+        history. (2) For every t, if t is exposed at such an initialization boundary, and t is a terminal_result for a normal_retry_eligible_identity,
+        and t is an authoritative REJECTED(definitive rejection reason) outcome, then it is not the case that the matching
+        canonical accepted change for t''s full identity is present in canonical accepted history. (3) For every t, if t is
+        the ACCEPTED terminal_result exposed at an authoritative restoration boundary for a normal_retry_eligible_identity,
+        then the matching canonical accepted change for t''s full identity is present in canonical accepted history. (4) For
+        every t, if t is the REJECTED terminal_result exposed at an authoritative restoration boundary for a normal_retry_eligible_identity,
+        then it is not the case that the matching canonical accepted change for t''s full identity is present in canonical
+        accepted history. (5) For every t, if t is the ACCEPTED terminal_result exposed at an authoritative import boundary
+        for a normal_retry_eligible_identity, then the matching canonical accepted change for t''s full identity is present
+        in canonical accepted history. (6) For every t, if t is the REJECTED terminal_result exposed at an authoritative import
+        boundary for a normal_retry_eligible_identity, then it is not the case that the matching canonical accepted change
+        for t''s full identity is present in canonical accepted history. (7) For every t, if t is exposed to a protocol consumer
+        through an authoritative publication path for its identity, and t is a terminal_result for a normal_retry_eligible_identity,
+        and t is an authoritative ACCEPTED(canonical result) outcome, then there exists a canonical acceptance a such that
+        all of the following hold: t and a are the ACCEPTED terminal-result creation and its matching canonical accepted-change
+        creation for one logical acceptance; the matching canonical acceptance a is committed for the corresponding ACCEPTED
+        terminal outcome and the execution that committed a is the acceptance execution that produced a; the matching ACCEPTED
+        terminal-result creation t and canonical accepted-change creation a share one authoritative transaction boundary and
+        therefore commit or roll back together, with no reachable authoritative post-boundary state for that pair containing
+        exactly one side, this asserting atomicity only and not producer provenance or a particular named transaction implementation;
+        the accepted terminal result representation t carries a canonical result produced by the same acceptance execution
+        that produced a, by the same test applied to any representation of the same logical terminal outcome; and the matching
+        canonical accepted change for t''s full identity is present in canonical accepted history. (8) For every t, if t is
+        exposed to a protocol consumer through an authoritative publication path for its identity, and t is a terminal_result
+        for a normal_retry_eligible_identity, and t is an authoritative REJECTED(definitive rejection reason) outcome, then
+        it is not the case that the matching canonical accepted change for t''s full identity is present in canonical accepted
+        history.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 0a4939f6ef269490ff7f9762e051d05ef97e6b029ee5964c585984264d9a224e
+        verdict: EQUIVALENT
+        reason: 'The formula covers all four boundaries with the eligible-identity guard: accepted implies, and rejected negates,
+          presence of the matching canonical acceptance in canonical accepted history for the same full identity at initialization,
+          restoration, and import; at publication the accepted case additionally requires an existential matching creation
+          pair that is committed, atomically committed with the result in one transaction, and bound to the same acceptance
+          execution that produced the acceptance, exactly the publication-specific co-presence defined in the source, with
+          no added or dropped requirements.'
+        differences: []
+      strengthening:
+        subject_signature: 0a4939f6ef269490ff7f9762e051d05ef97e6b029ee5964c585984264d9a224e
+        verdict: EQUIVALENT
+        reason: 'The formula covers each named boundary for eligible identities: initialization, restoration, and import require
+          presence in canonical accepted history for ACCEPTED and its absence for REJECTED, while publication ACCEPTED additionally
+          requires exactly the stipulated matching creation pair, produced and bound to the same acceptance execution, committed
+          and atomically co-committed, and present in history, and publication REJECTED requires absence; no scope, identity,
+          cardinality, or provenance condition is added or omitted.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 0a4939f6ef269490ff7f9762e051d05ef97e6b029ee5964c585984264d9a224e
+        verdict: EQUIVALENT
+        reason: 'The eight statements preserve the original''s boundary split, ACCEPTED/REJECTED polarity, full-identity matching,
+          and history presence for initialization, restoration, and import, while for publication they preserve the stronger
+          creation-pair condition: same acceptance execution, atomic single-transaction co-commit, and presence in canonical
+          accepted history, with no added or omitted guarantee.'
+        differences: []
+  claim:C43_terminal_outcome_entry_state_is_coherent:
+    kind: claim
+    subject_id: C43_terminal_outcome_entry_state_is_coherent
+    subject_signature: fa4b72d785a791e6e3a1187fa1398e57d2c56c61f4eaa39cc9d9e9edf8ae0073
+    roundtrip:
+      subject_signature: fa4b72d785a791e6e3a1187fa1398e57d2c56c61f4eaa39cc9d9e9edf8ae0073
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following nine conditions holds. (1) For every authoritative state s, every
+        terminal result record t1, every terminal result record t2, and every idempotency key k: if (s is an authoritative
+        initialization state, or s is an authoritative restoration state, or s is an authoritative import state, or s is an
+        authoritative publication state, where each such state is respectively the state exposed at an authoritative initialization,
+        restoration, import, or publication boundary for the terminal outcome store, with the publication boundary being one
+        that makes terminal outcomes observable to protocol consumers), and in authoritative state s key k is a normal_retry_eligible_identity,
+        meaning the logical edit it identifies remains within the normal retry/reconnect eligibility boundary (a logical edit
+        identity (document_id, client_change_id) whose pending/retry age is no more than 30 days and therefore remains inside
+        the normal retry/reconnect protocol boundary), and t1 is the terminal_result contained in the terminal outcome store
+        in authoritative state s for the exact full idempotency identity k, and t2 is the terminal_result contained in the
+        terminal outcome store in authoritative state s for the exact full idempotency identity k, then t1 equals t2. (2)
+        For every terminal result record t: if t is the terminal_result exposed at an authoritative initialization boundary
+        that makes a normal_retry_eligible_identity observable to the idempotency protocol, and t is a terminal_result for
+        a normal_retry_eligible_identity, and t is an authoritative ACCEPTED (canonical result) outcome, then the matching
+        canonical accepted change for t''s full identity is present in canonical accepted history. (3) For every terminal
+        result record t: if t is the terminal_result exposed at an authoritative initialization boundary that makes a normal_retry_eligible_identity
+        observable to the idempotency protocol, and t is a terminal_result for a normal_retry_eligible_identity, and t is
+        an authoritative REJECTED (definitive rejection reason) outcome, then it is not the case that the matching canonical
+        accepted change for t''s full identity is present in canonical accepted history. (4) For every terminal result record
+        t: if t is the ACCEPTED terminal_result exposed at an authoritative restoration boundary for a normal_retry_eligible_identity,
+        then the matching canonical accepted change for t''s full identity is present in canonical accepted history. (5) For
+        every terminal result record t: if t is the REJECTED terminal_result exposed at an authoritative restoration boundary
+        for a normal_retry_eligible_identity, then it is not the case that the matching canonical accepted change for t''s
+        full identity is present in canonical accepted history. (6) For every terminal result record t: if t is the ACCEPTED
+        terminal_result exposed at an authoritative import boundary for a normal_retry_eligible_identity, then the matching
+        canonical accepted change for t''s full identity is present in canonical accepted history. (7) For every terminal
+        result record t: if t is the REJECTED terminal_result exposed at an authoritative import boundary for a normal_retry_eligible_identity,
+        then it is not the case that the matching canonical accepted change for t''s full identity is present in canonical
+        accepted history. (8) For every terminal result record t: if t is exposed to a protocol consumer through an authoritative
+        publication path for its identity, and t is a terminal_result for a normal_retry_eligible_identity, and t is an authoritative
+        ACCEPTED (canonical result) outcome, then there exists a canonical acceptance a such that all of the following hold:
+        t and a are the ACCEPTED terminal-result creation and its matching canonical accepted-change creation for one logical
+        acceptance (this relation identifying the matching creation pair only); the matching canonical acceptance a is committed
+        for the corresponding ACCEPTED terminal outcome and the execution that committed a is the acceptance execution that
+        produced a; the matching ACCEPTED terminal-result creation t and canonical accepted-change creation a share one authoritative
+        transaction boundary and therefore commit or roll back together, with no reachable authoritative post-boundary state
+        for that pair containing exactly one side (this asserting atomicity only); the accepted terminal result representation
+        t carries a canonical result produced by the same acceptance execution that produced canonical acceptance a for the
+        producer binding under audit, in the sense that the result placed into t comes from that same execution rather than
+        another request, document, acceptance execution, or merely extensionally equal substitute, with the same test classifying
+        any representation of the same logical terminal outcome; and the matching canonical accepted change for t''s full
+        identity is present in canonical accepted history. (9) For every terminal result record t: if t is exposed to a protocol
+        consumer through an authoritative publication path for its identity, and t is a terminal_result for a normal_retry_eligible_identity,
+        and t is an authoritative REJECTED (definitive rejection reason) outcome, then it is not the case that the matching
+        canonical accepted change for t''s full identity is present in canonical accepted history. Throughout, a terminal_result
+        is the authoritative terminal outcome for one idempotency_key within the normal retry horizon, either an accepted
+        canonical result or a definitive rejected result, scoped by document.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: fa4b72d785a791e6e3a1187fa1398e57d2c56c61f4eaa39cc9d9e9edf8ae0073
+        verdict: EQUIVALENT
+        reason: The formula preserves at-most-one terminal result per eligible full identity across all four boundary states,
+          requires matching canonical acceptance presence for ACCEPTED and its absence for REJECTED at initialization, restoration,
+          import, and publication, and for publication additionally requires the matching creation pair, committed by the
+          same acceptance execution, bound to the result, and atomically committed with it, matching the source coherence
+          definition without added or omitted requirements.
+        differences: []
+      strengthening:
+        subject_signature: fa4b72d785a791e6e3a1187fa1398e57d2c56c61f4eaa39cc9d9e9edf8ae0073
+        verdict: EQUIVALENT
+        reason: 'The formula covers all four boundaries: uniqueness per eligible full identity in any such state, ACCEPTED
+          requiring a matching canonical acceptance and REJECTED requiring none at initialization, restoration, and import,
+          and at publication additionally requiring that matching acceptance be the creation pair created by the same acceptance
+          execution, committed, and atomically committed with the result, exactly as the canonical coherence definition specifies,
+          with no added or omitted scope.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: fa4b72d785a791e6e3a1187fa1398e57d2c56c61f4eaa39cc9d9e9edf8ae0073
+        verdict: EQUIVALENT
+        reason: The rendering preserves per-identity uniqueness at all four boundaries, ACCEPTED/REJECTED coherence with canonical
+          accepted history at initialization, restoration, and import, and at publication the same-acceptance-execution creation-pair
+          and single-transaction atomic-commit requirement, with no requirement added or omitted.
+        differences: []
