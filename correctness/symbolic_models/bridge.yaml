@@ -1409,6 +1409,9 @@ functions:
       its commit preceded x.
     semantic_anchors:
     - contract:acked_edit_failover_survival
+    - claim:L143_acked_edit_completed_recovery_matches_canonical_replay
+    - claim:L144_success_ack_follows_corresponding_canonical_commit
+    - claim:L146_ack_justifying_acceptance_survives_process_and_owner_failures
   completed_recovery_covers_acceptance:
     args:
     - RecoveryAttempt
@@ -1422,6 +1425,8 @@ functions:
       is eventually scheduled or completes.
     semantic_anchors:
     - contract:acked_edit_failover_survival
+    - claim:L143_acked_edit_completed_recovery_matches_canonical_replay
+    - claim:L146_ack_justifying_acceptance_survives_process_and_owner_failures
   recovery_matches_replay_including_acceptance:
     args:
     - RecoveryAttempt
@@ -1433,6 +1438,7 @@ functions:
       that replay even if later accepted edits alter its visible effect.
     semantic_anchors:
     - contract:acked_edit_failover_survival
+    - claim:L143_acked_edit_completed_recovery_matches_canonical_replay
   optimized_authoritative_representation_at_frontier:
     args:
     - AuthoritativeState
@@ -3125,6 +3131,9 @@ functions:
       nor any ordering relative to a commit.
     semantic_anchors:
     - contract:acked_edit_failover_survival
+    - claim:L143_acked_edit_completed_recovery_matches_canonical_replay
+    - claim:L144_success_ack_follows_corresponding_canonical_commit
+    - claim:L146_ack_justifying_acceptance_survives_process_and_owner_failures
   canonical_acceptance_committed_before_success_ack:
     args:
     - CanonicalAcceptance
@@ -3137,6 +3146,9 @@ functions:
       queryable afterward.
     semantic_anchors:
     - contract:acked_edit_failover_survival
+    - claim:L143_acked_edit_completed_recovery_matches_canonical_replay
+    - claim:L144_success_ack_follows_corresponding_canonical_commit
+    - claim:L146_ack_justifying_acceptance_survives_process_and_owner_failures
   owner_recovery_completion_and_resumption_after_success_ack:
     args:
     - RecoveryAttempt
@@ -3153,6 +3165,8 @@ functions:
     semantic_anchors:
     - contract:acked_edit_failover_survival
     - source:owner_failover
+    - claim:L143_acked_edit_completed_recovery_matches_canonical_replay
+    - claim:L146_ack_justifying_acceptance_survives_process_and_owner_failures
   catchup_response_targets_document_with_captured_head:
     args:
     - CatchupResponse
@@ -10513,6 +10527,113 @@ claims:
                 args:
                 - var: c
                 - var: e
+  L144_success_ack_follows_corresponding_canonical_commit:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          x: SuccessAck
+        body:
+          implies:
+          - call:
+              fn: success_ack_exposed
+              args:
+              - var: x
+          - exists:
+              vars:
+                a: CanonicalAcceptance
+              body:
+                and:
+                - call:
+                    fn: success_ack_for_acceptance
+                    args:
+                    - var: x
+                    - var: a
+                - call:
+                    fn: canonical_acceptance_committed_before_success_ack
+                    args:
+                    - var: a
+                    - var: x
+  L146_ack_justifying_acceptance_survives_process_and_owner_failures:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          x: SuccessAck
+          a: CanonicalAcceptance
+          r: RecoveryAttempt
+        body:
+          implies:
+          - and:
+            - and:
+              - call:
+                  fn: success_ack_exposed
+                  args:
+                  - var: x
+              - call:
+                  fn: success_ack_for_acceptance
+                  args:
+                  - var: x
+                  - var: a
+              - call:
+                  fn: canonical_acceptance_committed_before_success_ack
+                  args:
+                  - var: a
+                  - var: x
+            - call:
+                fn: owner_recovery_completion_and_resumption_after_success_ack
+                args:
+                - var: r
+                - var: x
+          - call:
+              fn: completed_recovery_covers_acceptance
+              args:
+              - var: r
+              - var: a
+  L143_acked_edit_completed_recovery_matches_canonical_replay:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          x: SuccessAck
+          a: CanonicalAcceptance
+          r: RecoveryAttempt
+        body:
+          implies:
+          - and:
+            - and:
+              - call:
+                  fn: success_ack_exposed
+                  args:
+                  - var: x
+              - call:
+                  fn: success_ack_for_acceptance
+                  args:
+                  - var: x
+                  - var: a
+              - call:
+                  fn: canonical_acceptance_committed_before_success_ack
+                  args:
+                  - var: a
+                  - var: x
+            - call:
+                fn: owner_recovery_completion_and_resumption_after_success_ack
+                args:
+                - var: r
+                - var: x
+            - call:
+                fn: completed_recovery_covers_acceptance
+                args:
+                - var: r
+                - var: a
+          - call:
+              fn: recovery_matches_replay_including_acceptance
+              args:
+              - var: r
+              - var: a
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
