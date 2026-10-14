@@ -1844,50 +1844,46 @@ records:
   obligation:accepted_terminal_result_preserves_acceptance_producer:
     kind: obligation
     subject_id: accepted_terminal_result_preserves_acceptance_producer
-    subject_signature: 2bfee994bb590dad7ccdf9621a343bc71993c2d75febeea28394678985e734e6
+    subject_signature: c653b71cc8e3dfc885e4005aa18624105b040b0a1ff7da568f1ecdaf5d1f0e7d
     roundtrip:
-      subject_signature: 2bfee994bb590dad7ccdf9621a343bc71993c2d75febeea28394678985e734e6
+      subject_signature: c653b71cc8e3dfc885e4005aa18624105b040b0a1ff7da568f1ecdaf5d1f0e7d
       status: TRANSLATED
       natural_language: 'For every terminal result record t, if t is an authoritative ACCEPTED (canonical result) terminal
-        outcome and t is within the retry horizon — meaning t carries a full identity that is still a normal-retry-eligible
-        identity, its pending/retry age is no more than 30 days and it remains inside the normal retry/reconnect protocol
-        boundary defined by A6, where identity eligibility and this horizon classification are one protocol boundary, not
-        independent conditions — then there exists a canonical acceptance a such that all of the following hold: a is a committed
-        canonical accepted-change record in the authoritative accepted history; the full idempotency key carried by t is equal
-        to the authoritative idempotency identity carried by a; and t is bound to the acceptance execution of a, meaning the
-        canonical result carried by t was produced by the same acceptance execution that produced a for the producer binding
-        under audit — at an accepted-terminal-acceptance-origin boundary, the result placed into t comes from that same execution
-        rather than another request, document, acceptance execution, or merely extensionally equal substitute, and for a later
-        lifecycle-rewritten representation of the same logical terminal outcome, this binding is classified by that same test,
-        i.e., the canonical result it carries is the one produced by that same acceptance execution. This binding relation
-        alone does not assert that a is committed, when binding metadata was materialized, or that t is provenance-reachable
-        from an acceptance origin; those are separate proof obligations.'
+        outcome and t is within the normal retry eligibility horizon — meaning the full identity t carries is still a normal_retry_eligible_identity,
+        which is the horizon in which producer provenance must be retained, this horizon predicate classifying horizon membership
+        only and not by itself asserting producer provenance, origin authority, or lifecycle preservation — then there exists
+        a canonical acceptance a such that all of the following hold: a is a committed canonical accepted-change record in
+        authoritative accepted history; the full idempotency_key carried by t is equal to the authoritative idempotency identity
+        carried by a; and t is bound to the acceptance execution of a, meaning the accepted terminal result representation
+        t carries a canonical result produced by the same acceptance execution that produced a for the producer binding under
+        audit, such that at an accepted_terminal_acceptance_origin boundary the result placed into t comes from that same
+        execution rather than from another request, document, acceptance execution, or merely extensionally equal substitute,
+        this relation applying to any representation of the same logical terminal outcome by the same test.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 2bfee994bb590dad7ccdf9621a343bc71993c2d75febeea28394678985e734e6
+        subject_signature: c653b71cc8e3dfc885e4005aa18624105b040b0a1ff7da568f1ecdaf5d1f0e7d
         verdict: EQUIVALENT
-        reason: The formula applies to exactly the in-horizon authoritative ACCEPTED terminal results and requires a committed
-          canonical acceptance with the identical full idempotency key whose acceptance execution produced the canonical result
-          carried by the terminal result, excluding merely extensionally equal results from another producer, matching the
-          canonical producer-provenance requirement without added or omitted conditions.
+        reason: The formula quantifies over authoritative ACCEPTED terminal results within the retry horizon and requires
+          existence of a committed canonical acceptance with the identical full idempotency key whose producing acceptance
+          execution also produced the canonical result carried by the terminal result, exactly matching the source's same-key,
+          same-producer provenance requirement and its exclusion of merely extensionally equal substitutes.
         differences: []
       strengthening:
-        subject_signature: 2bfee994bb590dad7ccdf9621a343bc71993c2d75febeea28394678985e734e6
+        subject_signature: c653b71cc8e3dfc885e4005aa18624105b040b0a1ff7da568f1ecdaf5d1f0e7d
         verdict: EQUIVALENT
-        reason: The formula restricts to authoritative ACCEPTED terminal results within the retry horizon, requires a committed
-          canonical acceptance with the same full idempotency key, and uses the bound-to relation to require the stored canonical
-          result be produced by that same acceptance execution, excluding merely extensionally equal substitutes, matching
-          the canonical source.
+        reason: The formula scopes to authoritative ACCEPTED records within the retry horizon, requires existence of a committed
+          canonical acceptance with equal full idempotency key, and requires the terminal result to be bound to that same
+          acceptance execution, which by the predicate meaning excludes merely extensionally equal results from another producer,
+          matching the canonical producer-provenance requirement without added or omitted conditions.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 2bfee994bb590dad7ccdf9621a343bc71993c2d75febeea28394678985e734e6
+        subject_signature: c653b71cc8e3dfc885e4005aa18624105b040b0a1ff7da568f1ecdaf5d1f0e7d
         verdict: EQUIVALENT
-        reason: The rendering preserves the universal in-horizon (30-day) precondition, the same-full-key condition, existence
-          of a committed canonical acceptance, and the same-acceptance-execution producer binding for the stored result, including
-          exclusion of merely extensionally equal substitutes and persistence across lifecycle-rewritten representations,
-          with no added or omitted requirement.
+        reason: The rendering preserves the in-horizon applicability, full idempotency-key equality, existence of a committed
+          canonical acceptance, same acceptance-execution producer binding, and insufficiency of a merely extensionally equal
+          result from another producer; the canonical sections explicitly support this producer-provenance requirement.
         differences: []
   obligation:non_acceptance_retirement_preserves_disposition_identity:
     kind: obligation
@@ -4238,282 +4234,272 @@ records:
   claim:L199_accepted_terminal_provenance_survives_persistence_and_restore:
     kind: claim
     subject_id: L199_accepted_terminal_provenance_survives_persistence_and_restore
-    subject_signature: 13d3eb004b609e84b4876c9e69d65a611e1280cd5584379401effd4c441a1ec2
+    subject_signature: c3e40a259cc665c8be4ba2f1e98aad70abb56155278b4192b9fb0af1ddbdc16c
     roundtrip:
-      subject_signature: 13d3eb004b609e84b4876c9e69d65a611e1280cd5584379401effd4c441a1ec2
+      subject_signature: c3e40a259cc665c8be4ba2f1e98aad70abb56155278b4192b9fb0af1ddbdc16c
       status: TRANSLATED
-      natural_language: 'For all TerminalResultRecords before and after and for all CanonicalAcceptances producer, if all
-        of the following hold: (1) accepted_terminal_persistence_restore_edge(before, after) holds, meaning before-to-after
-        is one durable persistence or completed recovery/restoration transition, within the normal retry horizon, of an authoritative
-        ACCEPTED terminal_result that preserves the same logical terminal outcome, where the transition acts on the durable
-        representation of that outcome and may rewrite that representation or leave its encoding unchanged, preserving the
-        logical outcome does not require a representation change, and this classification does not assert full-identity or
-        producer-binding preservation; (2) terminal_result_bound_to_acceptance_execution(before, producer) holds, meaning
-        before carries a canonical result produced by the same acceptance execution that produced canonical acceptance producer
-        for the producer binding under audit, rather than another request, document, acceptance execution, or merely extensionally
-        equal substitute, with a later lifecycle-rewritten representation of the same logical terminal outcome classified
-        by the same test; and (3) accepted_terminal_binding_identity_matches(before, producer) holds, meaning before and producer
-        carry the same full (document_id, client_change_id) identity; then both of the following hold: terminal_result_bound_to_acceptance_execution(after,
-        producer) holds, under the same meaning, and accepted_terminal_binding_identity_matches(after, producer) holds, meaning
-        after and producer carry the same full (document_id, client_change_id) identity.'
+      natural_language: 'For all TerminalResultRecords before and after and every CanonicalAcceptance producer, if all of
+        the following hold: (1) before to after is one durable persistence or completed recovery/restoration transition, within
+        the normal retry horizon, of an authoritative ACCEPTED terminal_result that preserves the same logical terminal outcome,
+        where the transition acts on the durable representation of that outcome and may rewrite that representation or leave
+        its encoding unchanged, preserving the logical outcome does not require a representation change, and classification
+        as such an edge does not by itself assert full-identity or producer-binding preservation; (2) before is bound to the
+        acceptance execution of producer, meaning the accepted terminal result representation before carries a canonical result
+        produced by the same acceptance execution that produced the canonical acceptance producer for the producer binding
+        under audit, rather than by another request, document, acceptance execution, or merely extensionally equal substitute,
+        and this relation alone does not assert that a committed, when binding metadata was materialized, or that before is
+        provenance-reachable from an acceptance origin; and (3) before and producer carry the same full identity, namely the
+        same document_id and the same client_change_id; then both of the following hold: after is bound to the acceptance
+        execution of producer, by the same test applied to after as a representation of the same logical terminal outcome,
+        meaning after carries the canonical result produced by that same acceptance execution, with the same limitation that
+        this relation alone does not assert that a committed, when binding metadata was materialized, or that after is provenance-reachable
+        from an acceptance origin; and after and producer carry the same full identity, namely the same document_id and the
+        same client_change_id.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 13d3eb004b609e84b4876c9e69d65a611e1280cd5584379401effd4c441a1ec2
+        subject_signature: c3e40a259cc665c8be4ba2f1e98aad70abb56155278b4192b9fb0af1ddbdc16c
         verdict: EQUIVALENT
-        reason: The formula conditions on a persistence/restore edge within the retry horizon for an authoritative ACCEPTED
-          outcome preserving the logical outcome, together with before being both bound to the producer execution and matching
-          it on the full (document_id, client_change_id) identity, and concludes after retains that same execution binding
-          and full identity match. The bound relation's meaning also excludes reconstruction from another request, document,
-          or acceptance execution or a merely extensionally equal substitute, and post-horizon cleanup is excluded via the
-          edge's horizon condition.
+        reason: The formula quantifies over every persistence/restore edge within the retry horizon whose before-record is
+          bound to the producer and fully identity-matches it on (document_id, client_change_id), and requires the after-record
+          to retain that same producer binding and full identity match; the edge predicate covers reconstruction cases preserving
+          only the logical outcome without asserting identity/binding preservation, and the bound predicate excludes substitutes
+          from another request, document, or acceptance execution, while post-horizon cleanup is excluded by the edge's horizon
+          condition.
         differences: []
       strengthening:
-        subject_signature: 13d3eb004b609e84b4876c9e69d65a611e1280cd5584379401effd4c441a1ec2
+        subject_signature: c3e40a259cc665c8be4ba2f1e98aad70abb56155278b4192b9fb0af1ddbdc16c
         verdict: EQUIVALENT
-        reason: The formula conditions on a within-horizon persistence or completed restoration edge preserving the logical
-          ACCEPTED outcome, together with the before-record's full (document_id, client_change_id) identity match and binding
-          to the same acceptance execution, and concludes the after-record retains both that identity match and that same-execution
-          binding. This exactly captures preservation without extensionally-equal substitution, while post-horizon cleanup
-          is outside the edge's scope.
+        reason: The formula conditions on a persistence/restore edge within the retry horizon that preserves the logical ACCEPTED
+          outcome, plus before-state producer binding and full (document_id, client_change_id) identity match, and requires
+          exactly that same binding and identity for the after-state, capturing preservation and the bar on extensionally-equal
+          reconstruction without extending scope beyond the horizon.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 13d3eb004b609e84b4876c9e69d65a611e1280cd5584379401effd4c441a1ec2
+        subject_signature: c3e40a259cc665c8be4ba2f1e98aad70abb56155278b4192b9fb0af1ddbdc16c
         verdict: EQUIVALENT
-        reason: The rendering quantifies over every single durable-persistence or completed recovery/restoration transition
-          within the retry horizon that preserves the ACCEPTED terminal outcome, requiring the before record to be bound to
-          the same acceptance producer and to share the full (document_id, client_change_id) identity, and concludes the after
-          record preserves both that producer binding and that identity, with extensionally equal substitutes from another
-          request, document, or execution expressly excluded, matching the original scope and exclusion for post-horizon cleanup.
+        reason: 'The rendering preserves the original scope and guarantee: for an authoritative ACCEPTED terminal result within
+          the normal retry horizon, any durable persistence or completed recovery/restoration transition preserving the logical
+          terminal outcome, with the before-state bound to the matching canonical acceptance producer for the same document_id
+          and client_change_id, yields an after-state with that same full identity and same producer binding; reconstruction
+          from another request, document, acceptance execution, or merely extensionally equal substitute fails the binding
+          test, and post-horizon cleanup removing the outcome is excluded by the horizon and outcome-preservation preconditions.'
         differences: []
   claim:L200_accepted_terminal_provenance_survives_compaction_and_retention:
     kind: claim
     subject_id: L200_accepted_terminal_provenance_survives_compaction_and_retention
-    subject_signature: b176b094de19eb68d196ce45c560957dba53bb96240d65119d7ccd2627692ac5
+    subject_signature: fcbf6c38ecc753a266e39314ecdc8e408a80d863da504c830c63016fb08077be
     roundtrip:
-      subject_signature: b176b094de19eb68d196ce45c560957dba53bb96240d65119d7ccd2627692ac5
+      subject_signature: fcbf6c38ecc753a266e39314ecdc8e408a80d863da504c830c63016fb08077be
       status: TRANSLATED
-      natural_language: 'For all TerminalResultRecord values before and after and for all CanonicalAcceptance values producer,
-        if the following antecedent holds: (1) either before-to-after is an accepted_terminal_compaction_retention_edge or
-        before-to-after is an accepted_terminal_cleanup_edge, and (2) both before is terminal_result_bound_to_acceptance_execution
-        to producer and before accepted_terminal_binding_identity_matches producer; then both after is terminal_result_bound_to_acceptance_execution
-        to producer and after accepted_terminal_binding_identity_matches producer. Here, an accepted_terminal_compaction_retention_edge
-        means before-to-after is one compaction or retention transition, within the normal retry horizon, of an authoritative
-        ACCEPTED terminal_result that preserves the same logical terminal outcome; the transition may rewrite the durable
-        representation or leave its encoding unchanged while retaining that outcome, so preserving the logical outcome does
-        not require a representation change; a cleanup implementation is included whenever the transition itself semantically
-        performs compaction or retention, while a cleanup label alone does not make an unrelated rewrite part of this category;
-        and this classification by itself does not assert full-identity or producer-binding preservation. An accepted_terminal_cleanup_edge
-        means before-to-after is one cleanup rewrite, within the normal retry horizon, of an authoritative ACCEPTED terminal_result
-        that preserves the same logical terminal outcome; such a cleanup operation may also satisfy accepted_terminal_compaction_retention_edge
-        when it semantically performs compaction or retention, the cleanup label by itself is not a C47/L212 lifecycle category,
-        this predicate does not assert full-identity or producer-binding preservation, and post-horizon cleanup that removes
-        the terminal outcome is outside it. terminal_result_bound_to_acceptance_execution(t, a) means the accepted terminal
-        result representation t carries a canonical result produced by the same acceptance execution that produced canonical
-        acceptance a for the producer binding under audit, rather than from another request, document, acceptance execution,
-        or a merely extensionally equal substitute; for a later lifecycle-rewritten representation of the same logical terminal
-        outcome, the same test applies, namely that the canonical result it carries is the one produced by that same acceptance
-        execution; this relation alone does not assert that a was committed, when binding metadata was materialized, or that
-        t is provenance-reachable from an acceptance origin. accepted_terminal_binding_identity_matches(t, a) means t and
-        a carry the same full (document_id, client_change_id) identity, where document_id is the stable identifier of one
-        collaborative document and client_change_id is a protocol identifier supplied by the client for a logical client edit.'
+      natural_language: 'For all TerminalResultRecords before and after and for all CanonicalAcceptances producer, if the
+        following antecedent holds: (1) either before->after is an accepted_terminal_compaction_retention_edge — i.e., one
+        compaction or retention transition, within the normal retry horizon, of an authoritative ACCEPTED terminal_result
+        that preserves the same logical terminal outcome, where the transition may rewrite the durable representation or leave
+        its encoding unchanged while retaining that outcome, a cleanup implementation is included whenever the transition
+        itself semantically performs compaction or retention, and a cleanup label alone does not make an unrelated rewrite
+        part of this category — or before->after is an accepted_terminal_cleanup_edge — i.e., one cleanup rewrite, within
+        the normal retry horizon, of an authoritative ACCEPTED terminal_result that preserves the same logical terminal outcome,
+        which does not by itself assert full-identity or producer-binding preservation and excludes post-horizon cleanup that
+        removes the terminal outcome; and (2) before is terminal_result_bound_to_acceptance_execution to producer, meaning
+        before carries a canonical result produced by the same acceptance execution that produced producer for the producer
+        binding under audit, with that same-execution test applied to any representation of the same logical terminal outcome;
+        and (3) before accepted_terminal_binding_identity_matches producer, meaning before and producer carry the same full
+        (document_id, client_change_id) identity; then both of the following hold for after: after is terminal_result_bound_to_acceptance_execution
+        to producer by that same same-acceptance-execution test, and after accepted_terminal_binding_identity_matches producer,
+        meaning after and producer carry the same full (document_id, client_change_id) identity.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: b176b094de19eb68d196ce45c560957dba53bb96240d65119d7ccd2627692ac5
+        subject_signature: fcbf6c38ecc753a266e39314ecdc8e408a80d863da504c830c63016fb08077be
         verdict: EQUIVALENT
-        reason: The formula's antecedent requires a within-horizon compaction/retention or cleanup edge preserving the logical
-          terminal outcome, together with the before record bound to the producer and matching its full (document_id, client_change_id)
-          identity; the consequent requires that same producer binding and identity for the after record, which by the supplied
-          predicate meanings excludes substitution from a different acceptance execution or document, and post-horizon outcome-removing
-          cleanup is outside the edge predicates as in the source.
+        reason: The formula's antecedent captures an in-horizon compaction, retention, or cleanup transition preserving the
+          logical outcome from a before record bound to the same producer with full (document_id, client_change_id) identity
+          match, and its consequent requires that same producer binding and identity match for after, which by the bound relation's
+          same-execution meaning forbids reconstruction or relabeling from a different execution or document; post-horizon
+          outcome-removing cleanup is excluded by both edge definitions.
         differences: []
       strengthening:
-        subject_signature: b176b094de19eb68d196ce45c560957dba53bb96240d65119d7ccd2627692ac5
+        subject_signature: fcbf6c38ecc753a266e39314ecdc8e408a80d863da504c830c63016fb08077be
         verdict: EQUIVALENT
-        reason: The formula's precondition conjoins a within-horizon compaction/retention or cleanup edge preserving the ACCEPTED
-          terminal outcome with the before record being bound to the producer and matching its full (document_id, client_change_id)
-          identity, exactly the canonical trigger. Its conclusion requires the after record to remain bound to that same producer
-          with the same identity match, which, under the supplied bound relation's same-execution (not merely extensionally
-          equal) meaning, preserves the acceptance-producer binding and excludes reconstruction or relabelling from a different
-          execution or document. Post-horizon cleanup removing the outcome is excluded by both edge definitions.
+        reason: The formula quantifies over exactly the horizon-internal compaction/retention and cleanup edges that preserve
+          the accepted terminal outcome, requires the before record to be bound to the producer with matching (document_id,
+          client_change_id), and requires the after record to retain that same producer binding and identity, which captures
+          the prohibition on substitution by an extensionally equal different execution or document without adding or omitting
+          scope.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: b176b094de19eb68d196ce45c560957dba53bb96240d65119d7ccd2627692ac5
+        subject_signature: fcbf6c38ecc753a266e39314ecdc8e408a80d863da504c830c63016fb08077be
         verdict: EQUIVALENT
-        reason: The rendering's union of compaction/retention and cleanup edges covers all three rewrite types in the source,
-          each restricted to within the retry horizon and to preservation of the same logical ACCEPTED terminal outcome, matching
-          the source's applicability boundary and post-horizon cleanup exclusion. Its antecedent and consequent conjoin the
-          same two binding components — provenance from the same acceptance execution (excluding extensionally equal substitutes
-          from another execution or document) and full (document_id, client_change_id) identity match — so no requirement
-          is omitted or added.
+        reason: 'The rendering preserves the source scope and guarantee: for a single in-horizon compaction, cleanup, or retention
+          transition preserving the ACCEPTED outcome, a before-state bound by the same acceptance execution to the producer
+          with matching full (document_id, client_change_id) identity yields an after-state with that same execution binding
+          and identity, excluding post-horizon outcome-removing cleanup; this also bars substitution from a different execution
+          or document.'
         differences: []
   claim:L201_accepted_terminal_provenance_survives_representation_migration:
     kind: claim
     subject_id: L201_accepted_terminal_provenance_survives_representation_migration
-    subject_signature: 59455a79b9d94102e99cdb6e9fee77082f58647e97c3e6c68795b373051373cb
+    subject_signature: 5a7e61dc98bc2b3669a16b80bdcd3394571aabbc73306a15ba7ba9ad491f9de0
     roundtrip:
-      subject_signature: 59455a79b9d94102e99cdb6e9fee77082f58647e97c3e6c68795b373051373cb
+      subject_signature: 5a7e61dc98bc2b3669a16b80bdcd3394571aabbc73306a15ba7ba9ad491f9de0
       status: TRANSLATED
-      natural_language: 'For every TerminalResultRecord before, every TerminalResultRecord after, and every CanonicalAcceptance
-        producer, if all of the following hold: (1) before to after is one representation-migration transition, within the
-        normal retry horizon, of an authoritative ACCEPTED terminal_result that preserves the same logical terminal outcome,
-        where this classification by itself does not assert preservation of full identity or of producer binding; (2) before
-        is bound to producer in that before carries a canonical result produced by the same acceptance execution that produced
-        producer for the producer binding under audit, meaning the result placed into before comes from that same execution
-        rather than from another request, document, acceptance execution, or merely extensionally equal substitute, with the
-        same test applying to a later lifecycle-rewritten representation by reference to the canonical result it carries,
-        and where this relation by itself does not assert that before is provenance-reachable from an acceptance origin; and
-        (3) before and producer carry the same full identity, namely the same pair of document_id and client_change_id; then
-        all of the following hold: after is bound to producer by that same same-acceptance-execution test; after and producer
-        carry the same full identity, namely the same pair of document_id and client_change_id; and for every CanonicalAcceptance
-        other_producer, if after is bound to other_producer by that same test, then other_producer is equal to producer.'
+      natural_language: 'For all TerminalResultRecords before and after and every CanonicalAcceptance producer, if (1) before
+        to after is one representation-migration transition, within the normal retry horizon, of an authoritative ACCEPTED
+        terminal_result that preserves the same logical terminal outcome — a classification that by itself does not assert
+        full-identity preservation or producer-binding preservation — and (2) before is bound to producer, meaning the accepted
+        terminal result representation before carries a canonical result produced by the same acceptance execution that produced
+        the canonical acceptance producer for the producer binding under audit, rather than by another request, document,
+        acceptance execution, or merely extensionally equal substitute, and (3) before and producer carry the same full (document_id,
+        client_change_id) identity, then all of the following hold: after is bound to producer by that same test, after and
+        producer carry the same full (document_id, client_change_id) identity, and for every CanonicalAcceptance other_producer,
+        if after is bound to other_producer then other_producer equals producer.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 59455a79b9d94102e99cdb6e9fee77082f58647e97c3e6c68795b373051373cb
+        subject_signature: 5a7e61dc98bc2b3669a16b80bdcd3394571aabbc73306a15ba7ba9ad491f9de0
         verdict: EQUIVALENT
-        reason: The antecedent captures a within-horizon, outcome-preserving migration edge from an authoritative ACCEPTED
-          record already bound to the producer with matching full (document_id, client_change_id) identity, and the consequent
-          requires the after record to retain that same producer binding and identity plus producer uniqueness, exactly encoding
-          the one-to-one preservation and bar on extensionally equal substitutes; post-horizon cleanup is excluded by the
-          edge's horizon condition.
+        reason: The formula's migration edge encodes an authoritative ACCEPTED, outcome-preserving transition within the retry
+          horizon, its preconditions require the before-record to be bound to the producer with full (document_id, client_change_id)
+          identity match, and its conclusion preserves both binding and identity for the after-record while universally excluding
+          any distinct other producer, matching the one-to-one, no-substitution guarantee and the post-horizon exclusion.
         differences: []
       strengthening:
-        subject_signature: 59455a79b9d94102e99cdb6e9fee77082f58647e97c3e6c68795b373051373cb
+        subject_signature: 5a7e61dc98bc2b3669a16b80bdcd3394571aabbc73306a15ba7ba9ad491f9de0
         verdict: EQUIVALENT
-        reason: The premises encode a horizon-scoped, outcome-preserving migration of an authoritative ACCEPTED result already
-          bound to and identity-matching the producer, and the conclusions preserve that same binding and full (document_id,
-          client_change_id) identity for the migrated representation while the universal clause enforces the stated one-to-one
-          producer mapping and exclusion of substitutes, with no added or omitted scope.
+        reason: The migration-edge predicate supplies the within-horizon, authoritative ACCEPTED, outcome-preserving guard;
+          the antecedent supplies the original binding and full (document_id, client_change_id) identity match, and the consequent
+          preserves exactly that binding and identity while the universal other_producer equality encodes the stated one-to-one
+          prohibition on substitution by another execution.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 59455a79b9d94102e99cdb6e9fee77082f58647e97c3e6c68795b373051373cb
+        subject_signature: 5a7e61dc98bc2b3669a16b80bdcd3394571aabbc73306a15ba7ba9ad491f9de0
         verdict: EQUIVALENT
-        reason: 'The rendering preserves the source scope and guarantee: an authoritative ACCEPTED result bound, via the same-acceptance-execution
-          test and the same (document_id, client_change_id) pair, to its producer, with a within-horizon outcome-preserving
-          migration, yields the after record bound to that same producer, carrying that same identity pair, and bound to no
-          distinct producer, which is the stated one-to-one preservation and bar on extensionally equal substitutes; post-horizon
-          outcome-removing cleanup remains outside the preconditions.'
+        reason: 'The rendering preserves the canonical guarantee: given a within-horizon migration of an authoritative ACCEPTED
+          terminal_result that preserves the terminal outcome, with the before-record bound to the matching canonical acceptance
+          producer for the same full (document_id, client_change_id) identity, the after-record remains bound to that same
+          producer with the same full identity and no distinct second producer, matching the one-to-one, no-substitution requirement
+          and the post-horizon exclusion.'
         differences: []
   claim:L211_accepted_terminal_result_origin_is_authoritative:
     kind: claim
     subject_id: L211_accepted_terminal_result_origin_is_authoritative
-    subject_signature: b8835e56554702454e673bc7699b326e332bcfb5ba2110933f078c52a7d2e2aa
+    subject_signature: baf8171b2af52a8fc901069e330e82f33f31e2f2c69d468ed8368c6e397726f4
     roundtrip:
-      subject_signature: b8835e56554702454e673bc7699b326e332bcfb5ba2110933f078c52a7d2e2aa
+      subject_signature: baf8171b2af52a8fc901069e330e82f33f31e2f2c69d468ed8368c6e397726f4
       status: TRANSLATED
-      natural_language: 'For every terminal result record t, if t is an authoritative ACCEPTED (canonical result) terminal
-        outcome, and t is within the retry horizon — meaning t carries a full identity that is still a normal-retry-eligible
-        identity, whose pending/retry age is no more than 30 days and which remains inside the normal retry/reconnect protocol
-        boundary defined by A6, where identity eligibility and this horizon classification are one protocol boundary, not
-        independent conditions — then there exists a terminal result record t0 such that all of the following hold: t0 is
-        an authoritative ACCEPTED terminal result at the acceptance-linearization creation boundary for one full identity
-        and logical terminal outcome, where this origin classification alone does not depend on whether a later representation
-        is being classified by L211, does not assert normal-retry eligibility at the origin event or current horizon eligibility
-        of t, and does not itself prove matching-producer provenance, transaction co-commit, or later lifecycle preservation;
-        t0 is the initial authoritative ACCEPTED terminal-result representation whose authoritative creation at the acceptance-linearization
-        boundary is performed by the acceptance transaction, where this classifies only the origin writer for t0 and does
-        not identify or quantify a matching CanonicalAcceptance, assert producer-result provenance, full-identity equality,
-        transaction co-commit, or later lifecycle preservation; and either t0 is equal to t, or both of the following hold:
-        t is a later durable authoritative terminal-result representation of the same already-linearized logical terminal
-        outcome, where durability is the semantic persistence requirement of L211 and does not require one particular physical
-        store, layout, or concrete lifecycle category and this predicate does not classify the initial acceptance-linearization
-        result, and t is reachable from t0 under the transitive closure of the accepted-terminal supported lifecycle edge
-        relation, where each such edge is one architecture-supported authoritative in-horizon ACCEPTED terminal-result representation
-        transition that preserves the same already-linearized logical terminal outcome and the same full (document_id, client_change_id)
-        identity, is non-terminal in the lifecycle sense used by L211 because it preserves rather than creates, replaces,
-        or reclassifies that logical terminal outcome, with non-terminal not being an additional applicability filter, and
-        leaves the concrete persistence/recovery, compaction/retention, or representation-migration category unspecified.'
+      natural_language: 'For every TerminalResultRecord t, if t is an authoritative ACCEPTED (canonical result) outcome and
+        t is within the normal retry eligibility horizon (meaning the full identity t carries is still a normal_retry_eligible_identity,
+        the horizon in which producer provenance must be retained; this horizon predicate classifies horizon membership only
+        and does not itself assert producer provenance, origin authority, or lifecycle preservation), then there exists a
+        TerminalResultRecord t0 such that all of the following hold: (1) t0 is an authoritative ACCEPTED terminal result at
+        the acceptance-linearization creation boundary for one full identity and logical terminal outcome (this classifies
+        that authoritative origin only; it does not depend on whether a later representation is being classified, does not
+        assert normal-retry eligibility at the origin event or current horizon eligibility of t0, and does not itself prove
+        matching-producer provenance, transaction co-commit, or later lifecycle preservation); (2) t0 is the initial authoritative
+        ACCEPTED terminal-result representation whose authoritative creation at the acceptance-linearization boundary is performed
+        by the acceptance transaction (this classifies only the origin writer for t0; it does not identify or quantify a matching
+        CanonicalAcceptance, assert producer-result provenance, full-identity equality, transaction co-commit, or later lifecycle
+        preservation); and (3) either t0 is equal to t, or both of the following hold: t is a later durable authoritative
+        terminal-result representation of the same already-linearized logical terminal outcome (durability is a semantic persistence
+        requirement and does not require one particular physical store, layout, or concrete lifecycle category, and this predicate
+        does not classify the initial acceptance-linearization result), and t is reachable from t0 via the transitive closure
+        of the supported-lifecycle-edge relation, where each such edge before->after is one architecture-supported authoritative
+        in-horizon ACCEPTED terminal-result representation transition that preserves the same already-linearized logical terminal
+        outcome and the full (document_id, client_change_id) identity, is non-terminal in the lifecycle sense because it preserves
+        rather than creates, replaces, or reclassifies that logical terminal outcome (non-terminal not being an additional
+        applicability filter), establishes membership in the supported lifecycle surface, and leaves the concrete persistence/recovery,
+        compaction/retention, or representation-migration category unspecified.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: b8835e56554702454e673bc7699b326e332bcfb5ba2110933f078c52a7d2e2aa
+        subject_signature: baf8171b2af52a8fc901069e330e82f33f31e2f2c69d468ed8368c6e397726f4
         verdict: EQUIVALENT
-        reason: The antecedent matches authoritative ACCEPTED status plus normal-retry-horizon eligibility, and the consequent
-          requires an acceptance-transaction-created linearization origin that is either t itself or reaches t via a durable
-          representation and a finite transitive closure of authoritative in-horizon lifecycle edges preserving the same full
-          (document_id, client_change_id) identity and logical terminal outcome, exactly encoding the reflexive-transitive
-          provenance lineage and excluding any independent introduction root.
+        reason: The formula applies to exactly authoritative ACCEPTED terminal results within the normal retry horizon, requires
+          an acceptance-transaction-created linearization origin, and permits either equality with that origin or a durable
+          later representation reachable through the transitive closure of authoritative in-horizon lifecycle edges preserving
+          the same full identity and logical terminal outcome; this exactly encodes the stated lineage and excludes any independent
+          provenance root, without adding a concrete lifecycle-category or other extra requirement.
         differences: []
       strengthening:
-        subject_signature: b8835e56554702454e673bc7699b326e332bcfb5ba2110933f078c52a7d2e2aa
+        subject_signature: baf8171b2af52a8fc901069e330e82f33f31e2f2c69d468ed8368c6e397726f4
         verdict: EQUIVALENT
-        reason: The formula's antecedent matches authoritative ACCEPTED status plus the single normal-retry-eligibility horizon
-          boundary, and its consequent requires an acceptance-transaction-created acceptance-linearization origin for the
-          same full identity and outcome, with t either equal to that origin or a later durable representation reachable by
-          the finite transitive closure of authoritative in-horizon lifecycle edges preserving that identity and outcome.
-          This exactly encodes the reflexive-transitive lineage and the exclusion of any independent in-horizon ACCEPTED provenance
-          root, with no added or omitted scope, identity, or category requirement.
+        reason: The formula quantifies exactly over authoritative ACCEPTED records within the retry horizon and requires existence
+          of an acceptance-transaction-created linearization origin t0 for the same identity/outcome, with t either equal
+          to t0 or a durable representation reachable via the transitive closure of identity- and outcome-preserving in-horizon
+          lifecycle edges, thereby also excluding any independent provenance root.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: b8835e56554702454e673bc7699b326e332bcfb5ba2110933f078c52a7d2e2aa
+        subject_signature: baf8171b2af52a8fc901069e330e82f33f31e2f2c69d468ed8368c6e397726f4
         verdict: EQUIVALENT
-        reason: The rendering preserves the universal in-horizon scope, the same full (document_id, client_change_id) identity
-          and already-linearized logical outcome, and the reflexive-or-finite-transitive lineage from the acceptance-transaction-created
-          ACCEPTED origin, thereby also excluding any independent authoritative introduction root; its horizon, durability,
-          and origin-predicate clarifications add no extra condition, bridge, or concrete lifecycle category beyond the canonical
-          statement and formal intent.
+        reason: The rendering preserves the same universal in-horizon scope, acceptance-transaction origin, reflexive-or-descendant
+          structure, finite supported transitive lineage, and preservation of the full (document_id, client_change_id) identity
+          and logical terminal outcome, thereby also excluding any independent authoritative introduction root; the predicate
+          disclaimers add no extra bridge or requirement.
         differences: []
   claim:C47_accepted_terminal_result_provenance_survives_lifecycle:
     kind: claim
     subject_id: C47_accepted_terminal_result_provenance_survives_lifecycle
-    subject_signature: 6e1182e0e5a5b503fbe46cffbe7697d05fbc52ba790207894ce2144023339e65
+    subject_signature: 56fe71b791a6d2e32e3340bfbf6460c418272d4aa03923686d545614d272187f
     roundtrip:
-      subject_signature: 6e1182e0e5a5b503fbe46cffbe7697d05fbc52ba790207894ce2144023339e65
+      subject_signature: 56fe71b791a6d2e32e3340bfbf6460c418272d4aa03923686d545614d272187f
       status: TRANSLATED
-      natural_language: 'For all TerminalResultRecord values before and after and every CanonicalAcceptance producer, if both
-        of the following hold: (1) the transition from before to after is at least one of (a) an accepted-terminal persistence/restore
-        edge, meaning one durable persistence or completed recovery/restoration transition, within the normal retry horizon,
-        of an authoritative ACCEPTED terminal_result that preserves the same logical terminal outcome, acting on the durable
-        representation of that outcome and possibly rewriting that representation or leaving its encoding unchanged; (b) an
-        accepted-terminal compaction/retention edge, meaning one compaction or retention transition, within the normal retry
-        horizon, of an authoritative ACCEPTED terminal_result that preserves the same logical terminal outcome, possibly rewriting
-        the durable representation or leaving its encoding unchanged while retaining that outcome, where a cleanup implementation
-        is included whenever the transition itself semantically performs compaction or retention and a cleanup label alone
-        does not make an unrelated rewrite part of this category; or (c) an accepted-terminal representation-migration edge,
-        meaning one representation-migration transition, within the normal retry horizon, of an authoritative ACCEPTED terminal_result
-        that preserves the same logical terminal outcome, where classification under any of these edges does not by itself
-        assert full-identity or producer-binding preservation; and (2) before is bound to producer in that before carries
-        a canonical result produced by the same acceptance execution that produced producer for the producer binding under
-        audit, classified for a later lifecycle-rewritten representation of the same logical terminal outcome by that same
-        test, and before carries the same full (document_id, client_change_id) identity as producer; then after is likewise
-        bound to producer in that same sense and after carries the same full (document_id, client_change_id) identity as producer.'
+      natural_language: 'For all TerminalResultRecords before and after and for all CanonicalAcceptances producer, if (1)
+        before -> after is at least one of the following: (a) one durable persistence or completed recovery/restoration transition,
+        within the normal retry horizon, of an authoritative ACCEPTED terminal_result that preserves the same logical terminal
+        outcome, acting on the durable representation of that outcome and possibly rewriting that representation or leaving
+        its encoding unchanged, since preserving the logical outcome does not require a representation change; or (b) one
+        compaction or retention transition, within the normal retry horizon, of an authoritative ACCEPTED terminal_result
+        that preserves the same logical terminal outcome, possibly rewriting the durable representation or leaving its encoding
+        unchanged while retaining that outcome, since preserving the logical outcome does not require a representation change,
+        where a cleanup implementation is included whenever the transition itself semantically performs compaction or retention
+        and a cleanup label alone does not make an unrelated rewrite part of this category; or (c) one representation-migration
+        transition, within the normal retry horizon, of an authoritative ACCEPTED terminal_result that preserves the same
+        logical terminal outcome; where classification under (a), (b), or (c) does not by itself assert full-identity or producer-binding
+        preservation; and (2) before is bound to producer in both respects: before carries a canonical result produced by
+        the same acceptance execution that produced producer for the producer binding under audit, rather than a result from
+        another request, document, acceptance execution, or a merely extensionally equal substitute, and before and producer
+        carry the same full (document_id, client_change_id) identity; then both of the following hold for after with respect
+        to that same producer: after carries a canonical result produced by the same acceptance execution that produced producer
+        for the producer binding under audit, rather than a result from another request, document, acceptance execution, or
+        a merely extensionally equal substitute, and after and producer carry the same full (document_id, client_change_id)
+        identity. The bound-to-acceptance-execution relation, applied to any representation of the same logical terminal outcome,
+        classifies that representation by that same-execution test, and by itself does not assert that producer was committed,
+        when binding metadata was materialized, or that the representation is provenance-reachable from an acceptance origin.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 6e1182e0e5a5b503fbe46cffbe7697d05fbc52ba790207894ce2144023339e65
+        subject_signature: 56fe71b791a6d2e32e3340bfbf6460c418272d4aa03923686d545614d272187f
         verdict: EQUIVALENT
-        reason: The disjunction of the three edge predicates covers persistence, recovery/restoration, compaction, retention,
-          and representation-migration transitions, each defined as within the normal retry horizon and preserving the same
-          logical outcome of an authoritative ACCEPTED terminal_result. The premise requires the before record to be bound
-          to the producer with full (document_id, client_change_id) identity match, and the conclusion requires the identical
-          binding and identity match for the after record; the bound_to relation's meaning excludes substitution by a merely
-          extensionally equal result from another request, document, or execution, and post-horizon cleanup is excluded because
-          all edges are horizon-bounded.
+        reason: The formula universally quantifies over before/after/producer, requires a within-horizon persistence/restore,
+          compaction/retention, or representation-migration edge preserving the same logical accepted outcome plus prior binding
+          and full (document_id, client_change_id) identity match, and concludes the same binding and identity match for after;
+          the binding predicate's meaning excludes reconstruction, relabeling, or cross-binding from another request, document,
+          or execution or a merely extensionally equal substitute, matching the source scope and cleanup exclusion.
         differences: []
       strengthening:
-        subject_signature: 6e1182e0e5a5b503fbe46cffbe7697d05fbc52ba790207894ce2144023339e65
+        subject_signature: 56fe71b791a6d2e32e3340bfbf6460c418272d4aa03923686d545614d272187f
         verdict: EQUIVALENT
-        reason: The formula's three edge predicates jointly cover persistence, recovery/restoration, compaction, retention,
-          and representation-migration within the normal retry horizon for an authoritative ACCEPTED result preserving the
-          same logical outcome. Given before is bound to the producer and matches its full (document_id, client_change_id)
-          identity, it concludes after retains both that producer binding, defined to exclude another request/document/execution
-          or merely extensionally equal substitute, and that identity match, exactly preserving the producer binding without
-          extending beyond the horizon or cleanup exclusion.
+        reason: The formula's three edge predicates cover exactly the listed persistence/restore, compaction/retention, and
+          representation-migration transitions, each guarded by the normal retry horizon, ACCEPTED status, and preservation
+          of the same logical terminal outcome. Given the before-state is bound to the producer and identity-matches it on
+          (document_id, client_change_id), it concludes the after-state retains both that same producer binding and identity
+          match, capturing the prohibition on reconstructing, relabelling, or cross-binding from an extensionally equal substitute.
+          Cleanup after the horizon is excluded via the edge guards.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 6e1182e0e5a5b503fbe46cffbe7697d05fbc52ba790207894ce2144023339e65
+        subject_signature: 56fe71b791a6d2e32e3340bfbf6460c418272d4aa03923686d545614d272187f
         verdict: EQUIVALENT
-        reason: The rendering preserves the same scope, horizon restriction, (document_id, client_change_id) identity, and
-          producer-binding preservation across persistence/restore, compaction/retention, and representation-migration transitions,
-          without adding or omitting a guarantee; cross-binding by extensional equality is excluded by requiring the after
-          record to satisfy the same origin-based binding test as the before record.
+        reason: The rendering covers the same in-horizon persistence, recovery/restoration, compaction, retention, and migration
+          transitions preserving the same logical ACCEPTED outcome, requires the same pre-transition binding to the same acceptance
+          execution and full (document_id, client_change_id) identity, and requires that identical binding afterward, excluding
+          cross-binding from another request, document, execution, or merely extensionally equal substitute; post-horizon
+          cleanup remains outside scope, and no extra provenance, commitment, or materialization assertion is added.
         differences: []
   claim:L212_accepted_terminal_lifecycle_categories_are_exhaustive:
     kind: claim
