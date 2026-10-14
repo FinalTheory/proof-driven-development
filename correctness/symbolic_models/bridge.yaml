@@ -93,6 +93,7 @@ functions:
     semantic_anchors:
     - contract:terminal_speculative_lifecycle_closure
     - claim:G12_client_pending_state_tracks_unresolved_edits
+    - claim:L110_client_retires_matching_speculative_overlay_before_canonical_publication
   visible_document:
     args:
     - ClientState
@@ -132,6 +133,7 @@ functions:
       this classification adds no progress or freshness requirement.
     semantic_anchors:
     - contract:visible_canonical_speculative_exclusion
+    - claim:L110_client_retires_matching_speculative_overlay_before_canonical_publication
 
   visible_overlay:
     args:
@@ -141,6 +143,14 @@ functions:
     catalog_symbols:
     - client_visible_speculative_overlays
     meaning: Overlay o is currently exposed as a speculative user-visible overlay in client state s.
+    semantic_anchors:
+    - contract:speculative_overlay_identity_provenance
+    - contract:speculative_overlay_operation_provenance
+    - contract:visible_canonical_speculative_exclusion
+    - contract:visible_speculative_effect_uniqueness
+    - contract:visible_speculative_overlay_document_binding
+    - contract:visible_speculative_retention_coherence
+    - claim:L110_client_retires_matching_speculative_overlay_before_canonical_publication
   canonical_contains_same_edit:
     args:
     - ClientState
@@ -153,6 +163,24 @@ functions:
       client_change_id) identity equals the full identity carried by overlay o. Full-identity equality alone triggers this
       relation; it does not additionally require proof that the acceptance and overlay denote the same semantic edit, and an
       identity collision therefore does not bypass the same-identity speculative exclusion.
+    semantic_anchors:
+    - contract:visible_canonical_speculative_exclusion
+    - claim:L110_client_retires_matching_speculative_overlay_before_canonical_publication
+  client_transition_recreates_speculative_overlay:
+    args:
+    - ClientState
+    - ClientState
+    - Overlay
+    returns: Bool
+    catalog_symbols:
+    - document_id
+    - client_change_id
+    meaning: Along the client-protocol path from user-visible state e to later user-visible state l, some client transition
+      creates or re-enables speculative overlay o, the speculative representation of the logical client edit identified by
+      (document_id, client_change_id), although that overlay was absent in e. This predicate classifies overlay creation or
+      re-enablement along the path only; it does not assert that the overlay is visible in l.
+    semantic_anchors:
+    - claim:L110_client_retires_matching_speculative_overlay_before_canonical_publication
   new_logical_edit_speculative_overlay_creation:
     args:
     - ProtocolTransition
@@ -5376,6 +5404,144 @@ claims:
                   args:
                   - var: t
                   - var: k
+  L110_client_retires_matching_speculative_overlay_before_canonical_publication:
+    contracts:
+    - visible_canonical_speculative_exclusion
+    formula:
+      and:
+      - forall:
+          vars:
+            s: ClientState
+            o: Overlay
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: visible_canonical_speculative_observation_state
+                  args:
+                  - var: s
+              - call:
+                  fn: canonical_contains_same_edit
+                  args:
+                  - var: s
+                  - var: o
+            - not:
+                call:
+                  fn: visible_overlay
+                  args:
+                  - var: s
+                  - var: o
+      - forall:
+          vars:
+            e: ClientState
+            l: ClientState
+            o: Overlay
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: later_reachable_client_state
+                  args:
+                  - var: e
+                  - var: l
+              - call:
+                  fn: visible_canonical_speculative_observation_state
+                  args:
+                  - var: l
+              - not:
+                  call:
+                    fn: canonical_contains_same_edit
+                    args:
+                    - var: e
+                    - var: o
+              - call:
+                  fn: canonical_contains_same_edit
+                  args:
+                  - var: l
+                  - var: o
+            - not:
+                call:
+                  fn: visible_overlay
+                  args:
+                  - var: l
+                  - var: o
+      - forall:
+          vars:
+            e: ClientState
+            l: ClientState
+            o: Overlay
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: later_reachable_client_state
+                  args:
+                  - var: e
+                  - var: l
+              - call:
+                  fn: visible_canonical_speculative_observation_state
+                  args:
+                  - var: l
+              - call:
+                  fn: canonical_contains_same_edit
+                  args:
+                  - var: e
+                  - var: o
+              - call:
+                  fn: canonical_contains_same_edit
+                  args:
+                  - var: l
+                  - var: o
+            - not:
+                call:
+                  fn: visible_overlay
+                  args:
+                  - var: l
+                  - var: o
+      - forall:
+          vars:
+            e: ClientState
+            l: ClientState
+            o: Overlay
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: later_reachable_client_state
+                  args:
+                  - var: e
+                  - var: l
+              - call:
+                  fn: visible_canonical_speculative_observation_state
+                  args:
+                  - var: e
+              - call:
+                  fn: visible_canonical_speculative_observation_state
+                  args:
+                  - var: l
+              - call:
+                  fn: canonical_contains_same_edit
+                  args:
+                  - var: e
+                  - var: o
+              - call:
+                  fn: canonical_contains_same_edit
+                  args:
+                  - var: l
+                  - var: o
+              - not:
+                  call:
+                    fn: visible_overlay
+                    args:
+                    - var: e
+                    - var: o
+            - not:
+                call:
+                  fn: client_transition_recreates_speculative_overlay
+                  args:
+                  - var: e
+                  - var: l
+                  - var: o
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
