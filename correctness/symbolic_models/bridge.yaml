@@ -307,6 +307,7 @@ functions:
     - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
     - claim:L124_pending_identity_classifier_uses_same_identity_and_response_head
     - claim:C37_pending_identity_resolution_is_bound_to_response_head
+    - claim:L109_resync_publication_is_atomic_and_monotonic
   catchup_response_identifies_selected_checkpoint:
     args:
     - CatchupResponse
@@ -1132,6 +1133,8 @@ functions:
     - claim:L166_recovery_preserves_pending_identity_revision_evidence
     - claim:L124_pending_identity_classifier_uses_same_identity_and_response_head
     - claim:C37_pending_identity_resolution_is_bound_to_response_head
+    - claim:L106_resync_request_covers_start_pending_set
+    - claim:L107_client_freezes_speculative_edits_during_resync
   logical_edit_in_reachable_client_history:
     args:
     - ClientState
@@ -2403,6 +2406,7 @@ functions:
       be currently visible.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+    - claim:L107_client_freezes_speculative_edits_during_resync
   resync_freezes_new_speculative_edits:
     args:
     - CatchupResponse
@@ -2413,6 +2417,7 @@ functions:
       be acceptance-eligible.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+    - claim:L107_client_freezes_speculative_edits_during_resync
   pending_identity_at_resync_start:
     args:
     - CatchupResponse
@@ -2426,6 +2431,9 @@ functions:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
     - claim:L124_pending_identity_classifier_uses_same_identity_and_response_head
     - claim:C37_pending_identity_resolution_is_bound_to_response_head
+    - claim:L106_resync_request_covers_start_pending_set
+    - claim:L107_client_freezes_speculative_edits_during_resync
+    - claim:L109_resync_publication_is_atomic_and_monotonic
   resync_identity_matches_document:
     args:
     - CatchupResponse
@@ -2436,6 +2444,8 @@ functions:
       D as the document being reconnected/resynchronized by c.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+    - claim:L106_resync_request_covers_start_pending_set
+    - claim:L109_resync_publication_is_atomic_and_monotonic
   resync_identity_within_normal_horizon:
     args:
     - CatchupResponse
@@ -2448,6 +2458,8 @@ functions:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
     - claim:L124_pending_identity_classifier_uses_same_identity_and_response_head
     - claim:C37_pending_identity_resolution_is_bound_to_response_head
+    - claim:L106_resync_request_covers_start_pending_set
+    - claim:L109_resync_publication_is_atomic_and_monotonic
   resync_identity_age_exceeds_normal_horizon:
     args:
     - CatchupResponse
@@ -2458,6 +2470,7 @@ functions:
       age greater than the 30-day normal reconnect eligibility horizon.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+    - claim:L106_resync_request_covers_start_pending_set
   resync_request_reconciles_identity_through_head:
     args:
     - CatchupResponse
@@ -2468,6 +2481,7 @@ functions:
       reconciliation through the response head.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+    - claim:L106_resync_request_covers_start_pending_set
   response_contains_same_identity_acceptance:
     args:
     - CatchupResponse
@@ -2478,6 +2492,7 @@ functions:
       through c response head.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+    - claim:L109_resync_publication_is_atomic_and_monotonic
   resync_publication_excludes_canonical_speculative_duplicate:
     args:
     - CatchupResponse
@@ -2490,6 +2505,7 @@ functions:
       user-visible state exposes both representations.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+    - claim:L109_resync_publication_is_atomic_and_monotonic
   resync_intermediate_candidate_excludes_canonical_speculative_duplicate:
     args:
     - CatchupResponse
@@ -2503,6 +2519,7 @@ functions:
       c's response head itself is classified as containing that acceptance.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+    - claim:L109_resync_publication_is_atomic_and_monotonic
   stale_resync_cannot_restore_retired_overlay:
     args:
     - CatchupResponse
@@ -2513,6 +2530,7 @@ functions:
       a newer published reconciliation already removed.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+    - claim:L109_resync_publication_is_atomic_and_monotonic
   expired_identity_uses_non_normal_resolution_path:
     args:
     - CatchupResponse
@@ -2524,6 +2542,7 @@ functions:
       expired/conflict/manual-resolution path.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+    - claim:L106_resync_request_covers_start_pending_set
   identity_unresolved_after_reconciled_publication:
     args:
     - CatchupResponse
@@ -2534,6 +2553,7 @@ functions:
       e for the same resync document D remains protocol-eligible and unresolved.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+    - claim:L107_client_freezes_speculative_edits_during_resync
   unresolved_identity_blocks_normal_editing:
     args:
     - CatchupResponse
@@ -2545,6 +2565,7 @@ functions:
       new acceptance-eligible speculative edit.
     semantic_anchors:
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+    - claim:L107_client_freezes_speculative_edits_during_resync
   document_has_authoritative_state:
     args:
     - AuthoritativeState
@@ -4582,6 +4603,7 @@ functions:
     semantic_anchors:
     - claim:L124_pending_identity_classifier_uses_same_identity_and_response_head
     - claim:C37_pending_identity_resolution_is_bound_to_response_head
+    - claim:L109_resync_publication_is_atomic_and_monotonic
   classification_evidence_preserved_throughout_horizon:
     args:
     - CatchupResponse
@@ -4605,6 +4627,59 @@ functions:
     semantic_anchors:
     - claim:L165_pending_identity_revision_evidence_survives_retention
     - claim:C41_pending_identity_revision_evidence_survives_lifecycle
+  catchup_request_includes_pending_change_id:
+    args:
+    - CatchupResponse
+    - ClientChangeId
+    returns: Bool
+    catalog_symbols:
+    - client_change_id
+    meaning: The catch-up request for resync c includes client_change_id k in the
+      pending set supplied under that request; k is interpreted under c's resync document.
+    semantic_anchors:
+    - claim:L106_resync_request_covers_start_pending_set
+    - claim:L107_client_freezes_speculative_edits_during_resync
+  resync_visible_frontier_at_candidate_readiness:
+    args:
+    - CatchupResponse
+    - Revision
+    returns: Bool
+    catalog_symbols:
+    - last_applied_revision
+    meaning: Revision f is the user-visible canonical frontier (the client's last_applied_revision
+      for the resync document) at the moment candidate response c is ready to publish.
+    semantic_anchors:
+    - claim:L109_resync_publication_is_atomic_and_monotonic
+  resync_visible_frontier_after_response_handling:
+    args:
+    - CatchupResponse
+    - Revision
+    returns: Bool
+    catalog_symbols:
+    - last_applied_revision
+    meaning: Revision f is the user-visible canonical frontier (the client's last_applied_revision
+      for the resync document) after response c has been handled (published or discarded).
+    semantic_anchors:
+    - claim:L109_resync_publication_is_atomic_and_monotonic
+  resync_candidate_discarded_without_visible_mutation:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: Candidate response c is discarded without mutating the visible canonical
+      base, last_applied_revision, pending-resolution state, or speculative overlays.
+    semantic_anchors:
+    - claim:L109_resync_publication_is_atomic_and_monotonic
+  resync_state_exposed_only_by_atomic_publication:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: State from candidate c is exposed to the user only by one atomic publication
+      after c's specified reconciliation work is complete; no checkpoint, tail, or
+      intermediate candidate prefix from c is user-visible.
+    semantic_anchors:
+    - claim:L109_resync_publication_is_atomic_and_monotonic
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -10017,6 +10092,316 @@ claims:
                   - var: e
             - call:
                 fn: classification_evidence_preserved_throughout_horizon
+                args:
+                - var: c
+                - var: e
+  L106_resync_request_covers_start_pending_set:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            c: CatchupResponse
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: pending_identity_at_resync_start
+                  args:
+                  - var: c
+                  - var: e
+              - call:
+                  fn: resync_identity_within_normal_horizon
+                  args:
+                  - var: c
+                  - var: e
+            - and:
+              - call:
+                  fn: catchup_request_includes_pending_change_id
+                  args:
+                  - var: c
+                  - call:
+                      fn: logical_identity_change_id
+                      args:
+                      - var: e
+              - call:
+                  fn: resync_request_reconciles_identity_through_head
+                  args:
+                  - var: c
+                  - var: e
+      - forall:
+          vars:
+            c: CatchupResponse
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - call:
+                fn: pending_identity_at_resync_start
+                args:
+                - var: c
+                - var: e
+            - call:
+                fn: resync_identity_matches_document
+                args:
+                - var: c
+                - var: e
+      - forall:
+          vars:
+            c: CatchupResponse
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: pending_identity_at_resync_start
+                  args:
+                  - var: c
+                  - var: e
+              - call:
+                  fn: resync_identity_age_exceeds_normal_horizon
+                  args:
+                  - var: c
+                  - var: e
+            - call:
+                fn: expired_identity_uses_non_normal_resolution_path
+                args:
+                - var: c
+                - var: e
+  L107_client_freezes_speculative_edits_during_resync:
+    capability: relational
+    contracts:
+    - unresolved_pending_blocks_normal_editing
+    formula:
+      and:
+      - forall:
+          vars:
+            s: ClientState
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_client_state
+                  args:
+                  - var: s
+              - call:
+                  fn: pending_identity_active
+                  args:
+                  - var: s
+                  - var: e
+              - call:
+                  fn: edit_remains_unresolved
+                  args:
+                  - var: s
+                  - var: e
+            - and:
+              - not:
+                  call:
+                    fn: identity_document_is_normal_editable
+                    args:
+                    - var: s
+                    - var: e
+              - not:
+                  call:
+                    fn: normal_editing_can_create_or_apply_new_eligible_edit
+                    args:
+                    - var: s
+                    - var: e
+      - forall:
+          vars:
+            c: CatchupResponse
+          body:
+            implies:
+            - call:
+                fn: normal_client_resync_attempt
+                args:
+                - var: c
+            - call:
+                fn: resync_freezes_new_speculative_edits
+                args:
+                - var: c
+      - forall:
+          vars:
+            c: CatchupResponse
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - call:
+                fn: identity_unresolved_after_reconciled_publication
+                args:
+                - var: c
+                - var: e
+            - call:
+                fn: unresolved_identity_blocks_normal_editing
+                args:
+                - var: c
+                - var: e
+      - forall:
+          vars:
+            c: CatchupResponse
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - call:
+                fn: pending_identity_at_resync_start
+                args:
+                - var: c
+                - var: e
+            - call:
+                fn: catchup_request_includes_pending_change_id
+                args:
+                - var: c
+                - call:
+                    fn: logical_identity_change_id
+                    args:
+                    - var: e
+  L109_resync_publication_is_atomic_and_monotonic:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            c: CatchupResponse
+            h: Revision
+            f: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: c
+                  - var: h
+              - call:
+                  fn: resync_visible_frontier_at_candidate_readiness
+                  args:
+                  - var: c
+                  - var: f
+              - not:
+                  call:
+                    fn: revision_at_or_before
+                    args:
+                    - var: f
+                    - var: h
+            - call:
+                fn: resync_candidate_discarded_without_visible_mutation
+                args:
+                - var: c
+      - forall:
+          vars:
+            c: CatchupResponse
+            h: Revision
+            f: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: c
+                  - var: h
+              - call:
+                  fn: resync_visible_frontier_at_candidate_readiness
+                  args:
+                  - var: c
+                  - var: f
+              - call:
+                  fn: revision_at_or_before
+                  args:
+                  - var: f
+                  - var: h
+            - call:
+                fn: resync_state_exposed_only_by_atomic_publication
+                args:
+                - var: c
+      - forall:
+          vars:
+            c: CatchupResponse
+            f1: Revision
+            f2: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: resync_visible_frontier_at_candidate_readiness
+                  args:
+                  - var: c
+                  - var: f1
+              - call:
+                  fn: resync_visible_frontier_after_response_handling
+                  args:
+                  - var: c
+                  - var: f2
+            - call:
+                fn: revision_at_or_before
+                args:
+                - var: f1
+                - var: f2
+      - forall:
+          vars:
+            c: CatchupResponse
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: pending_identity_at_resync_start
+                  args:
+                  - var: c
+                  - var: e
+              - call:
+                  fn: resync_identity_within_normal_horizon
+                  args:
+                  - var: c
+                  - var: e
+            - call:
+                fn: resync_intermediate_candidate_excludes_canonical_speculative_duplicate
+                args:
+                - var: c
+                - var: e
+      - forall:
+          vars:
+            c: CatchupResponse
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: pending_identity_at_resync_start
+                  args:
+                  - var: c
+                  - var: e
+              - call:
+                  fn: resync_identity_within_normal_horizon
+                  args:
+                  - var: c
+                  - var: e
+              - call:
+                  fn: response_contains_same_identity_acceptance
+                  args:
+                  - var: c
+                  - var: e
+            - call:
+                fn: resync_publication_excludes_canonical_speculative_duplicate
+                args:
+                - var: c
+                - var: e
+      - forall:
+          vars:
+            c: CatchupResponse
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - call:
+                fn: resync_identity_matches_document
+                args:
+                - var: c
+                - var: e
+            - call:
+                fn: stale_resync_cannot_restore_retired_overlay
                 args:
                 - var: c
                 - var: e
