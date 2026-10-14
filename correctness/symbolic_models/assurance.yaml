@@ -2408,82 +2408,87 @@ records:
   contract:accepted_terminal_result_binding:
     kind: contract
     subject_id: accepted_terminal_result_binding
-    subject_signature: b45521345fa3b583648143cf705878f5a5f071b8879478c2f8415a00451d73b6
+    subject_signature: 099c6b0fd9ac83f8a8c9878b47a142c7b9950e169ba21b92c0a6f765d91f4d06
     roundtrip:
-      subject_signature: b45521345fa3b583648143cf705878f5a5f071b8879478c2f8415a00451d73b6
+      subject_signature: 099c6b0fd9ac83f8a8c9878b47a142c7b9950e169ba21b92c0a6f765d91f4d06
       status: TRANSLATED
-      natural_language: This proposition constrains the identity/provenance relation between canonical accepted changes and
-        authoritative ACCEPTED terminal results, without adding liveness, delivery, ordering, durable-commit, co-commit, metadata-materialization,
-        lifecycle-ancestry, or other temporal requirements beyond what the predicates explicitly state. First, for every terminal-result
-        symbol t and canonical-acceptance symbol a, if t and a are one of the terminal-result/matching-canonical-accepted-change
-        pairs constructed at the successful acceptance_transaction assembly for a single logical acceptance, t is an authoritative
-        ACCEPTED(canonical result) terminal result, and t is still within the normal retry/provenance-retention horizon, then
-        a is a canonical_accepted_change on the authoritative accepted_change_log source side of the producer relation; the
-        full idempotency identity carried by t, namely terminal_result_idempotency_key(t), equals the authoritative full idempotency
-        identity carried by a, namely acceptance_key(a); the semantic producer binding between t and a is established at that
-        successful assembly boundary; and t is bound to the same acceptance execution that produced a, meaning the canonical
-        result carried by t comes from that same execution rather than from another request, document, or execution or from
-        a merely extensionally equal substitute. Second, for every t, if t is an authoritative ACCEPTED(canonical result)
-        terminal result and is within that retry/provenance-retention horizon, then there exists at least one a such that
-        a is an authoritative accepted_change_log source-side canonical_accepted_change, terminal_result_idempotency_key(t)
-        equals acceptance_key(a), and t is bound to the same acceptance execution that produced a. Third, for every lifecycle-transition
-        symbol x and every before and after representation, if x is an in-horizon authoritative lifecycle transition that
-        preserves one already-linearized ACCEPTED logical terminal outcome from before to after under the same full idempotency
-        identity, then there exists at least one single a witnessing the entire transition such that a is an authoritative
-        accepted_change_log source-side canonical_accepted_change, terminal_result_idempotency_key(before) equals acceptance_key(a),
-        terminal_result_idempotency_key(after) equals acceptance_key(a), before is bound to the same acceptance execution
-        that produced a, and after is bound to that same acceptance execution that produced a. The existential requirements
-        do not assert uniqueness of a, and the source-acceptance and binding relations themselves carry only the provenance
-        semantics defined here, including no independent assertion that a was durably committed, that producer-binding metadata
-        was separately materialized, or that provenance is reachable from an origin record.
+      natural_language: 'This is a provenance_binding, constraining only the identity/provenance relation between its source
+        and bound symbols for every modeled occurrence covered by the formula, and implying no liveness, delivery, ordering,
+        or other temporal behavior except as explicitly encoded below. All three of the following hold. (1) For every TerminalResultRecord
+        t and every CanonicalAcceptance a, if t and a are an accepted_terminal_contract_acceptance_assembly_pair — i.e., t
+        and a are exactly a terminal-result / matching canonical-accepted-change pair constructed at the successful acceptance_transaction
+        assembly boundary for one logical acceptance, a classification that by itself asserts no producer correctness, durable
+        commit, co-commit, producer-binding metadata materialization, or later provenance reachability — and t is an accepted_terminal_result_record,
+        i.e., an authoritative ACCEPTED (canonical result) outcome, and t is accepted_terminal_result_within_retry_horizon,
+        i.e., the full identity t carries is still a normal_retry_eligible_identity within the normal retry eligibility horizon
+        in which producer provenance must be retained, a classification of horizon membership only, then all of the following
+        hold: a is an accepted_terminal_contract_source_acceptance, i.e., a is the canonical_accepted_change producer on the
+        authoritative accepted_change_log source side of accepted_terminal_result_binding for the producer relation under
+        audit, without by itself asserting durable commit, co-commit with the terminal-result write, commit timing, or current
+        physical retention of the original accepted row after provenance-preserving compaction or representation change; the
+        full idempotency_key carried by t, terminal_result_idempotency_key(t), being document_id plus client_change_id, equals
+        acceptance_key(a), the authoritative idempotency identity carried by a; accepted_terminal_contract_binding_established_at_assembly(t,
+        a) holds, i.e., at that successful assembly boundary the semantic producer binding is established such that t carries
+        the canonical result produced by the same acceptance execution that produced a, rather than a result from another
+        request, document, acceptance execution, or a merely extensionally equal substitute, without requiring a separate
+        producer-binding metadata object to be materialized at that moment and without by itself asserting durable commit,
+        co-commit, or later lifecycle ancestry; and terminal_result_bound_to_acceptance_execution(t, a) holds, i.e., t carries
+        a canonical result produced by the same acceptance execution that produced a for the producer binding under audit,
+        by the same test applied to any representation of the same logical terminal outcome, without by itself asserting that
+        a committed, when binding metadata was materialized, or that t is provenance-reachable from an acceptance origin.
+        (2) For every TerminalResultRecord t, if t is an accepted_terminal_result_record and t is accepted_terminal_result_within_retry_horizon,
+        then there exists a CanonicalAcceptance a such that all of the following hold: a is an accepted_terminal_contract_source_acceptance
+        as defined in (1); terminal_result_idempotency_key(t) equals acceptance_key(a); terminal_result_bound_to_acceptance_execution(t,
+        a) holds as defined in (1); there exists a TerminalResultRecord t0 such that accepted_terminal_contract_acceptance_assembly_pair(t0,
+        a) holds, accepted_terminal_contract_binding_established_at_assembly(t0, a) holds, terminal_result_idempotency_key(t0)
+        equals acceptance_key(a), and either t0 equals t or t is reachable from t0 by the transitive closure of accepted_terminal_lifecycle_edge,
+        where each such edge is one authoritative in-horizon ACCEPTED terminal-result representation transition preserving
+        the same already-linearized logical terminal outcome and full (document_id, client_change_id) identity, hence non-terminal
+        in the lifecycle sense because the outcome is preserved rather than created, replaced, or reclassified — non-terminal
+        not being an additional applicability filter — and asserting no producer-binding preservation and no classification
+        into a concrete architecture lifecycle category; and there does not exist a CanonicalAcceptance a2 such that a2 is
+        not equal to a and terminal_result_bound_to_acceptance_execution(t, a2) holds. (3) For every ProtocolTransition x
+        and every TerminalResultRecords before and after, if accepted_terminal_contract_lifecycle_transition(x, before, after)
+        holds — i.e., x is an in-horizon authoritative lifecycle transition preserving one already-linearized ACCEPTED logical
+        terminal outcome from before to after under the same full idempotency identity, possibly rewriting the durable physical
+        representation or preserving it unchanged, and asserting by itself no producer-binding preservation — then there exists
+        a CanonicalAcceptance a such that all of the following hold: a is an accepted_terminal_contract_source_acceptance
+        as defined in (1); terminal_result_idempotency_key(before) equals acceptance_key(a); terminal_result_idempotency_key(after)
+        equals acceptance_key(a); terminal_result_bound_to_acceptance_execution(before, a) holds; terminal_result_bound_to_acceptance_execution(after,
+        a) holds; there exists a TerminalResultRecord t0 such that accepted_terminal_contract_acceptance_assembly_pair(t0,
+        a) holds, accepted_terminal_contract_binding_established_at_assembly(t0, a) holds, terminal_result_idempotency_key(t0)
+        equals acceptance_key(a), and either t0 equals before or before is reachable from t0 by the transitive closure of
+        accepted_terminal_lifecycle_edge as defined in (2); and there does not exist a CanonicalAcceptance a2 such that a2
+        is not equal to a and terminal_result_bound_to_acceptance_execution(after, a2) holds.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: b45521345fa3b583648143cf705878f5a5f071b8879478c2f8415a00451d73b6
+        subject_signature: 099c6b0fd9ac83f8a8c9878b47a142c7b9950e169ba21b92c0a6f765d91f4d06
         verdict: EQUIVALENT
-        reason: The three clauses cover the canonical contract without weakening it under the authoritative predicate meanings.
-          Clause 1 makes successful in-horizon acceptance assembly establish the producer-correct binding for the matching
-          full identity; assembly_binding_established and bound jointly state that the terminal canonical result comes from
-          the same acceptance execution as the paired canonical_accepted_change, excluding merely extensionally equal substitutes.
-          Clause 2 requires every in-horizon authoritative ACCEPTED terminal result to retain at least one same-full-key source_acceptance
-          witness to that producer binding. Clause 3 requires every lifecycle_transition to preserve one common source_acceptance
-          witness across before and after, which is exactly preservation of the same logical producer binding through representation
-          rewrites; lifecycle_transition already denotes only in-horizon authoritative transitions of an already-linearized
-          ACCEPTED outcome under the same full identity, so separate accepted/within_horizon premises there are unnecessary.
-          The definitions of bound, assembly_binding_established, full_key, and source_acceptance already exclude cross-document,
-          cross-request, cross-acceptance-execution, and merely extensionally equal substitution. No uniqueness/cardinality,
-          terminal arbitration, response-delivery, commit/co-commit, metadata-timing, or post-horizon obligation is added.
+        reason: The formula covers every in-horizon ACCEPTED terminal result, requires an assembly-established producer binding
+          to a source canonical acceptance with the identical full idempotency key, derives later representations from that
+          assembly pair via lifecycle-edge closure, forbids binding to any distinct acceptance, and requires lifecycle transitions
+          to preserve the same binding for before and after, matching the source without material addition or omission.
         differences: []
       strengthening:
-        subject_signature: b45521345fa3b583648143cf705878f5a5f071b8879478c2f8415a00451d73b6
+        subject_signature: 099c6b0fd9ac83f8a8c9878b47a142c7b9950e169ba21b92c0a6f765d91f4d06
         verdict: EQUIVALENT
-        reason: The three clauses match the canonical producer-binding contract under the authoritative predicate meanings.
-          Clause 1 establishes, at successful in-horizon ACCEPTED assembly, that the terminal result and its matching canonical_accepted_change
-          share the full identity and that the same-acceptance producer binding is established and holds. Clause 2 requires
-          every in-horizon authoritative ACCEPTED terminal result to have at least one same-full-key source_acceptance witness
-          to which it is bound, which captures the contract's per-terminal producer binding without adding uniqueness. Clause
-          3 uses one shared acceptance witness for both sides of every lifecycle_transition; because that predicate is defined
-          to cover exactly the in-horizon authoritative transitions of an already-linearized ACCEPTED logical terminal outcome,
-          the shared witness enforces preservation of the same producer binding across representation rewrites. None of the
-          clauses adds single-valued arbitration, witness uniqueness/cardinality, commit or co-commit, metadata timing, global
-          ancestry/reachability, liveness, delivery, ordering, stronger lifecycle coverage, or physical-retention requirements.
-          The existential witnesses permit multiple qualifying representations or witnesses when the authoritative semantics
-          do, and post-horizon cleanup remains outside scope.
+        reason: The formula covers exactly the in-horizon ACCEPTED terminal results, requires full idempotency-key equality
+          with the source canonical acceptance, asserts the producer binding and its establishment at acceptance-transaction
+          assembly, requires assembly-origin reachability through outcome-preserving lifecycle edges, forbids binding to any
+          other acceptance, and requires every in-horizon outcome-preserving lifecycle transition to keep the same unique
+          producer binding, without extending the contract beyond the retry horizon or to rejected outcomes.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: b45521345fa3b583648143cf705878f5a5f071b8879478c2f8415a00451d73b6
+        subject_signature: 099c6b0fd9ac83f8a8c9878b47a142c7b9950e169ba21b92c0a6f765d91f4d06
         verdict: EQUIVALENT
-        reason: 'Both propositions impose the same in-horizon provenance invariant on authoritative ACCEPTED terminal results:
-          the terminal result must share the full idempotency identity with a matching canonical_accepted_change and its canonical
-          result must be producer-bound to the same acceptance execution, excluding substitution by another request, document,
-          execution, or merely extensionally equal result. The rendering also preserves the original establishment point at
-          successful acceptance-transaction assembly and the lifecycle-preservation requirement by requiring a common canonical
-          accepted-change witness to bind both the before and after representations of the same authoritative ACCEPTED logical
-          outcome. Its existential formulation does not add uniqueness or cardinality beyond the original; it explicitly leaves
-          witnesses non-unique and does not displace separate terminal-arbitration or delivery contracts. The normal retry/provenance-retention
-          horizon remains the guard, representation rewrites remain allowed when binding is preserved, and no extra liveness,
-          commit, timing, ancestry, ordering, or delivery property is introduced.'
+        reason: 'The rendering preserves the original provenance binding: within the retry horizon, every authoritative ACCEPTED
+          terminal result is bound, by full (document_id, client_change_id) identity, to the matching canonical_accepted_change
+          from the same acceptance execution, with the binding established at acceptance-transaction assembly, no substitution
+          or cross-binding to another acceptance, and the same binding preserved across authoritative lifecycle transitions
+          that preserve the logical outcome while possibly rewriting representation. No quantifier, scope, cardinality, identity,
+          provenance-direction, or exclusion boundary is weakened or strengthened.'
         differences: []
   contract:accepted_terminal_speculative_retirement:
     kind: contract
