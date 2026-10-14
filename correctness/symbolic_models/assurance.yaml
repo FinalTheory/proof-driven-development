@@ -4730,3 +4730,55 @@ records:
           once), and increasing revision order, with S as selected checkpoint frontier and H as authoritative response head
           unchanged.
         differences: []
+  claim:C13_idempotency_key_is_temporally_unique:
+    kind: claim
+    subject_id: C13_idempotency_key_is_temporally_unique
+    subject_signature: 71df3cdff35fe150a72ab43f396503f05865e0db7d190796019d5a2d6a175374
+    roundtrip:
+      subject_signature: 71df3cdff35fe150a72ab43f396503f05865e0db7d190796019d5a2d6a175374
+      status: TRANSLATED
+      natural_language: 'All three of the following hold. (1) For every protocol transitions t1 and t2 and every idempotency
+        key k, where k is the composite identity (document_id, client_change_id): if t1 is an acceptance-capable protocol
+        transition for k, t2 is an acceptance-capable protocol transition for k, both t1 and t2 are acceptance-capable transitions
+        (i.e., each is a normal submission, retry, delayed execution, owner-recovery, resumed-owner, or other protocol transition
+        capable of creating a canonical accepted change), both t1 and t2 create a new acceptance event for their idempotency
+        key, the accepted-key gate decision of each of t1 and t2 occurs while its idempotency key remains within the 30-day
+        normal retry/reconnect eligibility horizon, and the authoritative idempotency key of the acceptance that t1 attempts
+        to create or creates equals k and the authoritative idempotency key of the acceptance that t2 attempts to create or
+        creates equals k, then t1 equals t2. (2) For every protocol transition t and every idempotency key k: if t is an acceptance
+        transition for k, it is not the case that at t''s authoritative accepted-key gate decision authoritative state records
+        t''s idempotency key as already accepted, and t''s accepted-key gate decision occurs while t''s idempotency key remains
+        within the 30-day normal retry/reconnect eligibility horizon, then t does not create more than one acceptance event,
+        that is more than one canonical accepted change, for k within the transition itself. (3) For every protocol transition
+        t and every idempotency key k: if t is an acceptance transition for k, t is an acceptance-capable transition, at t''s
+        authoritative accepted-key gate decision authoritative state records t''s idempotency key as already accepted, and
+        t''s accepted-key gate decision occurs while t''s idempotency key remains within the 30-day normal retry/reconnect
+        eligibility horizon, then t does not create a new acceptance event for its idempotency key.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 71df3cdff35fe150a72ab43f396503f05865e0db7d190796019d5a2d6a175374
+        verdict: EQUIVALENT
+        reason: 'The formula jointly enforces at most one acceptance per idempotency key within the 30-day retry horizon:
+          distinct creating transitions for the same key must coincide, a single transition cannot create multiple acceptances
+          when no prior acceptance is observed, and a transition whose gate observes the key already accepted cannot create
+          an acceptance. This matches the statement and formal count <= 1 intent without adding or omitting requirements.'
+        differences: []
+      strengthening:
+        subject_signature: 71df3cdff35fe150a72ab43f396503f05865e0db7d190796019d5a2d6a175374
+        verdict: EQUIVALENT
+        reason: The pairwise clause forbids two distinct acceptance-capable transitions from creating an acceptance for the
+          same key while both are within the 30-day retry horizon, the intra-transition clause forbids one transition from
+          creating multiple acceptances for that key, and the gate-observation clause forbids creation after the key is already
+          recorded as accepted; together they preserve exactly the source count of at most one acceptance event per idempotency
+          key within the horizon, with no added or omitted scope.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 71df3cdff35fe150a72ab43f396503f05865e0db7d190796019d5a2d6a175374
+        verdict: EQUIVALENT
+        reason: 'The three clauses jointly decompose the count<=1 bound for the same composite key within the same 30-day
+          horizon: distinct creating transitions are identified, a single transition creates at most one event when not already
+          accepted, and creates none when already accepted, covering overlapping, sequential, owner-recovery and lifecycle-change
+          retries without adding or omitting a guarantee.'
+        differences: []
