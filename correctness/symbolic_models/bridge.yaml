@@ -265,6 +265,7 @@ functions:
     - contract:acceptance_request_identity_binding
     - claim:L108_acceptance_preserves_request_identity
     - claim:G6_accepted_change_preserves_ot_semantics
+    - claim:L123_acceptance_payload_and_identity_share_submitted_request
   request_base_revision:
     args:
     - Request
@@ -531,6 +532,7 @@ functions:
     - contract:acked_edit_failover_survival
     - contract:ot_result_frontier_binding
     - claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance
+    - claim:L99_ot_result_is_bound_to_acceptance_frontier
   acceptance_key:
     args:
     - CanonicalAcceptance
@@ -566,6 +568,9 @@ functions:
     semantic_anchors:
     - contract:acceptance_request_identity_binding
     - claim:G6_accepted_change_preserves_ot_semantics
+    - claim:L99_ot_result_is_bound_to_acceptance_frontier
+    - claim:L123_acceptance_payload_and_identity_share_submitted_request
+    - claim:L182_logical_edit_request_payload_binding_is_preserved
   acceptance_document:
     args:
     - CanonicalAcceptance
@@ -578,6 +583,7 @@ functions:
     - claim:G6_accepted_change_preserves_ot_semantics
     - contract:ot_result_frontier_binding
     - claim:L99_ot_result_is_bound_to_acceptance_frontier
+    - claim:L123_acceptance_payload_and_identity_share_submitted_request
   acceptance_change_id:
     args:
     - CanonicalAcceptance
@@ -1589,6 +1595,7 @@ functions:
       prefix and submitted client base revision to the OT engine.
     semantic_anchors:
     - assumption:A2_ot_engine_is_correct
+    - claim:L98_ot_receives_exact_request_and_canonical_context
   ot_success_satisfies_algorithmic_contract:
     args:
     - OTInvocation
@@ -1599,6 +1606,7 @@ functions:
       the invocation raw edit, submitted base, and canonical prefix.
     semantic_anchors:
     - assumption:A2_ot_engine_is_correct
+    - claim:L123_acceptance_payload_and_identity_share_submitted_request
   ot_rejects_invalid_or_rebase_required:
     args:
     - OTInvocation
@@ -1608,6 +1616,7 @@ functions:
       than returning a successful transformed change.
     semantic_anchors:
     - assumption:A2_ot_engine_is_correct
+    - claim:L99_ot_result_is_bound_to_acceptance_frontier
   logical_edit_change_id:
     args:
     - LogicalEdit
@@ -2189,6 +2198,8 @@ functions:
       payload.
     semantic_anchors:
     - contract:ot_success_acceptance_binding
+    - claim:L99_ot_result_is_bound_to_acceptance_frontier
+    - claim:L123_acceptance_payload_and_identity_share_submitted_request
   acceptance_exact_ot_success_result:
     args:
     - CanonicalAcceptance
@@ -2202,6 +2213,7 @@ functions:
     semantic_anchors:
     - contract:ot_success_acceptance_binding
     - contract:ot_result_frontier_binding
+    - claim:L99_ot_result_is_bound_to_acceptance_frontier
   ot_success_matches_submitted_input:
     args:
     - CanonicalAcceptance
@@ -2214,6 +2226,7 @@ functions:
       submitted raw_edit and base_revision.
     semantic_anchors:
     - contract:ot_success_acceptance_binding
+    - claim:L123_acceptance_payload_and_identity_share_submitted_request
   canonical_acceptance_excludes_non_success_ot_producers:
     args:
     - CanonicalAcceptance
@@ -2362,6 +2375,7 @@ functions:
       accepted revision.
     semantic_anchors:
     - claim:G6_accepted_change_preserves_ot_semantics
+    - claim:L99_ot_result_is_bound_to_acceptance_frontier
   accepted_ot_success_satisfies_algorithmic_contract:
     args:
     - CanonicalAcceptance
@@ -2373,6 +2387,7 @@ functions:
     semantic_anchors:
     - claim:G6_accepted_change_preserves_ot_semantics
     - assumption:A2_ot_engine_is_correct
+    - claim:L123_acceptance_payload_and_identity_share_submitted_request
   foreground_catchup_attempt:
     args:
     - CatchupAttempt
@@ -5064,6 +5079,7 @@ functions:
       acceptance transaction committed.'
     semantic_anchors:
     - claim:L4_append_requires_previous_frontier
+    - claim:L99_ot_result_is_bound_to_acceptance_frontier
   revision_is_immediate_predecessor:
     args:
     - Revision
@@ -5540,6 +5556,56 @@ functions:
     semantic_anchors:
     - claim:L130_reconnect_start_is_bound_to_visible_client_tuple
     - claim:L136_reconnect_initiation_visible_frontier_is_canonical
+  ot_invocation_consumes_submitted_request:
+    args:
+    - OTInvocation
+    - Request
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'OT invocation i is the OT-engine invocation performed for submitted
+      request rq: the transform input the engine receives for i is exactly rq''s submitted
+      raw_edit and rq''s submitted client base_revision, not a substituted edit, a
+      substituted base, or another request''s input.'
+    semantic_anchors:
+    - claim:L98_ot_receives_exact_request_and_canonical_context
+    - claim:L99_ot_result_is_bound_to_acceptance_frontier
+    - claim:L123_acceptance_payload_and_identity_share_submitted_request
+  ot_invocation_success_result:
+    args:
+    - OTInvocation
+    - OTSuccessResult
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'sr is the successful OT result returned by OT invocation i: i completed
+      with a successful transformed change and sr is that exact output result. An
+      invocation the engine rejected as invalid or rebase-required has no such result.'
+    semantic_anchors:
+    - claim:L99_ot_result_is_bound_to_acceptance_frontier
+    - claim:L123_acceptance_payload_and_identity_share_submitted_request
+  ot_invocation_output_committed_as_acceptance:
+    args:
+    - OTInvocation
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'The successful output of OT invocation i is the accepted payload committed
+      as canonical acceptance a: a is the canonical_accepted_change created by committing
+      i''s OT result, not a synthesized or separately produced change.'
+    semantic_anchors:
+    - claim:L99_ot_result_is_bound_to_acceptance_frontier
+    - claim:L123_acceptance_payload_and_identity_share_submitted_request
+  ot_invocation_context_is_canonical_committed_prefix:
+    args:
+    - OTInvocation
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'The document context fed to OT invocation i represents exactly one canonical
+      committed prefix of the document through a definite revision frontier: every
+      change in the context belongs to that committed canonical prefix, and no speculative,
+      uncommitted, or mismatched-document content is part of the context.'
+    semantic_anchors:
+    - claim:L98_ot_receives_exact_request_and_canonical_context
+    - claim:L99_ot_result_is_bound_to_acceptance_frontier
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -14072,6 +14138,287 @@ claims:
                     fn: visible_frontier
                     args:
                     - var: l
+  L98_ot_receives_exact_request_and_canonical_context:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          i: OTInvocation
+          rq: Request
+        body:
+          implies:
+          - call:
+              fn: ot_invocation_consumes_submitted_request
+              args:
+              - var: i
+              - var: rq
+          - and:
+            - call:
+                fn: ot_engine_invocation
+                args:
+                - var: i
+            - call:
+                fn: ot_invocation_context_is_canonical_committed_prefix
+                args:
+                - var: i
+  L99_ot_result_is_bound_to_acceptance_frontier:
+    capability: relational
+    contracts:
+    - ot_result_frontier_binding
+    formula_from_contracts: true
+    residual_formula:
+      and:
+      - forall:
+          vars:
+            a: CanonicalAcceptance
+          body:
+            implies:
+            - call:
+                fn: canonical_acceptance_payload_record
+                args:
+                - var: a
+            - call:
+                fn: committed_canonical_acceptance
+                args:
+                - var: a
+      - forall:
+          vars:
+            i: OTInvocation
+            sr: OTSuccessResult
+          body:
+            implies:
+            - call:
+                fn: ot_invocation_success_result
+                args:
+                - var: i
+                - var: sr
+            - call:
+                fn: actual_ot_success_result
+                args:
+                - var: sr
+      - forall:
+          vars:
+            i: OTInvocation
+            sr: OTSuccessResult
+          body:
+            implies:
+            - call:
+                fn: ot_invocation_success_result
+                args:
+                - var: i
+                - var: sr
+            - not:
+                call:
+                  fn: ot_rejects_invalid_or_rebase_required
+                  args:
+                  - var: i
+      - forall:
+          vars:
+            i: OTInvocation
+            a: CanonicalAcceptance
+            sr: OTSuccessResult
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: ot_invocation_output_committed_as_acceptance
+                  args:
+                  - var: i
+                  - var: a
+              - call:
+                  fn: ot_invocation_success_result
+                  args:
+                  - var: i
+                  - var: sr
+            - call:
+                fn: acceptance_exact_ot_success_result
+                args:
+                - var: a
+                - var: sr
+      - forall:
+          vars:
+            a: CanonicalAcceptance
+            rq: Request
+            i: OTInvocation
+            sr: OTSuccessResult
+            n: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: acceptance_produced_from_request
+                  args:
+                  - var: a
+                  - var: rq
+              - call:
+                  fn: ot_invocation_consumes_submitted_request
+                  args:
+                  - var: i
+                  - var: rq
+              - call:
+                  fn: ot_invocation_success_result
+                  args:
+                  - var: i
+                  - var: sr
+              - call:
+                  fn: acceptance_exact_ot_success_result
+                  args:
+                  - var: a
+                  - var: sr
+              - call:
+                  fn: ot_invocation_context_is_canonical_committed_prefix
+                  args:
+                  - var: i
+              - call:
+                  fn: ot_success_preserves_computation_frontier
+                  args:
+                  - var: sr
+                  - var: n
+              - call:
+                  fn: acceptance_revision_is_successor_of
+                  args:
+                  - var: a
+                  - var: n
+            - call:
+                fn: accepted_ot_context_is_preceding_canonical_prefix
+                args:
+                - var: a
+                - var: rq
+      - forall:
+          vars:
+            a: CanonicalAcceptance
+          body:
+            eq:
+            - call:
+                fn: candidate_commit_prestate_latest_revision
+                args:
+                - var: a
+            - call:
+                fn: acceptance_prestate_latest_revision
+                args:
+                - var: a
+  L113_request_raw_edit_is_bound_to_authoring_frontier:
+    capability: relational
+    contracts:
+    - request_authoring_frontier_binding
+    formula_from_contracts: true
+  L123_acceptance_payload_and_identity_share_submitted_request:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            a: CanonicalAcceptance
+          body:
+            implies:
+            - call:
+                fn: canonical_acceptance_payload_record
+                args:
+                - var: a
+            - exists:
+                vars:
+                  rq: Request
+                  i: OTInvocation
+                  sr: OTSuccessResult
+                body:
+                  and:
+                  - call:
+                      fn: acceptance_produced_from_request
+                      args:
+                      - var: a
+                      - var: rq
+                  - call:
+                      fn: ot_invocation_consumes_submitted_request
+                      args:
+                      - var: i
+                      - var: rq
+                  - call:
+                      fn: ot_invocation_success_result
+                      args:
+                      - var: i
+                      - var: sr
+                  - call:
+                      fn: ot_invocation_output_committed_as_acceptance
+                      args:
+                      - var: i
+                      - var: a
+                  - call:
+                      fn: ot_success_matches_submitted_input
+                      args:
+                      - var: a
+                      - var: sr
+                  - eq:
+                    - call:
+                        fn: acceptance_document
+                        args:
+                        - var: a
+                    - call:
+                        fn: request_document
+                        args:
+                        - var: rq
+                  - eq:
+                    - call:
+                        fn: acceptance_change_id
+                        args:
+                        - var: a
+                    - call:
+                        fn: request_change_id
+                        args:
+                        - var: rq
+      - forall:
+          vars:
+            a: CanonicalAcceptance
+            rq: Request
+            i: OTInvocation
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: acceptance_produced_from_request
+                  args:
+                  - var: a
+                  - var: rq
+              - call:
+                  fn: ot_invocation_consumes_submitted_request
+                  args:
+                  - var: i
+                  - var: rq
+              - call:
+                  fn: ot_invocation_output_committed_as_acceptance
+                  args:
+                  - var: i
+                  - var: a
+              - call:
+                  fn: ot_success_satisfies_algorithmic_contract
+                  args:
+                  - var: i
+            - call:
+                fn: accepted_ot_success_satisfies_algorithmic_contract
+                args:
+                - var: a
+  L182_logical_edit_request_payload_binding_is_preserved:
+    capability: relational
+    contracts:
+    - logical_edit_request_payload_binding
+    formula_from_contracts: true
+    residual_formula:
+      forall:
+        vars:
+          a: CanonicalAcceptance
+          rq: Request
+        body:
+          implies:
+          - call:
+              fn: acceptance_produced_from_request
+              args:
+              - var: a
+              - var: rq
+          - call:
+              fn: submitted_request_eligible_for_ot_or_terminal_decision
+              args:
+              - var: rq
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
