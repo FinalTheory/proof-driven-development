@@ -5944,119 +5944,130 @@ claims:
                     - var: a
     capability: relational
   G7_reconnect_does_not_double_render_accepted_optimistic_edit:
-    contracts: []
     capability: relational
+    contracts: []
     formula:
       forall:
-        vars:
-          c: CatchupResponse
-          e: LogicalEditIdentity
         body:
           implies:
           - call:
-              fn: normal_client_resync_attempt
               args:
               - var: c
+              fn: normal_client_resync_attempt
           - and:
             - call:
-                fn: resync_freezes_new_speculative_edits
                 args:
                 - var: c
+                fn: resync_freezes_new_speculative_edits
             - implies:
               - and:
                 - call:
+                    args:
+                    - var: c
+                    - var: e
                     fn: pending_identity_at_resync_start
-                    args:
-                    - var: c
-                    - var: e
                 - call:
-                    fn: resync_identity_within_normal_horizon
                     args:
                     - var: c
                     - var: e
+                    fn: resync_identity_within_normal_horizon
               - call:
+                  args:
+                  - var: c
+                  - var: e
                   fn: resync_request_reconciles_identity_through_head
-                  args:
-                  - var: c
-                  - var: e
             - implies:
               - and:
                 - call:
+                    args:
+                    - var: c
+                    - var: e
                     fn: pending_identity_at_resync_start
+                - call:
                     args:
                     - var: c
                     - var: e
-                - call:
                     fn: resync_identity_within_normal_horizon
+                - call:
                     args:
                     - var: c
                     - var: e
-                - call:
                     fn: response_contains_same_identity_acceptance
-                    args:
-                    - var: c
-                    - var: e
               - call:
+                  args:
+                  - var: c
+                  - var: e
                   fn: resync_publication_excludes_canonical_speculative_duplicate
-                  args:
-                  - var: c
-                  - var: e
             - implies:
               - and:
                 - call:
-                    fn: pending_identity_at_resync_start
                     args:
                     - var: c
                     - var: e
+                    fn: pending_identity_at_resync_start
                 - call:
+                    args:
+                    - var: c
+                    - var: e
                     fn: resync_identity_within_normal_horizon
-                    args:
-                    - var: c
-                    - var: e
               - call:
+                  args:
+                  - var: c
+                  - var: e
                   fn: resync_intermediate_candidate_excludes_canonical_speculative_duplicate
-                  args:
-                  - var: c
-                  - var: e
-            - implies:
-              - call:
-                  fn: resync_identity_matches_document
-                  args:
-                  - var: c
-                  - var: e
-              - call:
-                  fn: stale_resync_cannot_restore_retired_overlay
-                  args:
-                  - var: c
-                  - var: e
             - implies:
               - and:
                 - call:
+                    args:
+                    - var: c
+                    - var: e
                     fn: pending_identity_at_resync_start
-                    args:
-                    - var: c
-                    - var: e
                 - call:
-                    fn: resync_identity_age_exceeds_normal_horizon
                     args:
                     - var: c
                     - var: e
+                    fn: resync_identity_within_normal_horizon
+                - call:
+                    args:
+                    - var: c
+                    - var: e
+                    fn: resync_identity_matches_document
               - call:
-                  fn: expired_identity_uses_non_normal_resolution_path
                   args:
                   - var: c
                   - var: e
+                  fn: stale_resync_cannot_restore_retired_overlay
+            - implies:
+              - and:
+                - call:
+                    args:
+                    - var: c
+                    - var: e
+                    fn: pending_identity_at_resync_start
+                - call:
+                    args:
+                    - var: c
+                    - var: e
+                    fn: resync_identity_age_exceeds_normal_horizon
+              - call:
+                  args:
+                  - var: c
+                  - var: e
+                  fn: expired_identity_uses_non_normal_resolution_path
             - implies:
               - call:
+                  args:
+                  - var: c
+                  - var: e
                   fn: identity_unresolved_after_reconciled_publication
-                  args:
-                  - var: c
-                  - var: e
               - call:
-                  fn: unresolved_identity_blocks_normal_editing
                   args:
                   - var: c
                   - var: e
+                  fn: unresolved_identity_blocks_normal_editing
+        vars:
+          c: CatchupResponse
+          e: LogicalEditIdentity
   G8_user_visible_state_does_not_double_render_accepted_optimistic_edit:
     contracts:
     - visible_canonical_speculative_exclusion
