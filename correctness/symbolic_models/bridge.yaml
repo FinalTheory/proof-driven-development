@@ -3768,9 +3768,9 @@ functions:
     - terminal_result
     meaning: 'Authoritative transition x, applied at state s, preserves the exact
       logical terminal outcome for key k: the terminal_result for k after x is identical
-      in value and identity to the one in s, and if s contains no terminal_result
-      for k then x does not create one for k as a side effect of this preservation-class
-      transition.'
+      in value and identity to the one in s. This predicate asserts preservation of
+      an existing outcome; whether x may create an outcome for a key that has none
+      is governed by the transition''s own class, not by this predicate.'
     semantic_anchors:
     - claim:L162_terminal_state_transition_preserves_single_outcome
     - claim:L169_persistence_lifecycle_preserves_terminal_outcomes
