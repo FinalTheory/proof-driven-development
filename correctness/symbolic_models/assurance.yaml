@@ -4645,3 +4645,88 @@ records:
           in-horizon lifecycle representation transitions preserving the same logical terminal outcome; neither imposes provenance
           retention after the horizon, and producer binding excludes substitution by mere extensional equality.
         differences: []
+  claim:L25_snapshot_catchup_uses_selected_checkpoint_replacement:
+    kind: claim
+    subject_id: L25_snapshot_catchup_uses_selected_checkpoint_replacement
+    subject_signature: fcc44e4f2d24f292598c931a37aac43231f80c1656e41c50b4f0df36361912fe
+    roundtrip:
+      subject_signature: fcc44e4f2d24f292598c931a37aac43231f80c1656e41c50b4f0df36361912fe
+      status: TRANSLATED
+      natural_language: 'For every catch-up response r, if r is a snapshot-replacement-mode catch-up response — that is, catch-up
+        selected a checkpoint for r and r is to be constructed by snapshot replacement rather than by delta/range application
+        — then both of the following hold: r identifies exactly the checkpoint (content and frontier) that catch-up selected
+        for it, in that the checkpoint identity carried by r is that one selected checkpoint, not another checkpoint and not
+        a mixture of checkpoints; and r specifies that its checkpoint content replaces the client''s prior document state
+        rather than being appended or patched onto it.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: fcc44e4f2d24f292598c931a37aac43231f80c1656e41c50b4f0df36361912fe
+        verdict: EQUIVALENT
+        reason: 'The formula''s snapshot-mode antecedent captures the source precondition (catch-up selected a checkpoint),
+          and its conjunction exactly captures both requirements: identification of exactly the selected checkpoint (content
+          and frontier, no other or mixture) and specification that its content replaces prior state rather than being appended
+          or patched. No requirement is omitted or added.'
+        differences: []
+      strengthening:
+        subject_signature: fcc44e4f2d24f292598c931a37aac43231f80c1656e41c50b4f0df36361912fe
+        verdict: EQUIVALENT
+        reason: The formula scopes exactly to snapshot-mode catch-up responses (whose meaning entails a checkpoint was selected),
+          and conjoins identifying exactly that selected checkpoint (content and frontier, no other or mixture) with specifying
+          replacement rather than append/patch semantics, matching the statement with no added or omitted requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: fcc44e4f2d24f292598c931a37aac43231f80c1656e41c50b4f0df36361912fe
+        verdict: EQUIVALENT
+        reason: The rendering preserves the precondition (catch-up selects a checkpoint and the response is snapshot-mode),
+          the exact identity of the selected checkpoint (content and frontier/S, no other or mixed checkpoint), and the requirement
+          to specify full replacement of the client's prior document state rather than append or patch, with no requirement
+          added or omitted.
+        differences: []
+  claim:L26_snapshot_catchup_returns_exact_canonical_tail:
+    kind: claim
+    subject_id: L26_snapshot_catchup_returns_exact_canonical_tail
+    subject_signature: 3e55d99c3cd840a2cb9acbb8be47a57adc6eb203d5f4b383f12021936a7b4a52
+    roundtrip:
+      subject_signature: 3e55d99c3cd840a2cb9acbb8be47a57adc6eb203d5f4b383f12021936a7b4a52
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following three conditions holds. (1) For every catch-up response r, every
+        revision s, every revision h, every canonical acceptance a, and every revision v: if r is a snapshot-replacement-mode
+        catch-up response, s is the frontier coordinate of the checkpoint selected for r, h is the authoritative response
+        head captured for r, v is the canonical revision assigned to a, and v lies in the checkpoint tail range (s, h] (i.e.,
+        s < v and v <= h), then a is one of the changes returned in the tail portion of r. (2) For every catch-up response
+        r, every revision s, every revision h, every canonical acceptance a, and every revision v: if r is a snapshot-replacement-mode
+        catch-up response, s is the frontier coordinate of the checkpoint selected for r, h is the authoritative response
+        head captured for r, a is one of the changes returned in the tail portion of r, and v is the canonical revision assigned
+        to a, then v lies in the checkpoint tail range (s, h] (i.e., s < v and v <= h). (3) For every catch-up response r,
+        every revision s, and every revision h: if r is a snapshot-replacement-mode catch-up response, s is the frontier coordinate
+        of the checkpoint selected for r, and h is the authoritative response head captured for r, then within the tail returned
+        by r for the range (s, h], no canonical accepted change appears more than once and the returned changes are arranged
+        in increasing revision order.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 3e55d99c3cd840a2cb9acbb8be47a57adc6eb203d5f4b383f12021936a7b4a52
+        verdict: EQUIVALENT
+        reason: The formula's three conjuncts jointly encode completeness (every canonical change with revision in (s,h] is
+          in the tail), soundness (every tail change's canonical revision lies in (s,h]), and exactly-once increasing-order
+          via the tail predicate, all guarded by snapshot mode with the selected frontier s and head h matching the statement's
+          scope and range S+1..H.
+        differences: []
+      strengthening:
+        subject_signature: 3e55d99c3cd840a2cb9acbb8be47a57adc6eb203d5f4b383f12021936a7b4a52
+        verdict: EQUIVALENT
+        reason: The three conjuncts jointly encode completeness (every canonical change with revision in (s,h] is in the tail),
+          exclusivity (every tail change has revision in (s,h]), and exactly-once plus increasing order via the dedicated
+          predicate, under exactly the snapshot-mode, selected-frontier, and head guards from the statement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 3e55d99c3cd840a2cb9acbb8be47a57adc6eb203d5f4b383f12021936a7b4a52
+        verdict: EQUIVALENT
+        reason: The rendering decomposes the original into completeness (every canonical accepted change with revision in
+          (S,H] is returned), soundness (only such changes are returned in the tail), uniqueness (no change appears more than
+          once), and increasing revision order, with S as selected checkpoint frontier and H as authoritative response head
+          unchanged.
+        differences: []
