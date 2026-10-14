@@ -2748,6 +2748,18 @@ functions:
     semantic_anchors:
     - claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance
     - claim:L211_accepted_terminal_result_origin_is_authoritative
+  accepted_terminal_canonical_creation_for_eligible_identity:
+    args:
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols:
+    - terminal_result
+    meaning: a is the canonical accepted-change creation for one full idempotency identity whose terminal_result becomes ACCEPTED
+      under retry_eligible_acceptance or another supported acceptance path that creates the terminal_result in the same transaction
+      boundary as a. This classifier names the qualifying creation event only; it does not constrain which implementation path
+      produced it or which transaction mechanism commits the pair.
+    semantic_anchors:
+    - claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance
   accepted_terminal_matching_creation_pair:
     args:
     - TerminalResultRecord
@@ -2886,8 +2898,7 @@ functions:
     catalog_symbols:
     - canonical_accepted_change
     meaning: a is the matching canonical_accepted_change record created by the acceptance execution referenced by the producer
-      binding under audit; as that matching record in authoritative accepted history, a stands committed by the acceptance
-      execution that created it.
+      binding under audit.
     semantic_anchors:
     - claim:L197_accepted_terminal_result_captures_same_acceptance_producer
     - claim:C46_accepted_terminal_result_preserves_acceptance_provenance
@@ -4591,6 +4602,24 @@ claims:
                   args:
                   - var: t
                   - var: a
+      - forall:
+          vars:
+            a: CanonicalAcceptance
+          body:
+            implies:
+            - call:
+                fn: accepted_terminal_canonical_creation_for_eligible_identity
+                args:
+                - var: a
+            - exists:
+                vars:
+                  t: TerminalResultRecord
+                body:
+                  call:
+                    fn: accepted_terminal_matching_creation_pair
+                    args:
+                    - var: t
+                    - var: a
   L197_accepted_terminal_result_captures_same_acceptance_producer:
     contracts: []
     formula:
