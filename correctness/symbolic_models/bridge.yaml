@@ -1416,10 +1416,10 @@ functions:
     returns: Bool
     catalog_symbols: []
     meaning: >-
-      Accepted terminal result t carries a full identity that is still a normal_retry_eligible_identity: its pending/retry age
-      is no more than 30 days and it remains inside the normal retry/reconnect protocol boundary defined by A6. Equivalently,
-      t is within the normal retry eligibility horizon in which producer provenance must be retained; identity eligibility
-      and this horizon classification are one protocol boundary, not independent conditions.
+      Accepted terminal result t is within the normal retry eligibility horizon: the full identity t carries is still a
+      normal_retry_eligible_identity, which is the horizon in which producer provenance must be retained. This predicate
+      classifies horizon membership only; it does not itself assert producer provenance, origin authority, or lifecycle
+      preservation.
     semantic_anchors:
     - contract:accepted_terminal_result_binding
     - source:accepted_change_log
@@ -1456,7 +1456,7 @@ functions:
     returns: Bool
     catalog_symbols:
     - terminal_result
-    meaning: Accepted terminal result representation t carries a canonical result produced by the same acceptance execution that produced canonical acceptance a for the producer binding under audit. At an accepted_terminal_acceptance_origin boundary, this means the result placed into t comes from that same execution rather than another request, document, acceptance execution, or merely extensionally equal substitute. For a later lifecycle-rewritten representation of the same logical terminal outcome, this relation classifies that representation by the same test; the canonical result it carries is the one produced by that same acceptance execution. This relation alone does not assert that a committed, when binding metadata was materialized, or that t is provenance-reachable from an acceptance origin; those are separate proof obligations.
+    meaning: Accepted terminal result representation t carries a canonical result produced by the same acceptance execution that produced canonical acceptance a for the producer binding under audit. At an accepted_terminal_acceptance_origin boundary, this means the result placed into t comes from that same execution rather than another request, document, acceptance execution, or merely extensionally equal substitute. Applied to any representation of the same logical terminal outcome, this relation classifies that representation by the same test; the canonical result it carries is the one produced by that same acceptance execution. This relation alone does not assert that a committed, when binding metadata was materialized, or that t is provenance-reachable from an acceptance origin; those are separate proof obligations.
     semantic_anchors:
     - contract:accepted_terminal_result_binding
     - claim:L197_accepted_terminal_result_captures_same_acceptance_producer
@@ -2878,6 +2878,7 @@ functions:
     semantic_anchors:
     - claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance
     - claim:C46_accepted_terminal_result_preserves_acceptance_provenance
+    - claim:L197_accepted_terminal_result_captures_same_acceptance_producer
   accepted_terminal_matching_canonical_acceptance:
     args:
     - CanonicalAcceptance
@@ -4593,31 +4594,6 @@ claims:
                   args:
                   - var: t
                   - var: a
-      - forall:
-          vars:
-            t: TerminalResultRecord
-            a: CanonicalAcceptance
-          body:
-            implies:
-            - and:
-              - or:
-                - call:
-                    fn: accepted_terminal_created_for_eligible_identity
-                    args:
-                    - var: t
-                - call:
-                    fn: accepted_terminal_linearization_origin_record
-                    args:
-                    - var: t
-              - call:
-                  fn: accepted_terminal_matching_creation_pair
-                  args:
-                  - var: t
-                  - var: a
-            - call:
-                fn: accepted_terminal_matching_acceptance_committed
-                args:
-                - var: a
   L197_accepted_terminal_result_captures_same_acceptance_producer:
     contracts: []
     formula:
@@ -4669,6 +4645,10 @@ claims:
                   - var: a
               - call:
                   fn: accepted_terminal_matching_canonical_acceptance
+                  args:
+                  - var: a
+              - call:
+                  fn: accepted_terminal_matching_acceptance_committed
                   args:
                   - var: a
   L199_accepted_terminal_provenance_survives_persistence_and_restore:
