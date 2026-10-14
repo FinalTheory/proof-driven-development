@@ -5860,3 +5860,55 @@ records:
           paths matches the original: the second clause is already entailed by the original no-bypass prohibition on publishing
           or committing a terminal decision outside the gate, so nothing is added or omitted.'
         differences: []
+  claim:L114_hot_path_accepted_evidence_requires_committed_acceptance:
+    kind: claim
+    subject_id: L114_hot_path_accepted_evidence_requires_committed_acceptance
+    subject_signature: 3cda82e1e101c39786ff78cfad9132d66871ead7abfe967abc2bd6726e5f45f6
+    roundtrip:
+      subject_signature: 3cda82e1e101c39786ff78cfad9132d66871ead7abfe967abc2bd6726e5f45f6
+      status: TRANSLATED
+      natural_language: 'Both of the following hold. (1) For every accepted evidence e, if e is authoritative accepted-idempotency
+        evidence (authoritative durable state counts e as establishing that the full identity e carries is already accepted)
+        and e is acquired on the normal acceptance path (the acceptance flow by which authoritative durable state first gains
+        already-accepted evidence for an identity, as opposed to a lifecycle transformation or a runtime reconstruction),
+        then there exists a canonical acceptance a such that: a is a committed canonical accepted-change record in authoritative
+        accepted history; the document_id component of the full identity carried by e equals the document_id component of
+        the full identity carried by a; the client_change_id component of the full identity carried by e equals the client_change_id
+        component of the full identity carried by a; and e is derived from and corresponds to a, i.e. a is the acceptance
+        from which e''s already-accepted evidence is established. (2) For every accepted evidence e, if e is authoritative
+        accepted-idempotency evidence, e is acquired on the normal acceptance path, and a separate hot-path accepted-key record
+        or index, distinct from the committed accepted row / unique identity itself, is the accepted-evidence mechanism for
+        e''s identity, then there exists a canonical acceptance a such that: a is a committed canonical accepted-change record
+        in authoritative accepted history; the document_id component of the full identity carried by e equals the document_id
+        component of the full identity carried by a; the client_change_id component of the full identity carried by e equals
+        the client_change_id component of the full identity carried by a; e is derived from and corresponds to a, i.e. a is
+        the acceptance from which e''s already-accepted evidence is established; and the separate hot-path accepted-key record
+        for e and a commit or abort together in the same acceptance transaction.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 3cda82e1e101c39786ff78cfad9132d66871ead7abfe967abc2bd6726e5f45f6
+        verdict: EQUIVALENT
+        reason: The formula scopes to authoritative accepted evidence acquired on the normal acceptance path and requires
+          a committed canonical acceptance matching both document_id and client_change_id from which the evidence derives,
+          covering the provisional and aborted-attempt exclusions by contraposition; the second conjunct additionally requires,
+          when a separate hot-path record exists, that same matching committed acceptance to co-commit or co-abort with the
+          record in the same acceptance transaction.
+        differences: []
+      strengthening:
+        subject_signature: 3cda82e1e101c39786ff78cfad9132d66871ead7abfe967abc2bd6726e5f45f6
+        verdict: EQUIVALENT
+        reason: The formula correctly scopes to authoritative already-accepted evidence acquired on the normal acceptance
+          path, requires a committed canonical acceptance matching both document_id and client_change_id from which the evidence
+          derives, thereby excluding provisional or uncommitted attempts, and additionally requires same-transaction commit-or-abort
+          co-commitment exactly when a separate hot-path record is the evidence mechanism, without adding or omitting requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 3cda82e1e101c39786ff78cfad9132d66871ead7abfe967abc2bd6726e5f45f6
+        verdict: EQUIVALENT
+        reason: The rendering preserves the normal-path only-if-committed-acceptance requirement with exact (document_id,
+          client_change_id) matching and provenance from that committed acceptance, which entails the exclusion of provisional
+          and aborted/timed-out/cancelled attempts lacking a committed acceptance, and clause (2) preserves same-transaction
+          commit-or-abort atomicity for a separate hot-path accepted-key record or index. No requirement is omitted or added.
+        differences: []
