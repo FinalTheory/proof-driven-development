@@ -4070,8 +4070,9 @@ functions:
     - TerminalResultRecord
     returns: Bool
     catalog_symbols: []
-    meaning: 'Terminal result record t is exposed through terminal_outcome_publication_gate:
-      every authoritative exposure of t to a protocol consumer flows through terminal_outcome_publication_gate.'
+    meaning: Terminal result record t is exposed to a protocol consumer through terminal_outcome_publication_gate.
+      This classifier asserts the gate exposure only; that every authoritative exposure
+      flows through the gate is a separate guarantee, not part of this classifier.
     semantic_anchors:
     - claim:L190_authoritative_terminal_publication_surfaces_are_exhaustive
     - claim:L195_rejected_terminal_publication_excludes_canonical_acceptance
