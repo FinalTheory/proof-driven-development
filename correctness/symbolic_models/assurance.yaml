@@ -6092,3 +6092,46 @@ records:
           other provisional or non-authoritative state. Quantifiers, identity coordinates, temporal ordering, and exclusions
           match without weakening or strengthening.'
         differences: []
+  claim:L166_recovery_preserves_pending_identity_revision_evidence:
+    kind: claim
+    subject_id: L166_recovery_preserves_pending_identity_revision_evidence
+    subject_signature: 5fb79776126f2430bd786e0a094a08bbc6fd9f7845f43915a8bca6fd51fd571c
+    roundtrip:
+      subject_signature: 5fb79776126f2430bd786e0a094a08bbc6fd9f7845f43915a8bca6fd51fd571c
+      status: TRANSLATED
+      natural_language: 'For all logical edit identities e, documents d, client change ids k, and revisions r, if the document_id
+        component of e is d and the client_change_id coordinate carried by the exact full logical edit identity e is k, and
+        the authoritative accepted_identity_frontier_evidence binds e to the canonical accepted revision r with the exact
+        query semantics that e is included through a response head H if and only if r <= H, and e is a normal_retry_eligible_identity,
+        meaning the logical edit identified by e remains within the normal retry/reconnect eligibility boundary, then for
+        every protocol transition t, if t is a completed recovery/restart reconstruction transition, then across t the logical
+        accepted_identity_frontier_evidence binding of e to r is preserved: after t the authoritative evidence still binds
+        the same full identity e to the same revision r with the exact included-through-head query semantics (e included through
+        head H if and only if r <= H), even though the physical representation may change and physical rows may be deleted
+        under a replacement representation, and the logical binding is not dropped, relabeled, or reinterpreted.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 5fb79776126f2430bd786e0a094a08bbc6fd9f7845f43915a8bca6fd51fd571c
+        verdict: EQUIVALENT
+        reason: The formula faithfully quantifies over the full identity e decomposed as (d,k), requires the authoritative
+          binding of e to r and normal retry eligibility, and requires every completed recovery transition to preserve that
+          same binding with the exact included-through-H iff r<=H semantics and no drop, relabel, or reinterpretation.
+        differences: []
+      strengthening:
+        subject_signature: 5fb79776126f2430bd786e0a094a08bbc6fd9f7845f43915a8bca6fd51fd571c
+        verdict: EQUIVALENT
+        reason: The formula guards exactly on the decomposed full identity e=(d,k), its authoritative frontier binding to
+          r, and normal retry eligibility, then requires every completed recovery transition to preserve that same e-to-r
+          binding with the exact included-through-H iff r<=H semantics, matching the source scope without added or omitted
+          requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 5fb79776126f2430bd786e0a094a08bbc6fd9f7845f43915a8bca6fd51fd571c
+        verdict: EQUIVALENT
+        reason: 'The round-trip preserves the same precondition (authoritative evidence binding a normal-retry-eligible identity
+          (D,k) to canonical revision r), the same completed recovery/restart scope, and the same post-transition guarantee:
+          the identical logical binding and exact included-through-H iff r<=H semantics are preserved, with only physical
+          representation allowed to change and no dropping, relabeling, or reinterpretation.'
+        differences: []
