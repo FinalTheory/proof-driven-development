@@ -10253,93 +10253,87 @@ claims:
     formula:
       and:
       - forall:
-          vars:
-            s: ClientState
-            e: LogicalEditIdentity
           body:
             implies:
             - and:
               - call:
+                  args:
+                  - var: s
                   fn: reachable_client_state
+              - call:
                   args:
                   - var: s
-              - call:
+                  - var: e
                   fn: pending_identity_active
+              - call:
                   args:
                   - var: s
                   - var: e
-              - call:
                   fn: edit_remains_unresolved
-                  args:
-                  - var: s
-                  - var: e
             - and:
               - not:
                   call:
+                    args:
+                    - var: s
+                    - var: e
                     fn: identity_document_is_normal_editable
-                    args:
-                    - var: s
-                    - var: e
               - not:
                   call:
-                    fn: normal_editing_can_create_or_apply_new_eligible_edit
                     args:
                     - var: s
                     - var: e
-      - forall:
+                    fn: normal_editing_can_create_or_apply_new_eligible_edit
           vars:
-            c: CatchupResponse
+            e: LogicalEditIdentity
+            s: ClientState
+      - forall:
           body:
             implies:
             - call:
+                args:
+                - var: c
                 fn: normal_client_resync_attempt
+            - call:
                 args:
                 - var: c
-            - call:
                 fn: resync_freezes_new_speculative_edits
-                args:
-                - var: c
-      - forall:
           vars:
             c: CatchupResponse
-            e: LogicalEditIdentity
+      - forall:
           body:
             implies:
             - call:
+                args:
+                - var: c
+                - var: e
                 fn: identity_unresolved_after_reconciled_publication
-                args:
-                - var: c
-                - var: e
             - call:
-                fn: unresolved_identity_blocks_normal_editing
                 args:
                 - var: c
                 - var: e
-      - forall:
+                fn: unresolved_identity_blocks_normal_editing
           vars:
             c: CatchupResponse
             e: LogicalEditIdentity
+      - forall:
           body:
             implies:
-            - and:
-              - call:
-                  fn: pending_identity_at_resync_start
-                  args:
-                  - var: c
-                  - var: e
-              - call:
-                  fn: resync_identity_within_normal_horizon
-                  args:
-                  - var: c
-                  - var: e
             - call:
-                fn: catchup_request_includes_pending_change_id
+                args:
+                - var: c
+                - var: e
+                fn: pending_identity_at_resync_start
+            - call:
                 args:
                 - var: c
                 - call:
-                    fn: logical_identity_change_id
                     args:
                     - var: e
+                    fn: logical_identity_change_id
+                fn: catchup_request_includes_pending_change_id
+          vars:
+            c: CatchupResponse
+            e: LogicalEditIdentity
   L109_resync_publication_is_atomic_and_monotonic:
     capability: relational
     contracts: []
