@@ -1641,6 +1641,7 @@ functions:
     semantic_anchors:
     - contract:accepted_terminal_result_binding
     - claim:L211_accepted_terminal_result_origin_is_authoritative
+    - claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance
   terminal_result_idempotency_key:
     args:
     - TerminalResultRecord
@@ -4891,10 +4892,15 @@ claims:
                   fn: accepted_terminal_created_for_eligible_identity
                   args:
                   - var: t
-              - call:
-                  fn: accepted_terminal_linearization_origin_record
-                  args:
-                  - var: t
+              - or:
+                - call:
+                    fn: accepted_terminal_linearization_origin_record
+                    args:
+                    - var: t
+                - call:
+                    fn: accepted_terminal_result_record
+                    args:
+                    - var: t
               - call:
                   fn: accepted_terminal_matching_creation_pair
                   args:

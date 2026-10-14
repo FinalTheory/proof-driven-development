@@ -3619,8 +3619,9 @@ claims:
       in the same authoritative transaction boundary and therefore commit or roll back together; no
       reachable authoritative state contains one without the other. In particular, whenever the
       ACCEPTED terminal result side of such a pair stands as an authoritative outcome, the matching
-      canonical accepted change stands committed too, since a rolled-back transaction leaves neither
-      side in any authoritative state.
+      canonical accepted change stands committed too — committed by the same acceptance execution
+      that produced it, since the pair's two creations are that one acceptance's work in its single
+      transaction, and a rolled-back transaction leaves neither side in any authoritative state.
     source_refs:
       - accepted_change_log
       - owner_failover
