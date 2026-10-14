@@ -2874,7 +2874,7 @@ functions:
     - CanonicalAcceptance
     returns: Bool
     catalog_symbols: []
-    meaning: Matching canonical acceptance a committed as the acceptance side of the same authoritative transaction boundary that created the corresponding ACCEPTED terminal outcome. This predicate asserts the committed matching-acceptance fact only; it does not require one named implementation path or assert producer provenance.
+    meaning: Matching canonical acceptance a committed as the acceptance side of the authoritative acceptance transaction for the corresponding ACCEPTED terminal outcome; the execution that commits a in that transaction is the acceptance execution that produced a. This predicate asserts the committed matching-acceptance fact and its committing execution only; it does not require one named implementation path or assert producer provenance of a stored result by itself.
     semantic_anchors:
     - claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance
     - claim:C46_accepted_terminal_result_preserves_acceptance_provenance
@@ -4474,27 +4474,8 @@ claims:
             - exists:
                 vars:
                   a: CanonicalAcceptance
-                  t0: TerminalResultRecord
                 body:
                   and:
-                  - call:
-                      fn: accepted_terminal_linearization_origin_record
-                      args:
-                      - var: t0
-                  - call:
-                      fn: accepted_terminal_matching_creation_pair
-                      args:
-                      - var: t0
-                      - var: a
-                  - call:
-                      fn: accepted_terminal_creation_pair_co_commits
-                      args:
-                      - var: t0
-                      - var: a
-                  - call:
-                      fn: accepted_terminal_matching_canonical_acceptance
-                      args:
-                      - var: a
                   - call:
                       fn: terminal_result_bound_to_acceptance_execution
                       args:
@@ -4505,16 +4486,14 @@ claims:
                       args:
                       - var: t
                       - var: a
-                  - or:
-                    - eq:
-                      - var: t0
-                      - var: t
-                    - transitive_closure:
-                        fn: accepted_terminal_supported_lifecycle_edge
-                        from:
-                          var: t0
-                        to:
-                          var: t
+                  - call:
+                      fn: accepted_terminal_matching_canonical_acceptance
+                      args:
+                      - var: a
+                  - call:
+                      fn: accepted_terminal_matching_acceptance_committed
+                      args:
+                      - var: a
   C47_accepted_terminal_result_provenance_survives_lifecycle:
     contracts: []
     formula:
