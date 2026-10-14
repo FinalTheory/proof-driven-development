@@ -4396,10 +4396,13 @@ functions:
     - AcceptedEvidence
     returns: Bool
     catalog_symbols: []
-    meaning: 'Every provenance source of evidence e is a committed canonical acceptance:
-      e is derived from no never-committed attempt, reservation, in-progress arbitration,
-      timeout or cancellation state, cache, failed-owner residue, or other provisional
-      or non-authoritative state.'
+    meaning: Every provenance source of evidence e is a canonical acceptance for the
+      same full (document_id, client_change_id) identity as e that was committed before
+      e was created or preserved, or authoritative accepted evidence whose own provenance
+      terminates at such an acceptance; e is derived from no never-committed attempt,
+      reservation, in-progress arbitration, timeout or cancellation state, cache,
+      failed-owner residue, or other provisional or non-authoritative state, and from
+      no acceptance for a different identity.
     semantic_anchors:
     - claim:L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance
     - claim:L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance
