@@ -1855,6 +1855,10 @@ functions:
     - claim:L199_accepted_terminal_provenance_survives_persistence_and_restore
     - claim:L200_accepted_terminal_provenance_survives_compaction_and_retention
     - claim:L201_accepted_terminal_provenance_survives_representation_migration
+    - claim:L192_terminal_publication_preserves_store_identity_provenance
+    - claim:C45_terminal_outcome_publication_matches_canonical_acceptance
+    - claim:C44_terminal_outcome_entry_matches_canonical_acceptance
+    - claim:C43_terminal_outcome_entry_state_is_coherent
   accepted_terminal_lifecycle_rewrite:
     args:
     - ProtocolTransition
@@ -7946,6 +7950,11 @@ claims:
                         fn: accepted_terminal_matching_acceptance_committed
                         args:
                         - var: a
+                    - call:
+                        fn: terminal_result_bound_to_acceptance_execution
+                        args:
+                        - var: r
+                        - var: a
   L195_rejected_terminal_publication_excludes_canonical_acceptance:
     capability: relational
     contracts: []
@@ -8018,6 +8027,11 @@ claims:
                       - var: a
                   - call:
                       fn: accepted_terminal_creation_pair_atomically_commits
+                      args:
+                      - var: t
+                      - var: a
+                  - call:
+                      fn: terminal_result_bound_to_acceptance_execution
                       args:
                       - var: t
                       - var: a
@@ -8182,6 +8196,11 @@ claims:
                       - var: a
                   - call:
                       fn: accepted_terminal_creation_pair_atomically_commits
+                      args:
+                      - var: t
+                      - var: a
+                  - call:
+                      fn: terminal_result_bound_to_acceptance_execution
                       args:
                       - var: t
                       - var: a
@@ -8392,6 +8411,11 @@ claims:
                       - var: a
                   - call:
                       fn: accepted_terminal_creation_pair_atomically_commits
+                      args:
+                      - var: t
+                      - var: a
+                  - call:
+                      fn: terminal_result_bound_to_acceptance_execution
                       args:
                       - var: t
                       - var: a
