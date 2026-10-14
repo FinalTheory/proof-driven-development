@@ -88,6 +88,9 @@ functions:
     - contract:rejected_terminal_speculative_retirement
     - claim:G12_client_pending_state_tracks_unresolved_edits
     - contract:unresolved_pending_blocks_normal_editing
+    - claim:L154_pending_edit_identity_provenance_is_preserved
+    - claim:L155_unresolved_speculative_edit_has_pending_entry
+    - claim:L206_terminal_speculative_lifecycle_is_absorbing
   later_reachable_client_state:
     args:
     - ClientState
@@ -101,6 +104,7 @@ functions:
     - contract:terminal_speculative_lifecycle_closure
     - claim:G12_client_pending_state_tracks_unresolved_edits
     - claim:L110_client_retires_matching_speculative_overlay_before_canonical_publication
+    - claim:L206_terminal_speculative_lifecycle_is_absorbing
   visible_document:
     args:
     - ClientState
@@ -964,6 +968,7 @@ functions:
       within the normal retry/reconnect horizon that remains retained.
     semantic_anchors:
     - contract:pending_speculative_lifecycle_coverage
+    - claim:L155_unresolved_speculative_edit_has_pending_entry
   acceptance_based_pending_retirement:
     args:
     - ClientState
@@ -975,6 +980,7 @@ functions:
       semantics.
     semantic_anchors:
     - contract:pending_retirement_acceptance_binding
+    - claim:L158_pending_retirement_requires_matching_acceptance_identity
   pending_retirement_has_matching_acceptance_source:
     args:
     - ClientState
@@ -991,6 +997,7 @@ functions:
       if some unrelated source actually caused the retirement.
     semantic_anchors:
     - contract:pending_retirement_acceptance_binding
+    - claim:L158_pending_retirement_requires_matching_acceptance_identity
   acceptance_semantic_lifecycle_retirement:
     args:
     - ClientState
@@ -1004,6 +1011,7 @@ functions:
       publication, or delivery eventually occurs.
     semantic_anchors:
     - claim:G12_client_pending_state_tracks_unresolved_edits
+    - claim:L158_pending_retirement_requires_matching_acceptance_identity
   accepted_retirement_has_matching_acceptance_source:
     args:
     - ClientState
@@ -1021,6 +1029,7 @@ functions:
       if some unrelated acceptance source caused the retirement.
     semantic_anchors:
     - claim:G12_client_pending_state_tracks_unresolved_edits
+    - claim:L158_pending_retirement_requires_matching_acceptance_identity
   speculative_identity_provenance_ok:
     args:
     - ClientState
@@ -1091,6 +1100,7 @@ functions:
     semantic_anchors:
     - source:reconnect_revision_boundary
     - contract:accepted_terminal_speculative_retirement
+    - claim:L209_accepted_reconciliation_terminalizes_speculative_lifecycle
   authoritative_reconciliation_terminally_retires_identity:
     args:
     - ClientState
@@ -1105,6 +1115,7 @@ functions:
       occurs.
     semantic_anchors:
     - claim:G12_client_pending_state_tracks_unresolved_edits
+    - claim:L206_terminal_speculative_lifecycle_is_absorbing
   new_user_edit_after_terminalized_lifecycle:
     args:
     - ClientState
@@ -1135,6 +1146,8 @@ functions:
     - claim:C37_pending_identity_resolution_is_bound_to_response_head
     - claim:L106_resync_request_covers_start_pending_set
     - claim:L107_client_freezes_speculative_edits_during_resync
+    - claim:L208_externally_rejected_edit_terminalizes_speculative_lifecycle
+    - claim:L209_accepted_reconciliation_terminalizes_speculative_lifecycle
   logical_edit_in_reachable_client_history:
     args:
     - ClientState
@@ -1165,6 +1178,7 @@ functions:
       pending bookkeeping is present.
     semantic_anchors:
     - contract:pending_edit_identity_provenance
+    - claim:L154_pending_edit_identity_provenance_is_preserved
   pending_identity_active:
     args:
     - ClientState
@@ -1180,6 +1194,10 @@ functions:
     - contract:rejected_terminal_speculative_retirement
     - contract:pending_edit_identity_provenance
     - contract:unresolved_pending_blocks_normal_editing
+    - claim:L154_pending_edit_identity_provenance_is_preserved
+    - claim:L206_terminal_speculative_lifecycle_is_absorbing
+    - claim:L208_externally_rejected_edit_terminalizes_speculative_lifecycle
+    - claim:L209_accepted_reconciliation_terminalizes_speculative_lifecycle
   retained_speculative_identity_active:
     args:
     - ClientState
@@ -1250,6 +1268,7 @@ functions:
       for an unrelated reason does not satisfy this predicate.
     semantic_anchors:
     - contract:rejected_terminal_speculative_retirement
+    - claim:L208_externally_rejected_edit_terminalizes_speculative_lifecycle
   definitive_rejection_published_into_state:
     args:
     - ClientState
@@ -1269,6 +1288,7 @@ functions:
     semantic_anchors:
     - contract:rejected_terminal_speculative_retirement
     - source:reconnect_revision_boundary
+    - claim:L208_externally_rejected_edit_terminalizes_speculative_lifecycle
   same_session_later_visible_continuous_same_document:
     args:
     - ClientState
@@ -1318,6 +1338,7 @@ functions:
       both document_id and client_change_id rather than being relabeled or cross-bound.
     semantic_anchors:
     - contract:pending_edit_identity_provenance
+    - claim:L154_pending_edit_identity_provenance_is_preserved
   reachable_client_protocol_transition:
     args:
     - ProtocolTransition
@@ -1329,6 +1350,9 @@ functions:
     semantic_anchors:
     - contract:non_acceptance_terminal_disposition_binding
     - claim:G12_client_pending_state_tracks_unresolved_edits
+    - claim:L155_unresolved_speculative_edit_has_pending_entry
+    - claim:L203_non_acceptance_terminal_disposition_preserves_edit_provenance
+    - claim:L206_terminal_speculative_lifecycle_is_absorbing
   bookkeeping_only_speculative_removal_transition:
     args:
     - ProtocolTransition
@@ -1343,6 +1367,7 @@ functions:
       ends e's normal speculative lifecycle.
     semantic_anchors:
     - claim:G12_client_pending_state_tracks_unresolved_edits
+    - claim:L155_unresolved_speculative_edit_has_pending_entry
   bookkeeping_removal_does_not_resolve_lifecycle:
     args:
     - ProtocolTransition
@@ -1355,6 +1380,7 @@ functions:
       were dropped.
     semantic_anchors:
     - claim:G12_client_pending_state_tracks_unresolved_edits
+    - claim:L155_unresolved_speculative_edit_has_pending_entry
   non_acceptance_retirement_establishes_terminalized_lifecycle:
     args:
     - ProtocolTransition
@@ -1372,6 +1398,7 @@ functions:
       applies to every later reachable state.
     semantic_anchors:
     - claim:G12_client_pending_state_tracks_unresolved_edits
+    - claim:L206_terminal_speculative_lifecycle_is_absorbing
   non_acceptance_retirement_transition:
     args:
     - ProtocolTransition
@@ -1383,6 +1410,7 @@ functions:
       retire the normal speculative lifecycle of exact logical edit identity e.
     semantic_anchors:
     - contract:non_acceptance_terminal_disposition_binding
+    - claim:L203_non_acceptance_terminal_disposition_preserves_edit_provenance
   non_acceptance_disposition_preserves_edit_identity:
     args:
     - ProtocolTransition
@@ -1397,6 +1425,7 @@ functions:
       identity through routing, bookkeeping, and the destructive retirement sink.
     semantic_anchors:
     - contract:non_acceptance_terminal_disposition_binding
+    - claim:L203_non_acceptance_terminal_disposition_preserves_edit_provenance
   success_ack_for_acceptance:
     args:
     - SuccessAck
@@ -3277,6 +3306,7 @@ functions:
     semantic_anchors:
     - contract:terminal_speculative_lifecycle_closure
     - claim:G12_client_pending_state_tracks_unresolved_edits
+    - claim:L206_terminal_speculative_lifecycle_is_absorbing
   request_logical_edit_tuple_preserved_through_lifecycle:
     args:
     - Request
@@ -4525,6 +4555,8 @@ functions:
     - claim:L166_recovery_preserves_pending_identity_revision_evidence
     - claim:L124_pending_identity_classifier_uses_same_identity_and_response_head
     - claim:C37_pending_identity_resolution_is_bound_to_response_head
+    - claim:L208_externally_rejected_edit_terminalizes_speculative_lifecycle
+    - claim:L209_accepted_reconciliation_terminalizes_speculative_lifecycle
   identity_is_normal_retry_eligible:
     args:
     - LogicalEditIdentity
@@ -5139,6 +5171,17 @@ functions:
       makes a previously superseded value authoritative again.'
     semantic_anchors:
     - claim:L28_authoritative_epoch_never_regresses_or_reuses
+  explicit_non_acceptance_retirement_transition:
+    args:
+    - ProtocolTransition
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: Protocol transition t uses a non_acceptance_terminal_disposition to terminally
+      retire the normal speculative lifecycle of exact logical edit identity e.
+    semantic_anchors:
+    - claim:L203_non_acceptance_terminal_disposition_preserves_edit_provenance
+    - claim:L206_terminal_speculative_lifecycle_is_absorbing
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -12096,6 +12139,415 @@ claims:
     contracts:
     - owner_generation_authorization_binding
     formula_from_contracts: true
+  L154_pending_edit_identity_provenance_is_preserved:
+    capability: relational
+    contracts:
+    - pending_edit_identity_provenance
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          e: LogicalEditIdentity
+        body:
+          implies:
+          - and:
+            - call:
+                fn: reachable_client_state
+                args:
+                - var: s
+            - call:
+                fn: pending_identity_active
+                args:
+                - var: s
+                - var: e
+            - call:
+                fn: pending_identity_normal_speculative_lifecycle_active
+                args:
+                - var: s
+                - var: e
+          - call:
+              fn: pending_representation_bound_to_creation_identity
+              args:
+              - var: s
+              - var: e
+  L155_unresolved_speculative_edit_has_pending_entry:
+    capability: relational
+    contracts:
+    - pending_speculative_lifecycle_coverage
+    formula:
+      and:
+      - forall:
+          vars:
+            s: ClientState
+            o: Overlay
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_client_state
+                  args:
+                  - var: s
+              - call:
+                  fn: unresolved_eligible_retained_edit
+                  args:
+                  - var: s
+                  - var: o
+            - call:
+                fn: pending_edit
+                args:
+                - var: s
+                - var: o
+      - forall:
+          vars:
+            t: ProtocolTransition
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_client_protocol_transition
+                  args:
+                  - var: t
+              - call:
+                  fn: bookkeeping_only_speculative_removal_transition
+                  args:
+                  - var: t
+                  - var: e
+            - call:
+                fn: bookkeeping_removal_does_not_resolve_lifecycle
+                args:
+                - var: t
+                - var: e
+  L158_pending_retirement_requires_matching_acceptance_identity:
+    capability: relational
+    contracts:
+    - pending_retirement_acceptance_binding
+    formula:
+      and:
+      - forall:
+          vars:
+            s: ClientState
+            o: Overlay
+          body:
+            implies:
+            - call:
+                fn: acceptance_based_pending_retirement
+                args:
+                - var: s
+                - var: o
+            - call:
+                fn: pending_retirement_has_matching_acceptance_source
+                args:
+                - var: s
+                - var: o
+      - forall:
+          vars:
+            s: ClientState
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - call:
+                fn: acceptance_semantic_lifecycle_retirement
+                args:
+                - var: s
+                - var: e
+            - call:
+                fn: accepted_retirement_has_matching_acceptance_source
+                args:
+                - var: s
+                - var: e
+  L203_non_acceptance_terminal_disposition_preserves_edit_provenance:
+    capability: relational
+    contracts:
+    - non_acceptance_terminal_disposition_binding
+    formula:
+      and:
+      - forall:
+          vars:
+            t: ProtocolTransition
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_client_protocol_transition
+                  args:
+                  - var: t
+              - call:
+                  fn: non_acceptance_retirement_transition
+                  args:
+                  - var: t
+                  - var: e
+            - call:
+                fn: non_acceptance_disposition_preserves_edit_identity
+                args:
+                - var: t
+                - var: e
+      - forall:
+          vars:
+            t: ProtocolTransition
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - call:
+                fn: non_acceptance_retirement_transition
+                args:
+                - var: t
+                - var: e
+            - call:
+                fn: explicit_non_acceptance_retirement_transition
+                args:
+                - var: t
+                - var: e
+  L206_terminal_speculative_lifecycle_is_absorbing:
+    capability: relational
+    contracts:
+    - terminal_speculative_lifecycle_closure
+    formula:
+      and:
+      - and:
+        - forall:
+            vars:
+              s: ClientState
+              e: LogicalEditIdentity
+            body:
+              implies:
+              - and:
+                - call:
+                    fn: reachable_client_state
+                    args:
+                    - var: s
+                - call:
+                    fn: terminalized_speculative_identity
+                    args:
+                    - var: s
+                    - var: e
+              - and:
+                - not:
+                    call:
+                      fn: pending_identity_active
+                      args:
+                      - var: s
+                      - var: e
+                - not:
+                    call:
+                      fn: retained_speculative_identity_active
+                      args:
+                      - var: s
+                      - var: e
+                - not:
+                    call:
+                      fn: visible_speculative_identity_active
+                      args:
+                      - var: s
+                      - var: e
+                - call:
+                    fn: later_user_operations_after_terminalized_lifecycle_are_fresh
+                    args:
+                    - var: s
+                    - var: e
+        - forall:
+            vars:
+              earlier: ClientState
+              later: ClientState
+              e: LogicalEditIdentity
+            body:
+              implies:
+              - and:
+                - call:
+                    fn: reachable_client_state
+                    args:
+                    - var: earlier
+                - call:
+                    fn: reachable_client_state
+                    args:
+                    - var: later
+                - call:
+                    fn: later_reachable_client_state
+                    args:
+                    - var: earlier
+                    - var: later
+                - call:
+                    fn: terminalized_speculative_identity
+                    args:
+                    - var: earlier
+                    - var: e
+              - and:
+                - call:
+                    fn: terminalized_speculative_identity
+                    args:
+                    - var: later
+                    - var: e
+                - not:
+                    call:
+                      fn: pending_identity_active
+                      args:
+                      - var: later
+                      - var: e
+                - not:
+                    call:
+                      fn: retained_speculative_identity_active
+                      args:
+                      - var: later
+                      - var: e
+                - not:
+                    call:
+                      fn: visible_speculative_identity_active
+                      args:
+                      - var: later
+                      - var: e
+      - forall:
+          vars:
+            s: ClientState
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - call:
+                fn: authoritative_reconciliation_terminally_retires_identity
+                args:
+                - var: s
+                - var: e
+            - call:
+                fn: terminalized_speculative_identity
+                args:
+                - var: s
+                - var: e
+      - forall:
+          vars:
+            t: ProtocolTransition
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_client_protocol_transition
+                  args:
+                  - var: t
+              - call:
+                  fn: explicit_non_acceptance_retirement_transition
+                  args:
+                  - var: t
+                  - var: e
+            - call:
+                fn: non_acceptance_retirement_establishes_terminalized_lifecycle
+                args:
+                - var: t
+                - var: e
+  L208_externally_rejected_edit_terminalizes_speculative_lifecycle:
+    capability: relational
+    contracts:
+    - rejected_terminal_speculative_retirement
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          e: LogicalEditIdentity
+          d: Document
+          k: ClientChangeId
+        body:
+          implies:
+          - and:
+            - eq:
+              - call:
+                  fn: logical_identity_document_id
+                  args:
+                  - var: e
+              - var: d
+            - eq:
+              - call:
+                  fn: logical_identity_change_id
+                  args:
+                  - var: e
+              - var: k
+            - call:
+                fn: definitive_rejection_published_into_state
+                args:
+                - var: s
+                - var: e
+          - and:
+            - call:
+                fn: rejection_observation_terminalizes_same_identity
+                args:
+                - var: s
+                - var: e
+            - not:
+                call:
+                  fn: pending_identity_active
+                  args:
+                  - var: s
+                  - var: e
+            - not:
+                call:
+                  fn: retained_speculative_identity_active
+                  args:
+                  - var: s
+                  - var: e
+            - not:
+                call:
+                  fn: visible_speculative_identity_active
+                  args:
+                  - var: s
+                  - var: e
+            - call:
+                fn: terminalized_speculative_identity
+                args:
+                - var: s
+                - var: e
+  L209_accepted_reconciliation_terminalizes_speculative_lifecycle:
+    capability: relational
+    contracts:
+    - accepted_terminal_speculative_retirement
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          e: LogicalEditIdentity
+          d: Document
+          k: ClientChangeId
+        body:
+          implies:
+          - and:
+            - eq:
+              - call:
+                  fn: logical_identity_document_id
+                  args:
+                  - var: e
+              - var: d
+            - eq:
+              - call:
+                  fn: logical_identity_change_id
+                  args:
+                  - var: e
+              - var: k
+            - call:
+                fn: accepted_reconciliation_published
+                args:
+                - var: s
+                - var: e
+          - and:
+            - not:
+                call:
+                  fn: pending_identity_active
+                  args:
+                  - var: s
+                  - var: e
+            - not:
+                call:
+                  fn: retained_speculative_identity_active
+                  args:
+                  - var: s
+                  - var: e
+            - not:
+                call:
+                  fn: visible_speculative_identity_active
+                  args:
+                  - var: s
+                  - var: e
+            - call:
+                fn: terminalized_speculative_identity
+                args:
+                - var: s
+                - var: e
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
