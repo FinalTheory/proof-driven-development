@@ -1244,62 +1244,63 @@ records:
   claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit:
     kind: claim
     subject_id: G7_reconnect_does_not_double_render_accepted_optimistic_edit
-    subject_signature: 2c2263e2776f0e20ae63f195360a07960abefe28218f2380516fdf6ab63d4f8d
+    subject_signature: 2247702a7b4b45509274c07bed76bd31b9aad733775d23e081cc1a96d5679642
     roundtrip:
-      subject_signature: 2c2263e2776f0e20ae63f195360a07960abefe28218f2380516fdf6ab63d4f8d
+      subject_signature: 2247702a7b4b45509274c07bed76bd31b9aad733775d23e081cc1a96d5679642
       status: TRANSLATED
-      natural_language: For every catch-up response c and every logical edit identity e, if c is a reconnect/resync attempt
-        for document D by a normally participating client, then all of the following requirements hold, whether or not the
-        attempt is foreground or D is currently visible. While c is in progress, the client creates or applies no new speculative
-        local edit for D, regardless of whether such a new edit would currently be acceptance-eligible. If the exact logical
-        edit identity e=(D,k) is pending at the start of c for that same document D and is within the normal 30-day reconnect
-        eligibility horizon for c, then the catch-up request for c includes e for authoritative reconciliation of that exact
-        full identity through c's response head. If those same pending and within-horizon conditions hold and canonical acceptance
-        for the exact same full identity e is included through c's response head H_D, then any user-visible publication through
+      natural_language: 'For every resync attempt c (of type CatchupResponse) and every logical edit identity e (of type LogicalEditIdentity),
+        if c is a normal client resync attempt — i.e., c is one reconnect/resync attempt for document D by a normally participating
+        client, without requiring that the attempt be foreground or that D be currently visible — then all of the following
+        hold conjunctively: (1) while resync c is in progress, the client creates or applies no new speculative local edit
+        for document D, regardless of whether that new edit would currently be acceptance-eligible; (2) if the exact logical
+        edit identity e=(D,k) is pending at the start of resync c for that same resync document D (a pending identity for
+        another document does not satisfy this) and pending identity e is within the normal 30-day reconnect eligibility horizon
+        for resync c, then the catch-up request for c includes e for authoritative same-full-identity reconciliation through
+        the response head; (3) if e is pending at the start of c for the same document D and e is within the normal 30-day
+        horizon and canonical acceptance for the exact same full logical identity e is included through c''s response head,
+        then once canonical acceptance for e is included through c''s response head H_D, any user-visible publication through
         H_D removes or suppresses the matching speculative overlay before or atomically with that publication, so no published
-        user-visible state exposes both representations. If e is pending at the start of c for that same document D and is
-        within the normal 30-day reconnect eligibility horizon, then no intermediate resync candidate for c may expose a candidate
-        state whose canonical prefix already contains acceptance for e together with a speculative overlay for e; purely internal,
-        unexposed candidate representations are not constrained by this requirement, and this requirement applies independently
-        of whether c's response head itself is classified as containing that acceptance. If e has the same document coordinate
+        user-visible state exposes both representations; (4) if e is pending at the start of c for the same document D and
+        e is within the normal 30-day horizon, then no intermediate resync candidate for c may expose a candidate state whose
+        canonical prefix already contains acceptance for exact identity e together with a speculative overlay for e, purely
+        internal unexposed candidate representation is not constrained by this, and this rule is independent of whether c''s
+        response head itself is classified as containing that acceptance; (5) if e is pending at the start of c for the same
+        document D, e is within the normal 30-day horizon, and exact logical edit identity e=(D,k) has the same document coordinate
         D as the document being reconnected/resynchronized by c, then a stale response for c cannot restore a speculative
-        overlay for e that a newer published reconciliation already removed; this requirement does not depend on e being pending
-        at c's start or being within the normal horizon. If e is pending at the start of c for that same document D and has
-        a defined pending/retry age greater than the 30-day normal reconnect eligibility horizon, then c does not submit e
-        through normal authoritative reconciliation, and the client discards e or uses an explicit expired, conflict, or manual-resolution
-        path. If, after reconciled publication or conflict entry for c, the exact identity e for that same resync document
-        D remains protocol-eligible and unresolved, then while e remains unresolved the client stays read-only or in an explicit
-        conflict/reconciliation state and creates no new acceptance-eligible speculative edit. This last requirement does
-        not additionally require e to have been pending at the start of c or to satisfy the within-horizon predicate.
+        overlay for e that a newer published reconciliation already removed; (6) if e is pending at the start of c for the
+        same document D and pending identity e at the start of resync c has a defined pending/retry age greater than the 30-day
+        normal reconnect eligibility horizon, then, e being outside the normal reconnect horizon, c does not submit it through
+        normal authoritative reconciliation and the client discards it or uses an explicit expired/conflict/manual-resolution
+        path; and (7) if, after reconciled publication or conflict entry for c, exact identity e for the same resync document
+        D remains protocol-eligible and unresolved and remains contained in client_pending_edits, then while e remains unresolved
+        after c publication/conflict entry, client_editing_mode is not normal-editable for the document of e and no normal
+        editing transition creates or applies a new acceptance-eligible speculative edit for that document.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 2c2263e2776f0e20ae63f195360a07960abefe28218f2380516fdf6ab63d4f8d
+        subject_signature: 2247702a7b4b45509274c07bed76bd31b9aad733775d23e081cc1a96d5679642
         verdict: EQUIVALENT
-        reason: The formula preserves the resync-wide speculative-edit freeze, reconciliation of every eligible pending full
-          identity through the response head, and acceptance-conditioned publication suppression. Intermediate exposure is
-          prohibited independently of response-head acceptance, stale restoration is prohibited for same-document identities,
-          expired identities use non-normal resolution, and unresolved eligible identities block normal editing. The supplied
-          predicate meanings preserve document identity, temporal scope, and user-visible observation boundaries without adding
-          progress or rebase guarantees.
+        reason: 'The formula preserves all source requirements: freeze on new speculative edits during resync, through-head
+          reconciliation for pending within-horizon identities, publication and intermediate-candidate duplicate exclusion
+          on same-identity acceptance, stale-response non-restoration, non-normal path for identities exceeding 30 days, and
+          blocked normal editing for unresolved identities, with document and identity coordinates retained and no added guarantee.'
         differences: []
       strengthening:
-        subject_signature: 2c2263e2776f0e20ae63f195360a07960abefe28218f2380516fdf6ab63d4f8d
+        subject_signature: 2247702a7b4b45509274c07bed76bd31b9aad733775d23e081cc1a96d5679642
         verdict: EQUIVALENT
-        reason: The formula preserves the normal-client applicability boundary, resync edit freeze, eligible pending-identity
-          reconciliation, exact document/edit identity, and acceptance-conditioned publication suppression. Intermediate exposure
-          is constrained independently of response-head acceptance, stale responses cannot restore retired overlays for the
-          resync document, expired identities use non-normal resolution, and unresolved eligible identities block normal editing.
-          No automatic rebase, conflict-resolution, or progress guarantee is added.
+        reason: 'All source guarantees map faithfully: the resync freeze, within-horizon request reconciliation through the
+          head, same-full-identity publication suppression, intermediate-candidate duplicate bar, stale-response restore bar,
+          expired-identity non-normal path, and unresolved-identity editing block, with no added or omitted scope, guard,
+          or coordinate.'
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 2c2263e2776f0e20ae63f195360a07960abefe28218f2380516fdf6ab63d4f8d
+        subject_signature: 2247702a7b4b45509274c07bed76bd31b9aad733775d23e081cc1a96d5679642
         verdict: EQUIVALENT
-        reason: The rendering preserves the resync edit freeze, eligible pending-identity reconciliation, exact document-and-edit
-          identity matching, atomic overlay suppression at visible publication, intermediate exposure prohibition, stale response
-          protection, expired-edit handling, and continued editing restriction while eligible edits remain unresolved. Its
-          explicit scope clarifications add no progress, automatic rebase, or conflict-resolution guarantee.
+        reason: The rendering preserves all clauses of the original with the same quantifiers, same-document/full-identity
+          conditions, 30-day eligibility boundary, publication and intermediate-candidate non-exposure rules, stale-response
+          prohibition, expired-edit handling, and post-publication non-normal-editable restriction, without adding or omitting
+          any guarantee.
         differences: []
   claim:G5_retry_resolves_idempotently:
     kind: claim
