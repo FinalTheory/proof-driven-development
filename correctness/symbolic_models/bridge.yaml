@@ -177,8 +177,11 @@ functions:
     - client_change_id
     meaning: Along the client-protocol path from user-visible state e to later user-visible state l, some client transition
       creates or re-enables speculative overlay o, the speculative representation of the logical client edit identified by
-      (document_id, client_change_id), although that overlay was absent in e. This predicate classifies overlay creation or
-      re-enablement along the path only; it does not assert that the overlay is visible in l.
+      (document_id, client_change_id), as a user-visible speculative overlay, exposing it at the user-visible client
+      observation boundary at some point on that path, although that overlay was absent in e. This predicate classifies
+      user-visible creation or re-enablement only; recreation that remains in private, intermediate, or not-yet-published
+      states and is never exposed at the user-visible boundary is outside this predicate. It does not assert that the
+      overlay is visible in l.
     semantic_anchors:
     - claim:L110_client_retires_matching_speculative_overlay_before_canonical_publication
   new_logical_edit_speculative_overlay_creation:
