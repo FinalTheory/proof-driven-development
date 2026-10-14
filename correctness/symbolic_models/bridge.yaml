@@ -165,6 +165,8 @@ functions:
     - contract:visible_speculative_overlay_document_binding
     - contract:visible_speculative_retention_coherence
     - claim:L110_client_retires_matching_speculative_overlay_before_canonical_publication
+    - claim:L132_visible_overlay_document_binding_established_on_publication
+    - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
   canonical_contains_same_edit:
     args:
     - ClientState
@@ -1083,6 +1085,7 @@ functions:
       client state s.
     semantic_anchors:
     - contract:visible_speculative_overlay_document_binding
+    - claim:L132_visible_overlay_document_binding_established_on_publication
   accepted_reconciliation_published:
     args:
     - ClientState
@@ -1300,6 +1303,7 @@ functions:
       the same document from the first state through the second state.
     semantic_anchors:
     - source:reconnect_revision_boundary
+    - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
   same_session_later_visible_same_document:
     args:
     - ClientState
@@ -3249,6 +3253,8 @@ functions:
       or satisfaction of client_canonical_frontier_coherence.
     semantic_anchors:
     - contract:client_canonical_frontier_coherence
+    - claim:L132_visible_overlay_document_binding_established_on_publication
+    - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
   client_document_id_value:
     args:
     - ClientState
@@ -5182,6 +5188,54 @@ functions:
     semantic_anchors:
     - claim:L203_non_acceptance_terminal_disposition_preserves_edit_provenance
     - claim:L206_terminal_speculative_lifecycle_is_absorbing
+  client_state_establishes_visible_document:
+    args:
+    - ClientState
+    returns: Bool
+    catalog_symbols: []
+    meaning: Client state s is the resulting user-visible state of a user-visible
+      client transition that establishes, replaces, or changes client_document_id
+      -- including initialization, restoration, switching, publication, and any other
+      visible-document replacement path -- so the document s represents was fixed
+      by that transition.
+    semantic_anchors:
+    - claim:L132_visible_overlay_document_binding_established_on_publication
+    - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
+  visible_overlay_document_binding_holds:
+    args:
+    - ClientState
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'The visible_speculative_overlay_document_binding property holds of the
+      whole user-visible client state s: every speculative overlay exposed in s belongs
+      to the document s represents.'
+    semantic_anchors:
+    - claim:L132_visible_overlay_document_binding_established_on_publication
+    - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
+  speculative_overlay_document_id:
+    args:
+    - Overlay
+    returns: Document
+    catalog_symbols:
+    - document_id
+    meaning: The document_id coordinate of the full logical identity (document_id,
+      client_change_id) of the logical edit that speculative overlay representation
+      o represents.
+    semantic_anchors:
+    - claim:L132_visible_overlay_document_binding_established_on_publication
+    - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
+    - claim:L205_visible_speculative_effect_is_unique_per_identity
+  speculative_overlay_client_change_id:
+    args:
+    - Overlay
+    returns: ClientChangeId
+    catalog_symbols:
+    - client_change_id
+    meaning: The client_change_id coordinate of the full logical identity (document_id,
+      client_change_id) of the logical edit that speculative overlay representation
+      o represents.
+    semantic_anchors:
+    - claim:L205_visible_speculative_effect_is_unique_per_identity
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -12548,6 +12602,326 @@ claims:
                 args:
                 - var: s
                 - var: e
+  L132_visible_overlay_document_binding_established_on_publication:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            s: ClientState
+            o: Overlay
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: client_state_establishes_visible_document
+                  args:
+                  - var: s
+              - call:
+                  fn: visible_overlay
+                  args:
+                  - var: s
+                  - var: o
+            - call:
+                fn: visible_overlay_matches_visible_document
+                args:
+                - var: s
+                - var: o
+      - forall:
+          vars:
+            s: ClientState
+          body:
+            implies:
+            - call:
+                fn: client_state_establishes_visible_document
+                args:
+                - var: s
+            - call:
+                fn: visible_overlay_document_binding_holds
+                args:
+                - var: s
+      - forall:
+          vars:
+            s: ClientState
+            o: Overlay
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: visible_overlay_document_binding_holds
+                  args:
+                  - var: s
+              - call:
+                  fn: visible_overlay
+                  args:
+                  - var: s
+                  - var: o
+            - call:
+                fn: visible_overlay_matches_visible_document
+                args:
+                - var: s
+                - var: o
+      - forall:
+          vars:
+            s: ClientState
+            o: Overlay
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: client_state_establishes_visible_document
+                  args:
+                  - var: s
+              - call:
+                  fn: visible_overlay
+                  args:
+                  - var: s
+                  - var: o
+            - eq:
+              - call:
+                  fn: speculative_overlay_document_id
+                  args:
+                  - var: o
+              - call:
+                  fn: represented_document
+                  args:
+                  - var: s
+  L133_visible_overlay_document_binding_preserved_by_local_transitions:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            e: ClientState
+            l: ClientState
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: same_session_later_visible_continuous_same_document
+                  args:
+                  - var: e
+                  - var: l
+              - call:
+                  fn: visible_overlay_document_binding_holds
+                  args:
+                  - var: e
+            - call:
+                fn: visible_overlay_document_binding_holds
+                args:
+                - var: l
+      - forall:
+          vars:
+            s: ClientState
+            o: Overlay
+          body:
+            implies:
+            - call:
+                fn: visible_overlay
+                args:
+                - var: s
+                - var: o
+            - or:
+              - call:
+                  fn: client_state_establishes_visible_document
+                  args:
+                  - var: s
+              - exists:
+                  vars:
+                    e: ClientState
+                  body:
+                    and:
+                    - call:
+                        fn: client_state_establishes_visible_document
+                        args:
+                        - var: e
+                    - call:
+                        fn: same_session_later_visible_continuous_same_document
+                        args:
+                        - var: e
+                        - var: s
+      - forall:
+          vars:
+            e: ClientState
+            l: ClientState
+            o: Overlay
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: same_session_later_visible_continuous_same_document
+                  args:
+                  - var: e
+                  - var: l
+              - call:
+                  fn: visible_overlay
+                  args:
+                  - var: e
+                  - var: o
+              - eq:
+                - call:
+                    fn: speculative_overlay_document_id
+                    args:
+                    - var: o
+                - call:
+                    fn: represented_document
+                    args:
+                    - var: e
+            - implies:
+              - call:
+                  fn: visible_overlay
+                  args:
+                  - var: l
+                  - var: o
+              - eq:
+                - call:
+                    fn: speculative_overlay_document_id
+                    args:
+                    - var: o
+                - call:
+                    fn: represented_document
+                    args:
+                    - var: l
+  L176_visible_speculative_overlay_is_backed_by_retained_state:
+    capability: relational
+    contracts:
+    - visible_speculative_retention_coherence
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          o: Overlay
+        body:
+          implies:
+          - call:
+              fn: visible_overlay
+              args:
+              - var: s
+              - var: o
+          - call:
+              fn: matching_retained_representation_for_visible_overlay
+              args:
+              - var: s
+              - var: o
+  L179_speculative_overlay_identity_provenance_is_preserved:
+    capability: relational
+    contracts:
+    - speculative_overlay_identity_provenance
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          o: Overlay
+        body:
+          implies:
+          - or:
+            - call:
+                fn: retained_overlay
+                args:
+                - var: s
+                - var: o
+            - call:
+                fn: visible_overlay
+                args:
+                - var: s
+                - var: o
+          - call:
+              fn: speculative_identity_provenance_ok
+              args:
+              - var: s
+              - var: o
+  L202_speculative_overlay_operation_provenance_is_preserved:
+    capability: relational
+    contracts:
+    - speculative_overlay_operation_provenance
+    formula:
+      forall:
+        vars:
+          s: ClientState
+          o: Overlay
+        body:
+          implies:
+          - or:
+            - call:
+                fn: retained_overlay
+                args:
+                - var: s
+                - var: o
+            - call:
+                fn: visible_overlay
+                args:
+                - var: s
+                - var: o
+          - call:
+              fn: speculative_operation_provenance_ok
+              args:
+              - var: s
+              - var: o
+  L205_visible_speculative_effect_is_unique_per_identity:
+    capability: relational
+    contracts:
+    - visible_speculative_effect_uniqueness
+    formula:
+      and:
+      - forall:
+          vars:
+            s: ClientState
+            o: Overlay
+          body:
+            implies:
+            - call:
+                fn: visible_overlay
+                args:
+                - var: s
+                - var: o
+            - call:
+                fn: single_effective_speculative_contribution
+                args:
+                - var: s
+                - var: o
+      - forall:
+          vars:
+            s: ClientState
+            o1: Overlay
+            o2: Overlay
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: visible_overlay
+                  args:
+                  - var: s
+                  - var: o1
+              - call:
+                  fn: visible_overlay
+                  args:
+                  - var: s
+                  - var: o2
+              - eq:
+                - call:
+                    fn: speculative_overlay_document_id
+                    args:
+                    - var: o1
+                - call:
+                    fn: speculative_overlay_document_id
+                    args:
+                    - var: o2
+              - eq:
+                - call:
+                    fn: speculative_overlay_client_change_id
+                    args:
+                    - var: o1
+                - call:
+                    fn: speculative_overlay_client_change_id
+                    args:
+                    - var: o2
+            - call:
+                fn: single_effective_speculative_contribution
+                args:
+                - var: s
+                - var: o1
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
