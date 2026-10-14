@@ -6254,7 +6254,14 @@ assurance:
         target) with direct premise L116_live_delivery_is_bound_to_committed_acceptance.
       signature: 8ccfbb3b387e8d2f017d8d010780a60d0fe6701b433112a495eed03b29d5e15f
     C13_idempotency_key_is_temporally_unique:
-      status: unaudited
+      status: machine_checked
+      rationale: "Trusted symbolic translations exist for C13 and all four direct premises L14, C14, L27
+        and A6. Z3 checked L14 AND C14 AND L27 AND A6 AND NOT(C13) as UNSAT (direct_smt). Independent
+        mutation tests that replace L14, C14 or L27 with True each become SAT with a concrete counterexample,
+        demonstrating those three premises are necessary. Replacing A6 with True leaves the entailment
+        intact: A6's eligibility vocabulary is disjoint from the uniqueness argument, so A6 is a recorded
+        dependency but not load-bearing for this composition."
+      signature: 1256b4b7dbd8365d8cddfb4ecb4d5e0c887536f1eb1a0493f3dcdd79ae10b63f
     C14_all_acceptance_paths_honor_idempotency_identity:
       status: machine_checked
       rationale: Trusted symbolic translations exist for C14 and both direct premises L20 and L21.
