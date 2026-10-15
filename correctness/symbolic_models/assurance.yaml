@@ -8095,3 +8095,436 @@ records:
           the added definedness clauses for the frontier in pre and post are entailed by equality to H on each side, and no
           requirement is omitted or added.
         differences: []
+  claim:L38_selected_checkpoint_does_not_exceed_response_head:
+    kind: claim
+    subject_id: L38_selected_checkpoint_does_not_exceed_response_head
+    subject_signature: 5c134e1d719e38f82437d41ba82be6e0c6642017d12e043695fe69f7803c7240
+    roundtrip:
+      subject_signature: 5c134e1d719e38f82437d41ba82be6e0c6642017d12e043695fe69f7803c7240
+      status: TRANSLATED
+      natural_language: For every catch-up response resp, every revision h, and every revision s, if resp is a snapshot-replacement-mode
+        catch-up response, and h is the authoritative response head captured for resp, and s is the frontier coordinate of
+        the checkpoint that catch-up selected for resp, then s is at or before h in the canonical revision order (s <= h).
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 5c134e1d719e38f82437d41ba82be6e0c6642017d12e043695fe69f7803c7240
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over a response, its authoritative head h, and its selected checkpoint
+          frontier s, guarded by snapshot-replacement mode, head_is, and selected_checkpoint_frontier, and concludes revision_at_or_before(s,
+          h), which exactly encodes S <= H with no added or omitted requirements.
+        differences: []
+      strengthening:
+        subject_signature: 5c134e1d719e38f82437d41ba82be6e0c6642017d12e043695fe69f7803c7240
+        verdict: EQUIVALENT
+        reason: Formula universally quantifies over resp, h, s and requires s <= h exactly when resp is snapshot-mode, h is
+          its authoritative head, and s is its selected checkpoint frontier, matching the proposition's scope and inequality
+          with no added or omitted conditions.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 5c134e1d719e38f82437d41ba82be6e0c6642017d12e043695fe69f7803c7240
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal quantification, the snapshot-replacement-mode precondition, the identities
+          of the authoritative response head and the selected checkpoint frontier, and the sole guarantee s <= h in the canonical
+          revision order, with no requirement added or omitted.
+        differences: []
+  claim:C17_snapshot_mode_selects_checkpoint_not_after_head:
+    kind: claim
+    subject_id: C17_snapshot_mode_selects_checkpoint_not_after_head
+    subject_signature: 25eb0e907443716cbf7a44820f6872bfd0e65d2bd32a5a2d13dc4a11d968e27f
+    roundtrip:
+      subject_signature: 25eb0e907443716cbf7a44820f6872bfd0e65d2bd32a5a2d13dc4a11d968e27f
+      status: TRANSLATED
+      natural_language: For every catch-up response resp and every revision h, if resp is a snapshot-replacement-mode catch-up
+        response (i.e., catch-up selected a checkpoint for resp and resp is to be constructed by snapshot replacement rather
+        than by delta/range application) and h is the authoritative response head captured for resp, then there exists a revision
+        s such that s is the frontier coordinate of the checkpoint (content, s) that catch-up selected for resp, the checkpoint
+        (content, s) selected for resp is an authoritative checkpoint identity (i.e., the selected (content, s) pair is a
+        genuine authoritative checkpoint for resp's target document, not a stale-cache or non-authoritative candidate), and
+        s is at or before h in the canonical revision order (s <= h).
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 25eb0e907443716cbf7a44820f6872bfd0e65d2bd32a5a2d13dc4a11d968e27f
+        verdict: EQUIVALENT
+        reason: The antecedent exactly captures snapshot-replacement mode for a response whose authoritative head is h, and
+          the consequent existentially requires a selected checkpoint frontier s for that response that is authoritative and
+          satisfies s <= h, with the checkpoint content carried by the selected-checkpoint identity in the predicate meanings;
+          no requirement is added or omitted.
+        differences: []
+      strengthening:
+        subject_signature: 25eb0e907443716cbf7a44820f6872bfd0e65d2bd32a5a2d13dc4a11d968e27f
+        verdict: EQUIVALENT
+        reason: The formula conditions on snapshot-mode and the authoritative head h for a response, then existentially requires
+          a selected checkpoint frontier s that is authoritative and satisfies s <= h, exactly matching the source guarantee
+          without added scope, cardinality, or other requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 25eb0e907443716cbf7a44820f6872bfd0e65d2bd32a5a2d13dc4a11d968e27f
+        verdict: EQUIVALENT
+        reason: The rendering preserves the same precondition (snapshot-replacement mode selected for an authoritative response
+          head), the same selected authoritative checkpoint (content, s), and the same bound s <= h, with no added or omitted
+          requirement, quantifier change, or coordinate collapse.
+        differences: []
+  claim:L151_selectable_checkpoint_publication_binds_content_and_frontier_atomically:
+    kind: claim
+    subject_id: L151_selectable_checkpoint_publication_binds_content_and_frontier_atomically
+    subject_signature: a75fbcfe0b9c27be51391e4f9fb845fb60eead156fa7651cd666d70c27d459ab
+    roundtrip:
+      subject_signature: a75fbcfe0b9c27be51391e4f9fb845fb60eead156fa7651cd666d70c27d459ab
+      status: TRANSLATED
+      natural_language: 'Both of the following hold. (1) For every recovery attempt r and every revision s: if r is a new-owner
+        recovery attempt — that is, r is within the canonical new-owner recovery boundary for its target document, a classification
+        established by entering that boundary and not dependent on successful progress, so r remains a new-owner recovery
+        attempt even if it stalls, crashes, or aborts before owner-generation installation, recovery-head capture, or completion,
+        while recovery or reconstruction activity outside that boundary is excluded — and s is the frontier coordinate S of
+        a checkpoint identity P=(content, S) actually selected by r (this relation names one actually selected checkpoint
+        identity of r by its frontier coordinate, which for r''s target document identifies the pair, and asserts nothing
+        about how many checkpoint identities r selected or about the selected identity''s provenance, installation, or ordering),
+        then the authoritative publication record from which the checkpoint identity P=(content, s) actually selected by r
+        was drawn bound that content and frontier s atomically as one checkpoint identity: the content and frontier became
+        visible together as one all-or-nothing pair in that publication, so P cannot be an intermediate or mixed content/frontier
+        pair assembled from different publication states. (2) For every recovery attempt r: if r is a new-owner recovery attempt
+        (as defined above) and r selects exactly one checkpoint identity (content, S) as the attempt''s checkpoint — one single
+        identity is the attempt''s selected checkpoint, not zero, not two different identities, and not a mixture of identities,
+        this predicate classifying the selection and its result only and asserting nothing about the selected identity''s
+        provenance, installation, or ordering — then the authoritative publication record from which r''s selected checkpoint
+        identity was drawn bound that checkpoint''s content and its frontier S atomically as one checkpoint identity: the
+        content and frontier became visible together as one all-or-nothing pair in that publication, so the selected identity
+        cannot be an intermediate or mixed content/frontier pair assembled from different publication states.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: a75fbcfe0b9c27be51391e4f9fb845fb60eead156fa7651cd666d70c27d459ab
+        verdict: EQUIVALENT
+        reason: The first universal covers every checkpoint actually selected by a new-owner recovery attempt via its frontier
+          coordinate, which identifies the (content,S) pair, and requires that pair's authoritative publication to be atomic,
+          excluding intermediate or mixed pairs exactly as stated. The second conditional conjunct adds no requirement beyond
+          this, as it only restates the same atomicity for the single selected checkpoint when exactly one is selected.
+        differences: []
+      strengthening:
+        subject_signature: a75fbcfe0b9c27be51391e4f9fb845fb60eead156fa7651cd666d70c27d459ab
+        verdict: EQUIVALENT
+        reason: The first conjunct quantifies over every new-owner attempt r and frontier s actually selected by r and requires
+          atomic publication at that frontier, matching the source exactly. The second conjunct is only a conditional restatement
+          for the exactly-one case already covered by the first; exactly-one appears solely as an antecedent, not as an asserted
+          cardinality requirement, and its attempt-level atomicity predicate has the same meaning for that selected checkpoint.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: a75fbcfe0b9c27be51391e4f9fb845fb60eead156fa7651cd666d70c27d459ab
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original guarantee: for any checkpoint identity actually selected by a new-owner
+          recovery attempt, regardless of selection cardinality, the authoritative publication record from which it was drawn
+          bound its content and frontier atomically as one identity, excluding intermediate or mixed pairs from different
+          publication states. The exactly-one-selection clause is a redundant conditional specialization already covered by
+          the general clause, and the boundary and predicate glosses do not add provenance, ordering, or cardinality requirements
+          beyond the source.'
+        differences: []
+  claim:L93_recovery_loads_selected_checkpoint_before_replay:
+    kind: claim
+    subject_id: L93_recovery_loads_selected_checkpoint_before_replay
+    subject_signature: a1c5c064410ea4d8ff83b71aac093fc7de5085e164f528473df5fd646768142b
+    roundtrip:
+      subject_signature: a1c5c064410ea4d8ff83b71aac093fc7de5085e164f528473df5fd646768142b
+      status: TRANSLATED
+      natural_language: 'Both of the following hold. (1) For every recovery attempt r and every revision s, if r is a new-owner
+        recovery attempt — that is, r is within the canonical new-owner recovery boundary for its target document, a classification
+        established by entering that boundary and persisting even if r stalls, crashes, or aborts before owner-generation
+        installation, recovery-head capture, or completion, with activity outside that boundary excluded — and s is the frontier
+        coordinate S of an authoritative checkpoint identity P=(content, S) actually selected by r, where P is present in
+        the authoritative published checkpoint set for r''s target document and r selected it, with this relation asserting
+        nothing about how many checkpoint identities r selected in total and nothing about installation or ordering, and r
+        progresses to completion, installation, or tail — that is, r proceeds past checkpoint selection to at least one of
+        completing recovery, installing a replay base, or applying a canonical tail revision, an attempt that only stalls,
+        crashes, or aborts after selection without doing any of those not satisfying this — then both: the replay base installed
+        by r is exactly the checkpoint identity P=(content, s) actually selected by r whose frontier coordinate is s, with
+        no concurrent pointer, cache, or later-checkpoint change substituting a different checkpoint for P as the installed
+        replay base; and P is completely installed before the first canonical tail revision is applied by r and before r''s
+        recovery is declared complete, with no canonical tail revision applied on a partially installed P and completion not
+        declared before P is completely installed. (2) For every recovery attempt r, if r is a new-owner recovery attempt
+        as defined above, and r selects exactly one checkpoint identity (content, S) as the attempt''s checkpoint — one single
+        identity, not zero, not two different identities, and not a mixture of identities, this classifying the selection
+        and its result only without asserting the selected identity''s provenance, installation, or ordering — and the checkpoint
+        identity selected by r is present in the authoritative published checkpoint set for r''s target document, not a stale-cache,
+        torn-record, or otherwise non-authoritative candidate, and r progresses to completion, installation, or tail as defined
+        above, then both: the replay base installed by r is exactly the checkpoint identity the same attempt selected, with
+        no concurrent pointer, cache, or later-checkpoint change substituting a different checkpoint for the selected one
+        as the installed replay base; and r''s selected checkpoint is completely installed before the first canonical tail
+        revision is applied by r and before r''s recovery is declared complete, with no canonical tail revision applied on
+        a partially installed selected checkpoint and completion not declared before the selected checkpoint is completely
+        installed.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: a1c5c064410ea4d8ff83b71aac093fc7de5085e164f528473df5fd646768142b
+        verdict: EQUIVALENT
+        reason: The formula's antecedent (new-owner attempt, actually selected authoritative checkpoint at frontier s, and
+          progress to completion, replay-base installation, or tail application) matches the source's conditional scope, including
+          the crash/abort exclusion encoded in the progress predicate. Its consequents require the installed replay base to
+          be exactly the selected checkpoint identity P=(content, s) with no concurrent substitution, and require that same
+          P to be completely installed before the first tail revision and before completion is declared, preserving identity,
+          provenance, ordering, and trigger boundaries without added requirements.
+        differences: []
+      strengthening:
+        subject_signature: a1c5c064410ea4d8ff83b71aac093fc7de5085e164f528473df5fd646768142b
+        verdict: EQUIVALENT
+        reason: The formula conditions both guarantees on a new-owner attempt that selected an authoritative checkpoint and
+          progressed to completion, replay-base installation, or tail application, exactly matching the source trigger and
+          the crash/abort-without-progress exclusion. Its consequents require the installed replay base to be the full selected
+          identity P=(content,S), with no substitution by concurrent pointer, cache, or later-checkpoint changes, and require
+          P to be completely installed before the first tail revision and before completion is declared. The exactly-one and
+          authoritative-published predicates appear only as additional antecedents in a redundant second implication already
+          covered by the frontier-indexed first implication, so they add no extra requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: a1c5c064410ea4d8ff83b71aac093fc7de5085e164f528473df5fd646768142b
+        verdict: EQUIVALENT
+        reason: The rendering preserves the new-owner scope, the authoritative selected checkpoint identity P=(content,S),
+          the progress trigger (completion, replay-base installation, or canonical tail application), the exact installed-base
+          identity with no pointer/cache/later-checkpoint substitution, complete installation of P before the first tail revision
+          and before completion is declared, and the crash/abort-without-progress exclusion. The exactly-one clause is subsumed
+          by the universal selected-checkpoint clause and adds no distinct obligation.
+        differences: []
+  claim:L174_recovery_inputs_and_state_are_document_bound:
+    kind: claim
+    subject_id: L174_recovery_inputs_and_state_are_document_bound
+    subject_signature: 25907c7056a40fcb258f6f9e1a0326a027f64f54998cd065e3c4463bf4aa8263
+    roundtrip:
+      subject_signature: 25907c7056a40fcb258f6f9e1a0326a027f64f54998cd065e3c4463bf4aa8263
+      status: TRANSLATED
+      natural_language: 'For every recovery attempt r, all three of the following hold conjunctively. (1) If r is a recovery_document_scope_attempt
+        — that is, a new-owner recovery targeting its document across the entire source-covered recovery lifecycle, beginning
+        before the first authoritative owner context, recovery-head, checkpoint, tail, metadata-reconstruction, runtime-installation,
+        or resumed-service input is selected, captured, consumed, constructed, installed, or used, with stalled, crashed,
+        and aborted prefixes included and no source-covered stage of r outside this applicability boundary merely because
+        a later recovery phase has not yet been reached — then, letting d be the target document identity bound to r, recovery_sources_preserve_document_scope(d,
+        r) holds: the authoritative ownership generation/current-epoch context actually used for r, the recovery_head actually
+        captured for r, the authoritative checkpoint actually selected for r, every accepted_change_log entry actually replayed
+        by r, and the recovered_owner_runtime_state actually installed by r preserve d as the same document identity; that
+        same document binding continues when those authoritative objects are consumed during metadata reconstruction, runtime
+        installation, or service resumption; an extensionally equal authoritative object from another document cannot substitute
+        for d in any of those canonical roles; candidate heads, checkpoints, or log entries merely examined but not captured,
+        selected, or replayed do not acquire an independent provenance obligation from this relation; and this relation imposes
+        no progress or existence requirement on later recovery stages and adds no separate provenance obligation for intermediate
+        derived reconstruction states before installation. (2) If r is a new_owner_recovery_attempt — that is, r is within
+        the canonical new-owner recovery boundary for its target document, a classification established by entering that recovery
+        boundary and not dependent on successful progress, so that r remains a new-owner recovery attempt if it stalls, crashes,
+        or aborts before owner-generation installation, recovery-head capture, or completion, while recovery or reconstruction
+        activity outside the canonical new-owner recovery boundary is excluded — then recovery_inputs_and_installed_ot_preserve_target_document_scope(r)
+        holds: whenever r has a captured recovery_head, a selected authoritative checkpoint, canonical accepted-history tail
+        entries it replays, or an installed ot_owner_memory, each of those is document-scoped to r''s own target document,
+        and an authoritative object from a different document cannot satisfy any of those roles for r merely because its frontier,
+        payload, logical state, or reconstructed metadata is extensionally equal to the target document''s; this covers exactly
+        the checkpoint, tail, recovery_head, and installed ot_owner_memory roles and imposes no requirement that any of those
+        stages occur. (3) If r is a recovery_document_scope_attempt, as defined in (1), then, letting d be the target document
+        identity bound to r, recovery_inputs_states_and_resumed_context_preserve_document_scope(d, r) holds: for r targeting
+        d, the document-scope binding holds across the full scope of r''s recovery lifecycle, such that every authoritative
+        owner/epoch context of r, and — whenever selected, captured, consumed, constructed, installed, or used — the recovery_head,
+        the checkpoint, the canonical accepted_change_log tail entries (bound under each of those modes, not only when replayed),
+        the rebuilt logical/OT runtime state (including intermediate derived reconstruction states, bound from construction
+        onward and not only once installed), the installed recovered_owner_runtime_state, and the resumed owner context (bound
+        as itself a document-scoped entity whenever service resumes under it) remain document-scoped to that same d; this
+        obligation applies to every recovery input, context, or state of r that actually exists at any stage of the attempt,
+        even if the attempt later stalls, crashes, or aborts before or after recovery_head capture; an authoritative object
+        or owner context from another document cannot satisfy the recovery merely because its frontier, payload, logical state,
+        or reconstructed metadata is extensionally equal to d''s; and it imposes no requirement that any later recovery stage
+        occur or that recovery complete.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 25907c7056a40fcb258f6f9e1a0326a027f64f54998cd065e3c4463bf4aa8263
+        verdict: EQUIVALENT
+        reason: The full-scope conjunct covers every authoritative owner/epoch context and, under selected, captured, consumed,
+          constructed, installed, or used modes, the recovery_head, checkpoint, canonical tail entries, rebuilt logical/OT
+          state including intermediate construction states, installed recovered_owner_runtime_state, and resumed owner context,
+          all bound to the attempt's target document, forbids extensional substitution from another document, applies to actually
+          existing inputs in stalled, crashed, or aborted attempts including before head capture, and imposes no completion
+          requirement. The other conjuncts are redundant subsets adding no requirement outside the source.
+        differences: []
+      strengthening:
+        subject_signature: 25907c7056a40fcb258f6f9e1a0326a027f64f54998cd065e3c4463bf4aa8263
+        verdict: EQUIVALENT
+        reason: The comprehensive third conjunct covers every source-listed owner/epoch context, recovery_head, checkpoint,
+          canonical tail entries, rebuilt logical/OT runtime state, installed recovered_owner_runtime_state, and resumed owner
+          context under the source's selected/captured/consumed/constructed/installed/used modes, for inputs that actually
+          exist in stalled, crashed, or aborted attempts, with no requirement that later stages occur or recovery complete;
+          the other two conjuncts cover only narrower subsets of the same roles and modes, adding nothing beyond the source.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 25907c7056a40fcb258f6f9e1a0326a027f64f54998cd065e3c4463bf4aa8263
+        verdict: EQUIVALENT
+        reason: 'The conjunction preserves the source: clause (3) restates the full binding for every authoritative owner/epoch
+          context and, under selected/captured/consumed/constructed/installed/used modes, the recovery_head, checkpoint, canonical
+          tail entries, rebuilt logical/OT runtime state including intermediates, installed recovered_owner_runtime_state,
+          and resumed owner context, scoped to the same target document D, barring substitution by extensionally equal objects
+          from another document, applying to actually existing inputs/states even on stall/crash/abort before or after head
+          capture, with no requirement that later stages occur or recovery complete. Clauses (1) and (2) are narrower sub-relations
+          entailed by that coverage and add no obligation beyond the source.'
+        differences: []
+  claim:L129_client_canonical_frontier_is_preserved_by_visible_transitions:
+    kind: claim
+    subject_id: L129_client_canonical_frontier_is_preserved_by_visible_transitions
+    subject_signature: 3c36f570914f2837ac6b2af4dc59c24320c3432ba46569653bb856a2b41c92c7
+    roundtrip:
+      subject_signature: 3c36f570914f2837ac6b2af4dc59c24320c3432ba46569653bb856a2b41c92c7
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following two statements holds. (1) For all client states e and l: if l is
+        reachable after e by one or more subsequent user-visible transitions, where each such transition is capable of mutating,
+        restoring, replacing, switching, or publishing client_document_id, client_local_document, or last_applied_revision
+        (and a path step that cannot touch any visible tuple coordinate does not by itself constitute this reachability relation);
+        and e is a user-visible canonical state, meaning e is currently user-visible at the canonical client observation boundary
+        and represents one document through its visible canonical tuple, regardless of whether it became visible by explicit
+        publication, initialization, restoration, view activation, or an in-place visible tuple replacement, excluding user-visible
+        states that represent no document and private or intermediate resynchronization candidates that have not become user-visible,
+        and without excluding a user-visible historical-version or rollback mode; and for e, the exact client_document_id
+        coordinate stored in e equals the independently represented document for e, and e''s canonical content matches exactly
+        the deterministic replay of that represented document through e''s visible frontier (its last_applied_revision); and
+        l is also a user-visible canonical state in the same sense; then for l, the exact client_document_id coordinate stored
+        in l equals the independently represented document for l, and l''s canonical content matches exactly the deterministic
+        replay of that represented document for l through l''s visible frontier (its last_applied_revision). The represented
+        document for a state is an independent contract reference coordinate, not derived from client_document_id, client_local_document,
+        last_applied_revision, or from satisfaction of frontier coherence. (2) For all client states s: if s is a user-visible
+        canonical state in the sense above, then any client_resync_candidate associated with s is private construction state
+        outside the user-visible observer boundary: it is not part of s''s user-visible canonical tuple, contributes nothing
+        to s''s client_document_id, client_local_document, or last_applied_revision, and can affect the user-visible state
+        only through an atomic publication that creates a new user-visible state.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 3c36f570914f2837ac6b2af4dc59c24320c3432ba46569653bb856a2b41c92c7
+        verdict: EQUIVALENT
+        reason: The formula's coherence predicate (client_document_id equals the state's represented document and canonical_content_matches
+          the deterministic replay of that document through visible_frontier/last_applied_revision) is required for the initial
+          visible state and re-required for every later visible state reachable via the specified tuple-mutating/restoring/replacing/switching/publishing
+          transitions, regardless of whether the frontier changes, and the separate universal conjunct keeps client_resync_candidate
+          outside the visible tuple, while exact-replay content excludes speculative raw edits from client_local_document.
+          No source requirement is omitted or added.
+        differences: []
+      strengthening:
+        subject_signature: 3c36f570914f2837ac6b2af4dc59c24320c3432ba46569653bb856a2b41c92c7
+        verdict: EQUIVALENT
+        reason: 'The formula matches the source scope and guarantee: it requires coherence (identity equals the represented
+          document and canonical content exactly replays that document through the visible frontier) for the starting user-visible
+          state, preserves the same coherence for every later user-visible state reachable via visible-tuple transitions regardless
+          of frontier change, and separately requires the resync candidate to remain outside the visible tuple for user-visible
+          states. No requirement is added, omitted, or materially altered.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 3c36f570914f2837ac6b2af4dc59c24320c3432ba46569653bb856a2b41c92c7
+        verdict: EQUIVALENT
+        reason: The rendering faithfully re-expresses the source. Clause (1) restates the transition-preservation requirement
+          as reachability over one or more qualifying transitions, with coherence defined as the tuple's identity, materialized
+          content, and frontier all anchored to one independent canonical basis (no cross-basis mixing), which captures the
+          enumerated operation classes and frontier-unchanged transitions. Its applicability boundary (visible canonical states;
+          excluding document-less states and non-visible resync candidates; not excluding historical/rollback modes or particular
+          ways of becoming visible) matches the source's "any user-visible client state for document D". Clause (2) restates
+          the resync-candidate privacy boundary with publication as the only ingress channel. The speculative-edits exclusion
+          is encoded in the exact-replay coherence conjunct. No requirement is added or omitted in either direction.
+        differences: []
+  claim:L28_authoritative_epoch_never_regresses_or_reuses:
+    kind: claim
+    subject_id: L28_authoritative_epoch_never_regresses_or_reuses
+    subject_signature: 3b7c9b58cbf5768b23885cb1ee3473fc677fea30326adcc2fb7fc27d7a0b380a
+    roundtrip:
+      subject_signature: 3b7c9b58cbf5768b23885cb1ee3473fc677fea30326adcc2fb7fc27d7a0b380a
+      status: TRANSLATED
+      natural_language: 'All of the following hold. First, for every protocol transition t and every document d, if t is an
+        authoritative lifecycle transition for d — that is, an authoritative recovery, restart, delayed metadata publication,
+        ownership handoff, or other authoritative transition in d''s lifecycle, as opposed to a client-side or speculative
+        action — and t executes after an authoritative epoch value for d has been superseded by a strictly greater epoch,
+        so that d''s epoch history already contains a supersession event when t occurs, then across t, d''s document_current_epoch,
+        the authoritative persisted epoch identifying the current fenced document owner generation for d, never decreases
+        and no superseded epoch value for d is restored as current: t leaves the current epoch at or above its prior value
+        and never makes a previously superseded value authoritative again. Second, for every authoritative state before, every
+        authoritative state after, and every document d, if after is the immediate successor of before under one committed
+        authoritative protocol transition, with that transition''s full authoritative effect separating the two states and
+        no intermediate authoritative state between them (aborted, rolled-back, or never-committed work creating no step and
+        no successor authoritative state), and the step from before to after is the state-level effect of an authoritative
+        lifecycle transition for d, and by the time of that step an authoritative epoch value for d has already been superseded
+        by a strictly greater epoch, so the step occurs in the post-supersession regime, then both of the following hold:
+        (a) if in after, d''s current document_current_epoch is an epoch value that was superseded by a strictly greater epoch,
+        regardless of which owner generation is paired with it in after, then in before, d''s current document_current_epoch
+        was also an epoch value that was superseded by a strictly greater epoch; and (b) it is not the case that across the
+        step from before to after, d''s document_current_epoch decreases, that is, it is not the case that the authoritative
+        current epoch of d in after is strictly less than the authoritative current epoch of d in before.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 3b7c9b58cbf5768b23885cb1ee3473fc677fea30326adcc2fb7fc27d7a0b380a
+        verdict: EQUIVALENT
+        reason: The transition-level conjunct directly encodes the source guarantee under the same post-supersession guard,
+          and the state-step conjuncts faithfully decompose it into no epoch decrease and no newly restored superseded value,
+          with no dropped guard or added requirement.
+        differences: []
+      strengthening:
+        subject_signature: 3b7c9b58cbf5768b23885cb1ee3473fc677fea30326adcc2fb7fc27d7a0b380a
+        verdict: EQUIVALENT
+        reason: The transition-level clause directly encodes the post-supersession guarantee for authoritative lifecycle transitions,
+          and the step-level clauses restate the same never-decrease and never-restore bounds over immediate authoritative
+          successors under the same lifecycle and post-supersession guards, without expanding scope or adding a distinct requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 3b7c9b58cbf5768b23885cb1ee3473fc677fea30326adcc2fb7fc27d7a0b380a
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the same post-supersession precondition, the same per-document authoritative epoch
+          coordinate, and both prohibitions over authoritative lifecycle transitions: the epoch never decreases and no superseded
+          value is restored as current. The state-step clause restates those same guarantees without adding or removing requirements.'
+        differences: []
+  claim:L39_recovered_owner_resumes_at_head_plus_one:
+    kind: claim
+    subject_id: L39_recovered_owner_resumes_at_head_plus_one
+    subject_signature: d635cd43a5caf1975fd7f4d39dee55e7fb2ff6ff27f680d945aa29f4caf2463b
+    roundtrip:
+      subject_signature: d635cd43a5caf1975fd7f4d39dee55e7fb2ff6ff27f680d945aa29f4caf2463b
+      status: TRANSLATED
+      natural_language: 'Both of the following hold. (1) For every recovery attempt r and every revision h, if r is a new-owner
+        recovery attempt (that is, r is within the canonical new-owner recovery boundary for its target document, a classification
+        established by entering that boundary and not dependent on successful progress), r has completed and installed its
+        recovered owner state, and h is the recovery head captured by r at its recovery-head capture event (the authoritative
+        frontier value r read and bound as its recovery_head), then both: r''s recovered local head is initialized, as part
+        of r''s reconstruction completion, to h, with the recovered owner''s local head value being h before the recovery
+        is considered complete; and there exists a revision v such that h is the immediate predecessor of v in the document''s
+        canonical accepted-revision numbering (v is the next revision position after h, no canonical revision lies strictly
+        between them, and h is exactly one less than v) and v is r''s next candidate revision established by its reconstruction
+        initialization (the first revision the recovered owner may next assign to a candidate canonical change). (2) For every
+        recovery attempt r and every revision h, if r is a new-owner recovery attempt as above, the recovered owner established
+        by r resumes canonical acceptance service after r''s reconstruction (that owner performs or is enabled to perform
+        canonical acceptance on the basis of r''s recovered state), and h is the recovery head captured by r at its recovery-head
+        capture event as above, then both: r''s recovered local head is initialized, as part of r''s reconstruction completion,
+        to h, with the recovered owner''s local head value being h before the recovery is considered complete; and there exists
+        a revision v such that h is the immediate predecessor of v in the document''s canonical accepted-revision numbering
+        as above and v is r''s next candidate revision established by its reconstruction initialization as above.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: d635cd43a5caf1975fd7f4d39dee55e7fb2ff6ff27f680d945aa29f4caf2463b
+        verdict: EQUIVALENT
+        reason: 'Both source requirements are preserved: a completed new-owner recovery must initialize its recovered local
+          head to the captured head H and its next candidate revision to the unique v whose immediate predecessor is H (exactly
+          H+1), with the before-completion timing carried by the initialization predicate meaning, and a recovery whose owner
+          resumes acceptance is subject to the same initialization requirement for the same captured H.'
+        differences: []
+      strengthening:
+        subject_signature: d635cd43a5caf1975fd7f4d39dee55e7fb2ff6ff27f680d945aa29f4caf2463b
+        verdict: EQUIVALENT
+        reason: 'The formula covers exactly the source guarantees: a completed new-owner recovery that captured head h must
+          initialize its local head to h and its next candidate to the immediate successor of h (i.e. h+1), and a resuming
+          recovered owner is subject to the same initialization requirement, matching the source''s resumption-only-after-initialization
+          clause. No scope, cardinality, identity, or temporal condition is added or omitted.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: d635cd43a5caf1975fd7f4d39dee55e7fb2ff6ff27f680d945aa29f4caf2463b
+        verdict: EQUIVALENT
+        reason: The rendering quantifies over the same new-owner recoveries and the authoritative head captured for that recovery,
+          requires the same pre-completion initialization of the recovered local head to h and of the next candidate revision
+          to h's immediate successor (h+1), and preserves that any later resumption of acceptance occurs only after that initialization.
+          No requirement is added or omitted.
+        differences: []
