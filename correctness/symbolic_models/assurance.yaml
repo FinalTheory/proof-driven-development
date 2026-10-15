@@ -7663,3 +7663,435 @@ records:
           appends, and the denial of authority from superseded or other-document generations via copying, substitution, or
           scalar collision, without collapsing distinct coordinates or adding a stronger requirement.'
         differences: []
+  claim:L101_client_completes_catchup_through_response_head:
+    kind: claim
+    subject_id: L101_client_completes_catchup_through_response_head
+    subject_signature: 2c42c00f1012889e4c8ec30ae573877dc38d7b89659a933e3345cc793f9bfe9d
+    roundtrip:
+      subject_signature: 2c42c00f1012889e4c8ec30ae573877dc38d7b89659a933e3345cc793f9bfe9d
+      status: TRANSLATED
+      natural_language: 'All of the following hold conjunctively. (1) For every catch-up response r, if the client catch-up
+        attempt associated with r is considered complete and r is a retained-delta-mode catch-up response (catch-up selected
+        the retained canonical revision range for r, and r is to be constructed by returning canonical accepted changes from
+        that range rather than by snapshot replacement), then the client has consumed the entire canonical representation
+        of delta-mode response r: it has applied every returned revision L+1..H of r, from r''s client frontier L through
+        r''s captured head H. (2) For every catch-up response r, if the client catch-up attempt associated with r is considered
+        complete and r is a snapshot-replacement-mode catch-up response (catch-up selected a checkpoint for r and r is to
+        be constructed by snapshot replacement rather than by delta/range application), then the client has consumed the entire
+        canonical representation of snapshot-mode response r: it has installed r''s selected checkpoint (content, S) and applied
+        every returned tail revision S+1..H, through r''s captured head H. (3) For every catch-up response r and every revision
+        h, if the client catch-up attempt associated with r is considered complete and h is the authoritative response head
+        captured for response r (this relation names r''s head only), then h is the client''s user-visible last_applied_revision
+        at the moment the catch-up attempt for r completes, where last_applied_revision is the highest contiguous canonical
+        revision already applied by a client.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 2c42c00f1012889e4c8ec30ae573877dc38d7b89659a933e3345cc793f9bfe9d
+        verdict: EQUIVALENT
+        reason: 'The formula preserves the necessity direction of ''only after'': completion plus delta mode requires entire
+          delta consumption, completion plus snapshot mode requires checkpoint installation and entire tail consumption, and
+          completion with captured head h requires the visible last_applied_revision at completion to equal h. No requirement
+          is added, dropped, or collapsed beyond the supplied predicate meanings.'
+        differences: []
+      strengthening:
+        subject_signature: 2c42c00f1012889e4c8ec30ae573877dc38d7b89659a933e3345cc793f9bfe9d
+        verdict: EQUIVALENT
+        reason: 'The formula exactly encodes the ''only after'' necessity: completion in delta mode implies consuming all
+          revisions L+1..H, completion in snapshot mode implies installing checkpoint S and applying all tail revisions S+1..H,
+          and completion with authoritative head H implies last_applied_revision = H at completion, with no converse, extra
+          guard, or stronger scope added.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 2c42c00f1012889e4c8ec30ae573877dc38d7b89659a933e3345cc793f9bfe9d
+        verdict: EQUIVALENT
+        reason: The rendering preserves the necessary-condition direction (completion implies full consumption), both modes
+          (delta applying L+1..H and snapshot installing checkpoint S then applying S+1..H through captured head H), and the
+          completion equality last_applied_revision = H, with no added or omitted requirement.
+        differences: []
+  claim:L121_delta_resync_candidate_starts_from_canonical_client_base:
+    kind: claim
+    subject_id: L121_delta_resync_candidate_starts_from_canonical_client_base
+    subject_signature: bb4f056dd2ebd234036b93e63e7b1da9bc653fca7d3f053442e66ef581cec9c1
+    roundtrip:
+      subject_signature: bb4f056dd2ebd234036b93e63e7b1da9bc653fca7d3f053442e66ef581cec9c1
+      status: TRANSLATED
+      natural_language: 'For every catch-up response r and every revision l, if r is a retained-delta-mode catch-up response
+        and l is the user-visible last_applied_revision of the client that requested r at the start of r''s catch-up attempt
+        — that is, the given client frontier L from which r''s missing range is computed — then both of the following hold:
+        r''s private resync candidate canonical document/frontier pair has been initialized, and r''s private resync candidate
+        canonical document/frontier pair was initialized from the same reconnect-start client document/frontier pair at L,
+        either by exact copy or by a deterministic reconstruction equal to that pair, before any returned canonical revision
+        greater than L is applied, with no stale or private scratch content substituted, no document cross-bound from another
+        client state to frontier L, and neither member of the reconnect-start pair changed before the first delta is applied.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: bb4f056dd2ebd234036b93e63e7b1da9bc653fca7d3f053442e66ef581cec9c1
+        verdict: EQUIVALENT
+        reason: The formula's antecedent matches delta-mode selection with client frontier L, and its consequent requires
+          candidate initialization from the client base, whose predicate meaning covers initialization from the same reconnect-start
+          pair at L by exact copy or deterministic equal reconstruction, before any revision greater than L is applied, with
+          no stale/scratch substitution, cross-binding, or change to either pair member before the first delta, and without
+          requiring canonical replay equality.
+        differences: []
+      strengthening:
+        subject_signature: bb4f056dd2ebd234036b93e63e7b1da9bc653fca7d3f053442e66ef581cec9c1
+        verdict: EQUIVALENT
+        reason: The formula's delta-mode and client-frontier-at-L preconditions match the source scope, and the consequent's
+          client-base initialization predicate exactly encodes initialization from the same reconnect-start pair at L by copy
+          or equal deterministic reconstruction, before any revision greater than L is applied, with the prohibitions on stale/scratch
+          substitution, cross-binding, and pre-first-delta alteration; the added pair-initialized conjunct is implied by that
+          initialization and adds no independent requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: bb4f056dd2ebd234036b93e63e7b1da9bc653fca7d3f053442e66ef581cec9c1
+        verdict: EQUIVALENT
+        reason: The rendering preserves the delta-mode precondition, the L-anchored reconnect-start pair, initialization by
+          exact copy or equal deterministic reconstruction before any revision greater than L is applied, and the prohibitions
+          on stale/scratch substitution, cross-binding, and pre-first-delta alteration of either pair member, without adding
+          or omitting any guarantee.
+        differences: []
+  claim:L12_delta_catchup_reads_canonical_revision_range:
+    kind: claim
+    subject_id: L12_delta_catchup_reads_canonical_revision_range
+    subject_signature: af1fe2898e3d8909ca3476fabd7213edc7314ad8852de3e02fd8c021d2463a0d
+    roundtrip:
+      subject_signature: af1fe2898e3d8909ca3476fabd7213edc7314ad8852de3e02fd8c021d2463a0d
+      status: TRANSLATED
+      natural_language: 'For every catch-up response r, revision l, revision h, canonical accepted change a, and revision
+        v, all of the following hold. (1) If r is a retained-delta-mode catch-up response, l is the base frontier from which
+        r''s delta range is computed (the requesting client''s last_applied_revision at catch-up start), h is the authoritative
+        response head captured for r, v is the canonical revision assigned to a, and v lies in the delta range (l, h] (i.e.,
+        l < v and v <= h), then a is one of the changes returned in the delta portion of r. (2) If r is a retained-delta-mode
+        catch-up response, l is the base frontier from which r''s delta range is computed, h is the authoritative response
+        head captured for r, a is one of the changes returned in the delta portion of r, and v is the canonical revision assigned
+        to a, then v lies in the delta range (l, h] (i.e., l < v and v <= h). (3) For every r, l, and h, if r is a retained-delta-mode
+        catch-up response, l is the base frontier from which r''s delta range is computed, and h is the authoritative response
+        head captured for r, then within the delta returned by r for the range (l, h], no canonical accepted change appears
+        more than once and the returned changes are arranged in increasing revision order. (4) For every r, if r is a retained-delta-mode
+        catch-up response, then no speculative data appears anywhere in r''s returned delta portion: every returned payload
+        item is canonical accepted data, not an unaccepted, uncommitted, or locally speculative change.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: af1fe2898e3d8909ca3476fabd7213edc7314ad8852de3e02fd8c021d2463a0d
+        verdict: EQUIVALENT
+        reason: The formula encodes both directions of set membership for canonical accepted changes whose unique revision
+          lies in (l, h], guarded by delta mode, base frontier l, and head h, and separately asserts exactly-once/increasing-order
+          and freedom from speculative data under the same delta-mode conditions, matching the canonical statement without
+          added or omitted requirements.
+        differences: []
+      strengthening:
+        subject_signature: af1fe2898e3d8909ca3476fabd7213edc7314ad8852de3e02fd8c021d2463a0d
+        verdict: EQUIVALENT
+        reason: The formula captures every-and-only via the two implications between in-range canonical revision and delta
+          containment, adds exactly-once/increasing-order via the dedicated predicate for the same l,h, and no-speculative-data
+          for delta-mode responses, with matching base-frontier L, head H, and delta-mode guards and no extra scope or requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: af1fe2898e3d8909ca3476fabd7213edc7314ad8852de3e02fd8c021d2463a0d
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original exactly: (1) and (2) jointly encode every-and-only for revisions in
+          (l, h], equivalent to L+1..H, (3) encodes exactly-once and increasing revision order, and (4) encodes the no-speculative-data
+          requirement, all under the same retained-delta-mode precondition with the same frontier and authoritative head.'
+        differences: []
+  claim:L19_client_applies_only_contiguous_revisions:
+    kind: claim
+    subject_id: L19_client_applies_only_contiguous_revisions
+    subject_signature: 5572348bf62fc09bd6879d55e9972516beb6e8b120ad3323cf327144a95a285e
+    roundtrip:
+      subject_signature: 5572348bf62fc09bd6879d55e9972516beb6e8b120ad3323cf327144a95a285e
+      status: TRANSLATED
+      natural_language: 'For every client state s and every canonical revision r, all of the following hold. First, if in
+        client state s the client applies canonical revision r, then the visible frontier of s — the last canonical revision
+        applied by s — is the immediate predecessor of r in the document''s canonical accepted-revision numbering, meaning
+        r is the next revision position after that frontier, no canonical revision lies strictly between them, and the frontier
+        is exactly one less than r. Second, conversely, if the visible frontier of s is the immediate predecessor of r in
+        that sense, then in client state s the client applies canonical revision r. Third, if r is at or before the visible
+        frontier of s in the canonical revision order (r <= the frontier), then in client state s the client ignores the presented
+        canonical revision r as a duplicate at or below its frontier: r is not applied, and the presentation of r does not
+        change the client''s applied history or frontier. Fourth, if r is not at or before the visible frontier of s and the
+        visible frontier of s is not the immediate predecessor of r, then in client state s the presented canonical revision
+        r lies above the next contiguous revision the client can apply, so the client performs buffer_or_gap_recovery for
+        r: it buffers r or triggers recovery for the gap, rather than applying r out of order.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 5572348bf62fc09bd6879d55e9972516beb6e8b120ad3323cf327144a95a285e
+        verdict: EQUIVALENT
+        reason: 'The formula encodes exactly the formal intent: applying is biconditional with r being the immediate successor
+          of the visible frontier (last_applied_revision), revisions at or below the frontier are ignored, and revisions neither
+          at-or-below nor the immediate successor—i.e. above L+1—are buffered or gap-recovered, with no added or dropped conditions.'
+        differences: []
+      strengthening:
+        subject_signature: 5572348bf62fc09bd6879d55e9972516beb6e8b120ad3323cf327144a95a285e
+        verdict: EQUIVALENT
+        reason: 'The formula exactly partitions revisions relative to visible_frontier: application holds iff the frontier
+          is the immediate predecessor of r, revisions at or below the frontier are ignored, and revisions neither at/below
+          nor immediately after the frontier trigger buffer-or-gap-recovery, matching the statement and formal intent without
+          added scope or conditions.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 5572348bf62fc09bd6879d55e9972516beb6e8b120ad3323cf327144a95a285e
+        verdict: EQUIVALENT
+        reason: 'The rendering matches the formal intent in all three cases: application iff r is the immediate successor
+          of the last applied revision (r == L+1), ignoring with no application when r <= L, and buffer_or_gap_recovery when
+          r > L+1. The elaborations of immediate predecessor, duplicate ignoring, and not applying out of order restate the
+          arithmetic and the defined terms without adding or omitting a requirement.'
+        differences: []
+  claim:L32_catchup_selects_complete_mode_for_response_head:
+    kind: claim
+    subject_id: L32_catchup_selects_complete_mode_for_response_head
+    subject_signature: 660afab481b055b70b4c1c1d2617bf05292da3794634d56adb36d5cd5f0a25e3
+    roundtrip:
+      subject_signature: 660afab481b055b70b4c1c1d2617bf05292da3794634d56adb36d5cd5f0a25e3
+      status: TRANSLATED
+      natural_language: 'For every catch-up response r, all of the following hold conjunctively: (1) if the complete canonical
+        revision range L+1..H for r — from r''s client frontier L to r''s captured authoritative response head H — is retained
+        and readable in authoritative storage, i.e. every canonical accepted change in that range is available to be returned,
+        then r is a retained-delta-mode catch-up response, i.e. catch-up selected the retained canonical revision range for
+        r and r is to be constructed by returning canonical accepted changes from that range rather than by snapshot replacement;
+        (2) if r is a retained-delta-mode catch-up response, then the complete canonical revision range L+1..H for r is retained
+        and readable in authoritative storage as described above; (3) if the complete canonical revision range L+1..H for
+        r is not retained and readable in authoritative storage, then r is a snapshot-replacement-mode catch-up response,
+        i.e. catch-up selected a checkpoint for r and r is to be constructed by snapshot replacement rather than by delta/range
+        application, without this asserting which checkpoint was selected or what r returns; and (4) if r is a snapshot-replacement-mode
+        catch-up response, then the complete canonical revision range L+1..H for r is not retained and readable in authoritative
+        storage.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 660afab481b055b70b4c1c1d2617bf05292da3794634d56adb36d5cd5f0a25e3
+        verdict: EQUIVALENT
+        reason: The formula encodes delta mode iff the complete range L+1..H is retained and readable, and snapshot mode iff
+          it is not, which together capture both the 'exactly when' condition and the 'otherwise snapshot' branch with exhaustivity
+          and exclusivity following from the two biconditionals.
+        differences: []
+      strengthening:
+        subject_signature: 660afab481b055b70b4c1c1d2617bf05292da3794634d56adb36d5cd5f0a25e3
+        verdict: EQUIVALENT
+        reason: The formula encodes delta mode iff the complete L+1..H range is retained and readable, and snapshot mode iff
+          that condition fails, exactly matching the statement's 'exactly when ... otherwise' exclusive selection, with L
+          and H carried by the response's own frontier and head per the predicate meanings.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 660afab481b055b70b4c1c1d2617bf05292da3794634d56adb36d5cd5f0a25e3
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original biconditionals per catch-up response with its own frontier L and authoritative
+          head H: retained-delta mode holds exactly when the complete canonical range L+1..H is retained and readable, and
+          snapshot-replacement mode holds exactly when it is not. The mode glosses and the ''every canonical accepted change
+          available to be returned'' unpacking match the source terms without adding or omitting any requirement.'
+        differences: []
+  claim:L113_request_raw_edit_is_bound_to_authoring_frontier:
+    kind: claim
+    subject_id: L113_request_raw_edit_is_bound_to_authoring_frontier
+    subject_signature: e97c96187e1f9fd3d4d2c88d0ca2c74678b5858a9f1681e9cc0e6a0b4dc29963
+    roundtrip:
+      subject_signature: e97c96187e1f9fd3d4d2c88d0ca2c74678b5858a9f1681e9cc0e6a0b4dc29963
+      status: TRANSLATED
+      natural_language: 'For every request r, if r is request_ot_acceptance_eligible — that is, r is a submitted acceptance-capable
+        server-OT request lineage covered by request_authoring_frontier_binding, whose normal processing may invoke server-side
+        OT and whose successful OT result may become canonical acceptance, with normal retries remaining in this lineage even
+        when idempotency resolution bypasses a fresh OT invocation, whereas a request eligible only for an authoritative definitive-REJECTED
+        terminal decision with no canonical-acceptance-capable OT path is outside this predicate — then all of the following
+        hold: (1) there exists at least one client state s such that r was constructed from s as its authoring state; (2)
+        for every client state s from which r was authored, s is a published user-visible client state (private or intermediate
+        resynchronization candidates that have not been published are outside this condition, and a user-visible historical-version
+        or rollback mode is not excluded), the document identity carried by r equals the document identity represented by
+        s, the base revision carried by r equals the last canonical revision applied by s, the raw edit carried by r is the
+        edit authored against the canonical client content in source state s, and the semantic authoring tuple captured from
+        s is preserved through every request construction, serialization, dispatch, and normal-retry representation actually
+        reached by that request lineage, meaning the document identity remains the source document, the base revision remains
+        the source frontier, and the server-visible raw-edit semantics remain the edit authored against the source canonical
+        client content, with physical encoding allowed to change but no reached stage allowed to cross-bind the raw edit to
+        another document or frontier or substitute different raw-edit semantics, and this preservation imposes no progress
+        requirement, no client_change_id/logical-edit identity condition, and no client_canonical_frontier_coherence requirement
+        on s; and (3) for any client states s1 and s2 such that r was authored from both s1 and s2, s1 and s2 denote the same
+        semantic authoring tuple, namely they carry the same client_document_id, the same logical client_local_document content
+        used as the authoring base, and the same last_applied_revision frontier, where physical ClientState objects or encodings
+        may differ because equality here is semantic tuple equality, not object identity.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: e97c96187e1f9fd3d4d2c88d0ca2c74678b5858a9f1681e9cc0e6a0b4dc29963
+        verdict: EQUIVALENT
+        reason: The formula covers exactly the acceptance-eligible requests, requires an authored-from user-visible source
+          state, pins request document and base revision to that state's document and frontier, binds the raw edit to the
+          source canonical content, requires lifecycle preservation without substitution, and enforces a single semantic authoring
+          tuple across all authored-from states, while imposing no separate canonical-coherence obligation.
+        differences: []
+      strengthening:
+        subject_signature: e97c96187e1f9fd3d4d2c88d0ca2c74678b5858a9f1681e9cc0e6a0b4dc29963
+        verdict: EQUIVALENT
+        reason: The formula scopes to acceptance-eligible requests, requires a single semantic user-visible authoring tuple
+          matching document and frontier, binds the raw edit to that source content, and preserves the tuple through the request
+          lifecycle, without imposing the separately-proved coherence obligation.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: e97c96187e1f9fd3d4d2c88d0ca2c74678b5858a9f1681e9cc0e6a0b4dc29963
+        verdict: EQUIVALENT
+        reason: The rendering preserves the acceptance-capable OT scope, the existence and semantic uniqueness of one user-visible
+          authoring tuple with the same document D, authoring document content, and frontier F, the raw_edit's binding to
+          that base, and preservation through construction, serialization, dispatch, and retry without document/frontier/raw-edit
+          substitution, while leaving canonical frontier coherence as a separate obligation and adding no progress or identity
+          requirement.
+        differences: []
+  claim:L210_new_owner_recovery_boundary_is_attempt_scoped:
+    kind: claim
+    subject_id: L210_new_owner_recovery_boundary_is_attempt_scoped
+    subject_signature: 5ed817e8cf5df667d0ba67e81dd07dc461185abf16ce1d1a118952d490f181b4
+    roundtrip:
+      subject_signature: 5ed817e8cf5df667d0ba67e81dd07dc461185abf16ce1d1a118952d490f181b4
+      status: TRANSLATED
+      natural_language: 'For every recovery attempt r, both of the following hold. First, if r is a recovery or reconstruction
+        attempt whose role from its initiation is to establish or re-establish an authoritative owner generation for its target
+        document, including owner-identity change, cold takeover, warm-standby promotion, and same-owner restart or reacquisition,
+        then r is a new-owner recovery attempt, meaning r is within the canonical new-owner recovery boundary for its target
+        document. This classification for r is established by entering that recovery boundary and does not depend on successful
+        progress: r remains a new-owner recovery attempt if it stalls, crashes, or aborts before owner-generation installation,
+        recovery-head capture, or completion, and recovery or reconstruction activity outside the canonical new-owner recovery
+        boundary is excluded. The establishing-owner-generation classification likewise rests on r''s role from its initiation
+        and does not depend on r later reaching owner-generation installation, recovery-head capture, or completion, and reconstruction
+        activity that does not establish or re-establish authoritative ownership does not satisfy it. Second, if r both establishes
+        owner generation in that sense and reaches authoritative publication, meaning the point at which the owner generation
+        r establishes becomes authoritative or acceptance-eligible, then r''s authoritative or acceptance-eligible publication
+        is for a distinct fresh owner generation rather than a continuation of the superseded tenure, and is therefore subject
+        to the fresh epoch and owner-generation installation requirements for that new generation.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 5ed817e8cf5df667d0ba67e81dd07dc461185abf16ce1d1a118952d490f181b4
+        verdict: EQUIVALENT
+        reason: 'The formula captures both source requirements: every attempt whose role is to establish or re-establish an
+          authoritative owner generation is classified as a new-owner recovery attempt, with the predicate meanings preserving
+          initiation-based classification independent of stall, crash, or abort before installation, head capture, or completion;
+          and any such attempt reaching authoritative or acceptance-eligible publication is required to publish a distinct
+          fresh generation subject to fresh epoch and installation requirements. Non-establishing reconstruction is excluded
+          by the establishing predicate''s meaning, and no extra requirement is added.'
+        differences: []
+      strengthening:
+        subject_signature: 5ed817e8cf5df667d0ba67e81dd07dc461185abf16ce1d1a118952d490f181b4
+        verdict: EQUIVALENT
+        reason: 'The formula exactly encodes both source clauses: every attempt whose role is to establish or re-establish
+          an authoritative owner generation is classified as a new-owner recovery attempt, with the predicate meanings preserving
+          initiation-based classification independent of stall, crash, or abort and excluding non-establishing reconstruction;
+          and such an attempt that reaches authoritative or acceptance-eligible publication is required to have a fresh-generation
+          publication subject to the fresh epoch and installation requirements. No scope, guard, or requirement is added or
+          omitted.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 5ed817e8cf5df667d0ba67e81dd07dc461185abf16ce1d1a118952d490f181b4
+        verdict: EQUIVALENT
+        reason: The round-trip preserves the role-based, initiation-scoped classification independent of later progress or
+          failure, the listed attempt types, the exclusion of non-ownership-establishing reconstruction, and the consequence
+          that any authoritative or acceptance-eligible publication is for a distinct fresh generation subject to fresh epoch
+          and installation requirements. No requirement is omitted, added, or materially altered.
+        differences: []
+  claim:L178_non_append_lifecycle_preserves_authoritative_document_provenance:
+    kind: claim
+    subject_id: L178_non_append_lifecycle_preserves_authoritative_document_provenance
+    subject_signature: 5cf2ede83833d5aacf6bfd1298870699c874b17783c6c9db0ff16afb9a61b1e6
+    roundtrip:
+      subject_signature: 5cf2ede83833d5aacf6bfd1298870699c874b17783c6c9db0ff16afb9a61b1e6
+      status: TRANSLATED
+      natural_language: 'For every protocol transition t and every document d, if t represents an execution, including an
+        execution prefix, of a non-append authoritative snapshotting, checkpoint-replacement, cleanup, or compaction lifecycle
+        procedure targeting d — where d is the procedure''s intended target independently of the documents owning t''s actual
+        inputs or outputs, and this classification does not require correct provenance, successful completion, output publication,
+        or eventual progress, so stalled, crashed, and aborted executions remain included, while ordinary canonical appends
+        and recovery procedures as such are outside this condition — then the authoritative history lifecycle for t preserves
+        the document scope of d: every authoritative accepted-history or checkpoint input that actually semantically supplies
+        the transformation remains bound to d throughout its participation, and every durable authoritative history lifecycle
+        output actually installed or published by t remains bound to d. These are document-scoped semantic ownership/reference
+        bindings: relabeling an authoritative history or checkpoint belonging to another document does not satisfy the relation,
+        even when revision, payload, frontier, and replay-result values coincide. Physical content-addressed blobs, immutable
+        pages, or other bytes may be shared when the authoritative references remain bound to d. Merely inspecting and rejecting
+        an unrelated candidate does not make that candidate a semantic input. This preservation relation requires no input
+        or output stage to occur and imposes no completion, replay-equivalence, frontier, recovery-correctness, physical-retention,
+        or physical-object-identity requirement.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 5cf2ede83833d5aacf6bfd1298870699c874b17783c6c9db0ff16afb9a61b1e6
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over all non-append lifecycle transitions targeting D and requires exactly
+          that semantically supplying authoritative history/checkpoint inputs and actually installed or published authoritative
+          outputs remain document-bound to D, including against relabeling an extensionally equal history from another document,
+          while preserving the physical-sharing exclusion and adding no completion, replay, frontier, or recovery requirement.
+        differences: []
+      strengthening:
+        subject_signature: 5cf2ede83833d5aacf6bfd1298870699c874b17783c6c9db0ff16afb9a61b1e6
+        verdict: EQUIVALENT
+        reason: The formula quantifies over exactly the non-append lifecycle executions targeting d and requires precisely
+          that the authoritative history/checkpoint inputs that semantically supply the transformation and the durable authoritative_history_lifecycle_output
+          installed or published remain document-bound to d, preserving the anti-rebinding rule for extensionally equal histories
+          from another document and the physical-sharing exclusion, without adding existence, completion, replay, frontier,
+          or recovery requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 5cf2ede83833d5aacf6bfd1298870699c874b17783c6c9db0ff16afb9a61b1e6
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original scope, document binding, and exclusions: for every non-append snapshotting,
+          checkpoint-replacement, cleanup, or compaction procedure targeting D, the authoritative history/checkpoint inputs
+          that semantically supply it and any installed or published authoritative output remain document-bound to D, notwithstanding
+          extensional or value collisions with another document''s history, while physical byte sharing remains permitted
+          and no replay, frontier, recovery, completion, or progress guarantee is added.'
+        differences: []
+  claim:L181_non_append_lifecycle_preserves_authoritative_frontier:
+    kind: claim
+    subject_id: L181_non_append_lifecycle_preserves_authoritative_frontier
+    subject_signature: 312b202ed5e919834a57e0e16544867dba15b2f344bc340d7a345ff2c43e5eb4
+    roundtrip:
+      subject_signature: 312b202ed5e919834a57e0e16544867dba15b2f344bc340d7a345ff2c43e5eb4
+      status: TRANSLATED
+      natural_language: 'For all protocol transitions t, documents d, authoritative states pre and post, and revisions h,
+        if all of the following hold: t represents an execution, including an execution prefix, of a non-append authoritative
+        snapshotting, checkpoint-replacement, cleanup, or compaction lifecycle procedure targeting document d, where the target
+        is the procedure''s intended document independently of the documents owning its actual inputs or outputs, and where
+        ordinary canonical appends and recovery procedures as such are outside this classification; t completes, meaning its
+        snapshotting, checkpoint-replacement, cleanup, or compaction procedure runs to completion rather than stalling or
+        aborting, so t has a completed post-state; pre is the pre-state of t, namely the authoritative representation immediately
+        before t executes; post is the resulting post-state of t, namely the authoritative representation t installs or publishes
+        on completion; pre exposes the document frontier for d, meaning pre includes an authoritative state instance for document
+        d so that d''s document_latest_revision frontier coordinate, the authoritative persisted canonical revision frontier
+        for a document, is defined in pre; and in pre the authoritative representation preserves latest_revision exactly equal
+        to frontier h; then both of the following hold: post exposes the document frontier for d, meaning post includes an
+        authoritative state instance for document d so that d''s document_latest_revision frontier coordinate is defined in
+        post; and in post the authoritative representation preserves latest_revision exactly equal to the same frontier h.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 312b202ed5e919834a57e0e16544867dba15b2f344bc340d7a345ff2c43e5eb4
+        verdict: EQUIVALENT
+        reason: The formula scopes to non-append authoritative lifecycle transitions for document d that complete, binds pre/post
+          via the source/result predicates, requires the pre-state to expose d with frontier exactly h, and concludes the
+          post-state exposes d with frontier exactly h, matching the canonical preservation guarantee with no added or omitted
+          condition.
+        differences: []
+      strengthening:
+        subject_signature: 312b202ed5e919834a57e0e16544867dba15b2f344bc340d7a345ff2c43e5eb4
+        verdict: EQUIVALENT
+        reason: The formula applies exactly to non-append snapshotting, checkpoint-replacement, cleanup, or compaction transitions
+          for document d that complete, with identified pre- and post-states and the pre-state exposing d with frontier equal
+          to H, and concludes exactly that the post-state exposes d with frontier still equal to the same H, adding no extra
+          scope or guarantee and omitting none.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 312b202ed5e919834a57e0e16544867dba15b2f344bc340d7a345ff2c43e5eb4
+        verdict: EQUIVALENT
+        reason: The rendering preserves the original scope (completed authoritative non-append snapshotting, checkpoint-replacement,
+          cleanup, or compaction transitions), the precondition that the pre-state document_latest_revision equals H, and
+          the conclusion that the completed post-state has document_latest_revision equal to the same H for the same document;
+          the added definedness clauses for the frontier in pre and post are entailed by equality to H on each side, and no
+          requirement is omitted or added.
+        differences: []
