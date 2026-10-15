@@ -8528,3 +8528,354 @@ records:
           to h's immediate successor (h+1), and preserves that any later resumption of acceptance occurs only after that initialization.
           No requirement is added or omitted.
         differences: []
+  claim:L98_ot_receives_exact_request_and_canonical_context:
+    kind: claim
+    subject_id: L98_ot_receives_exact_request_and_canonical_context
+    subject_signature: c3191d2fb514c1282b33dcb43d7ecb26e811fea25394c433222975ea8a5785c2
+    roundtrip:
+      subject_signature: c3191d2fb514c1282b33dcb43d7ecb26e811fea25394c433222975ea8a5785c2
+      status: TRANSLATED
+      natural_language: 'Both of the following hold. First, for every OT invocation i, if the success of i is eligible for
+        canonical acceptance — that is, i is performed on a canonical-acceptance path for its submitted request, so a successful
+        OT result of i may be committed as a canonical acceptance, and not a speculative or dry-run evaluation or a path eligible
+        only for an authoritative definitive-REJECTED terminal decision — then there exists a request rq such that i is the
+        OT-engine invocation performed for submitted request rq, where this relation asserts only the pairing of i to the
+        request it processes and asserts nothing about what input the engine actually received for i. Second, for every OT
+        invocation i and every request rq, if i is success-eligible for canonical acceptance as above and i is performed for
+        rq, then all three of the following hold: (a) i consumes submitted request rq, meaning the transform input the engine
+        receives for i is exactly rq''s submitted raw_edit (the client-submitted edit before server-side transformation/rebase
+        against accepted document history) and rq''s submitted client base_revision, not a substituted edit, a substituted
+        base, or another request''s input; (b) i is an OT engine invocation, meaning invocation i supplies one raw_edit together
+        with a canonical committed prefix and a submitted client base revision to the OT engine; and (c) the document context
+        fed to i represents exactly one canonical committed prefix of the document through a definite revision frontier, in
+        that every change in the context belongs to that committed canonical prefix and no speculative, uncommitted, or mismatched-document
+        content is part of the context.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: c3191d2fb514c1282b33dcb43d7ecb26e811fea25394c433222975ea8a5785c2
+        verdict: EQUIVALENT
+        reason: The formula restricts to success-eligible invocations, pairs each with its submitted request, and requires
+          exact consumption of that request's raw_edit and base revision plus a context representing exactly one canonical
+          committed prefix through a definite frontier with no speculative, uncommitted, or mismatched content, matching the
+          source without added or omitted requirements.
+        differences: []
+      strengthening:
+        subject_signature: c3191d2fb514c1282b33dcb43d7ecb26e811fea25394c433222975ea8a5785c2
+        verdict: EQUIVALENT
+        reason: The formula guards both conjuncts with the same canonical-acceptance eligibility predicate, pairs each eligible
+          invocation with its submitted request, requires receipt of exactly that request's raw_edit and client base revision
+          via consumes_submitted_request, and requires context representing exactly one canonical committed prefix with no
+          speculative, uncommitted, or mismatched content. No source requirement is omitted and no material extra scope, cardinality,
+          or provenance requirement is added; the redundant ot_engine_invocation conjunct is entailed by the other predicates
+          and matches the source description.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: c3191d2fb514c1282b33dcb43d7ecb26e811fea25394c433222975ea8a5785c2
+        verdict: EQUIVALENT
+        reason: The rendering preserves the scope (OT invocations whose success is eligible for canonical acceptance, excluding
+          speculative/dry-run and reject-only paths), the exact-input requirement (the paired request's submitted raw_edit
+          and client base revision, with no substitution), and the context requirement (exactly one canonical committed prefix
+          through a definite revision frontier, with no speculative, uncommitted, or mismatched content). The performed-for
+          relation is used only as pairing, with the input guarantee stated explicitly, so no requirement is omitted or added.
+        differences: []
+  claim:L123_acceptance_payload_and_identity_share_submitted_request:
+    kind: claim
+    subject_id: L123_acceptance_payload_and_identity_share_submitted_request
+    subject_signature: 0b06f6da09d9332d80a23e6edfdba9745ca8c30b72a4e360f2f63a7ef2b99848
+    roundtrip:
+      subject_signature: 0b06f6da09d9332d80a23e6edfdba9745ca8c30b72a4e360f2f63a7ef2b99848
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following four statements holds. (1) For every canonical acceptance a, if
+        a is a canonical_acceptance_payload_record — that is, a is a canonical_accepted_change in authoritative accepted history,
+        for which successful OT provenance for its accepted payload is required — then there exist a request rq, an OT invocation
+        i, and an OT success result sr such that all of the following hold together: a was produced from submitted request
+        rq; i is the OT-engine invocation performed for submitted request rq (this pairing by itself asserting nothing about
+        what input the engine actually received); the success of i is eligible for canonical acceptance, meaning i is performed
+        on a canonical-acceptance path for its submitted request so that a successful OT result of i may be committed as a
+        canonical acceptance, and not a speculative or dry-run evaluation or a path eligible only for an authoritative definitive-REJECTED
+        terminal decision; i consumes submitted request rq, meaning the transform input the engine receives for i is exactly
+        rq''s submitted raw_edit and rq''s submitted client base_revision, not a substituted edit, a substituted base, or
+        another request''s input; sr is the successful OT result returned by i, meaning i completed with a successful transformed
+        change and sr is that exact output result; the successful output of i is committed as canonical acceptance a, meaning
+        a is the canonical_accepted_change created by committing i''s OT result and not a synthesized or separately produced
+        change; the OT success result sr bound to acceptance a matches the submitted input, meaning sr was produced for the
+        corresponding submitted raw_edit and base_revision; the document identity preserved on a equals the document identity
+        carried by rq; and the client_change_id preserved on a equals the client-supplied logical edit identity carried by
+        rq. (2) For every canonical acceptance a, OT invocation i, and request rq, if i consumes submitted request rq and
+        the successful output of i is committed as canonical acceptance a, then a was produced from submitted request rq.
+        (3) For every canonical acceptance a and requests rq1 and rq2, if a was produced from rq1 and a was also produced
+        from rq2, then rq1 and rq2 are the same request. (4) For every canonical acceptance a and request rq, if a was produced
+        from submitted request rq, then both the document identity preserved on a equals the document identity carried by
+        rq, and the client_change_id preserved on a equals the client-supplied logical edit identity carried by rq.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 0b06f6da09d9332d80a23e6edfdba9745ca8c30b72a4e360f2f63a7ef2b99848
+        verdict: EQUIVALENT
+        reason: The formula requires, for every canonical acceptance, a single submitted request whose raw_edit and base_revision
+          are consumed by the successful OT invocation committed as that acceptance, and whose document_id and client_change_id
+          exactly match the acceptance's persisted identity; the additional clauses enforce that same-request provenance and
+          forbid mixing payload and identity provenance across requests, matching the source.
+        differences: []
+      strengthening:
+        subject_signature: 0b06f6da09d9332d80a23e6edfdba9745ca8c30b72a4e360f2f63a7ef2b99848
+        verdict: EQUIVALENT
+        reason: The formula requires, for every canonical acceptance, a unique request rq such that an eligible successful
+          OT invocation performed for and consuming exactly rq's raw_edit and base_revision has its output committed as that
+          acceptance, with acceptance document and client_change_id equal to rq's; auxiliary conjuncts enforce that any consuming-and-committed
+          invocation yields that same rq and that identity matches any produced-from request, exactly encoding the single-request
+          and no-mixed-provenance requirements without extending scope or adding distinct obligations.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 0b06f6da09d9332d80a23e6edfdba9745ca8c30b72a4e360f2f63a7ef2b99848
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original guarantee: for each canonical acceptance there is a single submitted
+          request whose raw_edit and base_revision are consumed by the successful OT invocation committed as that acceptance,
+          and whose document_id and client_change_id are exactly those persisted for that acceptance; the auxiliary clauses
+          enforce the same single-source provenance and prohibit cross-request mixing without adding or omitting a requirement.'
+        differences: []
+  claim:L206_terminal_speculative_lifecycle_is_absorbing:
+    kind: claim
+    subject_id: L206_terminal_speculative_lifecycle_is_absorbing
+    subject_signature: b7a45757e6e10e91f6b41c183e561e43d6fd917f2f37ee8003e4c3ae75e1cfc0
+    roundtrip:
+      subject_signature: b7a45757e6e10e91f6b41c183e561e43d6fd917f2f37ee8003e4c3ae75e1cfc0
+      status: TRANSLATED
+      natural_language: The conjunction of all of the following holds. (1) For every client state s and every logical edit
+        identity e, if s is a reachable client state and e is classified in s as a terminalized normal speculative lifecycle,
+        then e is not active in s in client_pending_edits, e has no normal-lifecycle speculative representation retained in
+        s in client_speculative_overlays, and e has no normal-lifecycle speculative representation exposed in s in client_visible_speculative_overlays.
+        (2) For every client states earlier and later and every logical edit identity e, if earlier is a reachable client
+        state, later is a reachable client state, later is reachable after earlier by one or more client-protocol transitions
+        for the continuing client lifecycle/history (including restore/reactivation, view switching, bookkeeping, reconnect/resync,
+        or publication transitions), and e is classified in earlier as a terminalized normal speculative lifecycle, then e
+        is not active in later in client_pending_edits, e has no normal-lifecycle speculative representation retained in later
+        in client_speculative_overlays, and e has no normal-lifecycle speculative representation exposed in later in client_visible_speculative_overlays.
+        (3) For every client state s and every logical edit identity e, if s results from an authoritative same-full-identity
+        reconciliation that actually ends e's normal speculative lifecycle, regardless of whether a foreground publication
+        occurred, then e is classified in s as a terminalized normal speculative lifecycle. (4) For every protocol transition
+        t and every logical edit identity e, if t is a protocol transition occurring on a reachable execution of the normal
+        client speculative lifecycle and t uses an explicit terminal disposition to terminally retire the normal speculative
+        lifecycle of e, at the full generality of an explicit terminal disposition including a non_acceptance_terminal_disposition
+        and any other explicit terminal disposition, then t establishes that e's normal speculative lifecycle is terminalized
+        in the resulting reachable client state and is no longer active in pending, retained speculative, or visible speculative
+        state.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: b7a45757e6e10e91f6b41c183e561e43d6fd917f2f37ee8003e4c3ae75e1cfc0
+        verdict: EQUIVALENT
+        reason: The formula covers both entry triggers (authoritative reconciliation and explicit terminal disposition), requires
+          terminalized identities to be absent from pending, retained, and visible speculative sets in the terminalized state,
+          and extends that absence to every later reachable state reached by any subsequent transition, while not forbidding
+          archival representation outside those sets.
+        differences: []
+      strengthening:
+        subject_signature: b7a45757e6e10e91f6b41c183e561e43d6fd917f2f37ee8003e4c3ae75e1cfc0
+        verdict: EQUIVALENT
+        reason: The formula captures both entry routes (authoritative reconciliation and any explicit terminal disposition)
+          into the terminalized classification, and enforces both same-state and all later-reachable-state exclusion of the
+          same full logical-edit identity from pending, retained speculative, and visible speculative sets, without requiring
+          a persisted tombstone or archival deletion.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: b7a45757e6e10e91f6b41c183e561e43d6fd917f2f37ee8003e4c3ae75e1cfc0
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the absorbing invariant over all reachable states: both terminalization triggers
+          (authoritative reconciliation and explicit terminal disposition) classify the full identity as terminalized, terminalized
+          identities are excluded contemporaneously and in all later reachable states from pending, retained speculative,
+          and visible speculative sets across restore, switching, reactivation, bookkeeping, reconnect/resync, publication,
+          and other transitions, while archival representation outside those sets is not forbidden.'
+        differences: []
+  claim:L130_reconnect_start_is_bound_to_visible_client_tuple:
+    kind: claim
+    subject_id: L130_reconnect_start_is_bound_to_visible_client_tuple
+    subject_signature: 87414cc43f7df201492d95a93b3b7231825b7a56f2c5fc268ec56a08f83284dc
+    roundtrip:
+      subject_signature: 87414cc43f7df201492d95a93b3b7231825b7a56f2c5fc268ec56a08f83284dc
+      status: TRANSLATED
+      natural_language: 'For every catch-up attempt c and every client state s, if c is a normal foreground reconnect/catch-up
+        attempt — an attempt by a normally participating client that proceeds on the foreground, user-visible-document-bound
+        path for one document, which background or non-visible per-document synchronization attempts do not satisfy — and
+        c was initiated from user-visible client state s, meaning s was the current user-visible client state at the moment
+        of c''s initiation, then all of the following hold: (1) the semantic document represented by s, as an independent
+        contract reference coordinate not derived from client_document_id, client_local_document, last_applied_revision, or
+        satisfaction of client_canonical_frontier_coherence, equals the document that c is for, namely the document whose
+        user-visible canonical tuple c starts from and whose canonical state c seeks to bring the client to; (2) c''s reconnect-start
+        base was captured from the user-visible canonical tuple of s, or from one exact private copy of that tuple, where
+        that base consists of its document identity, canonical client document, and last_applied_revision, and no start coordinate
+        was independently reread, substituted, synthesized, or cross-bound across a visible-state transition, and no private
+        resync-candidate or request-construction scratch state replaced that visible tuple as c''s starting base; (3) the
+        last_applied_revision coordinate captured in c''s reconnect-start base, the frontier from which c''s catch-up proceeds,
+        equals the visible frontier of s, namely the last canonical revision applied by s, where last_applied_revision means
+        the highest contiguous canonical revision already applied by a client; and (4) s is a user-visible canonical state,
+        meaning s is currently user-visible at the canonical client observation boundary and represents one document through
+        its visible canonical tuple, regardless of whether it became visible by explicit publication, initialization, restoration,
+        view activation, or an in-place visible tuple replacement, a predicate that excludes user-visible states representing
+        no document and private or intermediate resynchronization candidates that have not become user-visible, but does not
+        exclude a user-visible historical-version or rollback mode. In addition, for every catch-up attempt c, if c is a normal
+        foreground reconnect/catch-up attempt as defined above, then there exists a client state s such that c was initiated
+        from s in the sense that s was the current user-visible client state at the moment of c''s initiation.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 87414cc43f7df201492d95a93b3b7231825b7a56f2c5fc268ec56a08f83284dc
+        verdict: EQUIVALENT
+        reason: The formula requires every normal foreground attempt to have an initiation state, and for any such state requires
+          it to be user-visible canonical, equates its represented document and visible frontier with the attempt's document
+          and captured last_applied_revision, and requires capture of all three start coordinates from that same visible tuple
+          or one exact private copy with no rereading, substitution, synthesis, or cross-binding; background/non-visible attempts
+          are excluded by the attempt predicate, matching the source scope.
+        differences: []
+      strengthening:
+        subject_signature: 87414cc43f7df201492d95a93b3b7231825b7a56f2c5fc268ec56a08f83284dc
+        verdict: EQUIVALENT
+        reason: The formula scopes both conjuncts to normal foreground reconnect attempts, requires an initiating user-visible
+          state, binds that state's represented document and visible frontier to the attempt document and captured last_applied_revision,
+          and via the captured-from predicate covers capture from that tuple or an exact private copy with no independent
+          reread, substitution, synthesis, or cross-binding, matching the source boundary and exclusions without added or
+          omitted requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 87414cc43f7df201492d95a93b3b7231825b7a56f2c5fc268ec56a08f83284dc
+        verdict: EQUIVALENT
+        reason: The rendering preserves the original scope, initiation-time visibility condition, the three captured coordinates
+          and their provenance from the same visible tuple or one exact private copy, the prohibition on independent reread,
+          substitution, synthesis, or cross-binding across a visible-state transition, and the exclusion of background or
+          non-visible synchronization. Its additional clauses are logical unpackings of those requirements, including the
+          equality of the captured last_applied_revision with the visible frontier and the existence of the initiation state,
+          and add no material requirement or omission.
+        differences: []
+  claim:L133_visible_overlay_document_binding_preserved_by_local_transitions:
+    kind: claim
+    subject_id: L133_visible_overlay_document_binding_preserved_by_local_transitions
+    subject_signature: d688b20dc8dcbfaa2852f7fb092f900116dfdacdb9aac2b1753114655760eaf0
+    roundtrip:
+      subject_signature: d688b20dc8dcbfaa2852f7fb092f900116dfdacdb9aac2b1753114655760eaf0
+      status: TRANSLATED
+      natural_language: For all client states e and l, if there is a single user-visible overlay mutation step from e to l
+        — that is, l is the resulting state of one user-visible client transition applied in e that creates, removes, suppresses,
+        reactivates, or otherwise mutates the client-visible speculative overlays, a relation classified only by its effect
+        on the visible speculative overlays — and the document represented by l is equal to the document represented by e,
+        and for every overlay o, if o is visible as a speculative overlay in e then the speculative overlay document_id of
+        o is equal to the document represented by e, then for every overlay o, if o is visible as a speculative overlay in
+        l then the speculative overlay document_id of o is equal to the document represented by l.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: d688b20dc8dcbfaa2852f7fb092f900116dfdacdb9aac2b1753114655760eaf0
+        verdict: EQUIVALENT
+        reason: The formula quantifies over a before/after pair linked by a user-visible overlay-mutation step, requires the
+          represented document to be unchanged and every overlay visible in the before state to have that document_id, and
+          concludes every overlay visible in the after state has the (same) represented document_id, matching the preservation
+          claim with no added or dropped guard.
+        differences: []
+      strengthening:
+        subject_signature: d688b20dc8dcbfaa2852f7fb092f900116dfdacdb9aac2b1753114655760eaf0
+        verdict: EQUIVALENT
+        reason: 'The formula exactly encodes the source: for any pair of states linked by one user-visible overlay-mutating
+          transition, with the precondition that every overlay visible in the prior state has document_id equal to its represented
+          document and the represented document is unchanged, it requires every overlay visible in the resulting state to
+          have document_id equal to that same represented document. No scope, guard, identity, or cardinality condition is
+          added or omitted.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: d688b20dc8dcbfaa2852f7fb092f900116dfdacdb9aac2b1753114655760eaf0
+        verdict: EQUIVALENT
+        reason: 'Both assert the same single-step preservation: for any user-visible state whose exposed speculative overlays
+          all have document_id equal to its represented document, any user-visible transition mutating those overlays while
+          the represented document remains unchanged yields a state whose exposed speculative overlays all have document_id
+          equal to that same represented document. The round-trip''s explicit one-step quantification is the inductive form
+          of the original''s subsequent-transitions wording, with no added or omitted precondition, scope, identity, or conclusion.'
+        differences: []
+  claim:L176_visible_speculative_overlay_is_backed_by_retained_state:
+    kind: claim
+    subject_id: L176_visible_speculative_overlay_is_backed_by_retained_state
+    subject_signature: 48c3db846fc4daabc95b42a4f7fbbd7008b81a518b6052e944a10b75e44b960b
+    roundtrip:
+      subject_signature: 48c3db846fc4daabc95b42a4f7fbbd7008b81a518b6052e944a10b75e44b960b
+      status: TRANSLATED
+      natural_language: Both of the following hold. (1) For every client state s and every overlay o, if o is currently exposed
+        as a speculative user-visible overlay in s, then in s, o has at least one retained speculative representation of the
+        same logical edit and the same full identity (document_id, client_change_id); that retained representation need not
+        be the same physical overlay object as o. (2) For every protocol transition t, every client state e, every client
+        state l, and every overlay o, if t, applied in e and producing l, removes or terminally disposes the retained speculative
+        representation of the same logical edit and the same full identity (document_id, client_change_id) that o represents,
+        with matching by logical edit and full identity and with the disposed retained representation not required to be the
+        same physical overlay object as o, and o is currently exposed as a speculative user-visible overlay in e, then o is
+        not currently exposed as a speculative user-visible overlay in l.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 48c3db846fc4daabc95b42a4f7fbbd7008b81a518b6052e944a10b75e44b960b
+        verdict: EQUIVALENT
+        reason: 'Both conjuncts faithfully encode the source: visible overlays require a matching retained representation
+          for the same logical edit and full (document_id, client_change_id) identity, and any transition removing or terminally
+          disposing that retained representation with the overlay visible beforehand requires it not be visible in the resulting
+          state, capturing removal or suppression before or atomically. No guard, identity component, cardinality, scope,
+          or exclusion is dropped or added.'
+        differences: []
+      strengthening:
+        subject_signature: 48c3db846fc4daabc95b42a4f7fbbd7008b81a518b6052e944a10b75e44b960b
+        verdict: EQUIVALENT
+        reason: 'The formula mirrors both source clauses: visible_overlay implies a matching retained representation for the
+          same logical edit and full (document_id, client_change_id) identity, and any transition disposing that retained
+          representation while the overlay is visible requires it to be non-visible in the resulting state, capturing removal
+          or suppression before or atomically with that state. No reverse visibility, extra cardinality, provenance, or out-of-scope
+          requirement is added.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 48c3db846fc4daabc95b42a4f7fbbd7008b81a518b6052e944a10b75e44b960b
+        verdict: EQUIVALENT
+        reason: 'Both halves preserve the source semantics: exposed overlays require a retained representation matched by
+          same logical edit and full identity (document_id, client_change_id) in the same state, and any transition removing
+          or terminally disposing that retained representation leaves the matching exposed overlay not exposed in the resulting
+          state, capturing removal or suppression before or atomically with that state. No quantifier, scope, identity, cardinality,
+          or exclusion is weakened or strengthened.'
+        differences: []
+  claim:L179_speculative_overlay_identity_provenance_is_preserved:
+    kind: claim
+    subject_id: L179_speculative_overlay_identity_provenance_is_preserved
+    subject_signature: 58a67082a8529b11c09394496eeb2dc9b608fe26977113308608e3009ed4c9e3
+    roundtrip:
+      subject_signature: 58a67082a8529b11c09394496eeb2dc9b608fe26977113308608e3009ed4c9e3
+      status: TRANSLATED
+      natural_language: For every client state s and every overlay o, if (o remains in the retained client_speculative_overlays
+        in state s or o is currently exposed as a speculative user-visible overlay in state s) and o in state s represents
+        a logical client edit that was created with a full identity, namely an edit whose creation identity is the complete
+        pair consisting of a document_id and a client_change_id, with both coordinates assigned at creation, then the retained/exposed
+        representation o in state s preserves the same logical edit's complete creation identity.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 58a67082a8529b11c09394496eeb2dc9b608fe26977113308608e3009ed4c9e3
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over all states and overlays, restricts to retained or visible representations
+          of edits created with full identity, and requires speculative_identity_provenance_ok, defined as preserving that
+          edit's complete (document_id, client_change_id) creation identity. This covers all identity-preserving transitions
+          state-wise without adding visibility, reconciliation, or uniqueness requirements.
+        differences: []
+      strengthening:
+        subject_signature: 58a67082a8529b11c09394496eeb2dc9b608fe26977113308608e3009ed4c9e3
+        verdict: EQUIVALENT
+        reason: The formula quantifies over all states and overlays, guards by retained-or-visible status together with representing
+          a logical edit created with the complete (D,k) identity, and concludes the predicate defined as preserving that
+          same complete creation identity. This matches the source scope, applicability, and identity-preservation requirement
+          without adding visibility, uniqueness, reconciliation, or other extra conditions.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 58a67082a8529b11c09394496eeb2dc9b608fe26977113308608e3009ed4c9e3
+        verdict: EQUIVALENT
+        reason: The round-trip quantifies over every state and every retained or exposed overlay representing an edit created
+          with the full (document_id, client_change_id) pair, and requires preservation of that complete creation identity,
+          matching the original's scope, both identity coordinates, and its limitation to representations that persist; terminal
+          disposal and non-visibility are not required.
+        differences: []
