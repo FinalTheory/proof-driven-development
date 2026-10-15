@@ -6293,11 +6293,29 @@ assurance:
     C16_non_append_lifecycle_preserves_logical_revision_prefix:
       status: unaudited
     C17_snapshot_mode_selects_checkpoint_not_after_head:
-      status: unaudited
+      status: machine_checked
+      rationale: Trusted symbolic translations exist for C17 and both direct premises L37 and L38.
+        The composition check (direct SMT, require_trusted) found the premises together with
+        NOT(C17) UNSAT. Independent mutation tests that replace either L37 or L38 with True become
+        SAT with a concrete counterexample, demonstrating that both premises are individually
+        necessary.
+      signature: b2b05ddada688d8e7432abc9fe3f79b8441e4abafb932a6ce1ec7a14b09c641e
     C18_recovery_selects_and_loads_authoritative_checkpoint:
-      status: unaudited
+      status: machine_checked
+      rationale: Trusted symbolic translations exist for C18 and all three direct premises L42, L93
+        and L151. The composition check (direct SMT, require_trusted) found the premises together
+        with NOT(C18) UNSAT. Independent mutation tests that replace any single premise with True
+        become SAT with a concrete counterexample, demonstrating that all three premises are
+        individually necessary.
+      signature: 59a74e89c7433007543ab517e465aad1cb884e71e84998a771d92d7027abc28f
     C25_recovery_derives_complete_ot_metadata_from_truth:
-      status: unaudited
+      status: machine_checked
+      rationale: Trusted symbolic translations exist for C25 and all three direct premises L64, L65
+        and L174. The composition check (direct SMT, require_trusted) found the premises together
+        with NOT(C25) UNSAT. Independent mutation tests that replace any single premise with True
+        become SAT with a concrete counterexample, demonstrating that all three premises are
+        individually necessary.
+      signature: 42f16a7613df895b3321365f7974b0bc348cc87fdaa64fbccb0c6567c240e181
     G6_accepted_change_preserves_ot_semantics:
       status: unaudited
     G7_reconnect_does_not_double_render_accepted_optimistic_edit:
