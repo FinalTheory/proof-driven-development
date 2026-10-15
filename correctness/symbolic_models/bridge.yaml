@@ -4825,7 +4825,7 @@ functions:
     - ProtocolTransition
     returns: Bool
     catalog_symbols: []
-    meaning: 'Protocol transition t is a pending-identity reconciliation transition for a reconnect/resync attempt: it updates pending-resolution state, speculative overlays, or related control/bookkeeping state. It is not a canonical-content transition.'
+    meaning: 'Protocol transition t is a pending-identity reconciliation transition for a reconnect/resync attempt: a transition performing pending-identity reconciliation for the attempt, updating pending-resolution state, speculative overlays, or related control/bookkeeping state. The classification is by the transition''s reconciliation role alone; a transition that also touches canonical content still satisfies this classification.'
     semantic_anchors:
     - claim:L126_pending_reconciliation_preserves_resync_canonical_candidate
   transition_performed_for_resync_response:
@@ -5774,6 +5774,42 @@ functions:
     semantic_anchors:
     - claim:L41_recovery_checkpoint_does_not_exceed_recovery_head
     - claim:C9_recovery_reconstructs_committed_state
+  client_state_precedes_within_catchup:
+    args:
+    - ClientState
+    - ClientState
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Client state s1 occurs strictly before client state s2 within one and the same catch-up attempt: s2 is reachable from s1 by one or more client-protocol transitions of that attempt, and s1 is a different, earlier state than s2. This relation orders states of a single attempt only; it does not relate states of different attempts or of different clients.'
+    semantic_anchors:
+    - claim:L97_client_adopts_snapshot_before_tail
+  resync_attempt_captured_response_head:
+    args:
+    - CatchupResponse
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Revision h is the captured response head H of the reconnect/resync attempt associated with response r: the authoritative response head captured and fixed for that attempt, against which the attempt''s canonical catch-up proceeds.'
+    semantic_anchors:
+    - claim:L126_pending_reconciliation_preserves_resync_canonical_candidate
+  resync_candidate_pair_initialized_by_any_means:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Response r''s private resync candidate canonical document/frontier pair has been initialized: the candidate exists as a private candidate whose canonical document and canonical frontier are set. Initialization is by whatever path the attempt used; this predicate records only that the pair is set, not how it came to be set.'
+    semantic_anchors:
+    - claim:L126_pending_reconciliation_preserves_resync_canonical_candidate
+  transition_within_candidate_window_spanning_captured_head:
+    args:
+    - ProtocolTransition
+    - CatchupResponse
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Protocol transition t occurs within response r''s resync candidate window, taken relative to the attempt''s captured response head h: at or after the initialization of r''s private resync candidate canonical document/frontier pair and before that candidate is published or discarded. The window is not interrupted when canonical catch-up for r reaches h: t is within the window whether it occurs before canonical catch-up reaches h, at the moment it reaches h, or after it has reached h.'
+    semantic_anchors:
+    - claim:L126_pending_reconciliation_preserves_resync_canonical_candidate
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -16133,6 +16169,65 @@ claims:
                     fn: visible_frontier
                     args:
                     - var: s
+      - forall:
+          vars:
+            s: ClientState
+            s_rev: Revision
+          body:
+            implies:
+            - call:
+                fn: client_state_within_selected_checkpoint_catchup
+                args:
+                - var: s
+                - var: s_rev
+            - exists:
+                vars:
+                  s0: ClientState
+                body:
+                  call:
+                    fn: client_state_is_checkpoint_installation
+                    args:
+                    - var: s0
+                    - var: s_rev
+      - forall:
+          vars:
+            s: ClientState
+            v: Revision
+            s_rev: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: client_state_within_selected_checkpoint_catchup
+                  args:
+                  - var: s
+                  - var: s_rev
+              - call:
+                  fn: client_state_applies_revision
+                  args:
+                  - var: s
+                  - var: v
+              - not:
+                  call:
+                    fn: revision_at_or_before
+                    args:
+                    - var: v
+                    - var: s_rev
+            - exists:
+                vars:
+                  s0: ClientState
+                body:
+                  and:
+                  - call:
+                      fn: client_state_is_checkpoint_installation
+                      args:
+                      - var: s0
+                      - var: s_rev
+                  - call:
+                      fn: client_state_precedes_within_catchup
+                      args:
+                      - var: s0
+                      - var: s
   L101_client_completes_catchup_through_response_head:
     capability: relational
     contracts: []
@@ -16341,6 +16436,7 @@ claims:
         vars:
           t: ProtocolTransition
           r: CatchupResponse
+          h: Revision
         body:
           implies:
           - and:
@@ -16354,14 +16450,20 @@ claims:
                 - var: t
                 - var: r
             - call:
-                fn: resync_candidate_pair_initialized
+                fn: resync_candidate_pair_initialized_by_any_means
                 args:
                 - var: r
             - call:
-                fn: transition_within_candidate_initialized_unpublished_interval
+                fn: resync_attempt_captured_response_head
+                args:
+                - var: r
+                - var: h
+            - call:
+                fn: transition_within_candidate_window_spanning_captured_head
                 args:
                 - var: t
                 - var: r
+                - var: h
           - call:
               fn: transition_preserves_resync_candidate_canonical_state
               args:
