@@ -9311,3 +9311,49 @@ records:
           the same logical edit it represents, preserves that encoding across any transition preserving the edit, and forbids
           encoding a distinct edit's operation, without requiring identical physical representation.
         differences: []
+  claim:L37_snapshot_mode_selects_authoritative_checkpoint:
+    kind: claim
+    subject_id: L37_snapshot_mode_selects_authoritative_checkpoint
+    subject_signature: 6e9df160d490fff31003e25ed18f77f4cce549469ceb9e551cd2df48bb4c52ba
+    roundtrip:
+      subject_signature: 6e9df160d490fff31003e25ed18f77f4cce549469ceb9e551cd2df48bb4c52ba
+      status: TRANSLATED
+      natural_language: 'For every catch-up response resp, if resp is a snapshot-replacement-mode catch-up response — that
+        is, catch-up selected a checkpoint for resp and resp is to be constructed by snapshot replacement rather than by delta/range
+        application, a classification of resp''s mode only — then all of the following hold: (1) there exists a revision s
+        such that s is the frontier coordinate of the checkpoint (content, s) that catch-up selected for resp, and the selected
+        pair (content, s) at frontier s is exactly one atomically published authoritative checkpoint identity, namely that
+        very (content, s) pair is a member of the authoritative published checkpoint set as one identity whose content and
+        frontier were published together, not a stale-cache, torn, mixed, or non-authoritative pair, a classification of the
+        selected pair''s provenance at frontier s only; (2) for any revisions s1 and s2, if s1 is the frontier coordinate
+        of the checkpoint selected for resp and s2 is also the frontier coordinate of the checkpoint selected for resp, then
+        s1 equals s2; and (3) for every revision s, if s is the frontier coordinate of the checkpoint selected for resp and
+        the selected pair at frontier s is atomically published authoritative as described in (1), then the checkpoint (content,
+        s) selected for resp is an authoritative checkpoint, namely that selected (content, s) pair is a genuine authoritative
+        checkpoint for resp''s target document, not a stale-cache or non-authoritative candidate.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 6e9df160d490fff31003e25ed18f77f4cce549469ceb9e551cd2df48bb4c52ba
+        verdict: EQUIVALENT
+        reason: Under snapshot mode, the formula asserts a selected frontier witness that is atomically published authoritative,
+          enforces uniqueness of the selected frontier, and requires that witness to be authoritative, matching exactly one
+          atomically published authoritative checkpoint identity with no added or omitted condition.
+        differences: []
+      strengthening:
+        subject_signature: 6e9df160d490fff31003e25ed18f77f4cce549469ceb9e551cd2df48bb4c52ba
+        verdict: EQUIVALENT
+        reason: Under the snapshot-mode guard, the formula requires a selected frontier whose selected (content, s) pair is
+          atomically published as an authoritative identity, enforces a single selected frontier via the s1=s2 uniqueness
+          clause, and requires that selected atomic pair to be authoritative. Together these decompose exactly the source's
+          claim that the selected (content, S) is exactly one atomically published authoritative checkpoint identity, with
+          no added scope, head relation, or other requirement and no omitted requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 6e9df160d490fff31003e25ed18f77f4cce549469ceb9e551cd2df48bb4c52ba
+        verdict: EQUIVALENT
+        reason: The rendering preserves the snapshot-replacement precondition and the guarantee that the selected (content,
+          s) pair is a single, unique-frontier, atomically and jointly published authoritative checkpoint identity, with the
+          same stale/torn/mixed/non-authoritative exclusions and no added or omitted requirement.
+        differences: []
