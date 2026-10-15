@@ -5291,6 +5291,7 @@ functions:
     meaning: Before catch-up attempt c publishes, a user-visible transition switched the represented document from the document D that c was started for to a different document.
     semantic_anchors:
     - claim:L157_foreground_reconnect_loses_publication_eligibility_after_document_switch
+    - claim:C36_reconnect_starts_from_canonical_client_frontier
   catchup_attempt_remains_bound_to_document:
     args:
     - CatchupAttempt
@@ -14629,10 +14630,15 @@ claims:
             c: CatchupAttempt
           body:
             implies:
-            - call:
-                fn: normal_foreground_reconnect_attempt
-                args:
-                - var: c
+            - and:
+              - call:
+                  fn: normal_foreground_reconnect_attempt
+                  args:
+                  - var: c
+              - call:
+                  fn: catchup_attempt_visible_document_switched_before_publication
+                  args:
+                  - var: c
             - call:
                 fn: catchup_binding_break_permanently_blocks_publication
                 args:
@@ -14851,10 +14857,15 @@ claims:
             c: CatchupAttempt
           body:
             implies:
-            - call:
-                fn: normal_foreground_reconnect_attempt
-                args:
-                - var: c
+            - and:
+              - call:
+                  fn: normal_foreground_reconnect_attempt
+                  args:
+                  - var: c
+              - call:
+                  fn: catchup_attempt_visible_document_switched_before_publication
+                  args:
+                  - var: c
             - call:
                 fn: catchup_binding_break_permanently_blocks_publication
                 args:
@@ -14870,13 +14881,14 @@ claims:
                   args:
                   - var: c
               - call:
-                  fn: catchup_attempt_publishes
+                  fn: catchup_attempt_visible_document_switched_before_publication
                   args:
                   - var: c
-            - call:
-                fn: catchup_foreground_publication_eligible
-                args:
-                - var: c
+            - not:
+                call:
+                  fn: catchup_foreground_publication_eligible
+                  args:
+                  - var: c
       - forall:
           vars:
             c: CatchupAttempt
