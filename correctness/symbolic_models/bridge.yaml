@@ -4092,7 +4092,6 @@ functions:
     meaning: 'For canonical acceptance a, the document_latest_revision (the pre-state latest_revision) of the authoritative pre-state against which a''s candidate change committed: the frontier value of a''s document immediately before a''s acceptance transaction committed.'
     semantic_anchors:
     - claim:L4_append_requires_previous_frontier
-    - claim:L99_ot_result_is_bound_to_acceptance_frontier
   revision_is_immediate_predecessor:
     args:
     - Revision
@@ -5748,6 +5747,16 @@ functions:
     meaning: 'For submitted request r whose semantic source is logical edit e: no step of the request construction, serialization, dispatch, or normal retry that produced r preserves e''s identity and authoring frontier (document_id = D, client_change_id = k, base_revision = F, from e''s canonical authoring state D@F) while substituting a semantically different logical operation for e''s own operation into the raw_edit being carried. Those processes may change the request''s physical representation only in semantics-preserving ways. A substitution of a different logical operation under e''s (D, k, F) falsifies this predicate even if a later step of those processes restores e''s operation before submission. This predicate constrains the behavior of the four named processes themselves: it asserts nothing about any intermediate representation as an object -- in particular it does not assert that any intermediate representation is a submitted request, remains bound to e''s complete tuple, or carries (D, k, F) at all -- and it requires no byte-identical serialization and no dispatch, retry, OT invocation, acceptance, or terminal-decision progress beyond the processes that produced r. It does not by itself assert that r represents no other logical edit.'
     semantic_anchors:
     - claim:L182_logical_edit_request_payload_binding_is_preserved
+  acceptance_linearization_prestate_latest_revision:
+    args:
+    - CanonicalAcceptance
+    returns: Revision
+    catalog_symbols:
+    - document_latest_revision
+    - latest_revision
+    meaning: For committed acceptance a, the latest_revision of the authoritative acceptance pre-state of a's document immediately before a's acceptance linearization point (that pre-state's document_latest_revision). This is the actual acceptance pre-state value the claim's commit condition names, not an earlier read, an owner-memory estimate, a submitted frontier field, or the post-acceptance value, and not a pre-state read at any distinct candidate-commit step. Values on noncommitted objects are immaterial to this contract.
+    semantic_anchors:
+    - claim:L99_ot_result_is_bound_to_acceptance_frontier
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -14984,7 +14993,7 @@ claims:
                             - var: n
                         - eq:
                           - call:
-                              fn: candidate_commit_prestate_latest_revision
+                              fn: acceptance_linearization_prestate_latest_revision
                               args:
                               - var: a
                           - var: n
