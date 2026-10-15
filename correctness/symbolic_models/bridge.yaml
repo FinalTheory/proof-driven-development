@@ -5189,6 +5189,15 @@ functions:
     meaning: 'Authoritative representation s is acceptance-eligible by itself: an owner could serve canonical acceptance directly from s without completing authoritative recovery or reconstruction and installing recovered state.'
     semantic_anchors:
     - claim:L173_optimized_lifecycle_representation_resumes_only_through_recovery
+  document_history_initialization_state:
+    args:
+    - AuthoritativeState
+    - Document
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Authoritative state s is document d''s authoritative state as produced by document-state initialization, considered in the accepted-history respect: the initialization-produced state at which d''s accepted_change_log is initialized. This is the accepted-history face of document_initialization_state -- a scope predicate for the initialization boundary of d''s accepted history only. It asserts nothing about d''s document_latest_revision coordinate or its initialized value, nothing about whether s is d''s first authoritative state, and nothing about which transition classes create a document''s authoritative coordinates.'
+    semantic_anchors:
+    - claim:L140_initial_authoritative_history_is_gap_free
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -11806,25 +11815,42 @@ claims:
     capability: relational
     contracts: []
     formula:
-      forall:
-        vars:
-          s: AuthoritativeState
-          d: Document
-        body:
-          implies:
-          - call:
-              fn: document_initialization_state
-              args:
-              - var: s
-              - var: d
-          - and:
+      and:
+      - forall:
+          vars:
+            s: AuthoritativeState
+            d: Document
+          body:
+            implies:
             - call:
-                fn: canonical_history_gap_free_for_document
+                fn: document_history_initialization_state
+                args:
+                - var: s
+                - var: d
+            - and:
+              - call:
+                  fn: canonical_history_gap_free_for_document
+                  args:
+                  - var: s
+                  - var: d
+              - call:
+                  fn: state_denotes_accepted_history_for_document
+                  args:
+                  - var: s
+                  - var: d
+      - forall:
+          vars:
+            s: AuthoritativeState
+            d: Document
+          body:
+            implies:
+            - call:
+                fn: document_initialization_state
                 args:
                 - var: s
                 - var: d
             - call:
-                fn: state_denotes_accepted_history_for_document
+                fn: document_history_initialization_state
                 args:
                 - var: s
                 - var: d
