@@ -4266,7 +4266,6 @@ functions:
     - claim:L132_visible_overlay_document_binding_established_on_publication
     - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
     - claim:L205_visible_speculative_effect_is_unique_per_identity
-    - claim:L154_pending_edit_identity_provenance_is_preserved
   speculative_overlay_client_change_id:
     args:
     - Overlay
@@ -4276,7 +4275,6 @@ functions:
     meaning: The client_change_id coordinate of the full logical identity (document_id, client_change_id) of the logical edit that speculative overlay representation o represents.
     semantic_anchors:
     - claim:L205_visible_speculative_effect_is_unique_per_identity
-    - claim:L154_pending_edit_identity_provenance_is_preserved
   recovery_attempt_reaches_checkpoint_selection:
     args:
     - RecoveryAttempt
@@ -5344,6 +5342,69 @@ functions:
     meaning: A delayed response for catch-up attempt c mutates the current user-visible state, in whole or in part, through the normal foreground reconnect path.
     semantic_anchors:
     - claim:L157_foreground_reconnect_loses_publication_eligibility_after_document_switch
+  pending_representation_carried_document_id:
+    args:
+    - ClientState
+    - Overlay
+    returns: Document
+    catalog_symbols:
+    - client_pending_edits
+    - document_id
+    meaning: 'The document_id coordinate of the identity pair under which pending representation o is currently keyed in client_pending_edits in client state s: the document_id half of the key the pending entry for o carries in s, read from that current key. This is independent of provenance: it is not the document_id of the logical edit o represents, and if the entry has been relabeled to a different identity pair, this returns the relabeled document_id, not the creation identity.'
+    semantic_anchors:
+    - contract:pending_edit_identity_provenance
+    - claim:L154_pending_edit_identity_provenance_is_preserved
+  pending_representation_carried_client_change_id:
+    args:
+    - ClientState
+    - Overlay
+    returns: ClientChangeId
+    catalog_symbols:
+    - client_pending_edits
+    - client_change_id
+    meaning: 'The client_change_id coordinate of the identity pair under which pending representation o is currently keyed in client_pending_edits in client state s: the client_change_id half of the key the pending entry for o carries in s, read from that current key. This is independent of provenance: it is not the client_change_id of the logical edit o represents, and if the entry has been relabeled to a different identity pair, this returns the relabeled client_change_id, not the creation identity.'
+    semantic_anchors:
+    - contract:pending_edit_identity_provenance
+    - claim:L154_pending_edit_identity_provenance_is_preserved
+  non_acceptance_disposition_preserves_edit_identity_to_pending_sink:
+    args:
+    - ProtocolTransition
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - logical_client_edit
+    - document_id
+    - client_change_id
+    meaning: 'The non-acceptance terminal disposition consumed by transition t was produced for the same logical edit e and preserves e''s full document_id plus client_change_id identity through routing and bookkeeping to the pending retirement sink: the sink that removes or terminally retires e''s pending representation in client_pending_edits receives e''s own full identity.'
+    semantic_anchors:
+    - contract:non_acceptance_terminal_disposition_binding
+    - claim:L203_non_acceptance_terminal_disposition_preserves_edit_provenance
+  non_acceptance_disposition_preserves_edit_identity_to_retained_overlay_sink:
+    args:
+    - ProtocolTransition
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - logical_client_edit
+    - document_id
+    - client_change_id
+    meaning: 'The non-acceptance terminal disposition consumed by transition t was produced for the same logical edit e and preserves e''s full document_id plus client_change_id identity through routing and bookkeeping to the retained-overlay retirement sink: the sink that removes or terminally retires e''s retained speculative overlay representation receives e''s own full identity.'
+    semantic_anchors:
+    - contract:non_acceptance_terminal_disposition_binding
+    - claim:L203_non_acceptance_terminal_disposition_preserves_edit_provenance
+  non_acceptance_disposition_preserves_edit_identity_to_visible_overlay_sink:
+    args:
+    - ProtocolTransition
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - logical_client_edit
+    - document_id
+    - client_change_id
+    meaning: 'The non-acceptance terminal disposition consumed by transition t was produced for the same logical edit e and preserves e''s full document_id plus client_change_id identity through routing and bookkeeping to the visible-overlay retirement sink: the sink that removes or terminally retires e''s visible speculative overlay representation receives e''s own full identity.'
+    semantic_anchors:
+    - contract:non_acceptance_terminal_disposition_binding
+    - claim:L203_non_acceptance_terminal_disposition_preserves_edit_provenance
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -12588,8 +12649,9 @@ claims:
             - and:
               - eq:
                 - call:
-                    fn: speculative_overlay_document_id
+                    fn: pending_representation_carried_document_id
                     args:
+                    - var: s
                     - var: o
                 - call:
                     fn: logical_identity_document_id
@@ -12597,8 +12659,9 @@ claims:
                     - var: e
               - eq:
                 - call:
-                    fn: speculative_overlay_client_change_id
+                    fn: pending_representation_carried_client_change_id
                     args:
+                    - var: s
                     - var: o
                 - call:
                     fn: logical_identity_change_id
@@ -12695,46 +12758,40 @@ claims:
     contracts:
     - non_acceptance_terminal_disposition_binding
     formula:
-      and:
-      - forall:
-          vars:
-            t: ProtocolTransition
-            e: LogicalEditIdentity
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: reachable_client_protocol_transition
-                  args:
-                  - var: t
-              - call:
-                  fn: non_acceptance_retirement_transition
-                  args:
-                  - var: t
-                  - var: e
+      forall:
+        vars:
+          t: ProtocolTransition
+          e: LogicalEditIdentity
+        body:
+          implies:
+          - and:
+            - call:
+                fn: reachable_client_protocol_transition
+                args:
+                - var: t
+            - call:
+                fn: non_acceptance_retirement_transition
+                args:
+                - var: t
+                - var: e
+          - and:
             - call:
                 fn: non_acceptance_disposition_preserves_edit_identity
                 args:
                 - var: t
                 - var: e
-      - forall:
-          vars:
-            t: ProtocolTransition
-            e: LogicalEditIdentity
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: reachable_client_protocol_transition
-                  args:
-                  - var: t
-              - call:
-                  fn: non_acceptance_retirement_transition
-                  args:
-                  - var: t
-                  - var: e
             - call:
-                fn: explicit_non_acceptance_retirement_transition
+                fn: non_acceptance_disposition_preserves_edit_identity_to_pending_sink
+                args:
+                - var: t
+                - var: e
+            - call:
+                fn: non_acceptance_disposition_preserves_edit_identity_to_retained_overlay_sink
+                args:
+                - var: t
+                - var: e
+            - call:
+                fn: non_acceptance_disposition_preserves_edit_identity_to_visible_overlay_sink
                 args:
                 - var: t
                 - var: e
