@@ -1354,7 +1354,6 @@ functions:
       the same document from the first state through the second state.
     semantic_anchors:
     - source:reconnect_revision_boundary
-    - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
   same_session_later_visible_same_document:
     args:
     - ClientState
@@ -5294,7 +5293,6 @@ functions:
       by that transition.
     semantic_anchors:
     - claim:L132_visible_overlay_document_binding_established_on_publication
-    - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
     - claim:L128_client_canonical_frontier_is_established_on_publication
     - claim:L129_client_canonical_frontier_is_preserved_by_visible_transitions
   visible_overlay_document_binding_holds:
@@ -5307,7 +5305,6 @@ functions:
       to the document s represents.'
     semantic_anchors:
     - claim:L132_visible_overlay_document_binding_established_on_publication
-    - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
   speculative_overlay_document_id:
     args:
     - Overlay
@@ -6135,6 +6132,56 @@ functions:
       and does not change the candidate canonical frontier.'
     semantic_anchors:
     - claim:L126_pending_reconciliation_preserves_resync_canonical_candidate
+  user_visible_overlay_mutation_step:
+    args:
+    - ClientState
+    - ClientState
+    returns: Bool
+    catalog_symbols:
+    - client_visible_speculative_overlays
+    meaning: User-visible client state after is the resulting state of one user-visible
+      client transition applied in user-visible client state before, where that transition
+      creates, removes, suppresses, reactivates, or otherwise mutates client_visible_speculative_overlays.
+      This relation classifies one transition step by its effect on the visible speculative
+      overlays only; it does not assert which document either state represents or
+      whether the represented document changes.
+    semantic_anchors:
+    - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
+  transition_removes_or_disposes_retained_representation_for_overlay:
+    args:
+    - ProtocolTransition
+    - ClientState
+    - ClientState
+    - Overlay
+    returns: Bool
+    catalog_symbols:
+    - client_speculative_overlays
+    meaning: 'Protocol transition t, applied in user-visible client state before and
+      producing the resulting user-visible client state after, removes or terminally
+      disposes the retained speculative representation of the same logical edit and
+      the same full identity (document_id, client_change_id) that overlay o represents.
+      Matching is by logical edit and full identity: the disposed retained representation
+      need not be the same physical overlay object as o. This predicate classifies
+      only the retained-state disposal effect of t; it does not assert whether o is
+      exposed in before or after.'
+    semantic_anchors:
+    - claim:L176_visible_speculative_overlay_is_backed_by_retained_state
+  speculative_overlay_represents_full_identity_edit:
+    args:
+    - ClientState
+    - Overlay
+    returns: Bool
+    catalog_symbols:
+    - logical_client_edit
+    - document_id
+    - client_change_id
+    meaning: 'Overlay o in client state s represents a logical_client_edit that was
+      created with a full identity: the edit''s creation identity is the complete
+      pair (document_id=D, client_change_id=k), with both coordinates assigned at
+      creation. This predicate classifies the represented edit''s creation identity
+      only; it does not assert that o''s current representation preserves that identity.'
+    semantic_anchors:
+    - claim:L179_speculative_overlay_identity_provenance_is_preserved
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -13848,27 +13895,71 @@ claims:
     capability: relational
     contracts: []
     formula:
-      and:
-      - forall:
-          vars:
-            e: ClientState
-            l: ClientState
-          body:
-            implies:
-            - and:
+      forall:
+        vars:
+          e: ClientState
+          l: ClientState
+        body:
+          implies:
+          - and:
+            - call:
+                fn: user_visible_overlay_mutation_step
+                args:
+                - var: e
+                - var: l
+            - eq:
               - call:
-                  fn: same_session_later_visible_continuous_same_document
+                  fn: represented_document
                   args:
-                  - var: e
                   - var: l
               - call:
-                  fn: visible_overlay_document_binding_holds
+                  fn: represented_document
                   args:
                   - var: e
-            - call:
-                fn: visible_overlay_document_binding_holds
-                args:
-                - var: l
+            - forall:
+                vars:
+                  o: Overlay
+                body:
+                  implies:
+                  - call:
+                      fn: visible_overlay
+                      args:
+                      - var: e
+                      - var: o
+                  - eq:
+                    - call:
+                        fn: speculative_overlay_document_id
+                        args:
+                        - var: o
+                    - call:
+                        fn: represented_document
+                        args:
+                        - var: e
+          - forall:
+              vars:
+                o: Overlay
+              body:
+                implies:
+                - call:
+                    fn: visible_overlay
+                    args:
+                    - var: l
+                    - var: o
+                - eq:
+                  - call:
+                      fn: speculative_overlay_document_id
+                      args:
+                      - var: o
+                  - call:
+                      fn: represented_document
+                      args:
+                      - var: l
+  L176_visible_speculative_overlay_is_backed_by_retained_state:
+    capability: relational
+    contracts:
+    - visible_speculative_retention_coherence
+    formula:
+      and:
       - forall:
           vars:
             s: ClientState
@@ -13880,27 +13971,14 @@ claims:
                 args:
                 - var: s
                 - var: o
-            - or:
-              - call:
-                  fn: client_state_establishes_visible_document
-                  args:
-                  - var: s
-              - exists:
-                  vars:
-                    e: ClientState
-                  body:
-                    and:
-                    - call:
-                        fn: client_state_establishes_visible_document
-                        args:
-                        - var: e
-                    - call:
-                        fn: same_session_later_visible_continuous_same_document
-                        args:
-                        - var: e
-                        - var: s
+            - call:
+                fn: matching_retained_representation_for_visible_overlay
+                args:
+                - var: s
+                - var: o
       - forall:
           vars:
+            t: ProtocolTransition
             e: ClientState
             l: ClientState
             o: Overlay
@@ -13908,60 +13986,23 @@ claims:
             implies:
             - and:
               - call:
-                  fn: same_session_later_visible_continuous_same_document
+                  fn: transition_removes_or_disposes_retained_representation_for_overlay
                   args:
+                  - var: t
                   - var: e
                   - var: l
+                  - var: o
               - call:
                   fn: visible_overlay
                   args:
                   - var: e
                   - var: o
-              - eq:
-                - call:
-                    fn: speculative_overlay_document_id
-                    args:
-                    - var: o
-                - call:
-                    fn: represented_document
-                    args:
-                    - var: e
-            - implies:
-              - call:
+            - not:
+                call:
                   fn: visible_overlay
                   args:
                   - var: l
                   - var: o
-              - eq:
-                - call:
-                    fn: speculative_overlay_document_id
-                    args:
-                    - var: o
-                - call:
-                    fn: represented_document
-                    args:
-                    - var: l
-  L176_visible_speculative_overlay_is_backed_by_retained_state:
-    capability: relational
-    contracts:
-    - visible_speculative_retention_coherence
-    formula:
-      forall:
-        vars:
-          s: ClientState
-          o: Overlay
-        body:
-          implies:
-          - call:
-              fn: visible_overlay
-              args:
-              - var: s
-              - var: o
-          - call:
-              fn: matching_retained_representation_for_visible_overlay
-              args:
-              - var: s
-              - var: o
   L179_speculative_overlay_identity_provenance_is_preserved:
     capability: relational
     contracts:
@@ -13973,14 +14014,20 @@ claims:
           o: Overlay
         body:
           implies:
-          - or:
+          - and:
+            - or:
+              - call:
+                  fn: retained_overlay
+                  args:
+                  - var: s
+                  - var: o
+              - call:
+                  fn: visible_overlay
+                  args:
+                  - var: s
+                  - var: o
             - call:
-                fn: retained_overlay
-                args:
-                - var: s
-                - var: o
-            - call:
-                fn: visible_overlay
+                fn: speculative_overlay_represents_full_identity_edit
                 args:
                 - var: s
                 - var: o
