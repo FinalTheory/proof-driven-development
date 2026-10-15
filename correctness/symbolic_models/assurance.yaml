@@ -6977,3 +6977,87 @@ records:
           while retaining the exclusion that canonical containment/provenance correctness is a separate obligation and adding
           no eventual or absorbing guarantee.
         differences: []
+  claim:L156_owner_handoff_installs_fresh_epoch:
+    kind: claim
+    subject_id: L156_owner_handoff_installs_fresh_epoch
+    subject_signature: 46c3e537a511378587ad9a6e8bd12fcddd14d2f8e8ff97143b5d44cf74b62875
+    roundtrip:
+      subject_signature: 46c3e537a511378587ad9a6e8bd12fcddd14d2f8e8ff97143b5d44cf74b62875
+      status: TRANSLATED
+      natural_language: For every protocol transition t and every document d, if transition t is an authoritative ownership
+        handoff for document d, then that ownership handoff t for document d commits document_current_epoch to a strictly
+        greater value than the superseded generation's epoch, with the epoch advance occurring before or atomically with the
+        new generation becoming authoritative and acceptance-eligible, and the new generation does not reuse the superseded
+        generation's epoch.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 46c3e537a511378587ad9a6e8bd12fcddd14d2f8e8ff97143b5d44cf74b62875
+        verdict: EQUIVALENT
+        reason: The formula universally conditions on an authoritative handoff for a document and requires the installs predicate,
+          whose supplied meaning exactly encodes committing document_current_epoch to a strictly greater value than the superseded
+          generation's epoch, with the advance before or atomically with the new generation becoming authoritative and acceptance-eligible,
+          and prohibits reuse of the superseded epoch. No requirement is omitted, added, or dimensionally collapsed.
+        differences: []
+      strengthening:
+        subject_signature: 46c3e537a511378587ad9a6e8bd12fcddd14d2f8e8ff97143b5d44cf74b62875
+        verdict: EQUIVALENT
+        reason: 'The formula universally quantifies over exactly the authoritative ownership handoffs for a document, and
+          the consequent predicate matches the source: document_current_epoch must commit to a strictly greater value than
+          the superseded generation''s epoch, the advance must occur before or atomically with the new generation becoming
+          authoritative and acceptance-eligible, and the superseded epoch must not be reused. No scope, timing, or distinctness
+          requirement is added or omitted; the generation-identity half is scope context for this epoch-only claim, as the
+          predicate meaning notes.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 46c3e537a511378587ad9a6e8bd12fcddd14d2f8e8ff97143b5d44cf74b62875
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal scope over authoritative generation transitions, the strictly greater
+          committed epoch, the before-or-atomically-with timing relative to authority/acceptance-eligibility, and the prohibition
+          on reusing the superseded epoch, with no material weakening or strengthening.
+        differences: []
+  claim:L168_owner_handoff_installs_fresh_generation:
+    kind: claim
+    subject_id: L168_owner_handoff_installs_fresh_generation
+    subject_signature: e09147f758719b6a010fa90638788cc95ae8096d6130857ae9d51688ccec803d
+    roundtrip:
+      subject_signature: e09147f758719b6a010fa90638788cc95ae8096d6130857ae9d51688ccec803d
+      status: TRANSLATED
+      natural_language: 'For every ProtocolTransition t and every Document d, if t is an authoritative ownership handoff for
+        document d, then t installs a fresh generation identity for d: the ownership handoff t commits a fresh document_owner_generation_id
+        — the authoritative immutable generation identity of the currently designated acceptance-eligible owner for that one
+        document — that is different from the superseded generation''s identity, and this commitment occurs before or atomically
+        with the new generation becoming authoritative and acceptance-eligible; furthermore, the new generation is not published
+        or enabled while the authoritative generation identity still names the superseded tenure. This states only the generation-identity
+        half of the handoff installation requirement, not any strictly-greater-epoch requirement, which is stated separately.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: e09147f758719b6a010fa90638788cc95ae8096d6130857ae9d51688ccec803d
+        verdict: EQUIVALENT
+        reason: 'The universal implication over every authoritative handoff for a document exactly matches the source: the
+          consequent predicate requires committing a fresh generation identity different from the superseded one before or
+          atomically with the new generation becoming authoritative and acceptance-eligible, and forbids publishing or enabling
+          it while the authoritative identity still names the superseded tenure, covering all handoff paths without adding
+          or omitting requirements.'
+        differences: []
+      strengthening:
+        subject_signature: e09147f758719b6a010fa90638788cc95ae8096d6130857ae9d51688ccec803d
+        verdict: EQUIVALENT
+        reason: The formula quantifies over all transitions and documents with the authoritative-handoff antecedent, and its
+          consequent predicate exactly restates committing a fresh generation identity distinct from the superseded one before
+          or atomically with the new generation becoming authoritative and acceptance-eligible, including the prohibition
+          on publishing or enabling it while the authoritative identity still names the superseded tenure, without adding
+          or omitting requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: e09147f758719b6a010fa90638788cc95ae8096d6130857ae9d51688ccec803d
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal scope over authoritative ownership handoffs, the requirement of a fresh
+          generation identity different from the superseded one, its commitment before or atomically with the new generation
+          becoming authoritative and acceptance-eligible, and the prohibition on publishing or enabling the new generation
+          while the authoritative identity still names the superseded tenure; the enumerated handoff paths are subsumed by
+          the universal quantification, and the epoch note adds no requirement.
+        differences: []
