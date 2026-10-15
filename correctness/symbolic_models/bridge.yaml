@@ -5713,6 +5713,41 @@ functions:
     semantic_anchors:
     - claim:L94_recovery_starts_after_epoch_handoff
     - claim:C9_recovery_reconstructs_committed_state
+  client_local_document_is_exact_canonical_accepted_application:
+    args:
+    - ClientState
+    - Document
+    - Revision
+    returns: Bool
+    catalog_symbols:
+    - client_local_document
+    meaning: 'Client state s''s client_local_document is exactly the deterministic application of all and only document D''s canonical accepted revisions through F: every canonical accepted revision of D at or below F is applied exactly once, in canonical order, and no other revision, accepted change, or content is part of client_local_document. F is s''s last_applied_revision, the highest contiguous canonical revision applied by s, so the revisions applied for s are exactly D''s contiguous canonical accepted sequence through F, with no gap, no omission, and no extra element.'
+    semantic_anchors:
+    - claim:L128_client_canonical_frontier_is_established_on_publication
+  client_local_document_excludes_speculative_raw_edits:
+    args:
+    - ClientState
+    returns: Bool
+    catalog_symbols:
+    - client_local_document
+    meaning: 'Speculative raw edits are not part of client state s''s client_local_document: no unaccepted, locally speculative raw edit contributes any content to client_local_document in s, and client_local_document in s consists solely of canonical accepted content.'
+    semantic_anchors:
+    - claim:L128_client_canonical_frontier_is_established_on_publication
+  request_processes_do_not_substitute_logical_operation:
+    args:
+    - Request
+    - LogicalEdit
+    returns: Bool
+    catalog_symbols:
+    - submitted_request
+    - logical_client_edit
+    - document_id
+    - client_change_id
+    - raw_edit
+    - base_revision
+    meaning: 'For submitted request r whose semantic source is logical edit e: no step of the request construction, serialization, dispatch, or normal retry that produced r preserves e''s identity and authoring frontier (document_id = D, client_change_id = k, base_revision = F, from e''s canonical authoring state D@F) while substituting a semantically different logical operation for e''s own operation into the raw_edit being carried. Those processes may change the request''s physical representation only in semantics-preserving ways. A substitution of a different logical operation under e''s (D, k, F) falsifies this predicate even if a later step of those processes restores e''s operation before submission. This predicate constrains the behavior of the four named processes themselves: it asserts nothing about any intermediate representation as an object -- in particular it does not assert that any intermediate representation is a submitted request, remains bound to e''s complete tuple, or carries (D, k, F) at all -- and it requires no byte-identical serialization and no dispatch, retry, OT invocation, acceptance, or terminal-decision progress beyond the processes that produced r. It does not by itself assert that r represents no other logical edit.'
+    semantic_anchors:
+    - claim:L182_logical_edit_request_payload_binding_is_preserved
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -14277,6 +14312,22 @@ claims:
                 fn: client_resync_candidate_outside_visible_tuple_until_publication
                 args:
                 - var: s
+            - call:
+                fn: client_local_document_is_exact_canonical_accepted_application
+                args:
+                - var: s
+                - call:
+                    fn: represented_document
+                    args:
+                    - var: s
+                - call:
+                    fn: visible_frontier
+                    args:
+                    - var: s
+            - call:
+                fn: client_local_document_excludes_speculative_raw_edits
+                args:
+                - var: s
   L129_client_canonical_frontier_is_preserved_by_visible_transitions:
     capability: relational
     contracts: []
@@ -15115,6 +15166,11 @@ claims:
                     - var: e
                 - call:
                     fn: submitted_request_tuple_bound_to_logical_edit
+                    args:
+                    - var: r
+                    - var: e
+                - call:
+                    fn: request_processes_do_not_substitute_logical_operation
                     args:
                     - var: r
                     - var: e
