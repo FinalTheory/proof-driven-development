@@ -7061,3 +7061,45 @@ records:
           while the authoritative identity still names the superseded tenure; the enumerated handoff paths are subsumed by
           the universal quantification, and the epoch note adds no requirement.
         differences: []
+  claim:L205_visible_speculative_effect_is_unique_per_identity:
+    kind: claim
+    subject_id: L205_visible_speculative_effect_is_unique_per_identity
+    subject_signature: 960a656624506c4fe48da863c580f0da9252ab06dee15ae849b73e7c0b99e4e9
+    roundtrip:
+      subject_signature: 960a656624506c4fe48da863c580f0da9252ab06dee15ae849b73e7c0b99e4e9
+      status: TRANSLATED
+      natural_language: For every client state s and every overlay o, if overlay o is currently exposed as a speculative user-visible
+        overlay in client state s, then the full logical edit identity (document_id, client_change_id) represented by o contributes
+        at most one effective speculative operation to the rendered state s. And, for every client state s and every pair
+        of overlays o1 and o2, if o1 is currently exposed as a speculative user-visible overlay in s, o2 is currently exposed
+        as a speculative user-visible overlay in s, the document_id coordinate of o1 equals the document_id coordinate of
+        o2, and the client_change_id coordinate of o1 equals the client_change_id coordinate of o2, then the full logical
+        edit identity (document_id, client_change_id) represented by o1 contributes at most one effective speculative operation
+        to the rendered state s.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 960a656624506c4fe48da863c580f0da9252ab06dee15ae849b73e7c0b99e4e9
+        verdict: EQUIVALENT
+        reason: The formula quantifies over every client state and visible speculative overlay, requiring via single_effective_speculative_contribution
+          that the full logical identity (document_id, client_change_id) of that overlay contribute at most one effective
+          speculative operation to the rendered state; the second conjunct restates this for pairs sharing both identity coordinates,
+          matching the source's at-most-one effect per identity, its user-visible scope, and its allowance of duplicate physical
+          representations when deduplicated.
+        differences: []
+      strengthening:
+        subject_signature: 960a656624506c4fe48da863c580f0da9252ab06dee15ae849b73e7c0b99e4e9
+        verdict: EQUIVALENT
+        reason: The formula guards on visible_overlay in user-visible states and asserts, via the identity-level single_effective_speculative_contribution
+          predicate, that each full logical identity (document_id, client_change_id) contributes at most one effective speculative
+          operation; the second clause restates this for same-identity visible overlays without imposing a physical-object
+          cardinality limit, preserving the deduplication allowance and scope.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 960a656624506c4fe48da863c580f0da9252ab06dee15ae849b73e7c0b99e4e9
+        verdict: EQUIVALENT
+        reason: The rendering preserves the per-identity at-most-one effective speculative operation bound at every user-visible
+          state, keyed by the full (document_id, client_change_id) identity; it neither omits the deduplication-effect requirement
+          nor adds any stronger restriction on physical representations.
+        differences: []
