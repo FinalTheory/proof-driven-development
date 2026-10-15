@@ -2602,7 +2602,6 @@ functions:
     meaning: Authoritative state representation s is an optimized authoritative lifecycle representation at the common authoritative frontier H, including snapshot, checkpoint, cleanup, or compaction results covered by G3.
     semantic_anchors:
     - claim:G3_snapshot_and_recovery_preserve_state
-    - claim:L173_optimized_lifecycle_representation_resumes_only_through_recovery
   accepted_evidence_origin_valid:
     args:
     - AcceptedEvidence
@@ -5838,6 +5837,23 @@ functions:
     semantic_anchors:
     - claim:L41_recovery_checkpoint_does_not_exceed_recovery_head
     - claim:C9_recovery_reconstructs_committed_state
+  l173_optimized_snapshot_or_compacted_representation:
+    args:
+    - AuthoritativeState
+    returns: Bool
+    catalog_symbols: []
+    meaning: Authoritative state representation s is an optimized snapshot or compacted authoritative representation.
+    semantic_anchors:
+    - claim:L173_optimized_lifecycle_representation_resumes_only_through_recovery
+  l173_optimized_representation_at_frontier:
+    args:
+    - AuthoritativeState
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: Authoritative state representation s is an optimized snapshot or compacted authoritative representation at frontier h.
+    semantic_anchors:
+    - claim:L173_optimized_lifecycle_representation_resumes_only_through_recovery
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -17822,14 +17838,12 @@ claims:
       - forall:
           vars:
             s: AuthoritativeState
-            h: Revision
           body:
             implies:
             - call:
-                fn: optimized_authoritative_lifecycle_representation_at_frontier
+                fn: l173_optimized_snapshot_or_compacted_representation
                 args:
                 - var: s
-                - var: h
             - not:
                 call:
                   fn: optimized_representation_acceptance_eligible_by_itself
@@ -17843,7 +17857,7 @@ claims:
             implies:
             - and:
               - call:
-                  fn: optimized_authoritative_lifecycle_representation_at_frontier
+                  fn: l173_optimized_representation_at_frontier
                   args:
                   - var: s
                   - var: h
