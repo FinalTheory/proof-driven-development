@@ -1185,6 +1185,7 @@ functions:
     - claim:L107_client_freezes_speculative_edits_during_resync
     - claim:L208_externally_rejected_edit_terminalizes_speculative_lifecycle
     - claim:L209_accepted_reconciliation_terminalizes_speculative_lifecycle
+    - claim:L154_pending_edit_identity_provenance_is_preserved
   logical_edit_in_reachable_client_history:
     args:
     - ClientState
@@ -4626,6 +4627,7 @@ functions:
     - claim:C37_pending_identity_resolution_is_bound_to_response_head
     - claim:L208_externally_rejected_edit_terminalizes_speculative_lifecycle
     - claim:L209_accepted_reconciliation_terminalizes_speculative_lifecycle
+    - claim:L154_pending_edit_identity_provenance_is_preserved
   identity_is_normal_retry_eligible:
     args:
     - LogicalEditIdentity
@@ -5298,6 +5300,7 @@ functions:
     - claim:L132_visible_overlay_document_binding_established_on_publication
     - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
     - claim:L205_visible_speculative_effect_is_unique_per_identity
+    - claim:L154_pending_edit_identity_provenance_is_preserved
   speculative_overlay_client_change_id:
     args:
     - Overlay
@@ -5309,6 +5312,7 @@ functions:
       o represents.
     semantic_anchors:
     - claim:L205_visible_speculative_effect_is_unique_per_identity
+    - claim:L154_pending_edit_identity_provenance_is_preserved
   catchup_selected_checkpoint_is_atomically_published_authoritative:
     args:
     - CatchupResponse
@@ -5748,6 +5752,24 @@ functions:
     semantic_anchors:
     - claim:L159_owner_append_authorization_is_generation_bound
     - claim:C8_stale_owner_is_fenced
+  pending_representation_of_logical_edit:
+    args:
+    - ClientState
+    - Overlay
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - client_pending_edits
+    - logical_client_edit
+    meaning: 'Overlay o is a pending representation in client_pending_edits in client
+      state s of the logical client edit whose creation identity is exact logical
+      edit identity e. The representation belongs to that logical edit by provenance,
+      independently of the identity coordinates it currently carries: a representation
+      relabeled to a different identity pair still represents the logical edit it
+      was created for.'
+    semantic_anchors:
+    - contract:pending_edit_identity_provenance
+    - claim:L154_pending_edit_identity_provenance_is_preserved
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -12920,32 +12942,75 @@ claims:
     contracts:
     - pending_edit_identity_provenance
     formula:
-      forall:
-        vars:
-          s: ClientState
-          e: LogicalEditIdentity
-        body:
-          implies:
-          - and:
+      and:
+      - forall:
+          vars:
+            s: ClientState
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_client_state
+                  args:
+                  - var: s
+              - call:
+                  fn: pending_identity_active
+                  args:
+                  - var: s
+                  - var: e
+              - call:
+                  fn: pending_identity_normal_speculative_lifecycle_active
+                  args:
+                  - var: s
+                  - var: e
             - call:
-                fn: reachable_client_state
-                args:
-                - var: s
-            - call:
-                fn: pending_identity_active
+                fn: pending_representation_bound_to_creation_identity
                 args:
                 - var: s
                 - var: e
-            - call:
-                fn: pending_identity_normal_speculative_lifecycle_active
-                args:
-                - var: s
-                - var: e
-          - call:
-              fn: pending_representation_bound_to_creation_identity
-              args:
-              - var: s
-              - var: e
+      - forall:
+          vars:
+            s: ClientState
+            o: Overlay
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_client_state
+                  args:
+                  - var: s
+              - call:
+                  fn: pending_representation_of_logical_edit
+                  args:
+                  - var: s
+                  - var: o
+                  - var: e
+              - call:
+                  fn: pending_identity_normal_speculative_lifecycle_active
+                  args:
+                  - var: s
+                  - var: e
+            - and:
+              - eq:
+                - call:
+                    fn: speculative_overlay_document_id
+                    args:
+                    - var: o
+                - call:
+                    fn: logical_identity_document_id
+                    args:
+                    - var: e
+              - eq:
+                - call:
+                    fn: speculative_overlay_client_change_id
+                    args:
+                    - var: o
+                - call:
+                    fn: logical_identity_change_id
+                    args:
+                    - var: e
   L155_unresolved_speculative_edit_has_pending_entry:
     capability: relational
     contracts:
@@ -13065,11 +13130,16 @@ claims:
             e: LogicalEditIdentity
           body:
             implies:
-            - call:
-                fn: non_acceptance_retirement_transition
-                args:
-                - var: t
-                - var: e
+            - and:
+              - call:
+                  fn: reachable_client_protocol_transition
+                  args:
+                  - var: t
+              - call:
+                  fn: non_acceptance_retirement_transition
+                  args:
+                  - var: t
+                  - var: e
             - call:
                 fn: explicit_non_acceptance_retirement_transition
                 args:
