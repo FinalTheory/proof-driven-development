@@ -7372,3 +7372,294 @@ records:
           bar on influence or origin from failed-owner, cache, process-local, or other non-authoritative sources, without
           adding or omitting a material guarantee.
         differences: []
+  claim:C38_client_frontier_matches_canonical_base:
+    kind: claim
+    subject_id: C38_client_frontier_matches_canonical_base
+    subject_signature: 3311a56869d32ee58dee0192e6086e05fc445cf5d9497b8c3d1c000278060117
+    roundtrip:
+      subject_signature: 3311a56869d32ee58dee0192e6086e05fc445cf5d9497b8c3d1c000278060117
+      status: TRANSLATED
+      natural_language: 'For every client state s, if s is a user-visible canonical state — that is, s is currently user-visible
+        at the canonical client observation boundary and represents one document through its visible canonical tuple, regardless
+        of whether it became visible by explicit publication, initialization, restoration, view activation, or an in-place
+        visible tuple replacement, and not excluding a user-visible historical-version or rollback mode, while user-visible
+        states representing no document and private or intermediate resynchronization candidates that have not become user-visible
+        are outside this condition — then both of the following hold: (1) the exact client_document_id coordinate stored in
+        s equals the represented document of s, where the represented document is the independent semantic contract reference
+        document that s represents and is not derived from client_document_id, client_local_document, last_applied_revision,
+        or satisfaction of client_canonical_frontier_coherence; and the canonical content of s exactly matches deterministic
+        replay of that represented document of s through the visible frontier of s, where the visible frontier is the last
+        canonical revision applied by s. And, for every client state s, if s is a user-visible canonical state as defined
+        above, then the client_resync_candidate associated with s, if any, is outside its visible tuple: it is private construction
+        state outside the user-visible observer boundary, is not part of s''s user-visible canonical tuple, contributes nothing
+        to s''s client_document_id, client_local_document, or last_applied_revision, and can affect the user-visible state
+        only through an atomic publication that creates a new user-visible state.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 3311a56869d32ee58dee0192e6086e05fc445cf5d9497b8c3d1c000278060117
+        verdict: EQUIVALENT
+        reason: The formula quantifies over all user-visible canonical states, independently equating client_document_id with
+          the represented document and requiring exact deterministic canonical replay through visible_frontier (last_applied_revision),
+          which covers establishment and preservation at every such state; the separate resync conjunct keeps private candidate
+          construction outside the visible tuple until atomic publication, and exact replay excludes speculative edits from
+          client_local_document. No requirement is added, dropped, or collapsed.
+        differences: []
+      strengthening:
+        subject_signature: 3311a56869d32ee58dee0192e6086e05fc445cf5d9497b8c3d1c000278060117
+        verdict: EQUIVALENT
+        reason: The formula quantifies over exactly user-visible canonical states, requires client_document_id to equal the
+          independently represented document, requires canonical content to be exactly the deterministic replay of that document
+          through visible_frontier/last_applied_revision, and separately requires any client_resync_candidate to remain outside
+          the visible tuple except via atomic publication. This matches the source scope, tuple identity, replay extent, and
+          exclusions without added temporal, identity, or cardinality requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 3311a56869d32ee58dee0192e6086e05fc445cf5d9497b8c3d1c000278060117
+        verdict: EQUIVALENT
+        reason: The rendering preserves the user-visible scope, the independent represented-document identity equality, exact
+          deterministic replay through last_applied_revision, and the exclusion of private resync candidates until atomic
+          publication, without adding or omitting a requirement.
+        differences: []
+  claim:L136_reconnect_initiation_visible_frontier_is_canonical:
+    kind: claim
+    subject_id: L136_reconnect_initiation_visible_frontier_is_canonical
+    subject_signature: b1d06c21959eb3edbbf0de76510bf2c71fc0c0061762fbc55c99699684ea709f
+    roundtrip:
+      subject_signature: b1d06c21959eb3edbbf0de76510bf2c71fc0c0061762fbc55c99699684ea709f
+      status: TRANSLATED
+      natural_language: For every client state s, if s is currently user-visible at the canonical client observation boundary
+        and represents one document through its visible canonical tuple, regardless of whether it became visible by explicit
+        publication, initialization, restoration, view activation, or an in-place visible tuple replacement, and not excluding
+        a user-visible historical-version or rollback mode, while excluding user-visible states that represent no document
+        and private or intermediate resynchronization candidates that have not become user-visible, and normal foreground
+        reconnect/catch-up initiation is enabled from user-visible client state s, meaning s is a user-visible tuple from
+        which such an attempt may be initiated, then the canonical content of s is exactly the deterministic replay of the
+        document represented by s, as an independent contract reference coordinate, through the visible frontier of s, namely
+        the last canonical revision applied by s.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: b1d06c21959eb3edbbf0de76510bf2c71fc0c0061762fbc55c99699684ea709f
+        verdict: EQUIVALENT
+        reason: The formula quantifies over exactly the user-visible states where normal foreground reconnect/catch-up initiation
+          is enabled, uses represented_document and visible_frontier as the tuple's D and L coordinates, and requires canonical_content_matches,
+          whose meaning is exact deterministic replay of D through that frontier, preserving the all-and-only requirement
+          and the exclusion of background/non-visible synchronization.
+        differences: []
+      strengthening:
+        subject_signature: b1d06c21959eb3edbbf0de76510bf2c71fc0c0061762fbc55c99699684ea709f
+        verdict: EQUIVALENT
+        reason: The formula quantifies exactly over states that are user-visible and have normal foreground reconnect/catch-up
+          initiation enabled, and requires canonical content to be the exact deterministic replay of the represented document
+          through its visible frontier (last_applied_revision), preserving the document and revision coordinates and the exclusion
+          of background or non-visible synchronization.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: b1d06c21959eb3edbbf0de76510bf2c71fc0c0061762fbc55c99699684ea709f
+        verdict: EQUIVALENT
+        reason: The rendering preserves the same scope (user-visible tuples/states from which normal foreground reconnect/catch-up
+          initiation is enabled), the same identity coordinates (the represented document and its last applied canonical revision
+          as frontier), and the same conclusion (local content is exactly the deterministic replay/application of all and
+          only that document's canonical accepted revisions through that frontier); its enumerations of visibility modes and
+          exclusions merely spell out the original user-visible scope and non-visible exclusion without adding or omitting
+          any guarantee.
+        differences: []
+  claim:L207_visible_canonical_frontier_never_regresses_per_session_document:
+    kind: claim
+    subject_id: L207_visible_canonical_frontier_never_regresses_per_session_document
+    subject_signature: 5b505468ebbad02a7660758777f672485cbac8b50ed3e8ab631a8669e774e448
+    roundtrip:
+      subject_signature: 5b505468ebbad02a7660758777f672485cbac8b50ed3e8ab631a8669e774e448
+      status: TRANSLATED
+      natural_language: 'For every pair of client states e and l, if e and l satisfy the relation that e is a user-visible
+        exposure of one document in the normal current-document protocol of a client/session and l is a later ordinary user-visible
+        state in that same session that again represents the same document, with any separately modeled historical-version
+        or rollback mode being outside this relation, then both of the following hold: (1) it is not the case that the visible
+        frontier regresses from e to l, meaning it is not the case that l''s last_applied_revision for the same document is
+        strictly lower than e''s visible frontier; and (2) the visible frontier of e is at or before the visible frontier
+        of l in the canonical revision order. Here, the visible frontier of a client state is the last canonical revision
+        applied by that client state, where last_applied_revision is the highest contiguous canonical revision already applied
+        by a client.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 5b505468ebbad02a7660758777f672485cbac8b50ed3e8ab631a8669e774e448
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over pairs related by same_session_later_visible_same_document, whose meaning
+          preserves same session, same document, later ordinary user-visible exposure, normal current-document protocol, and
+          exclusion of historical/rollback modes, and requires both non-regression and revision_at_or_before(visible_frontier(e),
+          visible_frontier(l)), i.e. F2 >= F, exactly the per-session non-regression guarantee in the statement.
+        differences: []
+      strengthening:
+        subject_signature: 5b505468ebbad02a7660758777f672485cbac8b50ed3e8ab631a8669e774e448
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over earlier/later state pairs guarded by same_session_later_visible_same_document,
+          whose meaning preserves the same session, same document, ordinary normal current-document visibility, and exclusion
+          of separately modeled historical/rollback modes. Under that guard it asserts both non-regression and revision_at_or_before(visible_frontier(e),
+          visible_frontier(l)), i.e. F2 >= F, exactly the per-session non-decreasing frontier in the source, with no added
+          equality, reachability, cross-document, or cross-session requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 5b505468ebbad02a7660758777f672485cbac8b50ed3e8ab631a8669e774e448
+        verdict: EQUIVALENT
+        reason: The rendering preserves the per-session, per-document quantification over an earlier visible exposure and
+          a later ordinary visible state, the non-regression condition F2 >= F expressed both as not strictly lower and as
+          order-at-or-before, and the exclusion of new sessions and separately modeled historical/rollback modes, without
+          adding or omitting a guarantee.
+        differences: []
+  claim:C39_authoritative_history_state_is_gap_free:
+    kind: claim
+    subject_id: C39_authoritative_history_state_is_gap_free
+    subject_signature: e3d564b1220f243083d27635d98f713cd1dc07fdb1c72768a5b8ac3c79130d8e
+    roundtrip:
+      subject_signature: e3d564b1220f243083d27635d98f713cd1dc07fdb1c72768a5b8ac3c79130d8e
+      status: TRANSLATED
+      natural_language: Both of the following hold. (1) For every authoritative state s and every document d, if s denotes
+        an accepted history for d — that is, s includes d's authoritative accepted-history coordinate and the logical accepted
+        history it denotes for d is the history under observation, a scope condition asserting nothing about d's document_latest_revision
+        coordinate and nothing about whether the denoted history is gap-free or ends at any frontier, and a state with no
+        authoritative accepted-history coordinate for d does not satisfy it — then, in authoritative state s, the accepted
+        canonical history for document d is one gap-free revision sequence. (2) For every authoritative state before, every
+        authoritative state after, and every document d, if both (a) after is reachable from before under the transitive closure
+        of the authoritative_state_step relation, where a step holds when the second state is the immediate successor of the
+        first under one committed authoritative protocol transition whose full authoritative effect separates the two states
+        with no intermediate authoritative state between them, and aborted, rolled-back, or never-committed work creates no
+        step and no successor authoritative state, and (b) if after denotes an accepted history for d then, in authoritative
+        state before, the accepted canonical history for document d is one gap-free revision sequence, then it follows that
+        if after denotes an accepted history for d then, in authoritative state after, the accepted canonical history for
+        document d is one gap-free revision sequence.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: e3d564b1220f243083d27635d98f713cd1dc07fdb1c72768a5b8ac3c79130d8e
+        verdict: EQUIVALENT
+        reason: 'The first conjunct directly encodes the claim for every state and document: denoting an accepted history
+          implies that history is one gap-free revision sequence. The second conjunct adds no independent requirement, since
+          its consequent is already that same implication instantiated at the after state, so the conjunction is logically
+          equivalent to the source.'
+        differences: []
+      strengthening:
+        subject_signature: e3d564b1220f243083d27635d98f713cd1dc07fdb1c72768a5b8ac3c79130d8e
+        verdict: EQUIVALENT
+        reason: 'The first conjunct exactly states that every authoritative state denoting an accepted history for a document
+          has a gap-free canonical history for that document. The second conjunct adds no semantic constraint beyond this:
+          its consequent is already the first conjunct instantiated at the after state, so it is logically entailed and does
+          not extend scope, cardinality, or temporal requirements.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: e3d564b1220f243083d27635d98f713cd1dc07fdb1c72768a5b8ac3c79130d8e
+        verdict: EQUIVALENT
+        reason: The first clause restates the universal guarantee over the same authoritative-state and document scope, conditioned
+          only on presence of the accepted-history coordinate, with no added frontier or latest-revision requirement; the
+          second clause is logically redundant because its conclusion already follows directly from applying that universal
+          guarantee to the after state, so it neither weakens nor strengthens the contract.
+        differences: []
+  claim:L5_append_requires_current_epoch:
+    kind: claim
+    subject_id: L5_append_requires_current_epoch
+    subject_signature: cf692ccb66f60dbf79aa9082c97cd6cc87fee8f7027d5cd5268e9703b20e72c0
+    roundtrip:
+      subject_signature: cf692ccb66f60dbf79aa9082c97cd6cc87fee8f7027d5cd5268e9703b20e72c0
+      status: TRANSLATED
+      natural_language: 'Both of the following hold. (1) For every canonical acceptance a, every document d, and every revision
+        r, if a is the committed form of candidate_canonical_change carrying revision r committed as a candidate append, and
+        the document of a — the document whose canonical accepted history a belongs to, i.e. the document of the candidate_canonical_change
+        whose committed form a is — equals d, then a resulted from a candidate_canonical_change append for d whose supplied
+        owner_epoch equaled the authoritative document_current_epoch of d at commit: the pre-commit current_epoch observed
+        by the acceptance transaction''s epoch guard was exactly the supplied owner_epoch; an append whose supplied owner_epoch
+        differed from the authoritative current epoch at commit does not satisfy this. (2) For every protocol transition t
+        and every document d, if t performs a canonical accepted-history append for d and t is the commit of a candidate_canonical_change
+        append for d — i.e. the canonical accepted change that t appends to d''s canonical history is the committed form of
+        a candidate_canonical_change append for d, classifying the append by its candidate provenance rather than by its supplied
+        fencing tuple — then t committed with its supplied owner_epoch equal to d''s authoritative document_current_epoch
+        at commit: the epoch fencing guard inside the acceptance transaction passed with equality, so no stale-owner append
+        committed.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: cf692ccb66f60dbf79aa9082c97cd6cc87fee8f7027d5cd5268e9703b20e72c0
+        verdict: EQUIVALENT
+        reason: 'Both conjuncts state exactly the source guard: any candidate_canonical_change append that commits as a canonical
+          accepted change, at acceptance level and at transition level for its document, must have supplied owner_epoch equal
+          to the authoritative document_current_epoch observed pre-commit at commit. No requirement is added, dropped, or
+          re-scoped.'
+        differences: []
+      strengthening:
+        subject_signature: cf692ccb66f60dbf79aa9082c97cd6cc87fee8f7027d5cd5268e9703b20e72c0
+        verdict: EQUIVALENT
+        reason: The formula's acceptance-level and transition-level conjuncts both restrict exactly to committed candidate_canonical_change
+          appends for the linked document and require the supplied owner_epoch to equal the authoritative document_current_epoch
+          at commit (the pre-commit guard epoch), matching the source's commit-only-when-equal condition with no added scope,
+          equality, or cardinality.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: cf692ccb66f60dbf79aa9082c97cd6cc87fee8f7027d5cd5268e9703b20e72c0
+        verdict: EQUIVALENT
+        reason: 'Both renderings restate exactly the source necessary condition: a candidate_canonical_change append commits
+          as a canonical accepted change only if its supplied owner_epoch equals the authoritative document_current_epoch
+          for that document at pre-commit, with the same per-document identity, candidate provenance, and commit-time scope,
+          and neither adds nor omits a requirement.'
+        differences: []
+  claim:L159_owner_append_authorization_is_generation_bound:
+    kind: claim
+    subject_id: L159_owner_append_authorization_is_generation_bound
+    subject_signature: 894b540378cef54a3d907e798b05ca655975eff13775c9fae349bd8a2492a319
+    roundtrip:
+      subject_signature: 894b540378cef54a3d907e798b05ca655975eff13775c9fae349bd8a2492a319
+      status: TRANSLATED
+      natural_language: 'For every protocol transition t and every document d, all of the following hold conjunctively. First,
+        if t is a canonical append attempt for d — that is, t executes a canonical accepted-history append attempt targeting
+        d, including successful, rejected, aborted, delayed, and interrupted attempts, independently of whether their supplied
+        fencing tuple is valid or any canonical acceptance commits, and noting that every transition performing a canonical
+        accepted-history append for d is such an attempt, while a transition solely arbitrating or writing a per-key terminal
+        outcome does not qualify on that basis — then the append tuple is bound to the executing document generation for d
+        and t: throughout the attempt, the supplied owner_epoch and append_owner_generation_id originate from and remain bound
+        to the immutable trusted server-side owner generation actually executing that attempt, whose ownership document is
+        d; neither coordinate nor the document namespace may be copied, substituted, refreshed, or rebound to impersonate
+        another generation, and equal scalar values from another document or generation do not establish this provenance;
+        this binding does not require the executing generation to remain authoritative current, and does not require the attempt
+        to commit. Second, if t performs a canonical accepted-history append for d, then t uses the exact current document
+        generation for t and d: the append is authorized by the exact current document-scoped generation identity for d, including
+        epoch and generation-bound server append identity, and copied scalar values or another document''s tuple do not authorize
+        it. Third, if t performs a canonical accepted-history append for d, then the append tuple matches the current generation
+        at commit for t and d: t committed with its supplied document-scoped generation tuple matching d''s authoritative
+        generation at commit, specifically the supplied owner_epoch equaled d''s authoritative document_current_epoch at t''s
+        commit point and the supplied append_owner_generation_id equaled d''s authoritative document_owner_generation_id at
+        t''s commit point; a tuple whose generation was superseded between attempt and commit, or that was copied from or
+        merely scalar-collides with another document''s generation, does not satisfy this condition.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 894b540378cef54a3d907e798b05ca655975eff13775c9fae349bd8a2492a319
+        verdict: EQUIVALENT
+        reason: The formula requires every canonical append attempt to be bound to the immutable server-side generation for
+          the same document executing it, and every canonical append to use the exact current document generation and match
+          both authoritative epoch and generation-id coordinates at commit, thereby barring superseded or other-document generations
+          from gaining authority via copied, substituted, or colliding scalar values, within the same accepted-history scope.
+        differences: []
+      strengthening:
+        subject_signature: 894b540378cef54a3d907e798b05ca655975eff13775c9fae349bd8a2492a319
+        verdict: EQUIVALENT
+        reason: 'The formula preserves the source scope and guarantees: every canonical append attempt''s supplied owner_epoch
+          and append_owner_generation_id are provenance-bound to the immutable server-side generation for the same document
+          executing that attempt, and every canonical append additionally requires that document-scoped tuple to match the
+          document''s authoritative current epoch and generation id at commit, so a superseded generation or another document''s
+          generation cannot gain authority through copied, substituted, or scalar-colliding values. No extra coordinate, timing,
+          or authority boundary beyond the source is imposed, and terminal-outcome arbitration is not included.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 894b540378cef54a3d907e798b05ca655975eff13775c9fae349bd8a2492a319
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original scope and guarantees: provenance binding of owner_epoch and append_owner_generation_id
+          to the immutable server-side generation for the same document executing every canonical append attempt, the required
+          match of that document-scoped tuple to document_current_epoch and document_owner_generation_id at commit for performed
+          appends, and the denial of authority from superseded or other-document generations via copying, substitution, or
+          scalar collision, without collapsing distinct coordinates or adding a stronger requirement.'
+        differences: []
