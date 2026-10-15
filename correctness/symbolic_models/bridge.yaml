@@ -4874,6 +4874,8 @@ functions:
     - claim:C39_authoritative_history_state_is_gap_free
     - claim:L138_committed_append_preserves_gap_free_state_shape
     - claim:L139_non_append_lifecycle_preserves_gap_free_state_shape
+    - claim:L28_authoritative_epoch_never_regresses_or_reuses
+    - claim:C8_stale_owner_is_fenced
   document_initialization_state:
     args:
     - AuthoritativeState
@@ -5228,6 +5230,7 @@ functions:
       a client-side or speculative action.'
     semantic_anchors:
     - claim:L28_authoritative_epoch_never_regresses_or_reuses
+    - claim:C8_stale_owner_is_fenced
   lifecycle_transition_never_decreases_or_restores_epoch:
     args:
     - ProtocolTransition
@@ -5244,6 +5247,7 @@ functions:
       makes a previously superseded value authoritative again.'
     semantic_anchors:
     - claim:L28_authoritative_epoch_never_regresses_or_reuses
+    - claim:C8_stale_owner_is_fenced
   explicit_non_acceptance_retirement_transition:
     args:
     - ProtocolTransition
@@ -5606,6 +5610,144 @@ functions:
     semantic_anchors:
     - claim:L98_ot_receives_exact_request_and_canonical_context
     - claim:L99_ot_result_is_bound_to_acceptance_frontier
+  candidate_append_commits_as_acceptance:
+    args:
+    - CanonicalAcceptance
+    - Revision
+    returns: Bool
+    catalog_symbols:
+    - candidate_canonical_change
+    meaning: 'Canonical acceptance a is the committed form of candidate_canonical_change@r
+      committed as a candidate append: a is exactly the canonical accepted change
+      that the candidate change carrying revision r became when its append committed
+      as a canonical accepted change.'
+    semantic_anchors:
+    - claim:L5_append_requires_current_epoch
+  canonical_acceptance_document:
+    args:
+    - CanonicalAcceptance
+    returns: Document
+    catalog_symbols: []
+    meaning: 'The document of canonical acceptance a: the document whose canonical
+      accepted history a belongs to, that is, the document of the candidate_canonical_change
+      whose committed form a is.'
+    semantic_anchors:
+    - claim:L5_append_requires_current_epoch
+  canonical_append_commits_candidate_change:
+    args:
+    - ProtocolTransition
+    - Document
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Canonical append transition t for document d is the commit of a candidate_canonical_change
+      append for d: the canonical accepted change that t appends to d''s canonical
+      history is the committed form of a candidate_canonical_change append for d.
+      This classifies the append by its candidate provenance -- the provenance the
+      candidate-append epoch guard governs -- not by its supplied fencing tuple.'
+    semantic_anchors:
+    - claim:L5_append_requires_current_epoch
+    - claim:C8_stale_owner_is_fenced
+  lifecycle_transition_follows_epoch_supersession:
+    args:
+    - ProtocolTransition
+    - Document
+    returns: Bool
+    dimensions:
+    - document
+    - observation
+    catalog_symbols:
+    - document_current_epoch
+    meaning: 'Authoritative lifecycle transition t for document d executes after an
+      authoritative epoch value for d has been superseded by a strictly greater epoch:
+      d''s epoch history already contains a supersession event when t occurs, so t
+      is in the post-supersession regime to which the never-decrease / never-restore
+      guarantee applies.'
+    semantic_anchors:
+    - claim:L28_authoritative_epoch_never_regresses_or_reuses
+    - claim:C8_stale_owner_is_fenced
+  state_step_is_lifecycle_transition:
+    args:
+    - AuthoritativeState
+    - AuthoritativeState
+    - Document
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'The authoritative step from state before to state after is the state-level
+      effect of an authoritative lifecycle transition for document d: an authoritative
+      recovery, restart, delayed metadata publication, ownership handoff, or other
+      authoritative lifecycle transition in d''s lifecycle, as opposed to a client-side
+      or speculative action. This is the step form of authoritative_lifecycle_transition_for_document.'
+    semantic_anchors:
+    - claim:L28_authoritative_epoch_never_regresses_or_reuses
+    - claim:C8_stale_owner_is_fenced
+  state_step_follows_epoch_supersession:
+    args:
+    - AuthoritativeState
+    - AuthoritativeState
+    - Document
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'By the time of the authoritative step from state before to state after,
+      an authoritative epoch value for document d has already been superseded by a
+      strictly greater epoch: the step occurs in the post-supersession regime to which
+      the never-decrease / never-restore guarantee applies.'
+    semantic_anchors:
+    - claim:L28_authoritative_epoch_never_regresses_or_reuses
+    - claim:C8_stale_owner_is_fenced
+  state_step_decreases_document_epoch:
+    args:
+    - AuthoritativeState
+    - AuthoritativeState
+    - Document
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Across the authoritative step from state before to state after, document
+      d''s document_current_epoch decreases: the authoritative current epoch of d
+      in after is strictly less than the authoritative current epoch of d in before.'
+    semantic_anchors:
+    - claim:L28_authoritative_epoch_never_regresses_or_reuses
+    - claim:C8_stale_owner_is_fenced
+  superseded_epoch_value_is_current:
+    args:
+    - AuthoritativeState
+    - Document
+    returns: Bool
+    dimensions:
+    - document
+    - observation
+    catalog_symbols:
+    - document_current_epoch
+    meaning: 'In authoritative state s, document d''s current document_current_epoch
+      is an epoch value that was superseded by a strictly greater epoch: the epoch
+      value now authoritative for d is one that an earlier supersession event replaced
+      with a strictly greater value, regardless of which owner generation is paired
+      with it in s.'
+    semantic_anchors:
+    - claim:L28_authoritative_epoch_never_regresses_or_reuses
+    - claim:C8_stale_owner_is_fenced
+  append_tuple_matches_current_generation_at_commit:
+    args:
+    - ProtocolTransition
+    - Document
+    returns: Bool
+    dimensions:
+    - document
+    - observation
+    catalog_symbols:
+    - owner_epoch
+    - append_owner_generation_id
+    - document_current_epoch
+    - document_owner_generation_id
+    meaning: 'Canonical append transition t for document d committed with its supplied
+      document-scoped generation tuple matching d''s authoritative generation at commit:
+      the supplied owner_epoch equaled d''s authoritative document_current_epoch at
+      t''s commit point and the supplied append_owner_generation_id equaled d''s authoritative
+      document_owner_generation_id at t''s commit point. A tuple whose generation
+      was superseded between attempt and commit, or that was copied from or merely
+      scalar-collides with another document''s generation, does not satisfy this predicate.'
+    semantic_anchors:
+    - claim:L159_owner_append_authorization_is_generation_bound
+    - claim:C8_stale_owner_is_fenced
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -12385,11 +12527,18 @@ claims:
             r: Revision
           body:
             implies:
-            - call:
-                fn: candidate_change_commits_as_acceptance
-                args:
-                - var: a
-                - var: r
+            - and:
+              - call:
+                  fn: candidate_append_commits_as_acceptance
+                  args:
+                  - var: a
+                  - var: r
+              - eq:
+                - call:
+                    fn: canonical_acceptance_document
+                    args:
+                    - var: a
+                - var: d
             - call:
                 fn: acceptance_append_supplied_epoch_matches_current
                 args:
@@ -12401,11 +12550,17 @@ claims:
             d: Document
           body:
             implies:
-            - call:
-                fn: canonical_append_for_document
-                args:
-                - var: t
-                - var: d
+            - and:
+              - call:
+                  fn: canonical_append_for_document
+                  args:
+                  - var: t
+                  - var: d
+              - call:
+                  fn: canonical_append_commits_candidate_change
+                  args:
+                  - var: t
+                  - var: d
             - call:
                 fn: append_commit_supplied_epoch_matches_current
                 args:
@@ -12422,11 +12577,17 @@ claims:
             d: Document
           body:
             implies:
-            - call:
-                fn: authoritative_lifecycle_transition_for_document
-                args:
-                - var: t
-                - var: d
+            - and:
+              - call:
+                  fn: authoritative_lifecycle_transition_for_document
+                  args:
+                  - var: t
+                  - var: d
+              - call:
+                  fn: lifecycle_transition_follows_epoch_supersession
+                  args:
+                  - var: t
+                  - var: d
             - call:
                 fn: lifecycle_transition_never_decreases_or_restores_epoch
                 args:
@@ -12434,15 +12595,74 @@ claims:
                 - var: d
       - forall:
           vars:
-            s: AuthoritativeState
+            before: AuthoritativeState
+            after: AuthoritativeState
             d: Document
           body:
-            not:
-              call:
-                fn: superseded_generation_is_authoritative
-                args:
-                - var: s
-                - var: d
+            implies:
+            - and:
+              - call:
+                  fn: authoritative_state_step
+                  args:
+                  - var: before
+                  - var: after
+              - call:
+                  fn: state_step_is_lifecycle_transition
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+              - call:
+                  fn: state_step_follows_epoch_supersession
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+            - and:
+              - not:
+                  call:
+                    fn: superseded_epoch_value_is_current
+                    args:
+                    - var: after
+                    - var: d
+              - not:
+                  call:
+                    fn: superseded_generation_is_authoritative
+                    args:
+                    - var: after
+                    - var: d
+      - forall:
+          vars:
+            before: AuthoritativeState
+            after: AuthoritativeState
+            d: Document
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: authoritative_state_step
+                  args:
+                  - var: before
+                  - var: after
+              - call:
+                  fn: state_step_is_lifecycle_transition
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+              - call:
+                  fn: state_step_follows_epoch_supersession
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+            - not:
+                call:
+                  fn: state_step_decreases_document_epoch
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
   L156_owner_handoff_installs_fresh_epoch:
     capability: relational
     contracts: []
@@ -12513,15 +12733,96 @@ claims:
                   - var: d
       - forall:
           vars:
-            s: AuthoritativeState
+            t: ProtocolTransition
             d: Document
           body:
-            not:
-              call:
-                fn: superseded_generation_is_authoritative
+            implies:
+            - and:
+              - call:
+                  fn: authoritative_lifecycle_transition_for_document
+                  args:
+                  - var: t
+                  - var: d
+              - call:
+                  fn: lifecycle_transition_follows_epoch_supersession
+                  args:
+                  - var: t
+                  - var: d
+            - call:
+                fn: lifecycle_transition_never_decreases_or_restores_epoch
                 args:
-                - var: s
+                - var: t
                 - var: d
+      - forall:
+          vars:
+            before: AuthoritativeState
+            after: AuthoritativeState
+            d: Document
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: authoritative_state_step
+                  args:
+                  - var: before
+                  - var: after
+              - call:
+                  fn: state_step_is_lifecycle_transition
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+              - call:
+                  fn: state_step_follows_epoch_supersession
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+            - and:
+              - not:
+                  call:
+                    fn: superseded_epoch_value_is_current
+                    args:
+                    - var: after
+                    - var: d
+              - not:
+                  call:
+                    fn: superseded_generation_is_authoritative
+                    args:
+                    - var: after
+                    - var: d
+      - forall:
+          vars:
+            before: AuthoritativeState
+            after: AuthoritativeState
+            d: Document
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: authoritative_state_step
+                  args:
+                  - var: before
+                  - var: after
+              - call:
+                  fn: state_step_is_lifecycle_transition
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+              - call:
+                  fn: state_step_follows_epoch_supersession
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+            - not:
+                call:
+                  fn: state_step_decreases_document_epoch
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
       - forall:
           vars:
             t: ProtocolTransition
@@ -12560,13 +12861,35 @@ claims:
             d: Document
           body:
             implies:
+            - and:
+              - call:
+                  fn: canonical_append_for_document
+                  args:
+                  - var: t
+                  - var: d
+              - call:
+                  fn: canonical_append_commits_candidate_change
+                  args:
+                  - var: t
+                  - var: d
+            - call:
+                fn: append_commit_supplied_epoch_matches_current
+                args:
+                - var: t
+                - var: d
+      - forall:
+          vars:
+            t: ProtocolTransition
+            d: Document
+          body:
+            implies:
             - call:
                 fn: canonical_append_for_document
                 args:
                 - var: t
                 - var: d
             - call:
-                fn: append_commit_supplied_epoch_matches_current
+                fn: append_tuple_matches_current_generation_at_commit
                 args:
                 - var: t
                 - var: d
@@ -12575,6 +12898,23 @@ claims:
     contracts:
     - owner_generation_authorization_binding
     formula_from_contracts: true
+    residual_formula:
+      forall:
+        vars:
+          t: ProtocolTransition
+          d: Document
+        body:
+          implies:
+          - call:
+              fn: canonical_append_for_document
+              args:
+              - var: t
+              - var: d
+          - call:
+              fn: append_tuple_matches_current_generation_at_commit
+              args:
+              - var: t
+              - var: d
   L154_pending_edit_identity_provenance_is_preserved:
     capability: relational
     contracts:
