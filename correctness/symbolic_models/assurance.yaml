@@ -9465,3 +9465,174 @@ records:
           preparation is constrained only to be incapable of committing or causing canonical acceptance, without being required
           or made sufficient for acceptance.'
         differences: []
+  claim:L131_post_recovery_acceptance_state_is_exhaustive:
+    kind: claim
+    subject_id: L131_post_recovery_acceptance_state_is_exhaustive
+    subject_signature: 4be40b60370d1fd3d73a2f41b2dc9beed52b4f33b6bc59f2106bc850dfa11cc5
+    roundtrip:
+      subject_signature: 4be40b60370d1fd3d73a2f41b2dc9beed52b4f33b6bc59f2106bc850dfa11cc5
+      status: TRANSLATED
+      natural_language: 'For every recovery attempt r and every revision h, if all of the following hold: (1) r is a new-owner
+        recovery attempt, meaning r is within the canonical new-owner recovery boundary for its target document, a classification
+        established by entering that boundary and not dependent on successful progress, so r remains a new-owner recovery
+        attempt even if it stalls, crashes, or aborts before owner-generation installation, recovery-head capture, or completion,
+        and recovery or reconstruction activity outside that canonical boundary is excluded; (2) r has completed and installed
+        its recovered owner state, which classifies actual completion independently of whether the installed state, recovery
+        inputs, or their provenance satisfy any correctness obligation, and does not require any recovery attempt to complete;
+        (3) the recovered owner established by r is used to resume owner service, meaning that owner serves its document on
+        the basis of r''s recovered state; (4) h is the recovery head captured by r at its recovery-head capture event, i.e.,
+        the authoritative frontier value r read and bound as its recovery_head, this relation naming the captured value only
+        and not itself asserting that the captured value equals the authoritative frontier at capture; and (5) r completed
+        at authoritative head h, meaning h is the recovery head captured by r and h is the authoritative frontier H, the document_latest_revision
+        of r''s target document, at which r''s completed recovery stands, stating only the authoritative-head scope coordinate
+        of the completed recovery and not the contents of the recovered state nor how the captured value was bound at capture
+        time; then both of the following hold: (a) every document-history-dependent runtime state value present on r''s recovered
+        owner that can influence server-side OT transformation or canonical acceptance is contained in r''s recovered logical
+        document state through its recovery head, r''s recovered local head and next-candidate revision, or r''s ot_owner_memory,
+        and no stale, retained, cached, otherwise pre-existing, or newly produced per-document runtime state outside those
+        components can influence post-recovery canonical semantics for r''s owner; and (b) for r, the recovered OT metadata
+        for r''s owner is carried within the union of r''s recovered logical document state through its recovery head, r''s
+        recovered local head and next-candidate revision, and r''s ot_owner_memory, in that every recovered OT metadata value
+        that can influence server-side OT transformation or canonical acceptance for r''s owner is contained in at least one
+        of those three components, and no separate recovered OT metadata bucket exists outside that union.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 4be40b60370d1fd3d73a2f41b2dc9beed52b4f33b6bc59f2106bc850dfa11cc5
+        verdict: EQUIVALENT
+        reason: Antecedent exactly encodes a completed new-owner recovery used to resume service at captured authoritative
+          head H, and the two consequent predicates jointly restate containment of all history-dependent influential state
+          in the recovered logical state through H, local head/next-candidate revision, or ot_owner_memory, completeness of
+          that OT metadata carrier with no separate bucket outside the union, and exclusion of any stale/retained/cached/pre-existing/newly
+          produced outside state from post-recovery canonical influence, with no added or dropped guard, coordinate, or cardinality.
+        differences: []
+      strengthening:
+        subject_signature: 4be40b60370d1fd3d73a2f41b2dc9beed52b4f33b6bc59f2106bc850dfa11cc5
+        verdict: EQUIVALENT
+        reason: The formula's antecedent exactly captures a completed new-owner recovery at authoritative head H used to resume
+          owner service, and its two consequents exactly encode containment of all history-dependent influencing state in
+          the recovered logical state through H, local head/next-candidate revision, or ot_owner_memory, the completeness/no-separate-bucket
+          requirement for recovered OT metadata, and exclusion of any outside stale or newly produced state from post-recovery
+          canonical influence, with no added scope, equality, or cardinality requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 4be40b60370d1fd3d73a2f41b2dc9beed52b4f33b6bc59f2106bc850dfa11cc5
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal quantification over completed new-owner recoveries used to resume service
+          at authoritative head H, the containment of every history-dependent runtime state value that can influence OT transformation
+          or canonical acceptance within the recovered logical document state through H, the recovered local head and next-candidate
+          revision, or ot_owner_memory, the completeness of that union with no separate recovered OT metadata bucket outside
+          it, and the exclusion of any stale, retained, cached, pre-existing, or newly produced outside state from influencing
+          post-recovery canonical semantics, without adding or omitting a guarantee.
+        differences: []
+  claim:L180_non_append_lifecycle_preserves_logical_state_at_frontier:
+    kind: claim
+    subject_id: L180_non_append_lifecycle_preserves_logical_state_at_frontier
+    subject_signature: b47e896f05e3af5c922f4d0b64457981a86cf14dc763a72b34b2829eaf56e18e
+    roundtrip:
+      subject_signature: b47e896f05e3af5c922f4d0b64457981a86cf14dc763a72b34b2829eaf56e18e
+      status: TRANSLATED
+      natural_language: 'For every protocol transition t, every document d, every authoritative state s, and every revision
+        h: if (1) t is a non-append authoritative history lifecycle transition for document d — that is, t represents an execution,
+        including an execution prefix, of a non-append authoritative snapshotting, checkpoint-replacement, cleanup, or compaction
+        lifecycle procedure targeting document d, where the target is the procedure''s intended document independently of
+        the documents owning its actual inputs or outputs, classification does not require correct provenance, successful
+        completion, output publication, or eventual progress, stalled, crashed, and aborted executions remain included, and
+        ordinary canonical appends and recovery procedures as such are outside this classification; and (2) t completes, i.e.,
+        its snapshotting, checkpoint-replacement, cleanup, or compaction procedure runs to completion rather than stalling
+        or aborting, so t has a completed post-state; and (3) t completes without accepting a new edit, i.e., t''s own execution
+        itself accepts no new canonical edit and creates no canonical accepted change, where appends performed by other concurrent
+        transitions do not count as t accepting an edit; and (4) t completes at frontier h, i.e., h is the authoritative frontier
+        — the document_latest_revision of t''s target document — at the completion of t, read at the transition level at t''s
+        completion whether or not t''s resulting representation correctly records that frontier as its own latest_revision;
+        and (5) s is the resulting post-state of t, i.e., the authoritative representation t installs or publishes on completion;
+        then the logical document state denoted by s equals deterministic canonical replay of accepted revisions through frontier
+        h.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: b47e896f05e3af5c922f4d0b64457981a86cf14dc763a72b34b2829eaf56e18e
+        verdict: EQUIVALENT
+        reason: The formula's preconditions exactly capture a non-append authoritative lifecycle transition for a document
+          that completes, completes at frontier h, and accepts no new edit itself, with s as its resulting authoritative state;
+          the conclusion asserts s denotes the logical state equal to canonical replay of accepted revisions through h, with
+          no added or dropped requirements.
+        differences: []
+      strengthening:
+        subject_signature: b47e896f05e3af5c922f4d0b64457981a86cf14dc763a72b34b2829eaf56e18e
+        verdict: EQUIVALENT
+        reason: The formula quantifies over transitions, documents, result states, and frontiers, requires exactly the source
+          preconditions (non-append authoritative lifecycle type, completion, completion at frontier h, and no new edit accepted
+          by the transition), and concludes the result state logically matches canonical replay through h, with no added or
+          omitted requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: b47e896f05e3af5c922f4d0b64457981a86cf14dc763a72b34b2829eaf56e18e
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal scope over completing non-append snapshotting, checkpoint-replacement,
+          cleanup, and compaction transitions, the no-new-edit and frontier-H preconditions, and requires the post-transition
+          authoritative representation to denote exactly the logical state from canonical replay through H, with no material
+          weakening or strengthening.
+        differences: []
+  claim:L172_snapshot_compaction_preserves_concurrent_append_suffix:
+    kind: claim
+    subject_id: L172_snapshot_compaction_preserves_concurrent_append_suffix
+    subject_signature: 333b299dd4dedd8fb3ec56e3a92f5404d9e9f04730ce7e76f472f085f6184ae9
+    roundtrip:
+      subject_signature: 333b299dd4dedd8fb3ec56e3a92f5404d9e9f04730ce7e76f472f085f6184ae9
+      status: TRANSLATED
+      natural_language: 'Both of the following hold. (1) For every protocol transition t, document d, authoritative state
+        s, and revision h: if t is a non-append authoritative history lifecycle procedure targeting d — that is, t represents
+        an execution, including an execution prefix, of a non-append authoritative snapshotting, checkpoint-replacement, cleanup,
+        or compaction lifecycle procedure whose intended target is d, independently of the documents owning its actual inputs
+        or outputs, this classification not requiring correct provenance, successful completion, output publication, or eventual
+        progress, and including stalled, crashed, and aborted executions, while ordinary canonical appends and recovery procedures
+        as such are outside this predicate — and the authoritative history lifecycle procedure t targeting d overlaps one
+        or more canonical accepted-change appends for d, meaning at least one canonical append for d is concurrent with t
+        in that the append''s execution overlaps t''s execution, such an append possibly committing while t is in progress
+        or only after t completes, with an append that commits only after t completes being outside t''s post-state and not
+        counted in t''s completion head; and t completes, meaning its snapshotting, checkpoint-replacement, cleanup, or compaction
+        procedure runs to completion rather than stalling or aborting, so t has a completed post-state; and h is the completion
+        head of t, meaning h is the document_latest_revision of t''s target document after all canonical appends for that
+        document that committed before t completes, counting every canonical append committed during t''s overlap and no append
+        that commits only after t completes; and s is the resulting post-state of t, meaning the authoritative representation
+        t installs or publishes on completion; then all of the following hold: s exposes the document frontier for d, meaning
+        s includes an authoritative state instance for d so that d''s document_latest_revision frontier coordinate is defined
+        in s; s preserves latest_revision exactly equal to frontier h; and the logical document state denoted by s equals
+        deterministic canonical replay of accepted revisions through frontier h. (2) For every protocol transition t, document
+        d, and authoritative state s: if t is a non-append authoritative history lifecycle procedure targeting d as defined
+        above, and t overlaps one or more canonical accepted-change appends for d as defined above, and t completes as defined
+        above, and s is the resulting post-state of t as defined above, then t preserves the concurrent append suffix for
+        d, meaning no canonical accepted suffix of d that committed during t''s overlap is deleted, omitted, rewritten, or
+        double-applied by t''s snapshot publication, checkpoint replacement, cleanup, or compaction.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 333b299dd4dedd8fb3ec56e3a92f5404d9e9f04730ce7e76f472f085f6184ae9
+        verdict: EQUIVALENT
+        reason: The formula scopes to a completed non-append lifecycle transition targeting d that overlaps canonical appends,
+          defines h as the frontier after all appends committed before completion and excluding post-completion appends, and
+          for its result state s requires frontier exposure and equality to h, logical-state equality with canonical replay
+          through h, and via the second conjunct exact preservation of the concurrent accepted suffix against deletion, omission,
+          rewriting, or double application.
+        differences: []
+      strengthening:
+        subject_signature: 333b299dd4dedd8fb3ec56e3a92f5404d9e9f04730ce7e76f472f085f6184ae9
+        verdict: EQUIVALENT
+        reason: The formula conditions on a non-append authoritative lifecycle transition for d that overlaps canonical appends
+          and completes, defines h as the frontier after all appends committed before completion (excluding appends committing
+          only after completion), and requires the result state to expose d's frontier, equal h, match canonical replay through
+          h, and preserve the concurrent append suffix without deletion, omission, rewriting, or double application, matching
+          the source scope and guarantees with no added or omitted requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 333b299dd4dedd8fb3ec56e3a92f5404d9e9f04730ce7e76f472f085f6184ae9
+        verdict: EQUIVALENT
+        reason: The rendering preserves the same completed lifecycle scope, the same completion head H counting only appends
+          committed before completion, frontier preservation and replay equivalence through H, the prohibition on deleting,
+          omitting, rewriting, or double-applying a suffix committed during overlap, and the exclusion of appends committing
+          only after completion.
+        differences: []
