@@ -6833,3 +6833,147 @@ records:
           scope, immediate pre/post-state relation, and exclusion of non-committed, non-changing, and append steps are elaborations
           of the original pre-state/post-state and no-new-edit conditions, with no material weakening or strengthening.'
         differences: []
+  claim:L158_pending_retirement_requires_matching_acceptance_identity:
+    kind: claim
+    subject_id: L158_pending_retirement_requires_matching_acceptance_identity
+    subject_signature: 0b839f464898dd6f604c28acee8051813e92d0c044fcde29d3bdd3c35549659a
+    roundtrip:
+      subject_signature: 0b839f464898dd6f604c28acee8051813e92d0c044fcde29d3bdd3c35549659a
+      status: TRANSLATED
+      natural_language: Both of the following hold. (1) For every client state s and every overlay o, if s reflects the retirement
+        of the pending edit o with authoritative accepted/reconciled semantics, then that acceptance-based retirement of pending
+        edit o in state s is derived from canonical acceptance or equivalent authoritative accepted evidence for the exact
+        same full identity of o; mere co-presence of matching evidence is insufficient if some unrelated source actually caused
+        the retirement. (2) For every client state s and every logical edit identity e, if the reachable client state s results
+        from retirement of the exact logical edit identity e's normal speculative lifecycle with authoritative accepted/reconciled
+        semantics — a predicate that classifies an accepted-semantics retirement boundary that has already occurred and does
+        not assert that such retirement, reconciliation, publication, or delivery eventually occurs — then the authoritative
+        accepted/reconciled-semantics retirement of exact logical edit identity e in state s is actually derived from canonical
+        acceptance or equivalent authoritative accepted evidence for that same full document_id plus client_change_id identity;
+        mere co-presence of matching evidence is insufficient if some unrelated acceptance source caused the retirement.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 0b839f464898dd6f604c28acee8051813e92d0c044fcde29d3bdd3c35549659a
+        verdict: EQUIVALENT
+        reason: Both conjuncts require any retirement with authoritative accepted/reconciled semantics, whether viewed at
+          pending-overlay or exact logical-identity level, to be actually derived from a canonical_accepted_change or equivalent
+          authoritative accepted evidence for the exact same full (document_id, client_change_id) identity, with mere co-presence
+          insufficient. This preserves the mismatch exclusions for differing document or change identity and leaves expiry,
+          conflict/manual resolution, and abandonment terminations unconstrained.
+        differences: []
+      strengthening:
+        subject_signature: 0b839f464898dd6f604c28acee8051813e92d0c044fcde29d3bdd3c35549659a
+        verdict: EQUIVALENT
+        reason: Both conjuncts condition only authoritative accepted/reconciled retirement, at overlay and exact-identity
+          levels, on actual derivation from canonical or equivalent authoritative acceptance for the same full (D,k) identity,
+          preserving the mismatched-coordinate exclusion and leaving non-acceptance terminations such as expiry, conflict/manual
+          resolution, or abandonment outside the requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 0b839f464898dd6f604c28acee8051813e92d0c044fcde29d3bdd3c35549659a
+        verdict: EQUIVALENT
+        reason: Both renderings condition only on authoritative accepted/reconciled retirements and require actual derivation,
+          not mere co-presence, from canonical acceptance or equivalent authoritative accepted evidence for the exact same
+          full (document_id, client_change_id) identity, so an acceptance differing in either coordinate cannot be the retirement
+          source; non-acceptance terminations remain outside scope and no eventual reconciliation is asserted.
+        differences: []
+  claim:L208_externally_rejected_edit_terminalizes_speculative_lifecycle:
+    kind: claim
+    subject_id: L208_externally_rejected_edit_terminalizes_speculative_lifecycle
+    subject_signature: 3bdf2f48f1dfd1ee6f99283071c607115b5c831b108e36651681df2a2e0b7a36
+    roundtrip:
+      subject_signature: 3bdf2f48f1dfd1ee6f99283071c607115b5c831b108e36651681df2a2e0b7a36
+      status: TRANSLATED
+      natural_language: 'For every client state s, every logical edit identity e, every document d, and every client change
+        identifier k, if d is the document_id component of e, k is the client_change_id coordinate carried by e (where e =
+        (document_id, client_change_id)), and s is exactly the resulting user-visible state published at, or atomically with,
+        the authoritative terminal-result publication boundary through which the normally participating client observes an
+        authoritative externally terminal definitive REJECTED result carrying a definitive rejection reason for exact identity
+        e — where that published terminal result had already linearized before exposure through that boundary, where this
+        classification applies only to that resulting publication-boundary state and not to later states that merely remember
+        or follow an earlier rejection observation, and where it does not cover knowledge of an authoritative result obtained
+        through some other path — then all of the following hold in s for exact identity e: (1) the definitive REJECTED observation
+        represented by visible state s causes or atomically applies a same-identity non_acceptance_terminal_disposition, or
+        an equivalent terminal lifecycle transition, for e, and that terminalizing effect has already taken effect before
+        or atomically with s, not merely being scheduled to occur after s and not being a lifecycle that happened to be terminalized
+        earlier for an unrelated reason; (2) e does not remain active in client_pending_edits in s; (3) s does not retain
+        a normal-lifecycle speculative representation for e; (4) s does not expose a normal-lifecycle speculative representation
+        for e; and (5) e is classified in s as a terminalized normal speculative lifecycle.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 3bdf2f48f1dfd1ee6f99283071c607115b5c831b108e36651681df2a2e0b7a36
+        verdict: EQUIVALENT
+        reason: The formula's antecedent exactly captures observation of a definitive REJECTED result for the full identity
+          e=(D,k) at the authoritative publication boundary state s, via the identity coordinate equalities and definitive_rejection_published_into_state.
+          Its consequent requires the observation itself to terminalize the same identity before or atomically with s, excluding
+          earlier unrelated terminalization, together with non-activity in pending, retained, and visible speculative overlays
+          and classification as terminalized, matching the source without adding later-state absorbing obligations or an eventual-observation
+          requirement.
+        differences: []
+      strengthening:
+        subject_signature: 3bdf2f48f1dfd1ee6f99283071c607115b5c831b108e36651681df2a2e0b7a36
+        verdict: EQUIVALENT
+        reason: The formula's antecedent captures the authoritative publication-boundary REJECTED observation for the exact
+          full identity, and its consequent requires that same observation to terminalize that identity, with removal from
+          pending, retained, and visible speculative state and terminalized classification in that boundary state; earlier
+          unrelated terminalization is expressly excluded and no later absorbing or eventual-observation obligation is added.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 3bdf2f48f1dfd1ee6f99283071c607115b5c831b108e36651681df2a2e0b7a36
+        verdict: EQUIVALENT
+        reason: The rendering preserves the identity (document_id, client_change_id), the normally-participating-client and
+          authoritative publication-boundary observation precondition, the requirement that the REJECTED observation itself
+          effect a same-identity terminal disposition before or atomically with the resulting user-visible state (excluding
+          earlier unrelated terminalization), removal from pending, retained and visible speculative overlays, and terminalized
+          classification at that boundary only, without imposing later-state or eventual-observation obligations.
+        differences: []
+  claim:L209_accepted_reconciliation_terminalizes_speculative_lifecycle:
+    kind: claim
+    subject_id: L209_accepted_reconciliation_terminalizes_speculative_lifecycle
+    subject_signature: 4386395457c6829e97bf2a67f21dd12d494336934969822e29fd451b76faa81d
+    roundtrip:
+      subject_signature: 4386395457c6829e97bf2a67f21dd12d494336934969822e29fd451b76faa81d
+      status: TRANSLATED
+      natural_language: 'For every client state s, every logical edit identity e, every document d, and every client change
+        id k, if d is equal to the document_id component of the full identity carried by e, k is equal to the client_change_id
+        coordinate carried by e, and s is exactly the user-visible state atomically exposed by a normal foreground reconnect/reconciliation
+        publication through response head H after the authoritative reconciliation result classified the exact logical edit
+        identity e as ACCEPTED at canonical revision r with r <= H — with predicates over s therefore holding at that publication
+        boundary, not only after a later cleanup transition, and with this publication predicate itself not requiring that
+        the published canonical state correctly contains or is provenance-bound to that acceptance, since acceptance identity/provenance
+        and response-head correctness are separate obligations — then all of the following hold conjunctively in s: e does
+        not remain active in client_pending_edits in s; s does not retain a normal-lifecycle speculative representation for
+        e; s does not expose a normal-lifecycle speculative representation for e in the user-visible state; and e is classified
+        in s as a terminalized normal speculative lifecycle.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 4386395457c6829e97bf2a67f21dd12d494336934969822e29fd451b76faa81d
+        verdict: EQUIVALENT
+        reason: 'The formula conditions on the publication-boundary state satisfying accepted_reconciliation_published for
+          the full identity e=(d,k) classified ACCEPTED at r <= H, and requires exactly the source consequences in that state:
+          not active in pending, retained speculative, or visible speculative overlays, and classified terminalized, without
+          adding canonical-content or provenance requirements.'
+        differences: []
+      strengthening:
+        subject_signature: 4386395457c6829e97bf2a67f21dd12d494336934969822e29fd451b76faa81d
+        verdict: EQUIVALENT
+        reason: The formula conditions exactly on accepted_reconciliation_published for the full identity e=(d,k), which by
+          its supplied meaning encodes a normal foreground publication through head H with ACCEPTED at r <= H and evaluation
+          at the publication boundary, and concludes precisely non-activity in pending, retained, and visible speculative
+          sets plus terminalized classification, without adding provenance, eventuality, rebase, or absorbing guarantees.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 4386395457c6829e97bf2a67f21dd12d494336934969822e29fd451b76faa81d
+        verdict: EQUIVALENT
+        reason: The rendering preserves the exact (D,k) identity binding, the normal foreground publication through H after
+          ACCEPTED at r <= H precondition, holding at the publication boundary before-or-atomically (not later cleanup), removal
+          from pending, retained, and visible speculative overlays, and terminalized classification in the resulting state,
+          while retaining the exclusion that canonical containment/provenance correctness is a separate obligation and adding
+          no eventual or absorbing guarantee.
+        differences: []
