@@ -9636,3 +9636,391 @@ records:
           omitting, rewriting, or double-applying a suffix committed during overlap, and the exclusion of appends committing
           only after completion.
         differences: []
+  claim:L128_client_canonical_frontier_is_established_on_publication:
+    kind: claim
+    subject_id: L128_client_canonical_frontier_is_established_on_publication
+    subject_signature: bc1dfbc04d78af3380b326585ba39f631ae11cf06c45baf3168796671345f350
+    roundtrip:
+      subject_signature: bc1dfbc04d78af3380b326585ba39f631ae11cf06c45baf3168796671345f350
+      status: TRANSLATED
+      natural_language: 'For every client state s, if s is established by initialization or canonical publication — that is,
+        s is the resulting user-visible state of a client initialization or of a canonical publication that creates or replaces
+        a user-visible client state representing its document, including publication from restoration, document/view switching,
+        snapshot replacement, or reconnect/resync state, and covering exactly that establishment event class and no other
+        visible-document replacement path — then all of the following hold conjunctively: (1) the exact client_document_id
+        coordinate stored in s equals the represented document of s, where the represented document is the semantic document
+        D in the contract phrase ''client state representing document D'', an independent contract reference coordinate not
+        derived from client_document_id, client_local_document, last_applied_revision, or satisfaction of any frontier-coherence
+        condition; and the client state''s canonical content is exactly the deterministic replay of that represented document
+        through the visible frontier of s, where the visible frontier of s is the last canonical revision applied by s, i.e.
+        s''s last_applied_revision; (2) the client_resync_candidate associated with s, if any, is private construction state
+        outside the user-visible observer boundary until publication, and before publication it is not part of s''s user-visible
+        canonical tuple; (3) s''s client_local_document is exactly the deterministic application of all and only the represented
+        document''s canonical accepted revisions through the visible frontier of s: every canonical accepted revision of that
+        document at or below that frontier is applied exactly once, in canonical order, and no other revision, accepted change,
+        or content is part of client_local_document, where that frontier is s''s last_applied_revision, the highest contiguous
+        canonical revision applied by s, so the revisions applied for s are exactly that document''s contiguous canonical
+        accepted sequence through that frontier, with no gap, no omission, and no extra element; and (4) speculative raw edits
+        are not part of s''s client_local_document: no unaccepted, locally speculative raw edit contributes any content to
+        client_local_document in s, and client_local_document in s consists solely of canonical accepted content.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: bc1dfbc04d78af3380b326585ba39f631ae11cf06c45baf3168796671345f350
+        verdict: EQUIVALENT
+        reason: The formula quantifies over exactly the initialization/canonical-publication-established states, preserves
+          represented_document as an independent identity coordinate equated to client_document_id, requires client_local_document
+          to be the exact deterministic all-and-only canonical accepted application through visible_frontier/last_applied_revision,
+          and separately encodes the resync-candidate exclusion until publication and the speculative-raw-edit exclusion,
+          with no added or omitted requirement.
+        differences: []
+      strengthening:
+        subject_signature: bc1dfbc04d78af3380b326585ba39f631ae11cf06c45baf3168796671345f350
+        verdict: EQUIVALENT
+        reason: The formula quantifies only over states resulting from initialization or canonical publication (including
+          restoration, switching, snapshot replacement, and reconnect/resync), binds client_document_id to the independent
+          represented document, requires client_local_document to be exactly the deterministic all-and-only canonical accepted
+          revisions through visible_frontier/last_applied_revision, and separately encodes the resync-candidate boundary and
+          exclusion of speculative raw edits, with no added or omitted scope, identity, cardinality, or provenance condition.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: bc1dfbc04d78af3380b326585ba39f631ae11cf06c45baf3168796671345f350
+        verdict: EQUIVALENT
+        reason: The rendering preserves the initialization/publication scope including restoration, switching, snapshot and
+          resync, the independent identity D with client_document_id = D, the all-and-only deterministic application of D's
+          canonical accepted revisions through last_applied_revision as highest contiguous frontier, the privacy of client_resync_candidate
+          until publication, and the exclusion of speculative raw edits, without adding or omitting any requirement.
+        differences: []
+  claim:L157_foreground_reconnect_loses_publication_eligibility_after_document_switch:
+    kind: claim
+    subject_id: L157_foreground_reconnect_loses_publication_eligibility_after_document_switch
+    subject_signature: 5774cd703004e29a7a9076d0b118f6b915b043ddfa64c21ba9a957803fc3df67
+    roundtrip:
+      subject_signature: 5774cd703004e29a7a9076d0b118f6b915b043ddfa64c21ba9a957803fc3df67
+      status: TRANSLATED
+      natural_language: 'For every catch-up attempt c, all of the following hold. (1) If c is a normal foreground reconnect/catch-up
+        attempt — an attempt by a normally participating client that proceeds on the foreground, user-visible-document-bound
+        path for one document, which background or non-visible per-document synchronization attempts do not satisfy — and,
+        before c publishes, a user-visible transition switched the represented document from the document D that c was started
+        for to a different document, then the binding break permanently blocks publication for c: c permanently loses foreground
+        publication eligibility and cannot later publish merely because the user switches back. (2) If c is such a normal
+        foreground reconnect attempt and c completes and publishes its reconciled result to the user-visible canonical state,
+        then c remains eligible to publish to the foreground user-visible canonical state under the current visible-document
+        binding; this eligibility is specifically publication eligibility and does not assert completion eligibility. (3)
+        If c is such a normal foreground reconnect attempt and c is foreground-publication-eligible as just described, then
+        c remains bound to the foreground visible-document path for the document D it was started for, meaning the represented
+        document for c''s foreground path has not been switched away from D. (4) If c is such a normal foreground reconnect
+        attempt and the visible document was switched before publication as described in (1), then c is not foreground-publication-eligible.
+        (5) If c is such a normal foreground reconnect attempt and the visible document was switched before publication as
+        described in (1), then every delayed response for c is discarded, or is processed only under a separately defined
+        background/non-visible synchronization boundary, and no delayed response for c is processed through the normal foreground
+        reconnect path. (6) If c is such a normal foreground reconnect attempt and the visible document was switched before
+        publication as described in (1), then it is not the case that a delayed response for c mutates the current user-visible
+        state, in whole or in part, through the normal foreground reconnect path.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 5774cd703004e29a7a9076d0b118f6b915b043ddfa64c21ba9a957803fc3df67
+        verdict: EQUIVALENT
+        reason: The formula preserves the scope, switch-before-publication trigger, permanent loss of eligibility despite
+          switch-back, bound-while-eligible condition, and the delayed-response restriction to discard-or-background-only
+          with no mutation of current visible state via the normal foreground path.
+        differences: []
+      strengthening:
+        subject_signature: 5774cd703004e29a7a9076d0b118f6b915b043ddfa64c21ba9a957803fc3df67
+        verdict: EQUIVALENT
+        reason: 'The formula captures exactly the source conditions: publication implies eligibility, eligibility implies
+          remaining bound to D, a pre-publication switch to a different document permanently removes eligibility despite any
+          later switch back, and delayed responses after such a switch are confined to discard/background-only handling and
+          cannot mutate current visible state via the normal foreground path. No extra sufficiency, scope, or cardinality
+          condition is added.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 5774cd703004e29a7a9076d0b118f6b915b043ddfa64c21ba9a957803fc3df67
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original scope and consequences: a normal foreground reconnect attempt for D
+          that experiences a user-visible switch to a different document before publication permanently loses foreground publication
+          eligibility, a switch back does not re-qualify it, and its delayed response is limited to discard or background/non-visible
+          processing with no mutation of current user-visible state through the normal foreground path.'
+        differences: []
+  claim:C36_reconnect_starts_from_canonical_client_frontier:
+    kind: claim
+    subject_id: C36_reconnect_starts_from_canonical_client_frontier
+    subject_signature: 4fbc3380d32046bbe949407674db3697c0d1c6038a48f70ad6fd95512ea37096
+    roundtrip:
+      subject_signature: 4fbc3380d32046bbe949407674db3697c0d1c6038a48f70ad6fd95512ea37096
+      status: TRANSLATED
+      natural_language: 'All of the following hold conjunctively. (1) For every catch-up attempt c and every client state
+        s, if c is a normal foreground reconnect/catch-up attempt and c was initiated from user-visible client state s (s
+        was the current user-visible client state at the moment of c''s initiation), then the represented document of s —
+        the semantic document in the phrase ''client state representing document D'', an independent contract reference coordinate
+        not derived from client_document_id, client_local_document, last_applied_revision, or satisfaction of client_canonical_frontier_coherence
+        — equals the document that c is for, namely the document whose user-visible canonical tuple c starts from and whose
+        canonical state c seeks to bring the client to. (2) For every c and s, if c is a normal foreground reconnect/catch-up
+        attempt and c was initiated from user-visible client state s, then both: c''s reconnect-start base — its document
+        identity, canonical client document, and last_applied_revision — was captured from the user-visible canonical tuple
+        of s, or from one exact private copy of that tuple, with no start coordinate independently reread, substituted, synthesized,
+        or cross-bound across a visible-state transition, and with no private resync-candidate or request-construction scratch
+        state replacing that visible tuple as c''s starting base; and the last_applied_revision coordinate captured in c''s
+        reconnect-start base, the frontier from which c''s catch-up proceeds, equals the visible frontier of s, i.e. the last
+        canonical revision applied by s. (3) For every c and s, if c is a normal foreground reconnect/catch-up attempt and
+        c was initiated from user-visible client state s, then s''s canonical content exactly matches deterministic replay
+        of the represented document of s through the visible frontier of s. (4) For every c and s, if c is a normal foreground
+        reconnect/catch-up attempt and c was initiated from user-visible client state s, then the exact client_document_id
+        coordinate stored in s — which by itself makes no claim that the stored identity equals the independently represented
+        document — equals the document that c is for. (5) For every catch-up attempt c, if c is a normal foreground reconnect/catch-up
+        attempt and, before c publishes, a user-visible transition switched the represented document from the document c was
+        started for to a different document, then that binding break permanently blocks c''s publication: c permanently loses
+        foreground publication eligibility and cannot later publish merely because the user switches back. (6) For every catch-up
+        attempt c, if c is a normal foreground reconnect/catch-up attempt and, before c publishes, a user-visible transition
+        switched the represented document from the document c was started for to a different document, then c is not foreground
+        publication eligible, where foreground publication eligibility means remaining eligible to publish to the foreground
+        user-visible canonical state under the current visible-document binding and does not assert completion eligibility.
+        (7) For every catch-up attempt c, if c is a normal foreground reconnect/catch-up attempt, then there exists at least
+        one client state s such that c was initiated from user-visible client state s.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 4fbc3380d32046bbe949407674db3697c0d1c6038a48f70ad6fd95512ea37096
+        verdict: EQUIVALENT
+        reason: The formula preserves the visible-state initiation guard, represented-document and client_document_id identities,
+          same-tuple base capture with matching last_applied_revision and canonical replay content, exclusion of private scratch
+          replacement, and permanent loss of foreground publication eligibility after a pre-publication switch, while background
+          attempts remain outside the normal-foreground predicate.
+        differences: []
+      strengthening:
+        subject_signature: 4fbc3380d32046bbe949407674db3697c0d1c6038a48f70ad6fd95512ea37096
+        verdict: EQUIVALENT
+        reason: 'The formula preserves the source scope and guarantees: every normal foreground attempt has an initiating
+          visible state whose represented document and client_document_id both equal the attempt''s document, its start base
+          is captured from that same visible tuple with start revision equal to that state''s frontier and canonical content
+          equal to deterministic replay through that frontier, and a pre-publication switch away both permanently blocks publication
+          and removes foreground publication eligibility, with background synchronization excluded by the normal-foreground
+          predicate.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 4fbc3380d32046bbe949407674db3697c0d1c6038a48f70ad6fd95512ea37096
+        verdict: EQUIVALENT
+        reason: The rendering preserves the visible-document start condition, capture of the full starting tuple (identity,
+          replayed document through L, and frontier) from that same visible tuple without scratch substitution, the permanent
+          loss of foreground publication eligibility on switch-away before publication, and the restriction of the guarantee
+          to normal foreground attempts; its coordinate distinctions and unpacked capture conditions are entailed by the original's
+          same-tuple capture and do not add or omit a guarantee.
+        differences: []
+  claim:L99_ot_result_is_bound_to_acceptance_frontier:
+    kind: claim
+    subject_id: L99_ot_result_is_bound_to_acceptance_frontier
+    subject_signature: dc750a9e5381f408f3e4557bb6aefc8ca54759045d21aac1b74d00eaaa36b7a3
+    roundtrip:
+      subject_signature: dc750a9e5381f408f3e4557bb6aefc8ca54759045d21aac1b74d00eaaa36b7a3
+      status: TRANSLATED
+      natural_language: 'For every OT success result r, if r is a successful result actually produced by an OT computation
+        in an in-scope protocol execution, whether subsequently accepted, retained, retried, rejected at acceptance arbitration,
+        or discarded, then there exists a revision n such that both of the following hold: (1) n is the ot_computation_frontier
+        of the canonical committed document prefix against which the OT computation that produced r was computed, meaning
+        that computation consumed the canonical committed accepted_change_log prefix through revision n; this asserts only
+        that computation-time fact about r and the prefix it consumed, nothing about any representation or handoff of r after
+        its computation, requires no retention of r, and by itself imposes no condition on when r may become a canonical_accepted_change.
+        And (2) for every canonical acceptance a, if a is a committed canonical accepted-change record in authoritative accepted
+        history and canonical acceptance a is bound to the exact successful OT result r that produced its accepted payload,
+        with no synthesized or substituted result qualifying, then all three of the following hold: (a) acceptance_prestate_latest_revision(a)
+        equals n, where that value is, for committed acceptance a, the authoritative document_latest_revision of a''s document
+        immediately before a''s acceptance linearization point, being the actual acceptance pre-state value and not an earlier
+        read, an owner-memory estimate, a submitted frontier field, or the post-acceptance value; (b) acceptance_revision_is_successor_of(a,
+        n) holds, meaning the canonical revision assigned to acceptance a is exactly n+1, the immediate next revision after
+        n, and this predicate asserts only that revision relationship and does not assert commitment, OT provenance, or the
+        authoritative acceptance pre-state; and (c) acceptance_linearization_prestate_latest_revision(a) equals n, where that
+        value is, for committed acceptance a, the latest_revision of the authoritative acceptance pre-state of a''s document
+        immediately before a''s acceptance linearization point, namely that pre-state''s document_latest_revision, being the
+        actual acceptance pre-state value named and not an earlier read, an owner-memory estimate, a submitted frontier field,
+        the post-acceptance value, or a pre-state read at any distinct candidate-commit step.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: dc750a9e5381f408f3e4557bb6aefc8ca54759045d21aac1b74d00eaaa36b7a3
+        verdict: EQUIVALENT
+        reason: The formula binds each actual OT result to the frontier n against which it was computed and requires every
+          committed acceptance using that exact result to have acceptance pre-state latest_revision equal to n and assigned
+          revision n+1, exactly the canonical frontier-binding and stale-result prohibition; the duplicated pre-state functions
+          both denote the same authoritative pre-linearization value and add no distinct requirement.
+        differences: []
+      strengthening:
+        subject_signature: dc750a9e5381f408f3e4557bb6aefc8ca54759045d21aac1b74d00eaaa36b7a3
+        verdict: EQUIVALENT
+        reason: For every actual OT success result, the formula fixes its computation frontier n and requires any committed
+          acceptance bound to that exact result to have acceptance pre-state latest_revision equal to n and assigned revision
+          exactly n+1; this precisely bars stale-frontier commitment, leaving commitment possible only via a fresh result
+          computed at the advanced frontier.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: dc750a9e5381f408f3e4557bb6aefc8ca54759045d21aac1b74d00eaaa36b7a3
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the frontier binding: an OT result computed against prefix through n may be the exact
+          result bound to a committed canonical acceptance only when the authoritative acceptance pre-state latest_revision/document_latest_revision
+          immediately before linearization equals n and the assigned acceptance revision is n+1; no material weakening, strengthening,
+          or coordinate collapse beyond the source statement and contract definitions.'
+        differences: []
+  claim:L126_pending_reconciliation_preserves_resync_canonical_candidate:
+    kind: claim
+    subject_id: L126_pending_reconciliation_preserves_resync_canonical_candidate
+    subject_signature: 9b618563d0a4439cd6b01bf063b850b31a0c8d4e0fcb82a56f07e2096f11815e
+    roundtrip:
+      subject_signature: 9b618563d0a4439cd6b01bf063b850b31a0c8d4e0fcb82a56f07e2096f11815e
+      status: TRANSLATED
+      natural_language: 'For every protocol transition t, every catchup response r, and every revision h, if all of the following
+        hold: (1) t is a pending-identity reconciliation transition for a reconnect/resync attempt, classified by its reconciliation
+        role alone — i.e., a transition performing pending-identity reconciliation for the attempt, updating pending-resolution
+        state, speculative overlays, or related control/bookkeeping state, and a transition that also touches canonical content
+        still satisfies this classification; (2) t is performed as part of the reconnect/resync attempt associated with r,
+        the same attempt whose private resync candidate t could affect; (3) r''s private resync candidate canonical document/frontier
+        pair has been initialized by any means — the candidate exists as a private candidate whose canonical document and
+        canonical frontier are set, this predicate recording only that the pair is set and not how it came to be set; (4)
+        h is the captured response head of the reconnect/resync attempt associated with r, namely the authoritative response
+        head captured and fixed for that attempt against which the attempt''s canonical catch-up proceeds; and (5) t occurs
+        within r''s resync candidate window taken relative to that captured response head h — at or after the initialization
+        of r''s private resync candidate canonical document/frontier pair and before that candidate is published or discarded,
+        where the window is not interrupted when canonical catch-up for r reaches h, so t is within the window whether it
+        occurs before canonical catch-up reaches h, at the moment it reaches h, or after it has reached h — then t preserves
+        r''s private resync candidate canonical document and canonical frontier exactly: t does not insert, remove, rewrite,
+        reapply, or otherwise mutate canonical accepted content in the candidate, and does not change the candidate canonical
+        frontier.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 9b618563d0a4439cd6b01bf063b850b31a0c8d4e0fcb82a56f07e2096f11815e
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over transition, response, and captured head, ties the pending-reconciliation
+          transition to the same attempt via the response, guards it with candidate initialization and the initialization-to-publication/discard
+          window spanning catch-up reaching H, and concludes exact preservation of the candidate canonical document and frontier
+          with the same prohibited mutations; no requirement is omitted or added.
+        differences: []
+      strengthening:
+        subject_signature: 9b618563d0a4439cd6b01bf063b850b31a0c8d4e0fcb82a56f07e2096f11815e
+        verdict: EQUIVALENT
+        reason: The formula quantifies over the same transition, response/attempt, and captured head, restricts to pending-reconciliation
+          transitions for that attempt within the initialized-to-published/discarded candidate window spanning catch-up reaching
+          H, and requires exact preservation of the candidate canonical document and frontier as stated.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 9b618563d0a4439cd6b01bf063b850b31a0c8d4e0fcb82a56f07e2096f11815e
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal scope over same-attempt pending-identity reconciliation transitions,
+          the initialized-to-published/discarded window uninterrupted by catch-up reaching the captured head H, and the exact
+          prohibition on mutating canonical accepted content or changing the candidate canonical frontier.
+        differences: []
+  claim:L94_recovery_starts_after_epoch_handoff:
+    kind: claim
+    subject_id: L94_recovery_starts_after_epoch_handoff
+    subject_signature: 05ceb602f6e5044c212c2a5b8425df15c02d6b312d6e861dbdf7a4105063ad42
+    roundtrip:
+      subject_signature: 05ceb602f6e5044c212c2a5b8425df15c02d6b312d6e861dbdf7a4105063ad42
+      status: TRANSLATED
+      natural_language: 'For every recovery attempt r and every document d, if all of the following hold: (1) r is a new-owner
+        recovery attempt, meaning r is within the canonical new-owner recovery boundary for its target document, a classification
+        established by entering that recovery boundary and not dependent on successful progress, so that r remains a new-owner
+        recovery attempt even if it stalls, crashes, or aborts before owner-generation installation, recovery-head capture,
+        or completion, while recovery or reconstruction activity outside the canonical new-owner recovery boundary is excluded;
+        (2) the target document bound to r is exactly d; and (3) r has reached the new-owner recovery-head capture event after
+        epoch handoff, at which it reads the authoritative frontier and binds recovery_head; then, at the point at which r
+        captures its recovery head, the authoritative document_current_epoch for d has already advanced to the epoch of r''s
+        recovering owner, which is strictly greater than the superseded owner''s epoch. This advancement ordering is relative
+        to the head-capture point only: the advancement may occur before or after r''s initiation, and no ordering relative
+        to r''s start and no additional lifecycle-lock or checkpoint-selection ordering is asserted.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 05ceb602f6e5044c212c2a5b8425df15c02d6b312d6e861dbdf7a4105063ad42
+        verdict: EQUIVALENT
+        reason: The formula conditions on a new-owner recovery attempt targeting d that reaches head capture, and concludes
+          the epoch-advanced predicate whose meaning requires the authoritative document_current_epoch to have already advanced,
+          at the head-capture point, to the recovering owner's strictly greater epoch, with no added ordering relative to
+          initiation or any lifecycle-lock/checkpoint-selection ordering, matching the source exactly.
+        differences: []
+      strengthening:
+        subject_signature: 05ceb602f6e5044c212c2a5b8425df15c02d6b312d6e861dbdf7a4105063ad42
+        verdict: EQUIVALENT
+        reason: The formula applies only to a new-owner recovery attempt whose target document is d and which reaches recovery-head
+          capture, and then asserts that at that capture point document_current_epoch for d has already advanced to the recovering
+          owner's strictly greater epoch. The predicate meanings preserve the capture-relative timing, impose no ordering
+          relative to initiation, and add no lifecycle-lock or checkpoint-selection ordering, matching the source scope and
+          disclaimer.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 05ceb602f6e5044c212c2a5b8425df15c02d6b312d6e861dbdf7a4105063ad42
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal scope over recovery attempts and documents, the target-document identity,
+          the requirement that at the head-capture point document_current_epoch has already advanced to the recovering owner's
+          strictly greater epoch, and the absence of any additional start, lifecycle-lock, or checkpoint-selection ordering.
+          The expanded boundary wording only unpacks applicability of a new-owner recovery attempt and adds no stronger or
+          weaker guarantee.
+        differences: []
+  claim:L182_logical_edit_request_payload_binding_is_preserved:
+    kind: claim
+    subject_id: L182_logical_edit_request_payload_binding_is_preserved
+    subject_signature: 7ea78e3577bfcfc167c2ca88bb6170fd82a7c78d85e58e37570cd8348b932344
+    roundtrip:
+      subject_signature: 7ea78e3577bfcfc167c2ca88bb6170fd82a7c78d85e58e37570cd8348b932344
+      status: TRANSLATED
+      natural_language: 'For every request r, if r is a submitted request eligible for server-side OT or an authoritative
+        terminal decision — including initial submissions and normal retries, where eligibility identifies the processing
+        scope independently of whether r actually preserves its logical-edit identity, payload, or authoring-frontier binding,
+        and where actual OT invocation, successful acceptance, or completion of a terminal decision is not required — then
+        there exists a logical edit e such that all of the following hold for that same e: (1) r represents logical client
+        edit e rather than a different logical operation, and r''s submitted document_id, client_change_id, server-visible
+        raw_edit, and base_revision = F remain bound to that same logical operation and its canonical authoring state D@F;
+        (2) r''s complete submitted tuple is bound to e at the submitted-request endpoint, namely r''s document_id, client_change_id,
+        and base_revision are e''s identity (document_id = D, client_change_id = k) and authoring frontier F from e''s canonical
+        authoring state D@F, and the logical operation encoded by r''s submitted raw_edit is e''s own operation against that
+        same captured D@F authoring state — equivalently, the request construction, serialization, dispatch, and normal retry
+        that produced the submitted request r did not preserve e''s (D, k, F) while substituting a semantically different
+        logical operation into r''s submitted raw_edit; this condition speaks only about the submitted request r itself, as
+        submitted, asserts nothing about any intermediate request-lineage representation, imposes no condition on a stage
+        that does not survive into the submitted request, is not falsified by a transient substitution that was undone before
+        submission, does not by itself assert that r represents no other logical edit, and requires no dispatch, retry, OT
+        invocation, acceptance, or terminal-decision progress beyond r being the submitted request; and (3) for submitted
+        request r whose semantic source is e, no step of the request construction, serialization, dispatch, or normal retry
+        that produced r preserves e''s identity and authoring frontier (document_id = D, client_change_id = k, base_revision
+        = F, from e''s canonical authoring state D@F) while substituting a semantically different logical operation for e''s
+        own operation into the raw_edit being carried — those processes may change the request''s physical representation
+        only in semantics-preserving ways, a substitution of a different logical operation under e''s (D, k, F) falsifies
+        this condition even if a later step of those processes restores e''s operation before submission, this condition constrains
+        the behavior of the four named processes themselves, asserts nothing about any intermediate representation as an object
+        (in particular it does not assert that any intermediate representation is a submitted request, remains bound to e''s
+        complete tuple, or carries (D, k, F) at all), and requires no byte-identical serialization and no dispatch, retry,
+        OT invocation, acceptance, or terminal-decision progress beyond the processes that produced r, and it does not by
+        itself assert that r represents no other logical edit.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 7ea78e3577bfcfc167c2ca88bb6170fd82a7c78d85e58e37570cd8348b932344
+        verdict: EQUIVALENT
+        reason: The formula quantifies over exactly the eligible submitted requests and requires one logical edit whose (D,k,F)
+          and operation against its captured D@F authoring state bind the complete submitted tuple, while the process predicate
+          separately forbids construction, serialization, dispatch, or retry preserving (D,k,F) while substituting a different
+          operation, including transiently. The stated exclusions and lack of progress or byte-identity requirements are also
+          preserved.
+        differences: []
+      strengthening:
+        subject_signature: 7ea78e3577bfcfc167c2ca88bb6170fd82a7c78d85e58e37570cd8348b932344
+        verdict: EQUIVALENT
+        reason: The formula quantifies over exactly the eligible submitted requests, existentially binds one logical edit,
+          requires the submitted tuple to carry that edit's D, k, F and its own operation against D@F, and separately prohibits
+          construction, serialization, dispatch, or retry from preserving (D,k,F) while substituting a different operation,
+          without adding byte-identity or progress requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 7ea78e3577bfcfc167c2ca88bb6170fd82a7c78d85e58e37570cd8348b932344
+        verdict: EQUIVALENT
+        reason: The rendering preserves the same universal scope over eligible submitted requests, the same single logical
+          edit e as semantic source of the complete (D,k,raw_edit,F) tuple against canonical authoring state D@F, and the
+          same process prohibition on construction, serialization, dispatch, and retry preserving (D,k,F) while substituting
+          a different logical operation, including transient substitutions, without requiring byte-identical serialization
+          or progress beyond submission.
+        differences: []
