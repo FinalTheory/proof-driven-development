@@ -16162,12 +16162,53 @@ claims:
             s_rev: Revision
           body:
             implies:
-            - call:
-                fn: client_state_exposes_checkpoint_content
-                args:
-                - var: s
-                - var: cp
-                - var: s_rev
+            - and:
+              - call:
+                  fn: client_state_exposes_checkpoint_content
+                  args:
+                  - var: s
+                  - var: cp
+                  - var: s_rev
+              - not:
+                  exists:
+                    vars:
+                      v: Revision
+                    body:
+                      and:
+                      - call:
+                          fn: client_state_applies_revision
+                          args:
+                          - var: s
+                          - var: v
+                      - not:
+                          call:
+                            fn: revision_at_or_before
+                            args:
+                            - var: v
+                            - var: s_rev
+              - not:
+                  exists:
+                    vars:
+                      s2: ClientState
+                      v2: Revision
+                    body:
+                      and:
+                      - call:
+                          fn: client_state_precedes_within_catchup
+                          args:
+                          - var: s2
+                          - var: s
+                      - call:
+                          fn: client_state_applies_revision
+                          args:
+                          - var: s2
+                          - var: v2
+                      - not:
+                          call:
+                            fn: revision_at_or_before
+                            args:
+                            - var: v2
+                            - var: s_rev
             - eq:
               - call:
                   fn: visible_frontier
@@ -16181,12 +16222,53 @@ claims:
             s_rev: Revision
           body:
             implies:
-            - call:
-                fn: client_state_exposes_checkpoint_content
-                args:
-                - var: s
-                - var: cp
-                - var: s_rev
+            - and:
+              - call:
+                  fn: client_state_exposes_checkpoint_content
+                  args:
+                  - var: s
+                  - var: cp
+                  - var: s_rev
+              - not:
+                  exists:
+                    vars:
+                      v: Revision
+                    body:
+                      and:
+                      - call:
+                          fn: client_state_applies_revision
+                          args:
+                          - var: s
+                          - var: v
+                      - not:
+                          call:
+                            fn: revision_at_or_before
+                            args:
+                            - var: v
+                            - var: s_rev
+              - not:
+                  exists:
+                    vars:
+                      s2: ClientState
+                      v2: Revision
+                    body:
+                      and:
+                      - call:
+                          fn: client_state_precedes_within_catchup
+                          args:
+                          - var: s2
+                          - var: s
+                      - call:
+                          fn: client_state_applies_revision
+                          args:
+                          - var: s2
+                          - var: v2
+                      - not:
+                          call:
+                            fn: revision_at_or_before
+                            args:
+                            - var: v2
+                            - var: s_rev
             - call:
                 fn: client_state_within_selected_checkpoint_catchup
                 args:
@@ -16263,6 +16345,56 @@ claims:
                       args:
                       - var: s0
                       - var: s
+      - forall:
+          vars:
+            s: ClientState
+            s_rev: Revision
+          body:
+            implies:
+            - call:
+                fn: client_state_within_selected_checkpoint_catchup
+                args:
+                - var: s
+                - var: s_rev
+            - or:
+              - exists:
+                  vars:
+                    s0: ClientState
+                  body:
+                    call:
+                      fn: client_state_is_checkpoint_installation
+                      args:
+                      - var: s0
+                      - var: s_rev
+              - exists:
+                  vars:
+                    s1: ClientState
+                    cp: AuthoritativeState
+                  body:
+                    and:
+                    - call:
+                        fn: client_state_exposes_checkpoint_content
+                        args:
+                        - var: s1
+                        - var: cp
+                        - var: s_rev
+                    - eq:
+                      - call:
+                          fn: visible_frontier
+                          args:
+                          - var: s1
+                      - var: s_rev
+                    - not:
+                        call:
+                          fn: client_state_is_checkpoint_installation
+                          args:
+                          - var: s1
+                          - var: s_rev
+                    - call:
+                        fn: client_state_within_selected_checkpoint_catchup
+                        args:
+                        - var: s1
+                        - var: s_rev
   L101_client_completes_catchup_through_response_head:
     capability: relational
     contracts: []
