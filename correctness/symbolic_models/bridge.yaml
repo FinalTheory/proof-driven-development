@@ -631,8 +631,6 @@ functions:
     - claim:C18_recovery_selects_and_loads_authoritative_checkpoint
     - claim:L65_failed_owner_volatile_state_cannot_influence_recovered_metadata
     - claim:L39_recovered_owner_resumes_at_head_plus_one
-    - claim:L41_recovery_checkpoint_does_not_exceed_recovery_head
-    - claim:L79_new_owner_accepts_only_after_reconstruction
     - claim:L94_recovery_starts_after_epoch_handoff
     - claim:L131_post_recovery_acceptance_state_is_exhaustive
     - claim:L210_new_owner_recovery_boundary_is_attempt_scoped
@@ -4890,7 +4888,6 @@ functions:
     catalog_symbols: []
     meaning: Revision s is the frontier of the authoritative checkpoint that recovery attempt r selected and loaded as its replay base. This relation names the selected checkpoint's frontier only; it does not assert that the checkpoint's state is correct or that s bears any relation to r's recovery head.
     semantic_anchors:
-    - claim:L41_recovery_checkpoint_does_not_exceed_recovery_head
     - claim:L10_replay_covers_exact_tail_in_order_once
     - claim:C9_recovery_reconstructs_committed_state
   recovery_attempt_captured_head_is:
@@ -5044,6 +5041,7 @@ functions:
     semantic_anchors:
     - claim:L210_new_owner_recovery_boundary_is_attempt_scoped
     - claim:C9_recovery_reconstructs_committed_state
+    - claim:L79_new_owner_accepts_only_after_reconstruction
   recovery_attempt_reaches_authoritative_publication:
     args:
     - RecoveryAttempt
@@ -5698,6 +5696,7 @@ functions:
     semantic_anchors:
     - claim:L10_replay_covers_exact_tail_in_order_once
     - claim:C9_recovery_reconstructs_committed_state
+    - claim:L41_recovery_checkpoint_does_not_exceed_recovery_head
   document_epoch_advanced_before_recovery_head_capture:
     args:
     - RecoveryAttempt
@@ -5757,6 +5756,24 @@ functions:
     meaning: For committed acceptance a, the latest_revision of the authoritative acceptance pre-state of a's document immediately before a's acceptance linearization point (that pre-state's document_latest_revision). This is the actual acceptance pre-state value the claim's commit condition names, not an earlier read, an owner-memory estimate, a submitted frontier field, or the post-acceptance value, and not a pre-state read at any distinct candidate-commit step. Values on noncommitted objects are immaterial to this contract.
     semantic_anchors:
     - claim:L99_ot_result_is_bound_to_acceptance_frontier
+  recovery_preparation_cannot_cause_canonical_acceptance:
+    args:
+    - RecoveryAttempt
+    returns: Bool
+    catalog_symbols: []
+    meaning: Internal transformation preparation performed for recovery attempt r before r's reconstruction barrier completes cannot commit or otherwise cause canonical acceptance of any edit under the owner established by r. The reconstruction barrier completes when r's selected checkpoint is installed, the exact canonical tail through r's captured recovery head H has been replayed, r's required OT metadata has been rebuilt, and r's local head/next-revision state has been initialized through H. This atom constrains the preparation activity itself; it does not require preparation to occur.
+    semantic_anchors:
+    - claim:L79_new_owner_accepts_only_after_reconstruction
+  recovery_selected_loaded_checkpoint_frontier_is:
+    args:
+    - RecoveryAttempt
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: Revision s is the frontier of the checkpoint that recovery attempt r selected and loaded for its new-owner recovery. This relation names the selected and loaded checkpoint's frontier only; it does not assert that the checkpoint's state is correct or that s bears any relation to r's recovery head.
+    semantic_anchors:
+    - claim:L41_recovery_checkpoint_does_not_exceed_recovery_head
+    - claim:C9_recovery_reconstructs_committed_state
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -16790,16 +16807,17 @@ claims:
             implies:
             - and:
               - call:
-                  fn: new_owner_recovery_attempt
-                  args:
-                  - var: r
-              - call:
-                  fn: recovery_selected_checkpoint_frontier_is
+                  fn: recovery_selected_loaded_checkpoint_frontier_is
                   args:
                   - var: r
                   - var: s
               - call:
                   fn: recovery_attempt_captured_head_is
+                  args:
+                  - var: r
+                  - var: h
+              - call:
+                  fn: recovery_captured_head_is_authoritative_frontier
                   args:
                   - var: r
                   - var: h
@@ -17184,16 +17202,17 @@ claims:
           implies:
           - and:
             - call:
-                fn: new_owner_recovery_attempt
-                args:
-                - var: r
-            - call:
-                fn: recovery_selected_checkpoint_frontier_is
+                fn: recovery_selected_loaded_checkpoint_frontier_is
                 args:
                 - var: r
                 - var: s
             - call:
                 fn: recovery_attempt_captured_head_is
+                args:
+                - var: r
+                - var: h
+            - call:
+                fn: recovery_captured_head_is_authoritative_frontier
                 args:
                 - var: r
                 - var: h
@@ -17236,35 +17255,44 @@ claims:
     capability: relational
     contracts: []
     formula:
-      forall:
-        vars:
-          r: RecoveryAttempt
-        body:
-          implies:
-          - and:
-            - call:
-                fn: new_owner_recovery_attempt
-                args:
-                - var: r
+      and:
+      - forall:
+          vars:
+            r: RecoveryAttempt
+          body:
+            implies:
             - call:
                 fn: recovery_owner_performs_canonical_acceptance
                 args:
                 - var: r
-          - and:
+            - and:
+              - call:
+                  fn: recovery_checkpoint_installed
+                  args:
+                  - var: r
+              - call:
+                  fn: recovery_tail_replayed_through_captured_head
+                  args:
+                  - var: r
+              - call:
+                  fn: recovery_ot_metadata_rebuilt
+                  args:
+                  - var: r
+              - call:
+                  fn: recovery_local_state_initialized_through_head
+                  args:
+                  - var: r
+      - forall:
+          vars:
+            r: RecoveryAttempt
+          body:
+            implies:
             - call:
-                fn: recovery_checkpoint_installed
+                fn: recovery_attempt_establishes_owner_generation
                 args:
                 - var: r
             - call:
-                fn: recovery_tail_replayed_through_captured_head
-                args:
-                - var: r
-            - call:
-                fn: recovery_ot_metadata_rebuilt
-                args:
-                - var: r
-            - call:
-                fn: recovery_local_state_initialized_through_head
+                fn: recovery_preparation_cannot_cause_canonical_acceptance
                 args:
                 - var: r
   L131_post_recovery_acceptance_state_is_exhaustive:
