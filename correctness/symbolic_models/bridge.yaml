@@ -262,6 +262,7 @@ functions:
     - claim:C10_catchup_represents_exact_missing_suffix
     - claim:L101_client_completes_catchup_through_response_head
     - claim:L38_selected_checkpoint_does_not_exceed_response_head
+    - claim:L177_catchup_canonical_sources_preserve_document_provenance
   catchup_response_selected_checkpoint_frontier:
     args:
     - CatchupResponse
@@ -325,6 +326,7 @@ functions:
     - claim:L26_snapshot_catchup_returns_exact_canonical_tail
     - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
     - claim:C10_catchup_represents_exact_missing_suffix
+    - claim:L177_catchup_canonical_sources_preserve_document_provenance
   canonical_acceptance_revision_is:
     args:
     - CanonicalAcceptance
@@ -2669,6 +2671,7 @@ functions:
     meaning: 'Catch-up response r is eligible to reach response completion or publication under the catch-up protocol. This is only the scope guard for catchup_head_binding: it does not require r to be a normal/in-guarantee reconnect attempt, and it does not assert that completion or publication actually occurs.'
     semantic_anchors:
     - contract:catchup_head_binding
+    - claim:L122_catchup_response_head_is_bound_to_authoritative_frontier
   represented_document:
     args:
     - ClientState
@@ -2677,7 +2680,6 @@ functions:
     meaning: The semantic document D in the contract phrase "client state representing document D". This is an independent contract reference coordinate and is not derived from client_document_id, client_local_document, last_applied_revision, or satisfaction of client_canonical_frontier_coherence.
     semantic_anchors:
     - contract:client_canonical_frontier_coherence
-    - claim:L132_visible_overlay_document_binding_established_on_publication
     - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
     - claim:L128_client_canonical_frontier_is_established_on_publication
     - claim:L129_client_canonical_frontier_is_preserved_by_visible_transitions
@@ -2698,6 +2700,7 @@ functions:
     - claim:L129_client_canonical_frontier_is_preserved_by_visible_transitions
     - claim:C36_reconnect_starts_from_canonical_client_frontier
     - claim:C38_client_frontier_matches_canonical_base
+    - claim:L132_visible_overlay_document_binding_established_on_publication
   definitive_rejection_path_preserves_bound_request:
     args:
     - TerminalResultRecord
@@ -4260,7 +4263,6 @@ functions:
     - document_id
     meaning: The document_id coordinate of the full logical identity (document_id, client_change_id) of the logical edit that speculative overlay representation o represents.
     semantic_anchors:
-    - claim:L132_visible_overlay_document_binding_established_on_publication
     - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
     - claim:L205_visible_speculative_effect_is_unique_per_identity
   speculative_overlay_client_change_id:
@@ -4655,6 +4657,7 @@ functions:
     semantic_anchors:
     - claim:L12_delta_catchup_reads_canonical_revision_range
     - claim:C10_catchup_represents_exact_missing_suffix
+    - claim:L177_catchup_canonical_sources_preserve_document_provenance
   revision_in_delta_range:
     args:
     - Revision
@@ -4716,6 +4719,7 @@ functions:
     meaning: 'In client state s, the client applies canonical revision r: r is taken as an applied canonical revision of the client''s document, rather than being ignored as a duplicate or buffered for gap recovery.'
     semantic_anchors:
     - claim:L19_client_applies_only_contiguous_revisions
+    - claim:L97_client_adopts_snapshot_before_tail
   client_state_ignores_presented_revision:
     args:
     - ClientState
@@ -4742,15 +4746,6 @@ functions:
     returns: Bool
     catalog_symbols: []
     meaning: 'Client state s is the state produced by installing the catch-up-selected checkpoint (content, S) with replacement semantics: s exposes exactly that checkpoint''s content as the client''s canonical document state, the installation is one atomic installation step (no returned or interleaved tail revision is applied inside it), and S is the checkpoint''s frontier. A torn or interrupted exposure of checkpoint content does not satisfy this predicate.'
-    semantic_anchors:
-    - claim:L97_client_adopts_snapshot_before_tail
-  client_state_exposes_installed_checkpoint:
-    args:
-    - ClientState
-    - Revision
-    returns: Bool
-    catalog_symbols: []
-    meaning: 'Client state s exposes the content of the checkpoint (content, S) that catch-up installed for this client: s is the installation state or a later client state whose canonical document state still rests on that installed checkpoint content as its base.'
     semantic_anchors:
     - claim:L97_client_adopts_snapshot_before_tail
   client_catchup_attempt_completed:
@@ -5424,6 +5419,165 @@ functions:
     meaning: Explicit terminal-disposition retirement transition t establishes that exact identity e's normal speculative lifecycle is terminalized in the resulting reachable client state and no longer active in pending, retained speculative, or visible speculative state.
     semantic_anchors:
     - claim:L206_terminal_speculative_lifecycle_is_absorbing
+  canonical_acceptance_in_target_document_log:
+    args:
+    - CatchupResponse
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols:
+    - accepted_change_log
+    meaning: 'Canonical accepted change a is a member of accepted_change_log(D), where D is the target document of catch-up response r: a is one of D''s own canonical accepted changes. An extensionally equal accepted change from another document''s log does not satisfy this relation for r.'
+    semantic_anchors:
+    - claim:L177_catchup_canonical_sources_preserve_document_provenance
+    - claim:C10_catchup_represents_exact_missing_suffix
+  catchup_response_tail_free_of_speculative_data:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'No speculative data appears anywhere in response r''s returned snapshot tail portion: every returned tail payload item is canonical accepted data, not an unaccepted, uncommitted, or locally speculative change. This is the snapshot-tail counterpart of catchup_response_delta_free_of_speculative_data.'
+    semantic_anchors:
+    - claim:L177_catchup_canonical_sources_preserve_document_provenance
+    - claim:C10_catchup_represents_exact_missing_suffix
+  catchup_response_targets_document:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: Response r is a catch-up or reconnect response targeting some document D. This predicate classifies the response's target only; it does not require that any response head has been captured or fixed, and it asserts nothing about what r returns.
+    semantic_anchors:
+    - claim:L177_catchup_canonical_sources_preserve_document_provenance
+  catchup_response_selects_target_document_authoritative_checkpoint:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols:
+    - snapshot_content_with_snapshot_revision
+    meaning: 'Catch-up response r actually selects, as its snapshot checkpoint, the target document D''s authoritative snapshot_content_with_snapshot_revision: the checkpoint r''s snapshot construction uses is D''s own authoritative checkpoint, not another document''s checkpoint and not an unselected placeholder.'
+    semantic_anchors:
+    - claim:L177_catchup_canonical_sources_preserve_document_provenance
+  catchup_constructed_candidate_bound_to_target_document:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols:
+    - client_resync_candidate
+    meaning: 'A private client_resync_candidate is constructed for catch-up response r and that constructed candidate is bound to r''s target document D throughout its construction: the candidate''s canonical document is D, and no other document''s candidate or source is substituted for it, even if extensionally equal.'
+    semantic_anchors:
+    - claim:L177_catchup_canonical_sources_preserve_document_provenance
+  client_state_exposes_checkpoint_content:
+    args:
+    - ClientState
+    - AuthoritativeState
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Client state s exposes cp as its canonical document content, where cp is the content component of the catch-up-selected checkpoint P = (cp, s_rev). This relation covers EVERY exposure of that checkpoint content: the completed installation state, any later state resting on it, and any torn, interrupted, or partial exposure of the checkpoint content during an installation that did not complete. An exposure satisfies this relation whether or not the exposing state''s frontier is correct; correctness of the pairing is asserted separately.'
+    semantic_anchors:
+    - claim:L97_client_adopts_snapshot_before_tail
+  client_state_within_selected_checkpoint_catchup:
+    args:
+    - ClientState
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Client state s is a state of the catch-up attempt that selected the checkpoint (content, s_rev) for this client, at or after that selection: the state in which the checkpoint is installed, states before installation within the same attempt, and later states of the attempt whose canonical state rests on that checkpoint.'
+    semantic_anchors:
+    - claim:L97_client_adopts_snapshot_before_tail
+  transition_during_completed_candidate_lifetime:
+    args:
+    - ProtocolTransition
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Protocol transition t occurs during the lifetime of response r''s completed private reconciled candidate: at or after the candidate''s completion through its captured head and before that candidate is atomically published or discarded.'
+    semantic_anchors:
+    - claim:L119_completed_resync_candidate_stays_at_response_head_until_publication
+  transition_preserves_resync_candidate_frontier:
+    args:
+    - ProtocolTransition
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Across protocol transition t, response r''s private reconciled candidate canonical frontier is unchanged: the candidate frontier in t''s post-state equals the candidate frontier in t''s pre-state. This is a pre/post state-pair relation over t.'
+    semantic_anchors:
+    - claim:L119_completed_resync_candidate_stays_at_response_head_until_publication
+  captured_authoritative_head_for_response:
+    args:
+    - CatchupResponse
+    returns: Revision
+    catalog_symbols:
+    - document_latest_revision
+    meaning: 'The revision H captured for catch-up response r: exactly the value of document_latest_revision(D) for r''s catch-up document D as returned by one response-specific authoritative-store read/linearization point. That single reading fixes the captured value for r. Later canonical acceptances may advance document_latest_revision(D) after the capture without changing this captured value. This function names the captured value only; preservation of H through the response''s stages is asserted separately.'
+    semantic_anchors:
+    - claim:L122_catchup_response_head_is_bound_to_authoritative_frontier
+  catchup_head_preserved_through_listed_stages:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols:
+    - catchup_response_head
+    meaning: 'The captured response head H for response r remains the same bound response-head value through exactly these stages of r: delta/snapshot selection, canonical range construction, pending reconciliation, completion, and publication. No other stage is asserted by this predicate.'
+    semantic_anchors:
+    - claim:L122_catchup_response_head_is_bound_to_authoritative_frontier
+  transition_within_candidate_initialized_unpublished_interval:
+    args:
+    - ProtocolTransition
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Protocol transition t occurs within response r''s resync candidate window: at or after the initialization of r''s private resync candidate canonical document/frontier pair and before that candidate is published or discarded.'
+    semantic_anchors:
+    - claim:L126_pending_reconciliation_preserves_resync_canonical_candidate
+  speculative_overlay_carried_document_id:
+    args:
+    - Overlay
+    returns: Document
+    catalog_symbols:
+    - document_id
+    meaning: 'The document_id recorded on speculative overlay representation o itself: the document identity the overlay carries as an exposed speculative overlay.'
+    semantic_anchors:
+    - contract:visible_speculative_overlay_document_binding
+    - claim:L132_visible_overlay_document_binding_established_on_publication
+  speculative_overlay_represents_logical_edit:
+    args:
+    - ClientState
+    - Overlay
+    - LogicalEdit
+    returns: Bool
+    catalog_symbols:
+    - logical_client_edit
+    - client_speculative_overlays
+    - client_visible_speculative_overlays
+    meaning: 'Representation o in client state s is a representation of the specific logical_client_edit e: o is one of the retained or exposed speculative representations that stand for e. This predicate classifies which logical edit a representation represents; it does not by itself assert that the representation correctly encodes e''s operation.'
+    semantic_anchors:
+    - contract:speculative_overlay_operation_provenance
+    - claim:L202_speculative_overlay_operation_provenance_is_preserved
+  speculative_representation_encodes_logical_edit_operation:
+    args:
+    - ClientState
+    - Overlay
+    - LogicalEdit
+    returns: Bool
+    catalog_symbols:
+    - logical_client_edit
+    - logical_edit_operation
+    meaning: 'Representation o in client state s encodes the logical_edit_operation of the specific logical_client_edit e: the semantic user operation that e itself carries. The operation is identified by e''s own identity, so the anchor is that one edit across states, not whichever edit a later binding of o might point at.'
+    semantic_anchors:
+    - contract:speculative_overlay_operation_provenance
+    - claim:L202_speculative_overlay_operation_provenance_is_preserved
+  client_transition_preserves_logical_edit:
+    args:
+    - ClientState
+    - ClientState
+    - LogicalEdit
+    returns: Bool
+    catalog_symbols:
+    - logical_client_edit
+    meaning: 'Client state after is the resulting state of one client transition applied in client state before, and that transition preserves logical_client_edit e as the same logical edit: it is one of e''s creation, retention, restoration, tab/view switching, suppression/reactivation, ACK/retry bookkeeping, canonical publication, or resync publication transitions, or any other client transition under which e continues as the same logical edit. This relation classifies the transition''s effect on e''s identity only; it does not assert that any representation of e is present in either state or that its encoding is correct.'
+    semantic_anchors:
+    - contract:speculative_overlay_operation_provenance
+    - claim:L202_speculative_overlay_operation_provenance_is_preserved
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -13131,11 +13285,11 @@ claims:
                   - var: o
             - eq:
               - call:
-                  fn: speculative_overlay_document_id
+                  fn: speculative_overlay_carried_document_id
                   args:
                   - var: o
               - call:
-                  fn: represented_document
+                  fn: client_document_id_value
                   args:
                   - var: s
   L133_visible_overlay_document_binding_preserved_by_local_transitions:
@@ -13288,28 +13442,141 @@ claims:
     contracts:
     - speculative_overlay_operation_provenance
     formula:
-      forall:
-        vars:
-          s: ClientState
-          o: Overlay
-        body:
-          implies:
-          - or:
+      and:
+      - forall:
+          vars:
+            s: ClientState
+            o: Overlay
+          body:
+            implies:
+            - or:
+              - call:
+                  fn: retained_overlay
+                  args:
+                  - var: s
+                  - var: o
+              - call:
+                  fn: visible_overlay
+                  args:
+                  - var: s
+                  - var: o
             - call:
-                fn: retained_overlay
+                fn: speculative_operation_provenance_ok
                 args:
                 - var: s
                 - var: o
+      - forall:
+          vars:
+            s: ClientState
+            o: Overlay
+            e: LogicalEdit
+          body:
+            implies:
+            - and:
+              - or:
+                - call:
+                    fn: retained_overlay
+                    args:
+                    - var: s
+                    - var: o
+                - call:
+                    fn: visible_overlay
+                    args:
+                    - var: s
+                    - var: o
+              - call:
+                  fn: speculative_overlay_represents_logical_edit
+                  args:
+                  - var: s
+                  - var: o
+                  - var: e
             - call:
-                fn: visible_overlay
+                fn: speculative_representation_encodes_logical_edit_operation
                 args:
                 - var: s
                 - var: o
-          - call:
-              fn: speculative_operation_provenance_ok
-              args:
-              - var: s
-              - var: o
+                - var: e
+      - forall:
+          vars:
+            b: ClientState
+            a: ClientState
+            o1: Overlay
+            o2: Overlay
+            e: LogicalEdit
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: client_transition_preserves_logical_edit
+                  args:
+                  - var: b
+                  - var: a
+                  - var: e
+              - call:
+                  fn: speculative_overlay_represents_logical_edit
+                  args:
+                  - var: b
+                  - var: o1
+                  - var: e
+              - or:
+                - call:
+                    fn: retained_overlay
+                    args:
+                    - var: b
+                    - var: o1
+                - call:
+                    fn: visible_overlay
+                    args:
+                    - var: b
+                    - var: o1
+              - call:
+                  fn: speculative_overlay_represents_logical_edit
+                  args:
+                  - var: a
+                  - var: o2
+                  - var: e
+              - or:
+                - call:
+                    fn: retained_overlay
+                    args:
+                    - var: a
+                    - var: o2
+                - call:
+                    fn: visible_overlay
+                    args:
+                    - var: a
+                    - var: o2
+            - call:
+                fn: speculative_representation_encodes_logical_edit_operation
+                args:
+                - var: a
+                - var: o2
+                - var: e
+      - forall:
+          vars:
+            s: ClientState
+            o: Overlay
+            e: LogicalEdit
+            e2: LogicalEdit
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: speculative_overlay_represents_logical_edit
+                  args:
+                  - var: s
+                  - var: o
+                  - var: e
+              - neq:
+                - var: e2
+                - var: e
+            - not:
+                call:
+                  fn: speculative_representation_encodes_logical_edit_operation
+                  args:
+                  - var: s
+                  - var: o
+                  - var: e2
   L205_visible_speculative_effect_is_unique_per_identity:
     capability: relational
     contracts:
@@ -13386,26 +13653,63 @@ claims:
               fn: catchup_response_is_snapshot_mode
               args:
               - var: resp
-          - exists:
-              vars:
-                s: Revision
-              body:
-                and:
-                - call:
-                    fn: catchup_response_selected_checkpoint_frontier
-                    args:
-                    - var: resp
-                    - var: s
-                - call:
-                    fn: catchup_selected_checkpoint_frontier_is_atomically_published_authoritative
-                    args:
-                    - var: resp
-                    - var: s
-                - call:
-                    fn: catchup_selected_checkpoint_is_authoritative
-                    args:
-                    - var: resp
-                    - var: s
+          - and:
+            - exists:
+                vars:
+                  s: Revision
+                body:
+                  and:
+                  - call:
+                      fn: catchup_response_selected_checkpoint_frontier
+                      args:
+                      - var: resp
+                      - var: s
+                  - call:
+                      fn: catchup_selected_checkpoint_frontier_is_atomically_published_authoritative
+                      args:
+                      - var: resp
+                      - var: s
+            - forall:
+                vars:
+                  s1: Revision
+                  s2: Revision
+                body:
+                  implies:
+                  - and:
+                    - call:
+                        fn: catchup_response_selected_checkpoint_frontier
+                        args:
+                        - var: resp
+                        - var: s1
+                    - call:
+                        fn: catchup_response_selected_checkpoint_frontier
+                        args:
+                        - var: resp
+                        - var: s2
+                  - eq:
+                    - var: s1
+                    - var: s2
+            - forall:
+                vars:
+                  s: Revision
+                body:
+                  implies:
+                  - and:
+                    - call:
+                        fn: catchup_response_selected_checkpoint_frontier
+                        args:
+                        - var: resp
+                        - var: s
+                    - call:
+                        fn: catchup_selected_checkpoint_frontier_is_atomically_published_authoritative
+                        args:
+                        - var: resp
+                        - var: s
+                  - call:
+                      fn: catchup_selected_checkpoint_is_authoritative
+                      args:
+                      - var: resp
+                      - var: s
   L38_selected_checkpoint_does_not_exceed_response_head:
     capability: relational
     contracts: []
@@ -14705,6 +15009,11 @@ claims:
                   - var: v
                   - var: l
                   - var: h
+              - call:
+                  fn: canonical_acceptance_in_target_document_log
+                  args:
+                  - var: r
+                  - var: a
             - call:
                 fn: catchup_response_delta_contains_change
                 args:
@@ -14749,6 +15058,11 @@ claims:
                   args:
                   - var: a
                   - var: v
+              - call:
+                  fn: canonical_acceptance_in_target_document_log
+                  args:
+                  - var: r
+                  - var: a
             - call:
                 fn: revision_in_delta_range
                 args:
@@ -14875,6 +15189,11 @@ claims:
                     - var: v
                     - var: s
                     - var: h
+                - call:
+                    fn: canonical_acceptance_in_target_document_log
+                    args:
+                    - var: r
+                    - var: a
               - call:
                   fn: catchup_response_tail_contains_change
                   args:
@@ -14914,6 +15233,11 @@ claims:
                     args:
                     - var: a
                     - var: v
+                - call:
+                    fn: canonical_acceptance_in_target_document_log
+                    args:
+                    - var: r
+                    - var: a
               - call:
                   fn: revision_in_checkpoint_tail_range
                   args:
@@ -15004,28 +15328,25 @@ claims:
                 fn: checkpoint_state_equals_canonical_replay_through_frontier
                 args:
                 - var: s
+      - forall:
+          vars:
+            r: CatchupResponse
+          body:
+            implies:
+            - call:
+                fn: catchup_response_is_snapshot_mode
+                args:
+                - var: r
+            - call:
+                fn: catchup_response_tail_free_of_speculative_data
+                args:
+                - var: r
   L8_snapshot_is_exact_committed_prefix:
     capability: relational
     contracts:
     - snapshot_frontier_coherence
     formula:
       and:
-      - forall:
-          vars:
-            s: AuthoritativeState
-            r: Revision
-          body:
-            implies:
-            - call:
-                fn: authoritative_published_snapshot_at_revision
-                args:
-                - var: s
-                - var: r
-            - call:
-                fn: logical_state_matches_canonical_replay
-                args:
-                - var: s
-                - var: r
       - forall:
           vars:
             r: Revision
@@ -15216,9 +15537,110 @@ claims:
                   args:
                   - var: r
   L177_catchup_canonical_sources_preserve_document_provenance:
+    capability: relational
     contracts:
     - catchup_canonical_source_provenance
-    formula_from_contracts: true
+    formula:
+      and:
+      - forall:
+          vars:
+            r: CatchupResponse
+          body:
+            implies:
+            - call:
+                fn: catchup_response_targets_document_with_captured_head
+                args:
+                - var: r
+            - call:
+                fn: catchup_canonical_sources_preserve_document_scope
+                args:
+                - var: r
+      - forall:
+          vars:
+            r: CatchupResponse
+          body:
+            implies:
+            - call:
+                fn: catchup_response_targets_document
+                args:
+                - var: r
+            - call:
+                fn: catchup_constructed_candidate_bound_to_target_document
+                args:
+                - var: r
+      - forall:
+          vars:
+            r: CatchupResponse
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_targets_document
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+            - call:
+                fn: catchup_response_selects_target_document_authoritative_checkpoint
+                args:
+                - var: r
+      - forall:
+          vars:
+            r: CatchupResponse
+            a: CanonicalAcceptance
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_targets_document
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_delta_contains_change
+                  args:
+                  - var: r
+                  - var: a
+            - call:
+                fn: canonical_acceptance_in_target_document_log
+                args:
+                - var: r
+                - var: a
+      - forall:
+          vars:
+            r: CatchupResponse
+            a: CanonicalAcceptance
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_targets_document
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_tail_contains_change
+                  args:
+                  - var: r
+                  - var: a
+            - call:
+                fn: canonical_acceptance_in_target_document_log
+                args:
+                - var: r
+                - var: a
+      - forall:
+          vars:
+            r: CatchupResponse
+          body:
+            implies:
+            - call:
+                fn: catchup_response_is_snapshot_mode
+                args:
+                - var: r
+            - call:
+                fn: catchup_response_tail_free_of_speculative_data
+                args:
+                - var: r
   L19_client_applies_only_contiguous_revisions:
     capability: relational
     contracts: []
@@ -15345,21 +15767,71 @@ claims:
                 - var: s
                 - var: s_rev
             - call:
-                fn: client_state_exposes_installed_checkpoint
+                fn: client_state_within_selected_checkpoint_catchup
                 args:
                 - var: s
                 - var: s_rev
       - forall:
           vars:
             s: ClientState
+            cp: AuthoritativeState
             s_rev: Revision
           body:
             implies:
             - call:
-                fn: client_state_exposes_installed_checkpoint
+                fn: client_state_exposes_checkpoint_content
+                args:
+                - var: s
+                - var: cp
+                - var: s_rev
+            - eq:
+              - call:
+                  fn: visible_frontier
+                  args:
+                  - var: s
+              - var: s_rev
+      - forall:
+          vars:
+            s: ClientState
+            cp: AuthoritativeState
+            s_rev: Revision
+          body:
+            implies:
+            - call:
+                fn: client_state_exposes_checkpoint_content
+                args:
+                - var: s
+                - var: cp
+                - var: s_rev
+            - call:
+                fn: client_state_within_selected_checkpoint_catchup
                 args:
                 - var: s
                 - var: s_rev
+      - forall:
+          vars:
+            s: ClientState
+            v: Revision
+            s_rev: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: client_state_within_selected_checkpoint_catchup
+                  args:
+                  - var: s
+                  - var: s_rev
+              - call:
+                  fn: client_state_applies_revision
+                  args:
+                  - var: s
+                  - var: v
+              - not:
+                  call:
+                    fn: revision_at_or_before
+                    args:
+                    - var: v
+                    - var: s_rev
             - call:
                 fn: revision_at_or_before
                 args:
@@ -15488,6 +15960,29 @@ claims:
             - eq:
               - var: h
               - var: h2
+      - forall:
+          vars:
+            t: ProtocolTransition
+            r: CatchupResponse
+            h: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: resync_candidate_completed_through_head
+                  args:
+                  - var: r
+                  - var: h
+              - call:
+                  fn: transition_during_completed_candidate_lifetime
+                  args:
+                  - var: t
+                  - var: r
+            - call:
+                fn: transition_preserves_resync_candidate_frontier
+                args:
+                - var: t
+                - var: r
   L121_delta_resync_candidate_starts_from_canonical_client_base:
     capability: relational
     contracts: []
@@ -15518,9 +16013,33 @@ claims:
                 args:
                 - var: r
   L122_catchup_response_head_is_bound_to_authoritative_frontier:
+    capability: relational
     contracts:
     - catchup_head_binding
-    formula_from_contracts: true
+    formula:
+      forall:
+        vars:
+          r: CatchupResponse
+        body:
+          implies:
+          - call:
+              fn: catchup_head_binding_eligible_response
+              args:
+              - var: r
+          - and:
+            - eq:
+              - call:
+                  fn: catchup_response_head_value
+                  args:
+                  - var: r
+              - call:
+                  fn: captured_authoritative_head_for_response
+                  args:
+                  - var: r
+            - call:
+                fn: catchup_head_preserved_through_listed_stages
+                args:
+                - var: r
   L126_pending_reconciliation_preserves_resync_canonical_candidate:
     capability: relational
     contracts: []
@@ -15544,6 +16063,11 @@ claims:
             - call:
                 fn: resync_candidate_pair_initialized
                 args:
+                - var: r
+            - call:
+                fn: transition_within_candidate_initialized_unpublished_interval
+                args:
+                - var: t
                 - var: r
           - call:
               fn: transition_preserves_resync_candidate_canonical_state
