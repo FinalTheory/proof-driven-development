@@ -1991,6 +1991,7 @@ functions:
     semantic_anchors:
     - claim:G6_accepted_change_preserves_ot_semantics
     - contract:logical_edit_request_payload_binding
+    - claim:L182_logical_edit_request_payload_binding_is_preserved
   accepted_ot_context_is_preceding_canonical_prefix:
     args:
     - CanonicalAcceptance
@@ -2745,7 +2746,6 @@ functions:
       completion, or other progress; it requires no client-side rebase behavior, no byte-identical serialization, and no uniqueness of client_change_id across distinct logical edits.'
     semantic_anchors:
     - contract:logical_edit_request_payload_binding
-    - claim:L182_logical_edit_request_payload_binding_is_preserved
   claim_accepted_terminal_result_producer_matches:
     args:
     - TerminalResultRecord
@@ -5578,6 +5578,22 @@ functions:
     semantic_anchors:
     - contract:speculative_overlay_operation_provenance
     - claim:L202_speculative_overlay_operation_provenance_is_preserved
+  submitted_request_tuple_bound_to_logical_edit:
+    args:
+    - Request
+    - LogicalEdit
+    returns: Bool
+    catalog_symbols:
+    - submitted_request
+    - logical_client_edit
+    - document_id
+    - client_change_id
+    - raw_edit
+    - base_revision
+    meaning: 'Submitted request r''s complete submitted tuple is bound to logical edit e at the submitted-request endpoint: r''s document_id, client_change_id, and base_revision are e''s identity (document_id = D, client_change_id = k) and authoring frontier F from e''s canonical authoring state D@F, and the logical operation encoded by r''s submitted raw_edit is e''s own operation against that same captured D@F authoring state. Equivalently, the request construction, serialization, dispatch, and normal retry that produced the submitted request r did not preserve e''s (D, k, F) while substituting a semantically different logical operation into r''s submitted raw_edit. This predicate speaks only about the submitted request r itself, as submitted: it asserts nothing about any intermediate request-lineage representation, imposes no condition on a stage that does not survive into the submitted request, and is not falsified by a transient substitution that was undone before submission. It does
+      not by itself assert that r represents no other logical edit, and it requires no dispatch, retry, OT invocation, acceptance, or terminal-decision progress beyond r being the submitted request.'
+    semantic_anchors:
+    - claim:L182_logical_edit_request_payload_binding_is_preserved
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -14906,7 +14922,31 @@ claims:
     capability: relational
     contracts:
     - logical_edit_request_payload_binding
-    formula_from_contracts: true
+    formula:
+      forall:
+        vars:
+          r: Request
+        body:
+          implies:
+          - call:
+              fn: submitted_request_eligible_for_ot_or_terminal_decision
+              args:
+              - var: r
+          - exists:
+              vars:
+                e: LogicalEdit
+              body:
+                and:
+                - call:
+                    fn: request_represents_logical_edit
+                    args:
+                    - var: r
+                    - var: e
+                - call:
+                    fn: submitted_request_tuple_bound_to_logical_edit
+                    args:
+                    - var: r
+                    - var: e
   C10_catchup_represents_exact_missing_suffix:
     capability: relational
     contracts:
