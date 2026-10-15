@@ -8879,3 +8879,104 @@ records:
           matching the original's scope, both identity coordinates, and its limitation to representations that persist; terminal
           disposal and non-visibility are not required.
         differences: []
+  claim:L154_pending_edit_identity_provenance_is_preserved:
+    kind: claim
+    subject_id: L154_pending_edit_identity_provenance_is_preserved
+    subject_signature: 8df9e926cda6e15dbc61496220bb449e7bb8ebd29ba5b12f5320f8f9dc09aa17
+    roundtrip:
+      subject_signature: 8df9e926cda6e15dbc61496220bb449e7bb8ebd29ba5b12f5320f8f9dc09aa17
+      status: TRANSLATED
+      natural_language: 'The conjunction of two universal claims holds. First, for every client state s and every logical
+        edit identity e: if s is a reachable client state under the normal client protocol, and the exact logical edit identity
+        e remains active in client_pending_edits in s, and e is still within the same logical edit''s normal speculative lifecycle
+        in s (a scope that ends when the protocol boundary explicitly expires, conflict/manual-resolves, abandons, authoritatively
+        reconciles, or otherwise terminally disposes that logical edit, and that is not made active again by a stale physical
+        pending entry left behind after such a boundary, independently of whether pending bookkeeping is present), then the
+        pending representation active for the exact logical edit identity e in s remains bound to that logical edit''s creation
+        identity, preserving both its document_id and its client_change_id rather than being relabeled or cross-bound. Second,
+        for every client state s, every overlay o, and every logical edit identity e: if s is reachable under the normal client
+        protocol, and overlay o is a pending representation in client_pending_edits in s of the logical client edit whose
+        creation identity is the exact identity e (belonging to that logical edit by provenance, independently of the identity
+        coordinates o currently carries), and e is still within that same logical edit''s normal speculative lifecycle in
+        s as defined above, then both of the following equalities hold: the document_id coordinate of the identity pair under
+        which o is currently keyed in client_pending_edits in s, read from that current key and independently of provenance,
+        equals the document_id component of e; and the client_change_id coordinate of the identity pair under which o is currently
+        keyed in client_pending_edits in s, read from that current key and independently of provenance, equals the client_change_id
+        coordinate carried by e.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 8df9e926cda6e15dbc61496220bb449e7bb8ebd29ba5b12f5320f8f9dc09aa17
+        verdict: EQUIVALENT
+        reason: The formula quantifies over all reachable client states, logical edit identities, and pending overlays. While
+          the exact identity is active in its normal speculative lifecycle it requires the bound-to-creation predicate, and
+          for every overlay that represents that logical edit by provenance it requires componentwise equality of its currently
+          carried document_id and client_change_id to the creation identity's coordinates. This preserves both identity coordinates,
+          covers relabeled representations because provenance is independent of the carried key, imposes no global uniqueness
+          for client_change_id, and allows absence of a representation after suppression or terminal disposition.
+        differences: []
+      strengthening:
+        subject_signature: 8df9e926cda6e15dbc61496220bb449e7bb8ebd29ba5b12f5320f8f9dc09aa17
+        verdict: EQUIVALENT
+        reason: The formula scopes both conjuncts to reachable states within the normal speculative lifecycle, and the provenance-based
+          representation conjunct requires every pending representation of exact identity e to carry both the creation document_id
+          and client_change_id, without adding uniqueness, eventual-reconciliation, or other extra requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 8df9e926cda6e15dbc61496220bb449e7bb8ebd29ba5b12f5320f8f9dc09aa17
+        verdict: EQUIVALENT
+        reason: The rendering preserves the per-edit (document_id, client_change_id) provenance binding for every pending
+          representation throughout the normal speculative lifecycle, quantifies over all such representations, reads current
+          key coordinates independently of provenance, and adds no extra uniqueness, reconciliation, or editability requirement
+          beyond the original scope and terminal boundaries.
+        differences: []
+  claim:L203_non_acceptance_terminal_disposition_preserves_edit_provenance:
+    kind: claim
+    subject_id: L203_non_acceptance_terminal_disposition_preserves_edit_provenance
+    subject_signature: ba2a37d354bc48f6e3f48b4cd3dadb48f3e95cdeb27b04d31574407a77c0a2dc
+    roundtrip:
+      subject_signature: ba2a37d354bc48f6e3f48b4cd3dadb48f3e95cdeb27b04d31574407a77c0a2dc
+      status: TRANSLATED
+      natural_language: 'For every protocol transition t and every logical edit identity e, if t occurs on a reachable execution
+        of the normal client speculative lifecycle (impossible transitions and transitions outside that lifecycle are excluded)
+        and t uses a non-acceptance terminal disposition to terminally retire the normal speculative lifecycle of the exact
+        logical edit identity e, then all of the following hold: (1) the non-acceptance terminal disposition consumed by t
+        was produced for the same logical edit e and preserves e''s full document_id plus client_change_id identity through
+        routing, bookkeeping, and the destructive retirement sink; (2) that disposition preserves e''s full document_id plus
+        client_change_id identity through routing and bookkeeping to the pending retirement sink, meaning the sink that removes
+        or terminally retires e''s pending representation in client_pending_edits receives e''s own full identity; (3) that
+        disposition preserves e''s full document_id plus client_change_id identity through routing and bookkeeping to the
+        retained-overlay retirement sink, meaning the sink that removes or terminally retires e''s retained speculative overlay
+        representation receives e''s own full identity; and (4) that disposition preserves e''s full document_id plus client_change_id
+        identity through routing and bookkeeping to the visible-overlay retirement sink, meaning the sink that removes or
+        terminally retires e''s visible speculative overlay representation receives e''s own full identity.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: ba2a37d354bc48f6e3f48b4cd3dadb48f3e95cdeb27b04d31574407a77c0a2dc
+        verdict: EQUIVALENT
+        reason: The formula conditions on a reachable non-acceptance retirement transition for identity e and requires the
+          consumed disposition to have been produced for e and to preserve e's full document_id plus client_change_id identity
+          generally and to the pending, retained-overlay, and visible-overlay sinks, exactly matching the source binding and
+          its foreign-disposition prohibition.
+        differences: []
+      strengthening:
+        subject_signature: ba2a37d354bc48f6e3f48b4cd3dadb48f3e95cdeb27b04d31574407a77c0a2dc
+        verdict: EQUIVALENT
+        reason: The formula quantifies over reachable non-acceptance retirement transitions for an exact logical edit identity
+          and requires the consumed disposition to have been produced for that same edit, preserving its full document_id
+          and client_change_id identity through routing and bookkeeping to the pending, retained-overlay, and visible-overlay
+          sinks, exactly matching the source binding and its prohibition on foreign dispositions. No additional scope, liveness,
+          or business-reason requirement is imposed.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: ba2a37d354bc48f6e3f48b4cd3dadb48f3e95cdeb27b04d31574407a77c0a2dc
+        verdict: EQUIVALENT
+        reason: The rendering preserves the conditional scope on non-acceptance terminal retirement of a normal speculative
+          lifecycle, the produced-for provenance requirement for the same logical edit, and preservation of the full document_id
+          plus client_change_id identity through routing and bookkeeping to each of the pending, retained-overlay, and visible-overlay
+          retirement sinks; the prohibition on a foreign-produced disposition retiring the edit follows from that produced-for
+          binding, with no added eventuality or other requirement.
+        differences: []
