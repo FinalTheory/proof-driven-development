@@ -262,6 +262,7 @@ functions:
     - claim:L32_catchup_selects_complete_mode_for_response_head
     - claim:C10_catchup_represents_exact_missing_suffix
     - claim:L101_client_completes_catchup_through_response_head
+    - claim:L38_selected_checkpoint_does_not_exceed_response_head
   catchup_response_selected_checkpoint_frontier:
     args:
     - CatchupResponse
@@ -4281,16 +4282,6 @@ functions:
     semantic_anchors:
     - claim:L205_visible_speculative_effect_is_unique_per_identity
     - claim:L154_pending_edit_identity_provenance_is_preserved
-  catchup_selected_checkpoint_is_atomically_published_authoritative:
-    args:
-    - CatchupResponse
-    returns: Bool
-    catalog_symbols: []
-    meaning: 'The checkpoint (content, S) that catch-up selected for response r is exactly one atomically published authoritative checkpoint identity: the selected (content, S) pair is a member of the authoritative published checkpoint set as one identity whose content and frontier were published together, not a stale-cache, torn, mixed, or non-authoritative pair. This predicate classifies the selected checkpoint''s provenance only; it does not assert the frontier''s relation to any response head.'
-    semantic_anchors:
-    - claim:L37_snapshot_mode_selects_authoritative_checkpoint
-    - claim:C17_snapshot_mode_selects_checkpoint_not_after_head
-    - claim:C10_catchup_represents_exact_missing_suffix
   recovery_attempt_reaches_checkpoint_selection:
     args:
     - RecoveryAttempt
@@ -4323,6 +4314,7 @@ functions:
     - claim:L42_recovery_selects_authoritative_checkpoint_identity
     - claim:C18_recovery_selects_and_loads_authoritative_checkpoint
     - claim:C9_recovery_reconstructs_committed_state
+    - claim:L93_recovery_loads_selected_checkpoint_before_replay
   recovery_selected_checkpoint_publication_is_atomic:
     args:
     - RecoveryAttempt
@@ -5217,6 +5209,90 @@ functions:
     semantic_anchors:
     - claim:L98_ot_receives_exact_request_and_canonical_context
     - claim:L123_acceptance_payload_and_identity_share_submitted_request
+  catchup_selected_checkpoint_is_authoritative:
+    args:
+    - CatchupResponse
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'The checkpoint (content, s) that catch-up selected for response r is an authoritative checkpoint identity: the selected (content, s) pair is a genuine authoritative checkpoint for r''s target document, not a stale-cache or non-authoritative candidate. This predicate classifies the selected checkpoint''s authoritativeness only; it does not assert that the pair was atomically published as one identity, that it is the only checkpoint identity selected for r, or the frontier''s relation to any response head.'
+    semantic_anchors:
+    - claim:L37_snapshot_mode_selects_authoritative_checkpoint
+    - claim:C17_snapshot_mode_selects_checkpoint_not_after_head
+    - claim:C10_catchup_represents_exact_missing_suffix
+  catchup_selected_checkpoint_frontier_is_atomically_published_authoritative:
+    args:
+    - CatchupResponse
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'The checkpoint (content, s) that catch-up selected for response r -- the selected pair whose frontier coordinate is s -- is exactly one atomically published authoritative checkpoint identity: that very (content, s) pair is a member of the authoritative published checkpoint set as one identity whose content and frontier were published together, not a stale-cache, torn, mixed, or non-authoritative pair. This predicate classifies the provenance of the selected pair at frontier s only; it does not assert the frontier''s relation to any response head.'
+    semantic_anchors:
+    - claim:L37_snapshot_mode_selects_authoritative_checkpoint
+  recovery_attempt_selected_checkpoint_frontier:
+    args:
+    - RecoveryAttempt
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: Revision s is the frontier coordinate S of a checkpoint identity P=(content, S) actually selected by recovery attempt r. This relation names one actually selected checkpoint identity of r by its frontier coordinate; for r's target document the frontier coordinate identifies the pair. It asserts nothing about how many checkpoint identities r selected, and nothing about the selected identity's provenance, installation, or ordering.
+    semantic_anchors:
+    - claim:L151_selectable_checkpoint_publication_binds_content_and_frontier_atomically
+  recovery_selected_checkpoint_publication_is_atomic_at_frontier:
+    args:
+    - RecoveryAttempt
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'The authoritative publication record from which the checkpoint identity P=(content, s) actually selected by recovery attempt r was drawn bound that content and frontier s atomically as one checkpoint identity: the content and frontier became visible together as one all-or-nothing pair in that publication, so P cannot be an intermediate or mixed content/frontier pair assembled from different publication states.'
+    semantic_anchors:
+    - claim:L151_selectable_checkpoint_publication_binds_content_and_frontier_atomically
+  recovery_attempt_selected_authoritative_checkpoint_frontier:
+    args:
+    - RecoveryAttempt
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Revision s is the frontier coordinate S of an authoritative checkpoint identity P=(content, S) actually selected by recovery attempt r: P is present in the authoritative published checkpoint set for r''s target document and r selected it. This relation names one actually selected authoritative checkpoint of r by its frontier coordinate; it asserts nothing about how many checkpoint identities r selected in total, and nothing about installation or ordering.'
+    semantic_anchors:
+    - claim:L93_recovery_loads_selected_checkpoint_before_replay
+  recovery_installed_replay_base_is_selected_checkpoint_at_frontier:
+    args:
+    - RecoveryAttempt
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'The replay base installed by recovery attempt r is exactly the checkpoint identity P=(content, s) actually selected by r whose frontier coordinate is s: no concurrent pointer, cache, or later-checkpoint change substitutes a different checkpoint for P as the installed replay base.'
+    semantic_anchors:
+    - claim:L93_recovery_loads_selected_checkpoint_before_replay
+  recovery_selected_checkpoint_installed_before_tail_and_completion_at_frontier:
+    args:
+    - RecoveryAttempt
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'The checkpoint identity P=(content, s) actually selected by recovery attempt r is completely installed before the first canonical tail revision is applied by r and before r''s recovery is declared complete: no canonical tail revision is applied on a partially installed P, and completion is not declared before P is completely installed.'
+    semantic_anchors:
+    - claim:L93_recovery_loads_selected_checkpoint_before_replay
+  recovery_inputs_states_and_resumed_context_preserve_document_scope:
+    args:
+    - Document
+    - RecoveryAttempt
+    returns: Bool
+    catalog_symbols:
+    - document_current_epoch
+    - document_owner_generation_id
+    - recovery_head
+    - snapshot_content_with_snapshot_revision
+    - accepted_change_log
+    - recovered_owner_runtime_state
+    dimensions:
+    - document
+    - observation
+    meaning: 'For recovery attempt r targeting document d, the document-scope binding holds across the full scope of r''s recovery lifecycle: every authoritative owner/epoch context of r, and -- whenever selected, captured, consumed, constructed, installed, or used -- the recovery_head, the checkpoint, the canonical accepted_change_log tail entries (bound under each of those modes, not only when replayed), the rebuilt logical/OT runtime state (including intermediate derived reconstruction states, bound from construction onward and not only once installed), the installed recovered_owner_runtime_state, and the resumed owner context (bound as itself a document-scoped entity whenever service resumes under it) remain document-scoped to that same d. This obligation applies to every recovery input, context, or state of r that actually exists at any stage of the attempt, even if the attempt later stalls, crashes, or aborts before or after recovery_head capture; an authoritative object or owner context
+      from another document cannot satisfy the recovery merely because its frontier, payload, logical state, or reconstructed metadata is extensionally equal to d''s. It imposes no requirement that any later recovery stage occur or that recovery complete.'
+    semantic_anchors:
+    - claim:L174_recovery_inputs_and_state_are_document_bound
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -13202,9 +13278,15 @@ claims:
                     - var: resp
                     - var: s
                 - call:
-                    fn: catchup_selected_checkpoint_is_atomically_published_authoritative
+                    fn: catchup_selected_checkpoint_frontier_is_atomically_published_authoritative
                     args:
                     - var: resp
+                    - var: s
+                - call:
+                    fn: catchup_selected_checkpoint_is_authoritative
+                    args:
+                    - var: resp
+                    - var: s
   L38_selected_checkpoint_does_not_exceed_response_head:
     capability: relational
     contracts: []
@@ -13217,6 +13299,10 @@ claims:
         body:
           implies:
           - and:
+            - call:
+                fn: catchup_response_is_snapshot_mode
+                args:
+                - var: resp
             - call:
                 fn: catchup_response_head_is
                 args:
@@ -13263,9 +13349,10 @@ claims:
                     - var: resp
                     - var: s
                 - call:
-                    fn: catchup_selected_checkpoint_is_atomically_published_authoritative
+                    fn: catchup_selected_checkpoint_is_authoritative
                     args:
                     - var: resp
+                    - var: s
                 - call:
                     fn: revision_at_or_before
                     args:
@@ -13302,55 +13389,113 @@ claims:
     capability: relational
     contracts: []
     formula:
-      forall:
-        vars:
-          r: RecoveryAttempt
-        body:
-          implies:
-          - and:
+      and:
+      - forall:
+          vars:
+            r: RecoveryAttempt
+            s: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: new_owner_recovery_attempt
+                  args:
+                  - var: r
+              - call:
+                  fn: recovery_attempt_selected_checkpoint_frontier
+                  args:
+                  - var: r
+                  - var: s
             - call:
-                fn: new_owner_recovery_attempt
+                fn: recovery_selected_checkpoint_publication_is_atomic_at_frontier
                 args:
                 - var: r
+                - var: s
+      - forall:
+          vars:
+            r: RecoveryAttempt
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: new_owner_recovery_attempt
+                  args:
+                  - var: r
+              - call:
+                  fn: recovery_attempt_selects_exactly_one_checkpoint
+                  args:
+                  - var: r
             - call:
-                fn: recovery_attempt_selects_exactly_one_checkpoint
+                fn: recovery_selected_checkpoint_publication_is_atomic
                 args:
                 - var: r
-          - call:
-              fn: recovery_selected_checkpoint_publication_is_atomic
-              args:
-              - var: r
   L93_recovery_loads_selected_checkpoint_before_replay:
     capability: relational
     contracts: []
     formula:
-      forall:
-        vars:
-          r: RecoveryAttempt
-        body:
-          implies:
-          - and:
-            - call:
-                fn: new_owner_recovery_attempt
-                args:
-                - var: r
-            - call:
-                fn: recovery_attempt_selects_exactly_one_checkpoint
-                args:
-                - var: r
-            - call:
-                fn: recovery_attempt_progresses_to_completion_installation_or_tail
-                args:
-                - var: r
-          - and:
-            - call:
-                fn: recovery_installed_replay_base_is_selected_checkpoint
-                args:
-                - var: r
-            - call:
-                fn: recovery_selected_checkpoint_installed_before_tail_and_completion
-                args:
-                - var: r
+      and:
+      - forall:
+          vars:
+            r: RecoveryAttempt
+            s: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: new_owner_recovery_attempt
+                  args:
+                  - var: r
+              - call:
+                  fn: recovery_attempt_selected_authoritative_checkpoint_frontier
+                  args:
+                  - var: r
+                  - var: s
+              - call:
+                  fn: recovery_attempt_progresses_to_completion_installation_or_tail
+                  args:
+                  - var: r
+            - and:
+              - call:
+                  fn: recovery_installed_replay_base_is_selected_checkpoint_at_frontier
+                  args:
+                  - var: r
+                  - var: s
+              - call:
+                  fn: recovery_selected_checkpoint_installed_before_tail_and_completion_at_frontier
+                  args:
+                  - var: r
+                  - var: s
+      - forall:
+          vars:
+            r: RecoveryAttempt
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: new_owner_recovery_attempt
+                  args:
+                  - var: r
+              - call:
+                  fn: recovery_attempt_selects_exactly_one_checkpoint
+                  args:
+                  - var: r
+              - call:
+                  fn: recovery_selected_checkpoint_is_authoritative_published
+                  args:
+                  - var: r
+              - call:
+                  fn: recovery_attempt_progresses_to_completion_installation_or_tail
+                  args:
+                  - var: r
+            - and:
+              - call:
+                  fn: recovery_installed_replay_base_is_selected_checkpoint
+                  args:
+                  - var: r
+              - call:
+                  fn: recovery_selected_checkpoint_installed_before_tail_and_completion
+                  args:
+                  - var: r
   C18_recovery_selects_and_loads_authoritative_checkpoint:
     capability: relational
     contracts: []
@@ -13484,6 +13629,23 @@ claims:
             - call:
                 fn: recovery_inputs_and_installed_ot_preserve_target_document_scope
                 args:
+                - var: r
+      - forall:
+          vars:
+            r: RecoveryAttempt
+          body:
+            implies:
+            - call:
+                fn: recovery_document_scope_attempt
+                args:
+                - var: r
+            - call:
+                fn: recovery_inputs_states_and_resumed_context_preserve_document_scope
+                args:
+                - call:
+                    fn: recovery_target_document
+                    args:
+                    - var: r
                 - var: r
   C25_recovery_derives_complete_ot_metadata_from_truth:
     capability: relational
@@ -14611,9 +14773,10 @@ claims:
                       - var: resp
                       - var: s
                   - call:
-                      fn: catchup_selected_checkpoint_is_atomically_published_authoritative
+                      fn: catchup_selected_checkpoint_is_authoritative
                       args:
                       - var: resp
+                      - var: s
                   - call:
                       fn: revision_at_or_before
                       args:
