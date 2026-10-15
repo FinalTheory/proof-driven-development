@@ -8980,3 +8980,334 @@ records:
           retirement sinks; the prohibition on a foreign-produced disposition retiring the edit follows from that produced-for
           binding, with no added eventuality or other requirement.
         differences: []
+  claim:C10_catchup_represents_exact_missing_suffix:
+    kind: claim
+    subject_id: C10_catchup_represents_exact_missing_suffix
+    subject_signature: b2fb29308e77d442081f28963c0d4773d71c391265c719ea9c6814c4a1d489ec
+    roundtrip:
+      subject_signature: b2fb29308e77d442081f28963c0d4773d71c391265c719ea9c6814c4a1d489ec
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following holds. (1) For every catch-up response r, if r is a catch-up or
+        reconnect response for some target document D and the response-specific head value H for that attempt has already
+        been captured and fixed, then catch-up canonical sources preserve document scope for r: for r targeting its requested
+        document D at its already-captured response head H, every canonical payload source actually selected or consumed for
+        that response preserves its semantic authoritative binding to D throughout response construction, private candidate
+        construction, and any publication; in delta mode every returned canonical accepted change originates from accepted_change_log
+        for D; in snapshot mode the selected checkpoint is D''s authoritative snapshot_content_with_snapshot_revision and
+        every canonical tail change originates from accepted_change_log for D; every resulting client_resync_candidate remains
+        bound to the same target D throughout construction and any publication; substituting another document''s authoritative
+        source fails this relation even if revision, payload, frontier, and replay-result values are identical or its fields
+        are relabeled as D, while sharing content-addressed or deduplicated immutable bytes satisfies it when the semantic
+        authoritative reference remains D''s; it constrains only stages and sources actually reached or used and does not
+        require completion, candidate creation, or publication; and no selected or consumed canonical payload source may contribute
+        authoritative state beyond H, namely no selected delta or snapshot-tail acceptance may have canonical revision greater
+        than H, no selected snapshot may have snapshot_revision greater than H, and no returned response, client_resync_candidate,
+        or publication for r may semantically include a canonical acceptance beyond H, this being only an upper temporal boundary
+        and not requiring any particular acceptance at or below H, exact or contiguous range coverage, replay correctness,
+        head-capture correctness, publication atomicity, completion, publication, or progress. (2) For every catch-up response
+        r, all four implications hold: if the complete canonical revision range L+1..H for r, from r''s client frontier L
+        to r''s captured authoritative response head H, is retained and readable in authoritative storage with every canonical
+        accepted change in that range available to be returned, then r is in delta mode; if r is in delta mode, then that
+        complete range is retained and readable for r; if that complete range is not retained and readable for r, then r is
+        in snapshot mode; and if r is in snapshot mode, then that complete range is not retained and readable for r. Here
+        delta mode means catch-up selected the retained canonical revision range for r and r is to be constructed by returning
+        canonical accepted changes from that range rather than by snapshot replacement, and snapshot mode means catch-up selected
+        a checkpoint for r and r is to be constructed by snapshot replacement rather than by delta/range application. (3)
+        For every catch-up response r, revision l, revision h, canonical acceptance a, and revision v, if l is the user-visible
+        last_applied_revision of the client that requested r at the start of r''s catch-up attempt, r is in delta mode, l
+        is the base frontier from which r''s delta range is computed (the same client frontier), h is the authoritative response
+        head captured for r, v is the canonical revision assigned to a (each canonical accepted change having exactly one
+        assigned revision), v lies in the delta range (l, h] i.e. l < v and v <= h, and a is a member of accepted_change_log(D)
+        where D is the target document of r (an extensionally equal accepted change from another document''s log does not
+        satisfy this), then a is one of the changes returned in the delta portion of r. (4) For every r, l, h, a, and v as
+        above, if l is r''s client frontier as above, r is in delta mode, l is r''s delta base frontier, h is r''s captured
+        head, a is returned in the delta portion of r, v is the canonical revision assigned to a, and a is in the target document''s
+        log as above, then v lies in the delta range (l, h]. (5) For every r, l, and h, if l is r''s client frontier as above,
+        r is in delta mode, l is r''s delta base frontier, and h is r''s captured head, then within the delta returned by
+        r for the range (l, h] no canonical accepted change appears more than once and the returned changes are arranged in
+        increasing revision order, this asserting multiplicity and ordering only. (6) For every r and l, if l is r''s client
+        frontier as above and r is in delta mode, then no speculative data appears anywhere in r''s returned delta portion,
+        i.e. every returned payload item is canonical accepted data, not an unaccepted, uncommitted, or locally speculative
+        change. (7) The snapshot conjunction holds: (7a) for every r, revision s, and revision h, if r is in snapshot mode,
+        s is the frontier coordinate of the checkpoint (content, s) that catch-up selected for r, and h is r''s captured head,
+        then r identifies exactly the checkpoint (content and frontier) that catch-up selected for it, not another checkpoint
+        and not a mixture of checkpoints, and r specifies that its checkpoint content replaces the client''s prior document
+        state rather than being appended or patched onto it; (7b) for every r, s, h, a, and v, if r is in snapshot mode, s
+        is r''s selected checkpoint frontier, h is r''s captured head, v is the canonical revision assigned to a, v lies in
+        the checkpoint tail range (s, h] i.e. s < v and v <= h, and a is in the target document''s log as above, then a is
+        one of the changes returned in the tail portion of r; (7c) for every r, s, h, a, and v, if r is in snapshot mode,
+        s is r''s selected checkpoint frontier, h is r''s captured head, a is returned in the tail portion of r, v is the
+        canonical revision assigned to a, and a is in the target document''s log as above, then v lies in the checkpoint tail
+        range (s, h]; (7d) for every r, s, and h, if r is in snapshot mode, s is r''s selected checkpoint frontier, and h
+        is r''s captured head, then within the tail returned by r for the range (s, h] no canonical accepted change appears
+        more than once and the returned changes are arranged in increasing revision order, this asserting multiplicity and
+        ordering only. (8) For every catch-up response resp and revision h, if resp is in snapshot mode and h is resp''s captured
+        head, then there exists a revision s such that s is the frontier coordinate of the checkpoint selected for resp, the
+        selected checkpoint (content, s) is an authoritative checkpoint identity, i.e. a genuine authoritative checkpoint
+        for resp''s target document and not a stale-cache or non-authoritative candidate, and s is at or before h (s <= h).
+        (9) For every r and s, if r is in snapshot mode and s is r''s selected checkpoint frontier, then the document state
+        denoted by a snapshot checkpoint at frontier s equals deterministic canonical replay of all and only the canonical
+        accepted changes in accepted_change_log with revisions 1..s, this being conditional over checkpoints, constraining
+        every snapshot checkpoint whose frontier is s and vacuous at a revision with no checkpoint. (10) For every r, if r
+        is in snapshot mode, then no speculative data appears anywhere in r''s returned snapshot tail portion, i.e. every
+        returned tail payload item is canonical accepted data, not an unaccepted, uncommitted, or locally speculative change.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: b2fb29308e77d442081f28963c0d4773d71c391265c719ea9c6814c4a1d489ec
+        verdict: EQUIVALENT
+        reason: 'The formula faithfully decomposes the claim: provenance/document-scope is asserted for targeted responses;
+          the retained-range condition partitions delta versus snapshot mode; delta and tail membership are bidirectional
+          over the target document''s log within (L,H] and (S,H] respectively, with exactly-once ordering and no speculative
+          data; snapshot mode requires an identified authoritative checkpoint at S <= H whose state equals canonical replay
+          through S, with replacement semantics; and the provenance predicate bounds all sources and the candidate to D and
+          to at most H, excluding cross-document substitution and post-H acceptances.'
+        differences: []
+      strengthening:
+        subject_signature: b2fb29308e77d442081f28963c0d4773d71c391265c719ea9c6814c4a1d489ec
+        verdict: EQUIVALENT
+        reason: The formula preserves the captured-head scope, retention-based delta/snapshot partition, exact in-range membership
+          with uniqueness and ordering for both delta and snapshot tail, an authoritative selected checkpoint at S <= H whose
+          state equals canonical replay through S, document-scoped provenance and candidate binding including exclusion of
+          post-H acceptances, without adding or omitting a material requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: b2fb29308e77d442081f28963c0d4773d71c391265c719ea9c6814c4a1d489ec
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original: the retention biconditional matches the if/otherwise mode split, delta
+          and snapshot-tail clauses jointly give exact set, order, uniqueness, and canonical-only contents for L+1..H and
+          S+1..H with S <= H, the checkpoint replay clause gives exact canonical state through S and hence through H, and
+          the provenance clause preserves document-D binding of all sources and the candidate through construction/publication,
+          excludes other-document substitution and post-H acceptances, and retains the deduplicated-bytes exclusion.'
+        differences: []
+  claim:L8_snapshot_is_exact_committed_prefix:
+    kind: claim
+    subject_id: L8_snapshot_is_exact_committed_prefix
+    subject_signature: fa5aa5d84094bc30ba95ddad845fa7002a2c674853733a5272bf50dd3a60ca86
+    roundtrip:
+      subject_signature: fa5aa5d84094bc30ba95ddad845fa7002a2c674853733a5272bf50dd3a60ca86
+      status: TRANSLATED
+      natural_language: 'For every revision r, both of the following hold: (1) the snapshot_state at frontier r — the document
+        state represented by a snapshot checkpoint at its declared frontier r — equals deterministic canonical replay of all
+        and only the canonical accepted changes in accepted_change_log with revisions 1..r, i.e. snapshot_state(r) == replay(accepted[1..r]),
+        this condition applying conditionally over snapshot checkpoints declaring frontier r; and (2) the document state denoted
+        by a snapshot checkpoint at frontier r equals deterministic canonical replay of all and only the canonical accepted
+        changes in accepted_change_log with revisions 1..r, this condition constraining every snapshot checkpoint whose frontier
+        is r and being vacuous at a revision with no checkpoint.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: fa5aa5d84094bc30ba95ddad845fa7002a2c674853733a5272bf50dd3a60ca86
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over every frontier revision r and both predicates state that the document
+          state of a snapshot checkpoint at r equals deterministic canonical replay of all and only the canonical accepted
+          changes in revisions 1..r, which is exactly snapshot_state(S) == replay(accepted[1..S]); it is conditional on a
+          checkpoint existing at r, matching the source's lack of any existence or eventual-production guarantee, and adds
+          no scope, identity, or provenance requirement beyond that equality.
+        differences: []
+      strengthening:
+        subject_signature: fa5aa5d84094bc30ba95ddad845fa7002a2c674853733a5272bf50dd3a60ca86
+        verdict: EQUIVALENT
+        reason: 'Both universally quantified conjuncts state the same conditional equality: for every revision r, the document
+          state represented/denoted by a snapshot checkpoint at frontier r equals deterministic canonical replay of all and
+          only accepted changes 1..r. The second predicate is semantically redundant with the first and with snapshot_state(S)
+          == replay(accepted[1..S]); it adds no distinct entity, scope, cardinality, or frontier-pairing requirement.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: fa5aa5d84094bc30ba95ddad845fa7002a2c674853733a5272bf50dd3a60ca86
+        verdict: EQUIVALENT
+        reason: The rendering restates the same equality snapshot_state(r) == replay(accepted[1..r]) for every revision r,
+          quantified conditionally over snapshot checkpoints declaring frontier r and vacuous when none exists. Its two conjuncts
+          are duplicates of the same relation, adding no existence, authoritative-publication, or extra frontier requirement
+          beyond the original, and omitting none of the all-and-only replay condition.
+        differences: []
+  claim:L119_completed_resync_candidate_stays_at_response_head_until_publication:
+    kind: claim
+    subject_id: L119_completed_resync_candidate_stays_at_response_head_until_publication
+    subject_signature: 4cd4481c229d7c3a704345a472040516707882657d172c8e3da53f3d0d2c712e
+    roundtrip:
+      subject_signature: 4cd4481c229d7c3a704345a472040516707882657d172c8e3da53f3d0d2c712e
+      status: TRANSLATED
+      natural_language: 'All of the following hold conjunctively. (1) For every CatchupResponse r and every Revision h, if
+        r''s reconnect/resync attempt has completed its canonical catch-up and its pending reconciliation through captured
+        response head h — so that r''s private reconciled candidate is complete at h and awaits atomic publication or discard
+        — then, at candidate readiness for r, that candidate''s canonical frontier is exactly h: its canonical document state
+        is canonical replay through h, and no canonical acceptance after h has been applied into it. (2) For every CatchupResponse
+        r and every Revision h, if r''s candidate is completed through head h as above, then, with respect to r''s private
+        candidate, canonical acceptances after r''s captured head h are only buffered or deferred for later processing: they
+        are not applied into the candidate and do not advance the candidate''s canonical frontier before the candidate''s
+        publication. (3) For every CatchupResponse r and every Revisions h and h2, if r''s candidate is completed through
+        head h and a successful publication of r''s private reconciled candidate exposes user-visible canonical state through
+        exactly h2 — canonical replay of r''s document through h2, with no omitted and no extra canonical acceptance — then
+        h equals h2. (4) For every ProtocolTransition t, every CatchupResponse r, and every Revision h, if r''s candidate
+        is completed through head h and t occurs during the lifetime of r''s completed private reconciled candidate — at or
+        after the candidate''s completion through its captured head and before that candidate is atomically published or discarded
+        — then across t, r''s private reconciled candidate canonical frontier is unchanged: the candidate frontier in t''s
+        post-state equals the candidate frontier in t''s pre-state.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 4cd4481c229d7c3a704345a472040516707882657d172c8e3da53f3d0d2c712e
+        verdict: EQUIVALENT
+        reason: 'The formula covers each source requirement: completed candidate frontier is exactly H at readiness, every
+          transition during the candidate lifetime until publication or discard preserves that frontier, post-H acceptances
+          are deferred and not applied into or advancing the candidate before publication, and any publication frontier h2
+          for a candidate completed through H is forced equal to H.'
+        differences: []
+      strengthening:
+        subject_signature: 4cd4481c229d7c3a704345a472040516707882657d172c8e3da53f3d0d2c712e
+        verdict: EQUIVALENT
+        reason: The formula captures readiness frontier exactly H, preservation of that frontier across all transitions during
+          the completed candidate's lifetime until publication or discard, deferral without application of post-H acceptances,
+          and publication exposing exactly H via equality of the publication frontier with the completed head, with no added
+          or omitted scope.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 4cd4481c229d7c3a704345a472040516707882657d172c8e3da53f3d0d2c712e
+        verdict: EQUIVALENT
+        reason: The rendering preserves the candidate's frontier being exactly H at completion, the non-application and deferral
+          of post-H canonical acceptances, frontier invariance throughout the completed candidate's lifetime until atomic
+          publication or discard, and successful publication exposing canonical state through exactly H, with no requirement
+          added or omitted.
+        differences: []
+  claim:L122_catchup_response_head_is_bound_to_authoritative_frontier:
+    kind: claim
+    subject_id: L122_catchup_response_head_is_bound_to_authoritative_frontier
+    subject_signature: 5a0b9408ad2fc83eb240a80aba3272a326daf675165b0b77cf1f18aceb395503
+    roundtrip:
+      subject_signature: 5a0b9408ad2fc83eb240a80aba3272a326daf675165b0b77cf1f18aceb395503
+      status: TRANSLATED
+      natural_language: 'For every catch-up response r, if r is eligible to reach response completion or publication under
+        the catch-up protocol — where this eligibility is only a scope guard, does not require r to be a normal/in-guarantee
+        reconnect attempt, and does not assert that completion or publication actually occurs — then both of the following
+        hold: (1) the response head revision carried by r equals the revision H captured for r, where H is exactly the value
+        of document_latest_revision(D) for r''s catch-up document D as returned by one response-specific authoritative-store
+        read/linearization point, that single reading fixes the captured value for r, and later canonical acceptances may
+        advance document_latest_revision(D) after the capture without changing this captured value; and (2) the captured response
+        head H for r remains the same bound response-head value through exactly these stages of r: delta/snapshot selection,
+        canonical range construction, pending reconciliation, completion, and publication, with no other stage asserted.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 5a0b9408ad2fc83eb240a80aba3272a326daf675165b0b77cf1f18aceb395503
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over eligible catch-up responses, equates the response head value to the
+          head captured from document_latest_revision(D) at one response-specific authoritative-store read/linearization point,
+          and asserts preservation of that exact head through exactly the listed stages of delta/snapshot selection, canonical
+          range construction, pending reconciliation, completion, and publication, with later advances not altering the captured
+          value.
+        differences: []
+      strengthening:
+        subject_signature: 5a0b9408ad2fc83eb240a80aba3272a326daf675165b0b77cf1f18aceb395503
+        verdict: EQUIVALENT
+        reason: The formula applies exactly the eligibility guard to all catch-up responses, equates the response head value
+          with the single response-specific authoritative capture of document_latest_revision(D), and asserts preservation
+          through exactly the listed stages, with later advances not altering the captured value, matching the source scope,
+          provenance, and exclusions without addition or omission.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 5a0b9408ad2fc83eb240a80aba3272a326daf675165b0b77cf1f18aceb395503
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal scope over responses eligible for completion or publication, the single
+          response-specific authoritative-store capture of H from document_latest_revision(D), preservation of that exact
+          H through delta/snapshot selection, canonical range construction, pending reconciliation, completion, and publication,
+          and the exclusion that later acceptances may advance the frontier without rewriting H.
+        differences: []
+  claim:L132_visible_overlay_document_binding_established_on_publication:
+    kind: claim
+    subject_id: L132_visible_overlay_document_binding_established_on_publication
+    subject_signature: 383afe589271cde3c7a2aa9af3e80af061b0a9afbfaf592ceb7efa5a9cb104d0
+    roundtrip:
+      subject_signature: 383afe589271cde3c7a2aa9af3e80af061b0a9afbfaf592ceb7efa5a9cb104d0
+      status: TRANSLATED
+      natural_language: The following four conditions hold conjunctively. (1) For every client state s and every overlay o,
+        if s is the resulting user-visible state of a user-visible client transition that establishes, replaces, or changes
+        client_document_id — including initialization, restoration, switching, publication, and any other visible-document
+        replacement path — so that the document s represents was fixed by that transition, and o is currently exposed as a
+        speculative user-visible overlay in s, then o belongs to the same document represented by s. (2) For every client
+        state s, if s is such a resulting user-visible state of a transition that establishes, replaces, or changes client_document_id
+        as described above, then the visible-speculative-overlay-document-binding property holds of the whole user-visible
+        client state s, namely that every speculative overlay exposed in s belongs to the document s represents. (3) For every
+        client state s and every overlay o, if the visible-speculative-overlay-document-binding property holds of s and o
+        is currently exposed as a speculative user-visible overlay in s, then o belongs to the same document represented by
+        s. (4) For every client state s and every overlay o, if s is such a resulting user-visible state of a transition that
+        establishes, replaces, or changes client_document_id as described above, and o is currently exposed as a speculative
+        user-visible overlay in s, then the document_id recorded on overlay o itself — the document identity that o carries
+        as an exposed speculative overlay — is equal to the exact client_document_id coordinate stored in client state s.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 383afe589271cde3c7a2aa9af3e80af061b0a9afbfaf592ceb7efa5a9cb104d0
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over resulting states satisfying the establishes/replaces/changes precondition,
+          covering all named and other replacement paths, and over every overlay exposed in such a state, requiring its carried
+          document_id to equal client_document_id_value(s), i.e. document D; the helper-predicate conjuncts restate this same
+          binding without adding or omitting requirements.
+        differences: []
+      strengthening:
+        subject_signature: 383afe589271cde3c7a2aa9af3e80af061b0a9afbfaf592ceb7efa5a9cb104d0
+        verdict: EQUIVALENT
+        reason: 'All conjuncts restate the same guarantee under the supplied meanings: for any resulting state of a transition
+          that establishes, replaces, or changes client_document_id (including initialization, restoration, switching, publication,
+          and other replacement paths), every exposed speculative overlay matches the represented document and its carried
+          document_id equals client_document_id_value(s), i.e. document D. The binding_holds and matches conjuncts are definitional
+          unpackings of that per-overlay condition, with the same establishing-transition guard, identity coordinate, and
+          scope; no requirement is added or omitted.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 383afe589271cde3c7a2aa9af3e80af061b0a9afbfaf592ceb7efa5a9cb104d0
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the transition precondition (establishing, replacing, or changing client_document_id
+          via any visible-document replacement path), the universal quantification over exposed speculative overlays in the
+          resulting visible state, and the identity requirement: condition (4) pins each overlay''s own document_id to the
+          exact client_document_id of that state, matching the original''s document D, while conditions (1)-(3) restate the
+          same binding without broadening or narrowing scope.'
+        differences: []
+  claim:L202_speculative_overlay_operation_provenance_is_preserved:
+    kind: claim
+    subject_id: L202_speculative_overlay_operation_provenance_is_preserved
+    subject_signature: 9536e4d30f544f7eda6560cb56367084e81ac0f87160b1359b5f48f35379b85f
+    roundtrip:
+      subject_signature: 9536e4d30f544f7eda6560cb56367084e81ac0f87160b1359b5f48f35379b85f
+      status: TRANSLATED
+      natural_language: All of the following hold. (1) For every client state s and overlay o, if o is retained in s or o
+        is visible in s, then the speculative operation provenance of o in s is ok, meaning the retained or exposed representation
+        o in s remains semantically derived from the same logical edit operation rather than another edit's operation. (2)
+        For every client state s, overlay o, and logical edit e, if o is retained in s or o is visible in s, and o in s represents
+        e, then o in s encodes the logical edit operation of e, namely the semantic user operation carried by e itself, identified
+        by e's own identity. (3) For every client states b and a, overlays o1 and o2, and logical edit e, if the client transition
+        from b to a preserves e as the same logical edit, o1 in b represents e and o1 is retained in b or visible in b, and
+        o2 in a represents e and o2 is retained in a or visible in a, then o2 in a encodes the logical edit operation of e.
+        (4) For every client state s, overlay o, and logical edits e and e2, if o in s represents e and e2 is not equal to
+        e, then it is not the case that o in s encodes the logical edit operation of e2.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 9536e4d30f544f7eda6560cb56367084e81ac0f87160b1359b5f48f35379b85f
+        verdict: EQUIVALENT
+        reason: 'The formula covers every retained or visible overlay in every state: any such overlay representing a logical
+          edit e must encode e''s own operation, the transition clause preserves this requirement across all identity-preserving
+          client transitions using the same anchored e, and the final clause forbids encoding any other edit e2''s operation,
+          capturing the no-substitution/no-cross-binding rule even under extensional equality. Physical representation may
+          vary via distinct before/after overlay tokens without weakening the operation-identity requirement.'
+        differences: []
+      strengthening:
+        subject_signature: 9536e4d30f544f7eda6560cb56367084e81ac0f87160b1359b5f48f35379b85f
+        verdict: EQUIVALENT
+        reason: The formula covers retained and visible overlays, binds encoding and provenance to the same represented logical
+          edit, preserves that encoding across identity-preserving transitions, and excludes encoding another distinct edit's
+          operation, without imposing byte-identity, cardinality, or other out-of-scope requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 9536e4d30f544f7eda6560cb56367084e81ac0f87160b1359b5f48f35379b85f
+        verdict: EQUIVALENT
+        reason: The rendering covers every retained or visible representation in every state, binds it to the operation of
+          the same logical edit it represents, preserves that encoding across any transition preserving the edit, and forbids
+          encoding a distinct edit's operation, without requiring identical physical representation.
+        differences: []
