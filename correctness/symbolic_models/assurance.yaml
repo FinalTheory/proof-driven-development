@@ -10060,3 +10060,55 @@ records:
           and loaded is at or before the authoritative recovery head in canonical revision order (S <= H), with no added provenance,
           precondition, or stronger guarantee.'
         differences: []
+  claim:L173_optimized_lifecycle_representation_resumes_only_through_recovery:
+    kind: claim
+    subject_id: L173_optimized_lifecycle_representation_resumes_only_through_recovery
+    subject_signature: 6ce9a979b9e5404c321b4a9d63976fb10e59066f968f957cc4020ef0b832e3bc
+    roundtrip:
+      subject_signature: 6ce9a979b9e5404c321b4a9d63976fb10e59066f968f957cc4020ef0b832e3bc
+      status: TRANSLATED
+      natural_language: All of the following hold. (1) For every protocol transition t, if t is an authoritative snapshot
+        publication or compaction transition, i.e. t publishes a snapshot or installs a compacted authoritative representation,
+        then it is not the case that t is a lifecycle transition that directly replaces the acceptance-relevant runtime state
+        of an already-serving owner, i.e. it is not the case that the serving owner's live transform and acceptance state
+        is swapped for t's representation without that owner passing through authoritative recovery or reconstruction. (2)
+        For every authoritative state representation s, if s is an optimized snapshot or compacted authoritative representation,
+        then it is not the case that s is acceptance-eligible by itself, i.e. it is not the case that an owner could serve
+        canonical acceptance directly from s without completing authoritative recovery or reconstruction and installing recovered
+        state. (3) For every authoritative state representation s and every revision h, if s is an optimized snapshot or compacted
+        authoritative representation at frontier h and either s is used to resume owner service or s is used to initialize
+        an owner (an owner begins service on the basis of s), then all transform and acceptance entrypoints of the owner that
+        s is used to initialize or resume remain closed until that owner completes authoritative recovery/reconstruction through
+        frontier h and installs the recovered logical document state, the recovered head, and the recovered OT metadata through
+        frontier h, i.e. no transform or acceptance entrypoint of that owner is open before recovery through h is complete
+        and all three installations have occurred; this asserts the closure gate only and does not require that the recovery
+        or any installation ever occurs.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 6ce9a979b9e5404c321b4a9d63976fb10e59066f968f957cc4020ef0b832e3bc
+        verdict: EQUIVALENT
+        reason: 'All three source requirements are faithfully encoded: snapshot/compaction transitions never directly replace
+          a serving owner''s acceptance state, optimized representations are never acceptance-eligible by themselves, and
+          when such a representation at frontier H initializes or resumes an owner, its entrypoints remain closed until recovery
+          through H and installation of the recovered logical state, head, and OT metadata are complete.'
+        differences: []
+      strengthening:
+        subject_signature: 6ce9a979b9e5404c321b4a9d63976fb10e59066f968f957cc4020ef0b832e3bc
+        verdict: EQUIVALENT
+        reason: 'The formula''s three conjuncts match the original''s three guarantees: snapshot/compaction transitions never
+          directly replace a serving owner''s acceptance state, optimized/compacted representations are never acceptance-eligible
+          by themselves, and any optimized representation at frontier H used to initialize or resume an owner keeps all transform
+          and acceptance entrypoints closed until recovery through H completes and the recovered logical state, head, and
+          OT metadata are installed.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 6ce9a979b9e5404c321b4a9d63976fb10e59066f968f957cc4020ef0b832e3bc
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves all three guarantees: no direct replacement of a serving owner''s acceptance-relevant
+          runtime state by a snapshot-publication or compaction transition, no acceptance-eligibility of an optimized or compacted
+          representation by itself, and closure of all transform and acceptance entrypoints for an owner initialized or resumed
+          from such a representation at frontier H until authoritative recovery/reconstruction through H is complete and the
+          recovered logical state, head, and OT metadata are installed. No requirement is omitted, added, or materially altered.'
+        differences: []
