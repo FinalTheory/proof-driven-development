@@ -16211,26 +16211,6 @@ claims:
       - forall:
           vars:
             s: ClientState
-            s_rev: Revision
-          body:
-            implies:
-            - call:
-                fn: client_state_within_selected_checkpoint_catchup
-                args:
-                - var: s
-                - var: s_rev
-            - exists:
-                vars:
-                  s0: ClientState
-                body:
-                  call:
-                    fn: client_state_is_checkpoint_installation
-                    args:
-                    - var: s0
-                    - var: s_rev
-      - forall:
-          vars:
-            s: ClientState
             v: Revision
             s_rev: Revision
           body:
