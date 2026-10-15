@@ -7103,3 +7103,272 @@ records:
           state, keyed by the full (document_id, client_change_id) identity; it neither omits the deduplication-effect requirement
           nor adds any stronger restriction on physical representations.
         differences: []
+  claim:L42_recovery_selects_authoritative_checkpoint_identity:
+    kind: claim
+    subject_id: L42_recovery_selects_authoritative_checkpoint_identity
+    subject_signature: 5d58375f5f3996c4085bb70108068cea095b97f6b229c4d0188386e16c892a4c
+    roundtrip:
+      subject_signature: 5d58375f5f3996c4085bb70108068cea095b97f6b229c4d0188386e16c892a4c
+      status: TRANSLATED
+      natural_language: 'For every recovery attempt r: if r is a new-owner recovery attempt — that is, r is within the canonical
+        new-owner recovery boundary for its target document, a classification established by entering that boundary and not
+        dependent on successful progress, so r remains a new-owner recovery attempt even if it stalls, crashes, or aborts
+        before owner-generation installation, recovery-head capture, or completion, while recovery or reconstruction activity
+        outside that canonical boundary is excluded — and r reaches the checkpoint-selection stage of new-owner recovery,
+        meaning r''s execution arrives at the point where a checkpoint is to be selected for the attempt, which an attempt
+        that crashes or aborts before this stage does not satisfy, then both of the following hold: r selects exactly one
+        checkpoint identity (content, S) as the attempt''s checkpoint, meaning one single identity is the attempt''s selected
+        checkpoint — not zero, not two different identities, and not a mixture of identities — where this asserts only the
+        selection and its result and not the selected identity''s provenance, installation, or ordering; and the checkpoint
+        identity selected by r is present in the authoritative published checkpoint set, meaning the selected (content, S)
+        is one of the checkpoint identities authoritatively published for the attempt''s target document, not a stale-cache,
+        torn-record, or otherwise non-authoritative candidate.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 5d58375f5f3996c4085bb70108068cea095b97f6b229c4d0188386e16c892a4c
+        verdict: EQUIVALENT
+        reason: The formula conditions on new-owner attempt and reaching checkpoint selection, then requires both exactly-one
+          checkpoint selection and that the selected (content, S) identity is present in the authoritative published set,
+          matching the source including the no-obligation case for attempts crashing or aborting before selection.
+        differences: []
+      strengthening:
+        subject_signature: 5d58375f5f3996c4085bb70108068cea095b97f6b229c4d0188386e16c892a4c
+        verdict: EQUIVALENT
+        reason: The formula guards the universal quantifier with exactly the source preconditions (new-owner recovery attempt
+          reaching checkpoint selection) and requires exactly the source conclusion (selection of exactly one checkpoint identity
+          that is present in the authoritative published set); crash/abort before selection imposes no obligation because
+          the implication is then vacuous. No requirement is added, omitted, or altered in scope, cardinality, identity, or
+          provenance.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 5d58375f5f3996c4085bb70108068cea095b97f6b229c4d0188386e16c892a4c
+        verdict: EQUIVALENT
+        reason: The rendering preserves the same conditional scope, exactly-one selection cardinality, checkpoint identity
+          (content, S), and authoritative published-set membership; crashing or aborting before checkpoint selection remains
+          outside the obligation, and no provenance, installation, or ordering requirement is added.
+        differences: []
+  claim:C18_recovery_selects_and_loads_authoritative_checkpoint:
+    kind: claim
+    subject_id: C18_recovery_selects_and_loads_authoritative_checkpoint
+    subject_signature: be73a97dd599d1c61e9241e0eef2078d37e9403a681877b18cab03b6139dd3c0
+    roundtrip:
+      subject_signature: be73a97dd599d1c61e9241e0eef2078d37e9403a681877b18cab03b6139dd3c0
+      status: TRANSLATED
+      natural_language: 'Both of the following hold. First, for every recovery attempt r: if r is a new-owner recovery attempt
+        — that is, r is within the canonical new-owner recovery boundary for its target document, a classification established
+        by entering that boundary and not dependent on successful progress, so r remains a new-owner recovery attempt even
+        if it stalls, crashes, or aborts before owner-generation installation, recovery-head capture, or completion, while
+        recovery or reconstruction activity outside that canonical boundary is excluded — and r reaches the checkpoint-selection
+        stage of new-owner recovery, meaning r''s execution arrives at the point where a checkpoint is to be selected for
+        the attempt, which an attempt that crashes or aborts before this stage does not satisfy, then all of the following
+        hold: (a) r selects exactly one checkpoint identity (content, S) as its checkpoint, meaning one single identity is
+        r''s selected checkpoint, not zero, not two different identities, and not a mixture of identities, this being a classification
+        of the selection and its result only; (b) the checkpoint identity selected by r is present in the authoritative published
+        checkpoint set, meaning the selected (content, S) is one of the checkpoint identities authoritatively published for
+        r''s target document, not a stale-cache, torn-record, or otherwise non-authoritative candidate; and (c) the authoritative
+        publication record from which r''s selected checkpoint identity was drawn bound that checkpoint''s content and its
+        frontier S atomically as one checkpoint identity, meaning the content and frontier became visible together as one
+        all-or-nothing pair in that publication, so the selected identity cannot be an intermediate or mixed content/frontier
+        pair assembled from different publication states. Second, for every recovery attempt r: if r is a new-owner recovery
+        attempt as defined above, and r reaches the checkpoint-selection stage as defined above, and r progresses to completion,
+        installation, or tail, meaning r proceeds past checkpoint selection to at least one of completing recovery, installing
+        a replay base, or applying a canonical tail revision, which an attempt that only stalls, crashes, or aborts after
+        selection without doing any of those does not satisfy, then both of the following hold: (a) the replay base installed
+        by r is exactly the checkpoint identity the same attempt r selected, with no concurrent pointer, cache, or later-checkpoint
+        change substituting a different checkpoint for the selected one as the installed replay base; and (b) r''s selected
+        checkpoint is completely installed before the first canonical tail revision is applied by r and before r''s recovery
+        is declared complete, meaning no canonical tail revision is applied on a partially installed selected checkpoint and
+        completion is not declared before the selected checkpoint is completely installed.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: be73a97dd599d1c61e9241e0eef2078d37e9403a681877b18cab03b6139dd3c0
+        verdict: EQUIVALENT
+        reason: 'The formula preserves both source obligations: reaching checkpoint selection in a new-owner attempt requires
+          selection of exactly one checkpoint identity whose (content,S) pair is in the authoritative published set and was
+          atomically bound in its publication, and, under the additional progress guard (completion, replay-base installation,
+          or tail application by the same attempt), the installed replay base must be that same selected checkpoint and that
+          checkpoint must be completely installed before the first tail revision and before recovery is declared complete.
+          Attempts that only stall, crash, or abort after selection trigger no installation obligation, matching the source
+          permission.'
+        differences: []
+      strengthening:
+        subject_signature: be73a97dd599d1c61e9241e0eef2078d37e9403a681877b18cab03b6139dd3c0
+        verdict: EQUIVALENT
+        reason: 'The formula faithfully decomposes the claim: reaching checkpoint selection in a new-owner attempt requires
+          selecting exactly one checkpoint whose identity is authoritatively published and atomically bound as (content, S);
+          conditional on later progressing to completion, replay-base installation, or a tail revision, it additionally requires
+          the installed replay base to be that same selected checkpoint and complete installation before the first tail revision
+          and before completion is declared, leaving non-progressing stalled/crashed/aborted attempts without an installation
+          obligation.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: be73a97dd599d1c61e9241e0eef2078d37e9403a681877b18cab03b6139dd3c0
+        verdict: EQUIVALENT
+        reason: The round-trip preserves the same attempt reaching checkpoint selection, selection of exactly one atomically
+          published authoritative (content,S) checkpoint, the same-attempt identity of any installed replay base with that
+          checkpoint, complete installation before the first canonical tail revision and before recovery is declared complete,
+          and the absence of any installation or progress obligation for an attempt that only stalls, crashes, or aborts after
+          selection.
+        differences: []
+  claim:L64_recovered_ot_metadata_equals_clean_authoritative_reconstruction:
+    kind: claim
+    subject_id: L64_recovered_ot_metadata_equals_clean_authoritative_reconstruction
+    subject_signature: 0d8f4ae9685b441902d84a6211b895563f630aab2650981f4acd7dafc0b0c3c7
+    roundtrip:
+      subject_signature: 0d8f4ae9685b441902d84a6211b895563f630aab2650981f4acd7dafc0b0c3c7
+      status: TRANSLATED
+      natural_language: For every recovery attempt r, if r has completed and installed its recovered owner state — where completion
+        is classified independently of whether the installed state, recovery inputs, or their provenance satisfy any correctness
+        obligation, and no recovery attempt is required to complete — then the complete ot_owner_memory installed by r's completed
+        recovery, both in its complete installed component set and in every component value, exactly equals an independent
+        clean reconstruction from the full authoritative canonical accepted history through r's recovery head; that is, the
+        installed memory is the complete OT metadata required to resume owner service at that head, with no missing, extra,
+        or differing component, where computing the recovered result from the selected authoritative checkpoint plus the exact
+        canonical tail through the head is permitted only where those reduced inputs produce exactly this same full-history
+        reconstruction result.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 0d8f4ae9685b441902d84a6211b895563f630aab2650981f4acd7dafc0b0c3c7
+        verdict: EQUIVALENT
+        reason: The formula conditions on exactly completed recovery and requires, via the predicate meaning, the complete
+          installed ot_owner_memory set and every value to equal the independent clean reconstruction from the full authoritative
+          canonical accepted history through the recovery head, including completeness to resume service and the checkpoint-plus-exact-tail
+          permission only when it yields that same result. No requirement is omitted, added, or dimensionally collapsed.
+        differences: []
+      strengthening:
+        subject_signature: 0d8f4ae9685b441902d84a6211b895563f630aab2650981f4acd7dafc0b0c3c7
+        verdict: EQUIVALENT
+        reason: 'The formula quantifies over all recovery attempts, guards on completion, and the predicate meaning preserves
+          exactly the source requirements: completeness of the installed ot_owner_memory required to resume service at the
+          recovery head, exact equality of both component set and every component value to the independent clean reconstruction
+          from the full authoritative canonical accepted history through that head, and the conditional permission to use
+          checkpoint-plus-tail only when it yields that same result. No scope, guard, equality, or provenance requirement
+          is added or omitted.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 0d8f4ae9685b441902d84a6211b895563f630aab2650981f4acd7dafc0b0c3c7
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the same conditional guarantee: for a completed recovery at its head, the installed
+          ot_owner_memory''s complete component set and every value exactly equal the independent clean reconstruction from
+          the full authoritative canonical accepted history through that head and constitute the memory required to resume
+          owner service, and checkpoint-plus-exact-tail computation is permitted only when it produces that identical full-history
+          result. The completion and no-liveness wording only makes the original conditional scope explicit.'
+        differences: []
+  claim:L65_failed_owner_volatile_state_cannot_influence_recovered_metadata:
+    kind: claim
+    subject_id: L65_failed_owner_volatile_state_cannot_influence_recovered_metadata
+    subject_signature: b1cf20b802e83e617a8d13953b6ef3dbb1e995b3dbf7b8cba873423d36457428
+    roundtrip:
+      subject_signature: b1cf20b802e83e617a8d13953b6ef3dbb1e995b3dbf7b8cba873423d36457428
+      status: TRANSLATED
+      natural_language: 'For every recovery attempt r, if both of the following hold: (1) r is a new-owner recovery attempt,
+        meaning r is within the canonical new-owner recovery boundary for its target document, this classification is established
+        by entering that recovery boundary and does not depend on successful progress, so r remains a new-owner recovery attempt
+        if it stalls, crashes, or aborts before owner-generation installation, recovery-head capture, or completion, and recovery
+        or reconstruction activity outside the canonical new-owner recovery boundary is excluded; and (2) r has completed
+        and installed its recovered owner state, where this classifies actual completion independently of whether the installed
+        state, recovery inputs, or their provenance satisfy any correctness obligation and does not require any recovery attempt
+        to complete; then recovered_ot_state_has_exclusive_authoritative_provenance holds for r, meaning every component of
+        the ot_owner_memory installed by r''s completed recovery is derived exclusively from r''s selected authoritative checkpoint
+        (content, S) and r''s exact canonical accepted-history tail (S, recovery_head]. Holding r''s selected authoritative
+        checkpoint, exact canonical tail, and recovery_head fixed, changing or removing any non-authoritative runtime data
+        source — failed-owner volatile memory, new-owner caches, process-local recovery data, or any other non-authoritative
+        source — cannot change the complete installed ot_owner_memory, and no installed component originates from such a source
+        even when its value happens to match the authoritative result. Intermediate computations derived solely from the permitted
+        authoritative inputs are allowed. This consequent states provenance exclusivity and non-influence only; it does not
+        state the installed state''s document scope or its equality to a full-history reconstruction.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: b1cf20b802e83e617a8d13953b6ef3dbb1e995b3dbf7b8cba873423d36457428
+        verdict: EQUIVALENT
+        reason: 'The formula restricts to completed new-owner recovery attempts and asserts, via the predicate meaning, exactly
+          the source guarantee: holding the selected authoritative checkpoint, exact canonical tail (S, H], and H fixed, no
+          non-authoritative runtime source (failed-owner volatile memory, new-owner caches, process-local recovery data, or
+          any other) can change or originate any component of the complete installed ot_owner_memory, with checkpoint, tail,
+          and recovery_head as exclusive provenance.'
+        differences: []
+      strengthening:
+        subject_signature: b1cf20b802e83e617a8d13953b6ef3dbb1e995b3dbf7b8cba873423d36457428
+        verdict: EQUIVALENT
+        reason: The formula quantifies over new-owner recovery attempts that completed and installed state, matching the proposition's
+          installed-output scope, and the provenance predicate preserves the fixed checkpoint, exact canonical tail (S, H],
+          and recovery_head, the non-influence under changing/removing any non-authoritative runtime source, and exclusive
+          authoritative provenance with no strengthening or omission.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: b1cf20b802e83e617a8d13953b6ef3dbb1e995b3dbf7b8cba873423d36457428
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original''s scope, fixed coordinates (selected authoritative checkpoint, exact
+          canonical tail (S, H], and recovery_head H), and guarantee: the complete installed ot_owner_memory has exclusive
+          provenance in those authoritative inputs, and changing or removing any non-authoritative runtime source cannot change
+          it. The added boundary/completion preconditions and origin clarification restate the new-owner recovery and installed-output
+          framing already in the original without weakening or strengthening the guarantee.'
+        differences: []
+  claim:C25_recovery_derives_complete_ot_metadata_from_truth:
+    kind: claim
+    subject_id: C25_recovery_derives_complete_ot_metadata_from_truth
+    subject_signature: e072526a1a4369904c3e005cd60c076722b4d53e38eb9061f26c046704f544b8
+    roundtrip:
+      subject_signature: e072526a1a4369904c3e005cd60c076722b4d53e38eb9061f26c046704f544b8
+      status: TRANSLATED
+      natural_language: 'For every recovery attempt r, if r is a new-owner recovery attempt and r has completed recovery,
+        then all of the following hold: (1) the ot_owner_memory installed by r''s completed recovery has exclusive authoritative
+        provenance, meaning every installed component is derived exclusively from r''s selected authoritative checkpoint (content,
+        S) and r''s exact canonical accepted-history tail (S, recovery_head]; holding that checkpoint, tail, and recovery_head
+        fixed, changing or removing any non-authoritative runtime data source, such as failed-owner volatile memory, new-owner
+        caches, process-local recovery data, or any other non-authoritative source, cannot change the complete installed ot_owner_memory,
+        and no installed component originates from such a source even if its value happens to match the authoritative result,
+        while intermediate computations derived solely from the permitted authoritative inputs are allowed; (2) the complete
+        ot_owner_memory installed by r''s completed recovery, both its complete installed component set and every component
+        value, exactly equals an independent clean reconstruction from the full authoritative canonical accepted history through
+        r''s recovery head, so that it is the complete OT metadata required to resume owner service at that head with no missing,
+        extra, or differing component, and computing the recovered result from the selected authoritative checkpoint plus
+        the exact canonical tail through the head is permitted only where those reduced inputs produce exactly this same full-history
+        reconstruction result; and (3) r''s recovery inputs and installed OT state preserve target-document scope, meaning
+        whenever r has a captured recovery_head, a selected authoritative checkpoint, canonical accepted-history tail entries
+        it replays, or an installed ot_owner_memory, each of those is document-scoped to r''s own target document, and an
+        authoritative object from a different document cannot satisfy any of those roles for r merely because its frontier,
+        payload, logical state, or reconstructed metadata is extensionally equal to the target document''s. Here, being a
+        new-owner recovery attempt means r is within the canonical new-owner recovery boundary for its target document, a
+        classification established by entering that boundary and not dependent on successful progress, while recovery or reconstruction
+        activity outside that boundary is excluded; and having completed recovery means r has actually completed and installed
+        its recovered owner state, independently of whether the installed state, recovery inputs, or their provenance satisfy
+        any correctness obligation.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: e072526a1a4369904c3e005cd60c076722b4d53e38eb9061f26c046704f544b8
+        verdict: EQUIVALENT
+        reason: Under the completed new-owner recovery precondition, the formula conjoins exclusive derivation from the selected
+          authoritative checkpoint and exact canonical tail through the recovery head, exact equality of the complete installed
+          ot_owner_memory to a clean full-history reconstruction through that head, and preservation of the target document
+          scope across checkpoint, tail, recovery head, and installed memory, matching all source requirements including exclusion
+          of non-authoritative and wrong-document sources without addition or omission.
+        differences: []
+      strengthening:
+        subject_signature: e072526a1a4369904c3e005cd60c076722b4d53e38eb9061f26c046704f544b8
+        verdict: EQUIVALENT
+        reason: 'The formula applies exactly to completed new-owner recovery attempts and conjoins the statement''s three
+          guarantees without addition or omission: exclusive provenance from the selected authoritative checkpoint and exact
+          canonical tail through the recovery head, exact equality of the complete installed ot_owner_memory to a clean full-history
+          reconstruction through that head, and preservation of the target document scope for checkpoint, tail, recovery head,
+          and installed memory, including exclusion of extensionally equal wrong-document sources.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: e072526a1a4369904c3e005cd60c076722b4d53e38eb9061f26c046704f544b8
+        verdict: EQUIVALENT
+        reason: The rendering preserves the completed new-owner recovery scope, exclusive derivation from the target document's
+          selected authoritative checkpoint and exact canonical tail through its recovery head, exact equality to the full-history
+          clean reconstruction, same-document scoping including against extensionally equal wrong-document sources, and the
+          bar on influence or origin from failed-owner, cache, process-local, or other non-authoritative sources, without
+          adding or omitting a material guarantee.
+        differences: []
