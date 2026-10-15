@@ -1213,7 +1213,6 @@ functions:
     meaning: Explicit non-acceptance retirement transition t establishes, before or atomically with the destructive retirement, that exact identity e's normal speculative lifecycle is terminalized in the resulting reachable client state and no longer active in pending, retained speculative, or visible speculative state, so terminal_speculative_lifecycle_closure applies to every later reachable state.
     semantic_anchors:
     - claim:G12_client_pending_state_tracks_unresolved_edits
-    - claim:L206_terminal_speculative_lifecycle_is_absorbing
   non_acceptance_retirement_transition:
     args:
     - ProtocolTransition
@@ -2727,7 +2726,6 @@ functions:
     semantic_anchors:
     - contract:terminal_speculative_lifecycle_closure
     - claim:G12_client_pending_state_tracks_unresolved_edits
-    - claim:L206_terminal_speculative_lifecycle_is_absorbing
   request_logical_edit_tuple_preserved_through_lifecycle:
     args:
     - Request
@@ -4238,7 +4236,6 @@ functions:
     meaning: Protocol transition t uses a non_acceptance_terminal_disposition to terminally retire the normal speculative lifecycle of exact logical edit identity e.
     semantic_anchors:
     - claim:L203_non_acceptance_terminal_disposition_preserves_edit_provenance
-    - claim:L206_terminal_speculative_lifecycle_is_absorbing
   client_state_establishes_visible_document:
     args:
     - ClientState
@@ -5405,6 +5402,28 @@ functions:
     semantic_anchors:
     - contract:non_acceptance_terminal_disposition_binding
     - claim:L203_non_acceptance_terminal_disposition_preserves_edit_provenance
+  explicit_terminal_disposition_retirement_transition:
+    args:
+    - ProtocolTransition
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Protocol transition t uses an explicit terminal disposition to terminally retire the normal speculative lifecycle of exact logical edit identity e. This predicate is at the full generality of an explicit terminal disposition: it covers every explicit terminal disposition that ends the lifecycle, including a non_acceptance_terminal_disposition and any other explicit terminal disposition, and is not restricted to one disposition kind.'
+    semantic_anchors:
+    - claim:L206_terminal_speculative_lifecycle_is_absorbing
+  explicit_terminal_disposition_establishes_terminalized_lifecycle:
+    args:
+    - ProtocolTransition
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols:
+    - client_terminalized_speculative_lifecycles
+    - client_pending_edits
+    - client_speculative_overlays
+    - client_visible_speculative_overlays
+    meaning: Explicit terminal-disposition retirement transition t establishes that exact identity e's normal speculative lifecycle is terminalized in the resulting reachable client state and no longer active in pending, retained speculative, or visible speculative state.
+    semantic_anchors:
+    - claim:L206_terminal_speculative_lifecycle_is_absorbing
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -12837,11 +12856,6 @@ claims:
                       args:
                       - var: s
                       - var: e
-                - call:
-                    fn: later_user_operations_after_terminalized_lifecycle_are_fresh
-                    args:
-                    - var: s
-                    - var: e
         - forall:
             vars:
               earlier: ClientState
@@ -12869,11 +12883,6 @@ claims:
                     - var: earlier
                     - var: e
               - and:
-                - call:
-                    fn: terminalized_speculative_identity
-                    args:
-                    - var: later
-                    - var: e
                 - not:
                     call:
                       fn: pending_identity_active
@@ -12920,12 +12929,12 @@ claims:
                   args:
                   - var: t
               - call:
-                  fn: explicit_non_acceptance_retirement_transition
+                  fn: explicit_terminal_disposition_retirement_transition
                   args:
                   - var: t
                   - var: e
             - call:
-                fn: non_acceptance_retirement_establishes_terminalized_lifecycle
+                fn: explicit_terminal_disposition_establishes_terminalized_lifecycle
                 args:
                 - var: t
                 - var: e
