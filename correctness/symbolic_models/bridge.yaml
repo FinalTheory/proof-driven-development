@@ -1556,8 +1556,6 @@ functions:
     meaning: In authoritative state s, a superseded epoch/generation for document d has become authoritative again.
     semantic_anchors:
     - claim:G2_canonical_history_is_linear_and_fenced
-    - claim:L28_authoritative_epoch_never_regresses_or_reuses
-    - claim:C8_stale_owner_is_fenced
   canonical_append_for_document:
     args:
     - ProtocolTransition
@@ -12233,19 +12231,17 @@ claims:
                   - var: before
                   - var: after
                   - var: d
-            - and:
-              - not:
-                  call:
-                    fn: superseded_epoch_value_is_current
-                    args:
-                    - var: after
-                    - var: d
-              - not:
-                  call:
-                    fn: superseded_generation_is_authoritative
-                    args:
-                    - var: after
-                    - var: d
+            - implies:
+              - call:
+                  fn: superseded_epoch_value_is_current
+                  args:
+                  - var: after
+                  - var: d
+              - call:
+                  fn: superseded_epoch_value_is_current
+                  args:
+                  - var: before
+                  - var: d
       - forall:
           vars:
             before: AuthoritativeState
@@ -12393,19 +12389,17 @@ claims:
                   - var: before
                   - var: after
                   - var: d
-            - and:
-              - not:
-                  call:
-                    fn: superseded_epoch_value_is_current
-                    args:
-                    - var: after
-                    - var: d
-              - not:
-                  call:
-                    fn: superseded_generation_is_authoritative
-                    args:
-                    - var: after
-                    - var: d
+            - implies:
+              - call:
+                  fn: superseded_epoch_value_is_current
+                  args:
+                  - var: after
+                  - var: d
+              - call:
+                  fn: superseded_epoch_value_is_current
+                  args:
+                  - var: before
+                  - var: d
       - forall:
           vars:
             before: AuthoritativeState
@@ -12444,11 +12438,17 @@ claims:
             d: Document
           body:
             implies:
-            - call:
-                fn: canonical_append_attempt_for_document
-                args:
-                - var: t
-                - var: d
+            - and:
+              - call:
+                  fn: canonical_append_attempt_for_document
+                  args:
+                  - var: t
+                  - var: d
+              - call:
+                  fn: canonical_append_for_document
+                  args:
+                  - var: t
+                  - var: d
             - call:
                 fn: append_tuple_bound_to_executing_document_generation
                 args:
