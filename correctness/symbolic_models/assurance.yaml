@@ -9357,3 +9357,111 @@ records:
           s) pair is a single, unique-frontier, atomically and jointly published authoritative checkpoint identity, with the
           same stale/torn/mixed/non-authoritative exclusions and no added or omitted requirement.
         differences: []
+  claim:L10_replay_covers_exact_tail_in_order_once:
+    kind: claim
+    subject_id: L10_replay_covers_exact_tail_in_order_once
+    subject_signature: fee0e3cbe640fc37af369206c434b0684fe8371adf4c42b1d5fe824d76006910
+    roundtrip:
+      subject_signature: fee0e3cbe640fc37af369206c434b0684fe8371adf4c42b1d5fe824d76006910
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following three statements holds. (1) For every recovery attempt r, every
+        revision s, every revision h, every canonical accepted change a, and every revision v: if s is the frontier of the
+        authoritative checkpoint that r selected and loaded as its replay base, and h is the recovery head captured by r at
+        its recovery-head capture event, and h as captured by r is the authoritative frontier (the document_latest_revision
+        of r''s target document) at r''s capture, and v is the canonical revision assigned to a (with each canonical accepted
+        change having exactly one assigned revision), and v lies in the checkpoint tail range (s, h], i.e. s < v and v <=
+        h, then during r''s replay stage a is applied to r''s installed replay base as one replay application. (2) For every
+        recovery attempt r, every revision s, every revision h, every canonical accepted change a, and every revision v: if
+        s is the frontier of the authoritative checkpoint that r selected and loaded as its replay base, and h is the recovery
+        head captured by r at its recovery-head capture event, and h as captured by r is the authoritative frontier at r''s
+        capture, and during r''s replay stage a is applied to r''s installed replay base as one replay application, and v
+        is the canonical revision assigned to a, then v lies in the checkpoint tail range (s, h], i.e. s < v and v <= h. (3)
+        For every recovery attempt r, every revision s, and every revision h: if s is the frontier of the authoritative checkpoint
+        that r selected and loaded as its replay base, and h is the recovery head captured by r at its recovery-head capture
+        event, and h as captured by r is the authoritative frontier at r''s capture, then r''s replay applies no canonical
+        accepted change more than once, and its replay applications occur in increasing canonical revision order.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: fee0e3cbe640fc37af369206c434b0684fe8371adf4c42b1d5fe824d76006910
+        verdict: EQUIVALENT
+        reason: 'The formula covers both directions of tail membership: every canonical accepted change whose unique revision
+          lies in (s,h] is replay-applied, and every replay-applied change has its revision in (s,h], with s the selected
+          checkpoint frontier and h the captured authoritative head. Combined with the predicate asserting at most one application
+          per change and increasing canonical revision order, this yields exactly-once in-order application of accepted[S+1..H]
+          as stated.'
+        differences: []
+      strengthening:
+        subject_signature: fee0e3cbe640fc37af369206c434b0684fe8371adf4c42b1d5fe824d76006910
+        verdict: EQUIVALENT
+        reason: The formula's two implications give exactly the (s,h] tail coverage and exclude any other replay application,
+          and the guarded at-most-once/increasing-order predicate combined with coverage yields exactly once in revision order
+          through the authoritative captured head, matching the statement and fold intent with no added or omitted requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: fee0e3cbe640fc37af369206c434b0684fe8371adf4c42b1d5fe824d76006910
+        verdict: EQUIVALENT
+        reason: The rendering decomposes the original exactly-once, in-order coverage of the (S,H] tail into coverage of every
+          change in that range, exclusion of changes outside it, no duplicate applications, and increasing revision order,
+          with S and H grounded as the snapshot frontier and captured authoritative head.
+        differences: []
+  claim:L79_new_owner_accepts_only_after_reconstruction:
+    kind: claim
+    subject_id: L79_new_owner_accepts_only_after_reconstruction
+    subject_signature: 67fc6582a8e8ad27fb9ed86e92789c4a51b7591b9dfa3f460f13b6aaa2d539d7
+    roundtrip:
+      subject_signature: 67fc6582a8e8ad27fb9ed86e92789c4a51b7591b9dfa3f460f13b6aaa2d539d7
+      status: TRANSLATED
+      natural_language: 'For every recovery attempt r, both of the following hold. (1) If the owner established by r performs
+        a canonical acceptance of an edit, i.e., a canonical accepted change is committed under that owner''s authority, then
+        all four of the following hold for r: (a) r''s selected checkpoint is installed as r''s replay base, i.e., the checkpoint''s
+        content and frontier are the installed base from which r''s replay proceeds; (b) r has replayed the exact canonical
+        tail through its captured recovery head, i.e., every canonical accepted change in (S, H], for r''s selected checkpoint
+        frontier S and captured head H, has been applied to its installed base, and no change outside that range has been
+        applied as part of the tail; (c) r''s required OT metadata has been rebuilt, i.e., the document-history-dependent
+        OT metadata the recovered owner needs for server-side OT transformation and canonical acceptance has been reconstructed
+        for r; and (d) r''s recovered local head and next-candidate revision state have been initialized through its captured
+        recovery head H, i.e., the local head is H and the next candidate revision is exactly H + 1. (2) If r is a recovery
+        attempt that establishes an owner generation, i.e., r is a recovery or reconstruction attempt whose role is to establish
+        or re-establish an authoritative owner generation for its target document, including owner-identity change, cold takeover,
+        warm-standby promotion, and same-owner restart or reacquisition, where this classification rests on the attempt''s
+        role from its initiation and does not depend on the attempt later reaching owner-generation installation, recovery-head
+        capture, or completion, so that an attempt that stalls, crashes, or aborts remains classified, and reconstruction
+        activity that does not establish or re-establish authoritative ownership does not satisfy this condition, then internal
+        transformation preparation performed for r before r''s reconstruction barrier completes cannot commit or otherwise
+        cause canonical acceptance of any edit under the owner established by r; that barrier completes when r''s selected
+        checkpoint is installed, the exact canonical tail through r''s captured recovery head H has been replayed, r''s required
+        OT metadata has been rebuilt, and r''s local head/next-revision state has been initialized through H, and this condition
+        constrains the preparation activity itself without requiring preparation to occur.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 67fc6582a8e8ad27fb9ed86e92789c4a51b7591b9dfa3f460f13b6aaa2d539d7
+        verdict: EQUIVALENT
+        reason: The first conjunct makes canonical acceptance by the owner established by an attempt imply, for that same
+          attempt, checkpoint installation, exact canonical tail replay through its captured head H, OT metadata rebuilding,
+          and local head/next-revision initialization through H. The second conjunct applies the preparation cannot commit
+          or otherwise cause canonical acceptance constraint to every owner-generation-establishing attempt, matching the
+          stated proviso.
+        differences: []
+      strengthening:
+        subject_signature: 67fc6582a8e8ad27fb9ed86e92789c4a51b7591b9dfa3f460f13b6aaa2d539d7
+        verdict: EQUIVALENT
+        reason: 'Both source requirements are preserved for the same recovery attempt r: canonical acceptance by its owner
+          implies checkpoint installation, exact tail replay through captured head H, OT metadata rebuild, and local head/next-revision
+          initialization through H; and for owner-generation-establishing attempts, the preparation atom forbids pre-barrier
+          preparation from committing or causing canonical acceptance, matching the stated proviso without added scope or
+          conditions.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 67fc6582a8e8ad27fb9ed86e92789c4a51b7591b9dfa3f460f13b6aaa2d539d7
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the same scope and necessity structure: canonical acceptance by the owner established
+          through a recovery attempt requires all four barrier conditions tied to that attempt''s selected checkpoint and
+          captured head H (checkpoint installed as replay base, exact tail over (S, H] replayed with no out-of-range changes,
+          required OT metadata rebuilt, and local head/next state initialized as H/H+1), and pre-barrier internal transformation
+          preparation is constrained only to be incapable of committing or causing canonical acceptance, without being required
+          or made sufficient for acceptance.'
+        differences: []
