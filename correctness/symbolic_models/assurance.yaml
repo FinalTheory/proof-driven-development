@@ -10024,3 +10024,39 @@ records:
           a different logical operation, including transient substitutions, without requiring byte-identical serialization
           or progress beyond submission.
         differences: []
+  claim:L41_recovery_checkpoint_does_not_exceed_recovery_head:
+    kind: claim
+    subject_id: L41_recovery_checkpoint_does_not_exceed_recovery_head
+    subject_signature: 7b32a2cc22c2dc82a5b40b023e9bf21365e2da394fb259905776a2566107f863
+    roundtrip:
+      subject_signature: 7b32a2cc22c2dc82a5b40b023e9bf21365e2da394fb259905776a2566107f863
+      status: TRANSLATED
+      natural_language: For every recovery attempt r, every revision s, and every revision h, if s is the frontier of the
+        checkpoint that r selected and loaded for its new-owner recovery, and h is the authoritative recovery head of r —
+        the head against which the frontier of the checkpoint r selected and loaded for its new-owner recovery is bounded,
+        where this relation names the authoritative head coordinate only and does not state how the recovery-head bound for
+        r was established from that authoritative head — then s is at or before h in the canonical revision order (s <= h).
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 7b32a2cc22c2dc82a5b40b023e9bf21365e2da394fb259905776a2566107f863
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over recovery attempt r, frontier s, and head h, requiring revision_at_or_before(s,h)
+          exactly when s is the selected-and-loaded checkpoint frontier of r and h is r's authoritative recovery head, which
+          matches the statement S <= H with no added or omitted conditions.
+        differences: []
+      strengthening:
+        subject_signature: 7b32a2cc22c2dc82a5b40b023e9bf21365e2da394fb259905776a2566107f863
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over a recovery attempt r, its selected-and-loaded checkpoint frontier
+          s, and its authoritative recovery head h, and asserts exactly revision_at_or_before(s, h), matching the canonical
+          S <= H with no added or omitted conditions.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 7b32a2cc22c2dc82a5b40b023e9bf21365e2da394fb259905776a2566107f863
+        verdict: EQUIVALENT
+        reason: 'The round-trip preserves the universal bound: for any new-owner recovery, the checkpoint frontier selected
+          and loaded is at or before the authoritative recovery head in canonical revision order (S <= H), with no added provenance,
+          precondition, or stronger guarantee.'
+        differences: []
