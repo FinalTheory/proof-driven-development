@@ -139,6 +139,8 @@ functions:
     - claim:L207_visible_canonical_frontier_never_regresses_per_session_document
     - claim:C36_reconnect_starts_from_canonical_client_frontier
     - claim:C38_client_frontier_matches_canonical_base
+    - claim:L19_client_applies_only_contiguous_revisions
+    - claim:L97_client_adopts_snapshot_before_tail
   canonical_content_matches:
     args:
     - ClientState
@@ -302,6 +304,9 @@ functions:
     - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
     - claim:L37_snapshot_mode_selects_authoritative_checkpoint
     - claim:C17_snapshot_mode_selects_checkpoint_not_after_head
+    - claim:L32_catchup_selects_complete_mode_for_response_head
+    - claim:C10_catchup_represents_exact_missing_suffix
+    - claim:L101_client_completes_catchup_through_response_head
   catchup_response_selected_checkpoint_frontier:
     args:
     - CatchupResponse
@@ -318,6 +323,7 @@ functions:
     - claim:L37_snapshot_mode_selects_authoritative_checkpoint
     - claim:L38_selected_checkpoint_does_not_exceed_response_head
     - claim:C17_snapshot_mode_selects_checkpoint_not_after_head
+    - claim:C10_catchup_represents_exact_missing_suffix
   catchup_response_head_is:
     args:
     - CatchupResponse
@@ -335,6 +341,9 @@ functions:
     - claim:L109_resync_publication_is_atomic_and_monotonic
     - claim:L38_selected_checkpoint_does_not_exceed_response_head
     - claim:C17_snapshot_mode_selects_checkpoint_not_after_head
+    - claim:L12_delta_catchup_reads_canonical_revision_range
+    - claim:C10_catchup_represents_exact_missing_suffix
+    - claim:L101_client_completes_catchup_through_response_head
   catchup_response_identifies_selected_checkpoint:
     args:
     - CatchupResponse
@@ -346,6 +355,7 @@ functions:
     semantic_anchors:
     - claim:L25_snapshot_catchup_uses_selected_checkpoint_replacement
     - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
+    - claim:C10_catchup_represents_exact_missing_suffix
   catchup_response_uses_replacement_semantics:
     args:
     - CatchupResponse
@@ -356,6 +366,7 @@ functions:
     semantic_anchors:
     - claim:L25_snapshot_catchup_uses_selected_checkpoint_replacement
     - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
+    - claim:C10_catchup_represents_exact_missing_suffix
   catchup_response_tail_contains_change:
     args:
     - CatchupResponse
@@ -369,6 +380,7 @@ functions:
     semantic_anchors:
     - claim:L26_snapshot_catchup_returns_exact_canonical_tail
     - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
+    - claim:C10_catchup_represents_exact_missing_suffix
   canonical_acceptance_revision_is:
     args:
     - CanonicalAcceptance
@@ -381,6 +393,8 @@ functions:
     semantic_anchors:
     - claim:L26_snapshot_catchup_returns_exact_canonical_tail
     - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
+    - claim:L12_delta_catchup_reads_canonical_revision_range
+    - claim:C10_catchup_represents_exact_missing_suffix
   revision_in_checkpoint_tail_range:
     args:
     - Revision
@@ -394,6 +408,7 @@ functions:
     semantic_anchors:
     - claim:L26_snapshot_catchup_returns_exact_canonical_tail
     - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
+    - claim:C10_catchup_represents_exact_missing_suffix
   catchup_response_tail_exactly_once_in_order:
     args:
     - CatchupResponse
@@ -408,6 +423,7 @@ functions:
     semantic_anchors:
     - claim:L26_snapshot_catchup_returns_exact_canonical_tail
     - claim:C15_snapshot_catchup_returns_checkpoint_and_exact_tail
+    - claim:C10_catchup_represents_exact_missing_suffix
   eligible_catchup_response:
     args:
     - CatchupResponse
@@ -1558,6 +1574,7 @@ functions:
     semantic_anchors:
     - contract:logical_state_equivalence_at_frontier
     - contract:snapshot_frontier_coherence
+    - claim:L8_snapshot_is_exact_committed_prefix
   authoritative_latest_revision_equals_frontier:
     args:
     - AuthoritativeState
@@ -4745,6 +4762,9 @@ functions:
     - claim:L38_selected_checkpoint_does_not_exceed_response_head
     - claim:C17_snapshot_mode_selects_checkpoint_not_after_head
     - claim:L207_visible_canonical_frontier_never_regresses_per_session_document
+    - claim:L19_client_applies_only_contiguous_revisions
+    - claim:L97_client_adopts_snapshot_before_tail
+    - claim:C10_catchup_represents_exact_missing_suffix
   classification_evidence_preserved_throughout_horizon:
     args:
     - CatchupResponse
@@ -5096,6 +5116,7 @@ functions:
       than v in the document''s revision arithmetic.'
     semantic_anchors:
     - claim:L4_append_requires_previous_frontier
+    - claim:L19_client_applies_only_contiguous_revisions
   state_step_commits_acceptance:
     args:
     - AuthoritativeState
@@ -5328,6 +5349,7 @@ functions:
     semantic_anchors:
     - claim:L37_snapshot_mode_selects_authoritative_checkpoint
     - claim:C17_snapshot_mode_selects_checkpoint_not_after_head
+    - claim:C10_catchup_represents_exact_missing_suffix
   recovery_attempt_reaches_checkpoint_selection:
     args:
     - RecoveryAttempt
@@ -5770,6 +5792,349 @@ functions:
     semantic_anchors:
     - contract:pending_edit_identity_provenance
     - claim:L154_pending_edit_identity_provenance_is_preserved
+  catchup_response_is_delta_mode:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Response r is a retained-delta-mode catch-up response: catch-up selected
+      the retained canonical revision range for r, and r is to be constructed by returning
+      canonical accepted changes from that range rather than by snapshot replacement.
+      This is the delta counterpart of catchup_response_is_snapshot_mode.'
+    semantic_anchors:
+    - claim:L12_delta_catchup_reads_canonical_revision_range
+    - claim:L32_catchup_selects_complete_mode_for_response_head
+    - claim:C10_catchup_represents_exact_missing_suffix
+    - claim:L101_client_completes_catchup_through_response_head
+    - claim:L121_delta_resync_candidate_starts_from_canonical_client_base
+  catchup_response_complete_range_retained_and_readable:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'The complete canonical revision range L+1..H for response r -- from
+      r''s client frontier L to r''s captured authoritative response head H -- is
+      retained and readable in authoritative storage: every canonical accepted change
+      in that range is available to be returned. If any revision in the range is missing
+      or unreadable, this predicate does not hold for r.'
+    semantic_anchors:
+    - claim:L32_catchup_selects_complete_mode_for_response_head
+    - claim:C10_catchup_represents_exact_missing_suffix
+  catchup_response_delta_base_frontier_is:
+    args:
+    - CatchupResponse
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Revision l is the base frontier from which response r''s delta range
+      is computed: the requesting client''s last_applied_revision at catch-up start.
+      Response r''s delta range is l+1..H for r''s captured head H. This relation
+      names the base frontier only; it does not assert what r returns.'
+    semantic_anchors:
+    - claim:L12_delta_catchup_reads_canonical_revision_range
+    - claim:C10_catchup_represents_exact_missing_suffix
+  catchup_response_client_frontier_is:
+    args:
+    - CatchupResponse
+    - Revision
+    returns: Bool
+    catalog_symbols:
+    - last_applied_revision
+    meaning: 'Revision l is the user-visible last_applied_revision of the client that
+      requested response r, at the start of r''s catch-up attempt: the given client
+      frontier L from which r''s missing range is computed. This is the same quantity
+      that catchup_response_delta_base_frontier_is names for r''s delta range, stated
+      on the last_applied_revision catalog surface.'
+    semantic_anchors:
+    - claim:C10_catchup_represents_exact_missing_suffix
+    - claim:L121_delta_resync_candidate_starts_from_canonical_client_base
+  catchup_response_delta_contains_change:
+    args:
+    - CatchupResponse
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    meaning: Canonical accepted change a is one of the changes returned in the delta
+      portion of catch-up response r. This relation records delta membership only;
+      it does not assert that a's revision lies in any particular range or how many
+      times a appears.
+    semantic_anchors:
+    - claim:L12_delta_catchup_reads_canonical_revision_range
+    - claim:C10_catchup_represents_exact_missing_suffix
+  revision_in_delta_range:
+    args:
+    - Revision
+    - Revision
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Revision v lies in the delta range (l, h]: l < v and v <= h, so v is
+      one of the revisions l+1..h. This predicate is the range relation only.'
+    semantic_anchors:
+    - claim:L12_delta_catchup_reads_canonical_revision_range
+    - claim:C10_catchup_represents_exact_missing_suffix
+  catchup_response_delta_exactly_once_in_order:
+    args:
+    - CatchupResponse
+    - Revision
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: Within the delta returned by response r for the range (l, h], no canonical
+      accepted change appears more than once and the returned changes are arranged
+      in increasing revision order. This predicate asserts the delta's multiplicity
+      and ordering only; which changes belong to the range is asserted separately.
+    semantic_anchors:
+    - claim:L12_delta_catchup_reads_canonical_revision_range
+    - claim:C10_catchup_represents_exact_missing_suffix
+  catchup_response_delta_free_of_speculative_data:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'No speculative data appears anywhere in response r''s returned delta
+      portion: every returned payload item is canonical accepted data, not an unaccepted,
+      uncommitted, or locally speculative change.'
+    semantic_anchors:
+    - claim:L12_delta_catchup_reads_canonical_revision_range
+    - claim:C10_catchup_represents_exact_missing_suffix
+  checkpoint_state_equals_canonical_replay_through_frontier:
+    args:
+    - Revision
+    returns: Bool
+    catalog_symbols:
+    - accepted_change_log
+    meaning: 'The document state denoted by a snapshot checkpoint at frontier r equals
+      deterministic canonical replay of all and only the canonical accepted changes
+      in accepted_change_log with revisions 1..r. This predicate is conditional over
+      checkpoints: it constrains every snapshot checkpoint whose frontier is r and
+      is vacuous at a revision with no checkpoint.'
+    semantic_anchors:
+    - claim:L8_snapshot_is_exact_committed_prefix
+    - claim:C10_catchup_represents_exact_missing_suffix
+  snapshot_state_equals_canonical_replay_through_frontier:
+    args:
+    - Revision
+    returns: Bool
+    catalog_symbols:
+    - snapshot_state
+    - accepted_change_log
+    meaning: 'The snapshot_state at frontier r -- the document state represented by
+      a snapshot checkpoint at its declared frontier r -- equals deterministic canonical
+      replay of all and only the canonical accepted changes in accepted_change_log
+      with revisions 1..r: snapshot_state(r) == replay(accepted[1..r]). This predicate
+      is conditional over snapshot checkpoints declaring frontier r.'
+    semantic_anchors:
+    - claim:L8_snapshot_is_exact_committed_prefix
+  client_state_applies_revision:
+    args:
+    - ClientState
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'In client state s, the client applies canonical revision r: r is taken
+      as an applied canonical revision of the client''s document, rather than being
+      ignored as a duplicate or buffered for gap recovery.'
+    semantic_anchors:
+    - claim:L19_client_applies_only_contiguous_revisions
+  client_state_ignores_presented_revision:
+    args:
+    - ClientState
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'In client state s, the client ignores presented canonical revision r
+      as a duplicate at or below its frontier: r is not applied, and the presentation
+      of r does not change the client''s applied history or frontier.'
+    semantic_anchors:
+    - claim:L19_client_applies_only_contiguous_revisions
+  client_state_buffers_or_recovers_gap:
+    args:
+    - ClientState
+    - Revision
+    returns: Bool
+    catalog_symbols:
+    - buffer_or_gap_recovery
+    meaning: 'In client state s, presented canonical revision r lies above the next
+      contiguous revision the client can apply, so the client performs buffer_or_gap_recovery
+      for r: it buffers r or triggers recovery for the gap, rather than applying r
+      out of order.'
+    semantic_anchors:
+    - claim:L19_client_applies_only_contiguous_revisions
+  client_state_is_checkpoint_installation:
+    args:
+    - ClientState
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Client state s is the state produced by installing the catch-up-selected
+      checkpoint (content, S) with replacement semantics: s exposes exactly that checkpoint''s
+      content as the client''s canonical document state, the installation is one atomic
+      installation step (no returned or interleaved tail revision is applied inside
+      it), and S is the checkpoint''s frontier. A torn or interrupted exposure of
+      checkpoint content does not satisfy this predicate.'
+    semantic_anchors:
+    - claim:L97_client_adopts_snapshot_before_tail
+  client_state_exposes_installed_checkpoint:
+    args:
+    - ClientState
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Client state s exposes the content of the checkpoint (content, S) that
+      catch-up installed for this client: s is the installation state or a later client
+      state whose canonical document state still rests on that installed checkpoint
+      content as its base.'
+    semantic_anchors:
+    - claim:L97_client_adopts_snapshot_before_tail
+  client_catchup_attempt_completed:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: The client catch-up attempt associated with response r is considered
+      complete. This predicate records the completion status only; what full consumption
+      of r's canonical representation requires is asserted by the companion clauses
+      of the same claim.
+    semantic_anchors:
+    - claim:L101_client_completes_catchup_through_response_head
+  client_consumed_entire_delta_response:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'The client has consumed the entire canonical representation of delta-mode
+      response r: it has applied every returned revision L+1..H of r, from r''s client
+      frontier L through r''s captured head H.'
+    semantic_anchors:
+    - claim:L101_client_completes_catchup_through_response_head
+  client_consumed_entire_snapshot_response:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'The client has consumed the entire canonical representation of snapshot-mode
+      response r: it has installed r''s selected checkpoint (content, S) and applied
+      every returned tail revision S+1..H, through r''s captured head H.'
+    semantic_anchors:
+    - claim:L101_client_completes_catchup_through_response_head
+  client_visible_frontier_at_catchup_completion:
+    args:
+    - CatchupResponse
+    - Revision
+    returns: Bool
+    catalog_symbols:
+    - last_applied_revision
+    meaning: Revision f is the client's user-visible last_applied_revision at the
+      moment the catch-up attempt for response r completes.
+    semantic_anchors:
+    - claim:L101_client_completes_catchup_through_response_head
+  resync_candidate_completed_through_head:
+    args:
+    - CatchupResponse
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Response r''s reconnect/resync attempt has completed its canonical catch-up
+      and its pending reconciliation through captured response head h: r''s private
+      reconciled candidate is complete at h and awaits atomic publication or discard.'
+    semantic_anchors:
+    - claim:L119_completed_resync_candidate_stays_at_response_head_until_publication
+  resync_candidate_frontier_at_readiness_is:
+    args:
+    - CatchupResponse
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'At candidate readiness for response r -- the completed private reconciled
+      candidate awaiting publication or discard -- the candidate''s canonical frontier
+      is exactly h: its canonical document state is canonical replay through h, and
+      no canonical acceptance after h has been applied into it.'
+    semantic_anchors:
+    - claim:L119_completed_resync_candidate_stays_at_response_head_until_publication
+  resync_candidate_publication_exposes_frontier:
+    args:
+    - CatchupResponse
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'A successful publication of response r''s private reconciled candidate
+      exposes user-visible canonical state through exactly h: canonical replay of
+      r''s document through h, with no omitted and no extra canonical acceptance.'
+    semantic_anchors:
+    - claim:L119_completed_resync_candidate_stays_at_response_head_until_publication
+  post_head_acceptances_deferred_for_candidate:
+    args:
+    - CatchupResponse
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'With respect to response r''s private candidate, canonical acceptances
+      after r''s captured head h are only buffered or deferred for later processing:
+      they are not applied into the candidate and do not advance the candidate''s
+      canonical frontier before the candidate''s publication.'
+    semantic_anchors:
+    - claim:L119_completed_resync_candidate_stays_at_response_head_until_publication
+  resync_candidate_pair_initialized:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Response r''s private resync candidate canonical document/frontier pair
+      has been initialized: the candidate exists as a private candidate whose canonical
+      document and canonical frontier are set (by client-base initialization in delta
+      mode or by checkpoint installation in snapshot mode).'
+    semantic_anchors:
+    - claim:L121_delta_resync_candidate_starts_from_canonical_client_base
+    - claim:L126_pending_reconciliation_preserves_resync_canonical_candidate
+  resync_candidate_initialized_from_client_base:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Response r''s private resync candidate canonical document/frontier pair
+      was initialized from the same reconnect-start client document/frontier pair
+      at L, either by exact copy or by a deterministic reconstruction equal to that
+      pair, before any returned canonical revision greater than L is applied: no stale
+      or private scratch content is substituted, no document is cross-bound from another
+      client state to frontier L, and neither member of the reconnect-start pair is
+      changed before the first delta is applied.'
+    semantic_anchors:
+    - claim:L121_delta_resync_candidate_starts_from_canonical_client_base
+  pending_reconciliation_transition:
+    args:
+    - ProtocolTransition
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Protocol transition t is a pending-identity reconciliation transition
+      for a reconnect/resync attempt: it updates pending-resolution state, speculative
+      overlays, or related control/bookkeeping state. It is not a canonical-content
+      transition.'
+    semantic_anchors:
+    - claim:L126_pending_reconciliation_preserves_resync_canonical_candidate
+  transition_performed_for_resync_response:
+    args:
+    - ProtocolTransition
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Protocol transition t is performed as part of the reconnect/resync attempt
+      associated with response r: the same attempt whose private resync candidate
+      t could affect.'
+    semantic_anchors:
+    - claim:L126_pending_reconciliation_preserves_resync_canonical_candidate
+  transition_preserves_resync_candidate_canonical_state:
+    args:
+    - ProtocolTransition
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Protocol transition t preserves response r''s private resync candidate
+      canonical document and canonical frontier exactly: t does not insert, remove,
+      rewrite, reapply, or otherwise mutate canonical accepted content in the candidate,
+      and does not change the candidate canonical frontier.'
+    semantic_anchors:
+    - claim:L126_pending_reconciliation_preserves_resync_canonical_candidate
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -14841,6 +15206,952 @@ claims:
               fn: submitted_request_eligible_for_ot_or_terminal_decision
               args:
               - var: rq
+  C10_catchup_represents_exact_missing_suffix:
+    capability: relational
+    contracts:
+    - catchup_canonical_source_provenance
+    formula:
+      and:
+      - forall:
+          vars:
+            r: CatchupResponse
+          body:
+            implies:
+            - call:
+                fn: catchup_response_targets_document_with_captured_head
+                args:
+                - var: r
+            - call:
+                fn: catchup_canonical_sources_preserve_document_scope
+                args:
+                - var: r
+      - forall:
+          vars:
+            r: CatchupResponse
+          body:
+            and:
+            - implies:
+              - call:
+                  fn: catchup_response_complete_range_retained_and_readable
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_is_delta_mode
+                  args:
+                  - var: r
+            - implies:
+              - call:
+                  fn: catchup_response_is_delta_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_complete_range_retained_and_readable
+                  args:
+                  - var: r
+            - implies:
+              - not:
+                  call:
+                    fn: catchup_response_complete_range_retained_and_readable
+                    args:
+                    - var: r
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+            - implies:
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+              - not:
+                  call:
+                    fn: catchup_response_complete_range_retained_and_readable
+                    args:
+                    - var: r
+      - forall:
+          vars:
+            r: CatchupResponse
+            l: Revision
+            h: Revision
+            a: CanonicalAcceptance
+            v: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_client_frontier_is
+                  args:
+                  - var: r
+                  - var: l
+              - call:
+                  fn: catchup_response_is_delta_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_delta_base_frontier_is
+                  args:
+                  - var: r
+                  - var: l
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+              - call:
+                  fn: canonical_acceptance_revision_is
+                  args:
+                  - var: a
+                  - var: v
+              - call:
+                  fn: revision_in_delta_range
+                  args:
+                  - var: v
+                  - var: l
+                  - var: h
+            - call:
+                fn: catchup_response_delta_contains_change
+                args:
+                - var: r
+                - var: a
+      - forall:
+          vars:
+            r: CatchupResponse
+            l: Revision
+            h: Revision
+            a: CanonicalAcceptance
+            v: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_client_frontier_is
+                  args:
+                  - var: r
+                  - var: l
+              - call:
+                  fn: catchup_response_is_delta_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_delta_base_frontier_is
+                  args:
+                  - var: r
+                  - var: l
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+              - call:
+                  fn: catchup_response_delta_contains_change
+                  args:
+                  - var: r
+                  - var: a
+              - call:
+                  fn: canonical_acceptance_revision_is
+                  args:
+                  - var: a
+                  - var: v
+            - call:
+                fn: revision_in_delta_range
+                args:
+                - var: v
+                - var: l
+                - var: h
+      - forall:
+          vars:
+            r: CatchupResponse
+            l: Revision
+            h: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_client_frontier_is
+                  args:
+                  - var: r
+                  - var: l
+              - call:
+                  fn: catchup_response_is_delta_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_delta_base_frontier_is
+                  args:
+                  - var: r
+                  - var: l
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+            - call:
+                fn: catchup_response_delta_exactly_once_in_order
+                args:
+                - var: r
+                - var: l
+                - var: h
+      - forall:
+          vars:
+            r: CatchupResponse
+            l: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_client_frontier_is
+                  args:
+                  - var: r
+                  - var: l
+              - call:
+                  fn: catchup_response_is_delta_mode
+                  args:
+                  - var: r
+            - call:
+                fn: catchup_response_delta_free_of_speculative_data
+                args:
+                - var: r
+      - and:
+        - forall:
+            vars:
+              r: CatchupResponse
+              s: Revision
+              h: Revision
+            body:
+              implies:
+              - and:
+                - call:
+                    fn: catchup_response_is_snapshot_mode
+                    args:
+                    - var: r
+                - call:
+                    fn: catchup_response_selected_checkpoint_frontier
+                    args:
+                    - var: r
+                    - var: s
+                - call:
+                    fn: catchup_response_head_is
+                    args:
+                    - var: r
+                    - var: h
+              - and:
+                - call:
+                    fn: catchup_response_identifies_selected_checkpoint
+                    args:
+                    - var: r
+                - call:
+                    fn: catchup_response_uses_replacement_semantics
+                    args:
+                    - var: r
+        - forall:
+            vars:
+              r: CatchupResponse
+              s: Revision
+              h: Revision
+              a: CanonicalAcceptance
+              v: Revision
+            body:
+              implies:
+              - and:
+                - call:
+                    fn: catchup_response_is_snapshot_mode
+                    args:
+                    - var: r
+                - call:
+                    fn: catchup_response_selected_checkpoint_frontier
+                    args:
+                    - var: r
+                    - var: s
+                - call:
+                    fn: catchup_response_head_is
+                    args:
+                    - var: r
+                    - var: h
+                - call:
+                    fn: canonical_acceptance_revision_is
+                    args:
+                    - var: a
+                    - var: v
+                - call:
+                    fn: revision_in_checkpoint_tail_range
+                    args:
+                    - var: v
+                    - var: s
+                    - var: h
+              - call:
+                  fn: catchup_response_tail_contains_change
+                  args:
+                  - var: r
+                  - var: a
+        - forall:
+            vars:
+              r: CatchupResponse
+              s: Revision
+              h: Revision
+              a: CanonicalAcceptance
+              v: Revision
+            body:
+              implies:
+              - and:
+                - call:
+                    fn: catchup_response_is_snapshot_mode
+                    args:
+                    - var: r
+                - call:
+                    fn: catchup_response_selected_checkpoint_frontier
+                    args:
+                    - var: r
+                    - var: s
+                - call:
+                    fn: catchup_response_head_is
+                    args:
+                    - var: r
+                    - var: h
+                - call:
+                    fn: catchup_response_tail_contains_change
+                    args:
+                    - var: r
+                    - var: a
+                - call:
+                    fn: canonical_acceptance_revision_is
+                    args:
+                    - var: a
+                    - var: v
+              - call:
+                  fn: revision_in_checkpoint_tail_range
+                  args:
+                  - var: v
+                  - var: s
+                  - var: h
+        - forall:
+            vars:
+              r: CatchupResponse
+              s: Revision
+              h: Revision
+            body:
+              implies:
+              - and:
+                - call:
+                    fn: catchup_response_is_snapshot_mode
+                    args:
+                    - var: r
+                - call:
+                    fn: catchup_response_selected_checkpoint_frontier
+                    args:
+                    - var: r
+                    - var: s
+                - call:
+                    fn: catchup_response_head_is
+                    args:
+                    - var: r
+                    - var: h
+              - call:
+                  fn: catchup_response_tail_exactly_once_in_order
+                  args:
+                  - var: r
+                  - var: s
+                  - var: h
+      - forall:
+          vars:
+            resp: CatchupResponse
+            h: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: resp
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: resp
+                  - var: h
+            - exists:
+                vars:
+                  s: Revision
+                body:
+                  and:
+                  - call:
+                      fn: catchup_response_selected_checkpoint_frontier
+                      args:
+                      - var: resp
+                      - var: s
+                  - call:
+                      fn: catchup_selected_checkpoint_is_atomically_published_authoritative
+                      args:
+                      - var: resp
+                  - call:
+                      fn: revision_at_or_before
+                      args:
+                      - var: s
+                      - var: h
+      - forall:
+          vars:
+            r: CatchupResponse
+            s: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_selected_checkpoint_frontier
+                  args:
+                  - var: r
+                  - var: s
+            - call:
+                fn: checkpoint_state_equals_canonical_replay_through_frontier
+                args:
+                - var: s
+  L8_snapshot_is_exact_committed_prefix:
+    capability: relational
+    contracts:
+    - snapshot_frontier_coherence
+    formula:
+      and:
+      - forall:
+          vars:
+            s: AuthoritativeState
+            r: Revision
+          body:
+            implies:
+            - call:
+                fn: authoritative_published_snapshot_at_revision
+                args:
+                - var: s
+                - var: r
+            - call:
+                fn: logical_state_matches_canonical_replay
+                args:
+                - var: s
+                - var: r
+      - forall:
+          vars:
+            r: Revision
+          body:
+            call:
+              fn: snapshot_state_equals_canonical_replay_through_frontier
+              args:
+              - var: r
+      - forall:
+          vars:
+            r: Revision
+          body:
+            call:
+              fn: checkpoint_state_equals_canonical_replay_through_frontier
+              args:
+              - var: r
+  L12_delta_catchup_reads_canonical_revision_range:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            r: CatchupResponse
+            l: Revision
+            h: Revision
+            a: CanonicalAcceptance
+            v: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_delta_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_delta_base_frontier_is
+                  args:
+                  - var: r
+                  - var: l
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+              - call:
+                  fn: canonical_acceptance_revision_is
+                  args:
+                  - var: a
+                  - var: v
+              - call:
+                  fn: revision_in_delta_range
+                  args:
+                  - var: v
+                  - var: l
+                  - var: h
+            - call:
+                fn: catchup_response_delta_contains_change
+                args:
+                - var: r
+                - var: a
+      - forall:
+          vars:
+            r: CatchupResponse
+            l: Revision
+            h: Revision
+            a: CanonicalAcceptance
+            v: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_delta_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_delta_base_frontier_is
+                  args:
+                  - var: r
+                  - var: l
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+              - call:
+                  fn: catchup_response_delta_contains_change
+                  args:
+                  - var: r
+                  - var: a
+              - call:
+                  fn: canonical_acceptance_revision_is
+                  args:
+                  - var: a
+                  - var: v
+            - call:
+                fn: revision_in_delta_range
+                args:
+                - var: v
+                - var: l
+                - var: h
+      - forall:
+          vars:
+            r: CatchupResponse
+            l: Revision
+            h: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_is_delta_mode
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_delta_base_frontier_is
+                  args:
+                  - var: r
+                  - var: l
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+            - call:
+                fn: catchup_response_delta_exactly_once_in_order
+                args:
+                - var: r
+                - var: l
+                - var: h
+      - forall:
+          vars:
+            r: CatchupResponse
+          body:
+            implies:
+            - call:
+                fn: catchup_response_is_delta_mode
+                args:
+                - var: r
+            - call:
+                fn: catchup_response_delta_free_of_speculative_data
+                args:
+                - var: r
+  L32_catchup_selects_complete_mode_for_response_head:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          r: CatchupResponse
+        body:
+          and:
+          - implies:
+            - call:
+                fn: catchup_response_complete_range_retained_and_readable
+                args:
+                - var: r
+            - call:
+                fn: catchup_response_is_delta_mode
+                args:
+                - var: r
+          - implies:
+            - call:
+                fn: catchup_response_is_delta_mode
+                args:
+                - var: r
+            - call:
+                fn: catchup_response_complete_range_retained_and_readable
+                args:
+                - var: r
+          - implies:
+            - not:
+                call:
+                  fn: catchup_response_complete_range_retained_and_readable
+                  args:
+                  - var: r
+            - call:
+                fn: catchup_response_is_snapshot_mode
+                args:
+                - var: r
+          - implies:
+            - call:
+                fn: catchup_response_is_snapshot_mode
+                args:
+                - var: r
+            - not:
+                call:
+                  fn: catchup_response_complete_range_retained_and_readable
+                  args:
+                  - var: r
+  L177_catchup_canonical_sources_preserve_document_provenance:
+    contracts:
+    - catchup_canonical_source_provenance
+    formula_from_contracts: true
+  L19_client_applies_only_contiguous_revisions:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            s: ClientState
+            r: Revision
+          body:
+            implies:
+            - call:
+                fn: client_state_applies_revision
+                args:
+                - var: s
+                - var: r
+            - call:
+                fn: revision_is_immediate_predecessor
+                args:
+                - call:
+                    fn: visible_frontier
+                    args:
+                    - var: s
+                - var: r
+      - forall:
+          vars:
+            s: ClientState
+            r: Revision
+          body:
+            implies:
+            - call:
+                fn: revision_is_immediate_predecessor
+                args:
+                - call:
+                    fn: visible_frontier
+                    args:
+                    - var: s
+                - var: r
+            - call:
+                fn: client_state_applies_revision
+                args:
+                - var: s
+                - var: r
+      - forall:
+          vars:
+            s: ClientState
+            r: Revision
+          body:
+            implies:
+            - call:
+                fn: revision_at_or_before
+                args:
+                - var: r
+                - call:
+                    fn: visible_frontier
+                    args:
+                    - var: s
+            - call:
+                fn: client_state_ignores_presented_revision
+                args:
+                - var: s
+                - var: r
+      - forall:
+          vars:
+            s: ClientState
+            r: Revision
+          body:
+            implies:
+            - and:
+              - not:
+                  call:
+                    fn: revision_at_or_before
+                    args:
+                    - var: r
+                    - call:
+                        fn: visible_frontier
+                        args:
+                        - var: s
+              - not:
+                  call:
+                    fn: revision_is_immediate_predecessor
+                    args:
+                    - call:
+                        fn: visible_frontier
+                        args:
+                        - var: s
+                    - var: r
+            - call:
+                fn: client_state_buffers_or_recovers_gap
+                args:
+                - var: s
+                - var: r
+  L97_client_adopts_snapshot_before_tail:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            s: ClientState
+            s_rev: Revision
+          body:
+            implies:
+            - call:
+                fn: client_state_is_checkpoint_installation
+                args:
+                - var: s
+                - var: s_rev
+            - eq:
+              - call:
+                  fn: visible_frontier
+                  args:
+                  - var: s
+              - var: s_rev
+      - forall:
+          vars:
+            s: ClientState
+            s_rev: Revision
+          body:
+            implies:
+            - call:
+                fn: client_state_is_checkpoint_installation
+                args:
+                - var: s
+                - var: s_rev
+            - call:
+                fn: client_state_exposes_installed_checkpoint
+                args:
+                - var: s
+                - var: s_rev
+      - forall:
+          vars:
+            s: ClientState
+            s_rev: Revision
+          body:
+            implies:
+            - call:
+                fn: client_state_exposes_installed_checkpoint
+                args:
+                - var: s
+                - var: s_rev
+            - call:
+                fn: revision_at_or_before
+                args:
+                - var: s_rev
+                - call:
+                    fn: visible_frontier
+                    args:
+                    - var: s
+  L101_client_completes_catchup_through_response_head:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            r: CatchupResponse
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: client_catchup_attempt_completed
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_is_delta_mode
+                  args:
+                  - var: r
+            - call:
+                fn: client_consumed_entire_delta_response
+                args:
+                - var: r
+      - forall:
+          vars:
+            r: CatchupResponse
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: client_catchup_attempt_completed
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_is_snapshot_mode
+                  args:
+                  - var: r
+            - call:
+                fn: client_consumed_entire_snapshot_response
+                args:
+                - var: r
+      - forall:
+          vars:
+            r: CatchupResponse
+            h: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: client_catchup_attempt_completed
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: r
+                  - var: h
+            - call:
+                fn: client_visible_frontier_at_catchup_completion
+                args:
+                - var: r
+                - var: h
+  L119_completed_resync_candidate_stays_at_response_head_until_publication:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            r: CatchupResponse
+            h: Revision
+          body:
+            implies:
+            - call:
+                fn: resync_candidate_completed_through_head
+                args:
+                - var: r
+                - var: h
+            - call:
+                fn: resync_candidate_frontier_at_readiness_is
+                args:
+                - var: r
+                - var: h
+      - forall:
+          vars:
+            r: CatchupResponse
+            h: Revision
+          body:
+            implies:
+            - call:
+                fn: resync_candidate_completed_through_head
+                args:
+                - var: r
+                - var: h
+            - call:
+                fn: post_head_acceptances_deferred_for_candidate
+                args:
+                - var: r
+                - var: h
+      - forall:
+          vars:
+            r: CatchupResponse
+            h: Revision
+            h2: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: resync_candidate_completed_through_head
+                  args:
+                  - var: r
+                  - var: h
+              - call:
+                  fn: resync_candidate_publication_exposes_frontier
+                  args:
+                  - var: r
+                  - var: h2
+            - eq:
+              - var: h
+              - var: h2
+  L121_delta_resync_candidate_starts_from_canonical_client_base:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          r: CatchupResponse
+          l: Revision
+        body:
+          implies:
+          - and:
+            - call:
+                fn: catchup_response_is_delta_mode
+                args:
+                - var: r
+            - call:
+                fn: catchup_response_client_frontier_is
+                args:
+                - var: r
+                - var: l
+          - and:
+            - call:
+                fn: resync_candidate_pair_initialized
+                args:
+                - var: r
+            - call:
+                fn: resync_candidate_initialized_from_client_base
+                args:
+                - var: r
+  L122_catchup_response_head_is_bound_to_authoritative_frontier:
+    contracts:
+    - catchup_head_binding
+    formula_from_contracts: true
+  L126_pending_reconciliation_preserves_resync_canonical_candidate:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          t: ProtocolTransition
+          r: CatchupResponse
+        body:
+          implies:
+          - and:
+            - call:
+                fn: pending_reconciliation_transition
+                args:
+                - var: t
+            - call:
+                fn: transition_performed_for_resync_response
+                args:
+                - var: t
+                - var: r
+            - call:
+                fn: resync_candidate_pair_initialized
+                args:
+                - var: r
+          - call:
+              fn: transition_preserves_resync_candidate_canonical_state
+              args:
+              - var: t
+              - var: r
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
