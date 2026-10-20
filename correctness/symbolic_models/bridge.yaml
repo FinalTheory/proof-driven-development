@@ -11488,11 +11488,17 @@ claims:
       - forall:
           body:
             implies:
-            - call:
-                args:
-                - var: c
-                - var: e
-                fn: pending_identity_at_resync_start
+            - and:
+              - call:
+                  args:
+                  - var: c
+                  - var: e
+                  fn: pending_identity_at_resync_start
+              - call:
+                  args:
+                  - var: c
+                  - var: e
+                  fn: resync_identity_within_normal_horizon
             - call:
                 args:
                 - var: c
@@ -11613,17 +11619,11 @@ claims:
             e: LogicalEditIdentity
           body:
             implies:
-            - and:
-              - call:
-                  fn: pending_identity_at_resync_start
-                  args:
-                  - var: c
-                  - var: e
-              - call:
-                  fn: resync_identity_within_normal_horizon
-                  args:
-                  - var: c
-                  - var: e
+            - call:
+                args:
+                - var: c
+                - var: e
+                fn: pending_identity_at_resync_start
             - call:
                 fn: resync_intermediate_candidate_excludes_canonical_speculative_duplicate
                 args:
@@ -11637,15 +11637,10 @@ claims:
             implies:
             - and:
               - call:
+                  args:
+                  - var: c
+                  - var: e
                   fn: pending_identity_at_resync_start
-                  args:
-                  - var: c
-                  - var: e
-              - call:
-                  fn: resync_identity_within_normal_horizon
-                  args:
-                  - var: c
-                  - var: e
               - call:
                   fn: response_contains_same_identity_acceptance
                   args:
