@@ -8369,63 +8369,71 @@ records:
   claim:L129_client_canonical_frontier_is_preserved_by_visible_transitions:
     kind: claim
     subject_id: L129_client_canonical_frontier_is_preserved_by_visible_transitions
-    subject_signature: 3c36f570914f2837ac6b2af4dc59c24320c3432ba46569653bb856a2b41c92c7
+    subject_signature: 0c8897a7301a8ef0d3c6ef61de1b4395695ec386ecf806dc3ba7f4e9b72436a7
     roundtrip:
-      subject_signature: 3c36f570914f2837ac6b2af4dc59c24320c3432ba46569653bb856a2b41c92c7
+      subject_signature: 0c8897a7301a8ef0d3c6ef61de1b4395695ec386ecf806dc3ba7f4e9b72436a7
       status: TRANSLATED
-      natural_language: 'The conjunction of the following two statements holds. (1) For all client states e and l: if l is
-        reachable after e by one or more subsequent user-visible transitions, where each such transition is capable of mutating,
-        restoring, replacing, switching, or publishing client_document_id, client_local_document, or last_applied_revision
-        (and a path step that cannot touch any visible tuple coordinate does not by itself constitute this reachability relation);
-        and e is a user-visible canonical state, meaning e is currently user-visible at the canonical client observation boundary
-        and represents one document through its visible canonical tuple, regardless of whether it became visible by explicit
-        publication, initialization, restoration, view activation, or an in-place visible tuple replacement, excluding user-visible
-        states that represent no document and private or intermediate resynchronization candidates that have not become user-visible,
-        and without excluding a user-visible historical-version or rollback mode; and for e, the exact client_document_id
-        coordinate stored in e equals the independently represented document for e, and e''s canonical content matches exactly
-        the deterministic replay of that represented document through e''s visible frontier (its last_applied_revision); and
-        l is also a user-visible canonical state in the same sense; then for l, the exact client_document_id coordinate stored
-        in l equals the independently represented document for l, and l''s canonical content matches exactly the deterministic
-        replay of that represented document for l through l''s visible frontier (its last_applied_revision). The represented
-        document for a state is an independent contract reference coordinate, not derived from client_document_id, client_local_document,
-        last_applied_revision, or from satisfaction of frontier coherence. (2) For all client states s: if s is a user-visible
-        canonical state in the sense above, then any client_resync_candidate associated with s is private construction state
-        outside the user-visible observer boundary: it is not part of s''s user-visible canonical tuple, contributes nothing
-        to s''s client_document_id, client_local_document, or last_applied_revision, and can affect the user-visible state
-        only through an atomic publication that creates a new user-visible state.'
+      natural_language: 'All three of the following hold. (1) For every client state e and every client state l: if l is reachable
+        after e by one or more subsequent user-visible transitions, each capable of mutating, restoring, replacing, switching,
+        or publishing client_document_id, client_local_document, or last_applied_revision (a path step that cannot touch any
+        visible tuple coordinate does not by itself constitute this reachability relation), and e is a currently user-visible
+        canonical client state representing one document through its visible canonical tuple, and the exact client_document_id
+        coordinate stored in e equals the independent contract reference coordinate for the semantic document represented
+        by e, and e''s canonical content is exactly the deterministic replay of that represented document through the last
+        canonical revision applied by e (its visible_frontier), and l is also a currently user-visible canonical client state
+        representing one document through its visible canonical tuple, then the exact client_document_id coordinate stored
+        in l equals the independent contract reference coordinate for the semantic document represented by l, and l''s canonical
+        content is exactly the deterministic replay of that represented document of l through the last canonical revision
+        applied by l (its visible_frontier). (2) For every client state s: if s is a currently user-visible canonical client
+        state representing one document through its visible canonical tuple, then the client_resync_candidate associated with
+        s, if any, is private construction state outside the user-visible observer boundary: it is not part of s''s user-visible
+        canonical tuple, contributes nothing to s''s client_document_id, client_local_document, or last_applied_revision,
+        and can affect the user-visible state only through an atomic publication that creates a new user-visible state. (3)
+        For every client state s: if s is a currently user-visible canonical client state representing one document through
+        its visible canonical tuple, then either s itself is the resulting user-visible state of a user-visible client transition
+        that establishes, replaces, or changes client_document_id — including initialization, restoration, switching, publication,
+        and any other visible-document replacement path, so the document s represents was fixed by that transition — or there
+        exists a client state e such that e is the resulting user-visible state of such a document-establishing transition,
+        e is a currently user-visible canonical client state representing one document through its visible canonical tuple,
+        and s is reachable after e by one or more subsequent user-visible transitions of the visible-tuple-mutating class
+        described in (1). In the predicates above, user-visible canonical state excludes states representing no document and
+        private or intermediate resynchronization candidates that have not become user-visible, and does not exclude a user-visible
+        historical-version or rollback mode; the represented document of a state is an independent contract reference coordinate,
+        not derived from client_document_id, client_local_document, last_applied_revision, or satisfaction of any coherence
+        condition.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 3c36f570914f2837ac6b2af4dc59c24320c3432ba46569653bb856a2b41c92c7
+        subject_signature: 0c8897a7301a8ef0d3c6ef61de1b4395695ec386ecf806dc3ba7f4e9b72436a7
         verdict: EQUIVALENT
-        reason: The formula's coherence predicate (client_document_id equals the state's represented document and canonical_content_matches
-          the deterministic replay of that document through visible_frontier/last_applied_revision) is required for the initial
-          visible state and re-required for every later visible state reachable via the specified tuple-mutating/restoring/replacing/switching/publishing
-          transitions, regardless of whether the frontier changes, and the separate universal conjunct keeps client_resync_candidate
-          outside the visible tuple, while exact-replay content excludes speculative raw edits from client_local_document.
-          No source requirement is omitted or added.
+        reason: 'The formula preserves the source exactly: coherence of a visible predecessor, encoded as identity equality
+          with its independently represented document plus exact canonical replay through its frontier, implies the same coherence
+          for every later visible state reachable by one or more governed tuple transitions, including frontier-unchanged
+          cases; the resync candidate is separately required to remain outside every visible tuple; and every visible state
+          is exhaustively classified as establishing or reachable from a visible establishing state via the same governed
+          transitions. No coordinate, guard, identity component, or provenance requirement is dropped or added.'
         differences: []
       strengthening:
-        subject_signature: 3c36f570914f2837ac6b2af4dc59c24320c3432ba46569653bb856a2b41c92c7
+        subject_signature: 0c8897a7301a8ef0d3c6ef61de1b4395695ec386ecf806dc3ba7f4e9b72436a7
         verdict: EQUIVALENT
-        reason: 'The formula matches the source scope and guarantee: it requires coherence (identity equals the represented
-          document and canonical content exactly replays that document through the visible frontier) for the starting user-visible
-          state, preserves the same coherence for every later user-visible state reachable via visible-tuple transitions regardless
-          of frontier change, and separately requires the resync candidate to remain outside the visible tuple for user-visible
-          states. No requirement is added, omitted, or materially altered.'
+        reason: 'The formula''s three conjuncts match the source: coherence of a visible state is decomposed as client_document_id
+          equal to its independently represented document plus canonical content exactly replaying that document through its
+          visible frontier, and that coherence is required for every later state reachable by one or more governed visible-tuple
+          transitions from a coherent visible state, covering unchanged-frontier and mixed-base cases; the resync candidate
+          is universally kept outside the visible tuple except via publication; and every visible state is required to be
+          an establishment/replacement state (initialization, restoration, switching, publication, or other visible-document
+          replacement) or reachable from a visible establishment state through the governed transitions, matching the source''s
+          exhaustive origin classification with no added or omitted requirement.'
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 3c36f570914f2837ac6b2af4dc59c24320c3432ba46569653bb856a2b41c92c7
+        subject_signature: 0c8897a7301a8ef0d3c6ef61de1b4395695ec386ecf806dc3ba7f4e9b72436a7
         verdict: EQUIVALENT
-        reason: The rendering faithfully re-expresses the source. Clause (1) restates the transition-preservation requirement
-          as reachability over one or more qualifying transitions, with coherence defined as the tuple's identity, materialized
-          content, and frontier all anchored to one independent canonical basis (no cross-basis mixing), which captures the
-          enumerated operation classes and frontier-unchanged transitions. Its applicability boundary (visible canonical states;
-          excluding document-less states and non-visible resync candidates; not excluding historical/rollback modes or particular
-          ways of becoming visible) matches the source's "any user-visible client state for document D". Clause (2) restates
-          the resync-candidate privacy boundary with publication as the only ingress channel. The speculative-edits exclusion
-          is encoded in the exact-replay coherence conjunct. No requirement is added or omitted in either direction.
+        reason: The rendering unpacks tuple coherence as identity matching the independent document reference plus canonical
+          content equal to deterministic replay through the visible frontier, and preserves it over all tuple-mutating visible
+          transitions including frontier-unchanged ones; it likewise keeps resync candidates outside the visible boundary
+          until atomic publication and reproduces the establishment-or-reachable provenance closure for every user-visible
+          state, with no material weakening, strengthening, or coordinate collapse.
         differences: []
   claim:L28_authoritative_epoch_never_regresses_or_reuses:
     kind: claim
@@ -8640,56 +8648,61 @@ records:
   claim:L206_terminal_speculative_lifecycle_is_absorbing:
     kind: claim
     subject_id: L206_terminal_speculative_lifecycle_is_absorbing
-    subject_signature: b7a45757e6e10e91f6b41c183e561e43d6fd917f2f37ee8003e4c3ae75e1cfc0
+    subject_signature: 044b97fbdadb57a7bd70f5cdad1f584886fd10556ad991cac9eca235486d5341
     roundtrip:
-      subject_signature: b7a45757e6e10e91f6b41c183e561e43d6fd917f2f37ee8003e4c3ae75e1cfc0
+      subject_signature: 044b97fbdadb57a7bd70f5cdad1f584886fd10556ad991cac9eca235486d5341
       status: TRANSLATED
-      natural_language: The conjunction of all of the following holds. (1) For every client state s and every logical edit
-        identity e, if s is a reachable client state and e is classified in s as a terminalized normal speculative lifecycle,
-        then e is not active in s in client_pending_edits, e has no normal-lifecycle speculative representation retained in
-        s in client_speculative_overlays, and e has no normal-lifecycle speculative representation exposed in s in client_visible_speculative_overlays.
-        (2) For every client states earlier and later and every logical edit identity e, if earlier is a reachable client
-        state, later is a reachable client state, later is reachable after earlier by one or more client-protocol transitions
-        for the continuing client lifecycle/history (including restore/reactivation, view switching, bookkeeping, reconnect/resync,
-        or publication transitions), and e is classified in earlier as a terminalized normal speculative lifecycle, then e
-        is not active in later in client_pending_edits, e has no normal-lifecycle speculative representation retained in later
-        in client_speculative_overlays, and e has no normal-lifecycle speculative representation exposed in later in client_visible_speculative_overlays.
-        (3) For every client state s and every logical edit identity e, if s results from an authoritative same-full-identity
-        reconciliation that actually ends e's normal speculative lifecycle, regardless of whether a foreground publication
-        occurred, then e is classified in s as a terminalized normal speculative lifecycle. (4) For every protocol transition
-        t and every logical edit identity e, if t is a protocol transition occurring on a reachable execution of the normal
-        client speculative lifecycle and t uses an explicit terminal disposition to terminally retire the normal speculative
-        lifecycle of e, at the full generality of an explicit terminal disposition including a non_acceptance_terminal_disposition
-        and any other explicit terminal disposition, then t establishes that e's normal speculative lifecycle is terminalized
-        in the resulting reachable client state and is no longer active in pending, retained speculative, or visible speculative
+      natural_language: The conjunction of the following holds. First, (a) for every client state s and every logical edit
+        identity e, if s is reachable under the normal client protocol and e is classified in s as a terminalized normal speculative
+        lifecycle, then in s e is not active in client_pending_edits, e has no retained normal-lifecycle speculative representation
+        in client_speculative_overlays, e has no visible normal-lifecycle speculative representation in client_visible_speculative_overlays,
+        and for e in s, every later user operation that actually occurs for the same document as e in the continuing normal
+        client history is a genuinely new logical edit rather than a continuation, retry, restore, or reactivation of e, using
+        a client_change_id different from the client_change_id of e, this freshness condition being vacuously true if no such
+        later user operation for that document occurs and imposing no cross-document change-id restriction, no physical-deletion
+        or tombstone requirement, and no liveness or eventual-operation obligation; and (b) for every client states earlier
+        and later and every logical edit identity e, if earlier is reachable under the normal client protocol, later is reachable
+        under the normal client protocol, later is reachable after earlier by one or more client-protocol transitions for
+        the continuing client lifecycle/history, including restore/reactivation, view switching, bookkeeping, reconnect/resync,
+        or publication transitions, and e is classified in earlier as a terminalized normal speculative lifecycle, then in
+        later e is not active in client_pending_edits, e has no retained normal-lifecycle speculative representation in client_speculative_overlays,
+        and e has no visible normal-lifecycle speculative representation in client_visible_speculative_overlays. Second, for
+        every client state s and every logical edit identity e, if s results from authoritative same-full-identity reconciliation
+        that actually ends e's normal speculative lifecycle, regardless of whether a foreground publication occurred, then
+        e is classified in s as a terminalized normal speculative lifecycle; this does not assert that reconciliation, terminalization,
+        publication, or delivery eventually occurs. Third, for every protocol transition t and every logical edit identity
+        e, if t occurs on a reachable execution of the normal client speculative lifecycle and t uses an explicit terminal
+        disposition, at the full generality of explicit terminal dispositions including a non_acceptance_terminal_disposition
+        and any other explicit terminal disposition and not restricted to one disposition kind, to terminally retire the normal
+        speculative lifecycle of e, then that transition establishes that e's normal speculative lifecycle is terminalized
+        in the resulting reachable client state and no longer active in pending, retained speculative, or visible speculative
         state.
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: b7a45757e6e10e91f6b41c183e561e43d6fd917f2f37ee8003e4c3ae75e1cfc0
+        subject_signature: 044b97fbdadb57a7bd70f5cdad1f584886fd10556ad991cac9eca235486d5341
         verdict: EQUIVALENT
-        reason: The formula covers both entry triggers (authoritative reconciliation and explicit terminal disposition), requires
-          terminalized identities to be absent from pending, retained, and visible speculative sets in the terminalized state,
-          and extends that absence to every later reachable state reached by any subsequent transition, while not forbidding
-          archival representation outside those sets.
+        reason: The formula covers entry into the terminalized classification via both authoritative reconciliation and explicit
+          terminal disposition, excludes the exact (D,k) identity from pending, retained, and visible speculative sets in
+          the terminalized state and in every later reachable state, and requires later user operations for D to be fresh
+          edits with a new change id, while allowing archival representation outside the normal speculative sets.
         differences: []
       strengthening:
-        subject_signature: b7a45757e6e10e91f6b41c183e561e43d6fd917f2f37ee8003e4c3ae75e1cfc0
+        subject_signature: 044b97fbdadb57a7bd70f5cdad1f584886fd10556ad991cac9eca235486d5341
         verdict: EQUIVALENT
-        reason: The formula captures both entry routes (authoritative reconciliation and any explicit terminal disposition)
-          into the terminalized classification, and enforces both same-state and all later-reachable-state exclusion of the
-          same full logical-edit identity from pending, retained speculative, and visible speculative sets, without requiring
-          a persisted tombstone or archival deletion.
+        reason: The formula covers both terminalization causes, requires a terminalized exact identity to be absent from pending,
+          retained, and visible speculative sets in its own and every later reachable state, and requires later user operations
+          for the same document to be fresh edits with a new change id, without imposing deletion, tombstone, liveness, or
+          cross-document restrictions beyond the source.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: b7a45757e6e10e91f6b41c183e561e43d6fd917f2f37ee8003e4c3ae75e1cfc0
+        subject_signature: 044b97fbdadb57a7bd70f5cdad1f584886fd10556ad991cac9eca235486d5341
         verdict: EQUIVALENT
-        reason: 'The rendering preserves the absorbing invariant over all reachable states: both terminalization triggers
-          (authoritative reconciliation and explicit terminal disposition) classify the full identity as terminalized, terminalized
-          identities are excluded contemporaneously and in all later reachable states from pending, retained speculative,
-          and visible speculative sets across restore, switching, reactivation, bookkeeping, reconnect/resync, publication,
-          and other transitions, while archival representation outside those sets is not forbidden.'
+        reason: The rendering preserves the absorbing terminalization invariant over all reachable states, both trigger routes
+          (authoritative reconciliation and any explicit terminal disposition), full (D,k) identity, exclusion from all three
+          speculative sets across all later transitions, and the new-change-id freshness for later operations on D, with the
+          same archival, non-deletion, and non-liveness exclusions and no added cross-document or other restriction.
         differences: []
   claim:L130_reconnect_start_is_bound_to_visible_client_tuple:
     kind: claim
@@ -8934,51 +8947,58 @@ records:
   claim:L203_non_acceptance_terminal_disposition_preserves_edit_provenance:
     kind: claim
     subject_id: L203_non_acceptance_terminal_disposition_preserves_edit_provenance
-    subject_signature: ba2a37d354bc48f6e3f48b4cd3dadb48f3e95cdeb27b04d31574407a77c0a2dc
+    subject_signature: eb05d06d7601c098b2562fa296970ae53fddb7646d94e3d2595cc4d35816641a
     roundtrip:
-      subject_signature: ba2a37d354bc48f6e3f48b4cd3dadb48f3e95cdeb27b04d31574407a77c0a2dc
+      subject_signature: eb05d06d7601c098b2562fa296970ae53fddb7646d94e3d2595cc4d35816641a
       status: TRANSLATED
       natural_language: 'For every protocol transition t and every logical edit identity e, if t occurs on a reachable execution
         of the normal client speculative lifecycle (impossible transitions and transitions outside that lifecycle are excluded)
-        and t uses a non-acceptance terminal disposition to terminally retire the normal speculative lifecycle of the exact
+        and t uses a non_acceptance_terminal_disposition to terminally retire the normal speculative lifecycle of the exact
         logical edit identity e, then all of the following hold: (1) the non-acceptance terminal disposition consumed by t
         was produced for the same logical edit e and preserves e''s full document_id plus client_change_id identity through
-        routing, bookkeeping, and the destructive retirement sink; (2) that disposition preserves e''s full document_id plus
-        client_change_id identity through routing and bookkeeping to the pending retirement sink, meaning the sink that removes
-        or terminally retires e''s pending representation in client_pending_edits receives e''s own full identity; (3) that
-        disposition preserves e''s full document_id plus client_change_id identity through routing and bookkeeping to the
-        retained-overlay retirement sink, meaning the sink that removes or terminally retires e''s retained speculative overlay
-        representation receives e''s own full identity; and (4) that disposition preserves e''s full document_id plus client_change_id
-        identity through routing and bookkeeping to the visible-overlay retirement sink, meaning the sink that removes or
-        terminally retires e''s visible speculative overlay representation receives e''s own full identity.'
+        routing, bookkeeping, and the destructive retirement sink; (2) that disposition was produced for the same logical
+        edit e and preserves e''s full document_id plus client_change_id identity through routing and bookkeeping to the pending
+        retirement sink, namely the sink that removes or terminally retires e''s pending representation in client_pending_edits
+        receives e''s own full identity; (3) that disposition was produced for the same logical edit e and preserves e''s
+        full document_id plus client_change_id identity through routing and bookkeeping to the retained-overlay retirement
+        sink, namely the sink that removes or terminally retires e''s retained speculative overlay representation receives
+        e''s own full identity; and (4) that disposition was produced for the same logical edit e and preserves e''s full
+        document_id plus client_change_id identity through routing and bookkeeping to the visible-overlay retirement sink,
+        namely the sink that removes or terminally retires e''s visible speculative overlay representation receives e''s own
+        full identity. In addition, for every protocol transition t and every logical edit identity e, if t occurs on a reachable
+        execution of the normal client speculative lifecycle and t uses a non_acceptance_terminal_disposition to terminally
+        retire the normal speculative lifecycle of the exact logical edit identity e, then t is an explicit non-acceptance
+        retirement transition for e, i.e., t uses a non_acceptance_terminal_disposition to terminally retire the normal speculative
+        lifecycle of the exact logical edit identity e.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: ba2a37d354bc48f6e3f48b4cd3dadb48f3e95cdeb27b04d31574407a77c0a2dc
+        subject_signature: eb05d06d7601c098b2562fa296970ae53fddb7646d94e3d2595cc4d35816641a
         verdict: EQUIVALENT
-        reason: The formula conditions on a reachable non-acceptance retirement transition for identity e and requires the
-          consumed disposition to have been produced for e and to preserve e's full document_id plus client_change_id identity
-          generally and to the pending, retained-overlay, and visible-overlay sinks, exactly matching the source binding and
-          its foreign-disposition prohibition.
+        reason: The formula universally quantifies over reachable non-acceptance retirement transitions for each full logical-edit
+          identity, requiring the disposition to have been produced for that same identity and to preserve document_id plus
+          client_change_id generally and to the pending, retained-overlay, and visible-overlay sinks, which also forbids a
+          foreign disposition retiring the edit by relabeling or rebinding; a second universal clause requires every such
+          retirement transition to be explicit, with no added occurrence, business-reason, or acceptance requirement.
         differences: []
       strengthening:
-        subject_signature: ba2a37d354bc48f6e3f48b4cd3dadb48f3e95cdeb27b04d31574407a77c0a2dc
+        subject_signature: eb05d06d7601c098b2562fa296970ae53fddb7646d94e3d2595cc4d35816641a
         verdict: EQUIVALENT
-        reason: The formula quantifies over reachable non-acceptance retirement transitions for an exact logical edit identity
-          and requires the consumed disposition to have been produced for that same edit, preserving its full document_id
-          and client_change_id identity through routing and bookkeeping to the pending, retained-overlay, and visible-overlay
-          sinks, exactly matching the source binding and its prohibition on foreign dispositions. No additional scope, liveness,
-          or business-reason requirement is imposed.
+        reason: The formula applies to every reachable non-acceptance retirement transition for an identity e and requires
+          the consumed disposition to have been produced for that same full (document_id, client_change_id) identity and to
+          preserve it through routing/bookkeeping to the general destructive sink and to each enumerated pending, retained-overlay,
+          and visible-overlay sink, while also requiring the retirement to be explicit. This matches the claim's provenance
+          binding, its prohibition on a foreign disposition retiring e, and its explicitness requirement without adding or
+          omitting a condition.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: ba2a37d354bc48f6e3f48b4cd3dadb48f3e95cdeb27b04d31574407a77c0a2dc
+        subject_signature: eb05d06d7601c098b2562fa296970ae53fddb7646d94e3d2595cc4d35816641a
         verdict: EQUIVALENT
-        reason: The rendering preserves the conditional scope on non-acceptance terminal retirement of a normal speculative
-          lifecycle, the produced-for provenance requirement for the same logical edit, and preservation of the full document_id
-          plus client_change_id identity through routing and bookkeeping to each of the pending, retained-overlay, and visible-overlay
-          retirement sinks; the prohibition on a foreign-produced disposition retiring the edit follows from that produced-for
-          binding, with no added eventuality or other requirement.
+        reason: The round-trip preserves the conditional scope, same-edit provenance, full document_id plus client_change_id
+          identity through routing and bookkeeping to the pending, retained-overlay, and visible-overlay retirement sinks,
+          the bar on foreign dispositions retiring an edit, and the explicitness requirement, without adding occurrence, business-reason,
+          or acceptance obligations.
         differences: []
   claim:C10_catchup_represents_exact_missing_suffix:
     kind: claim
@@ -9639,58 +9659,58 @@ records:
   claim:L128_client_canonical_frontier_is_established_on_publication:
     kind: claim
     subject_id: L128_client_canonical_frontier_is_established_on_publication
-    subject_signature: bc1dfbc04d78af3380b326585ba39f631ae11cf06c45baf3168796671345f350
+    subject_signature: 93896f7f9fc1dd54910dbf822998a366576ea186c2c43a81011cedd3039c3bbe
     roundtrip:
-      subject_signature: bc1dfbc04d78af3380b326585ba39f631ae11cf06c45baf3168796671345f350
+      subject_signature: 93896f7f9fc1dd54910dbf822998a366576ea186c2c43a81011cedd3039c3bbe
       status: TRANSLATED
-      natural_language: 'For every client state s, if s is established by initialization or canonical publication — that is,
-        s is the resulting user-visible state of a client initialization or of a canonical publication that creates or replaces
-        a user-visible client state representing its document, including publication from restoration, document/view switching,
-        snapshot replacement, or reconnect/resync state, and covering exactly that establishment event class and no other
-        visible-document replacement path — then all of the following hold conjunctively: (1) the exact client_document_id
-        coordinate stored in s equals the represented document of s, where the represented document is the semantic document
-        D in the contract phrase ''client state representing document D'', an independent contract reference coordinate not
-        derived from client_document_id, client_local_document, last_applied_revision, or satisfaction of any frontier-coherence
-        condition; and the client state''s canonical content is exactly the deterministic replay of that represented document
-        through the visible frontier of s, where the visible frontier of s is the last canonical revision applied by s, i.e.
-        s''s last_applied_revision; (2) the client_resync_candidate associated with s, if any, is private construction state
-        outside the user-visible observer boundary until publication, and before publication it is not part of s''s user-visible
-        canonical tuple; (3) s''s client_local_document is exactly the deterministic application of all and only the represented
-        document''s canonical accepted revisions through the visible frontier of s: every canonical accepted revision of that
-        document at or below that frontier is applied exactly once, in canonical order, and no other revision, accepted change,
-        or content is part of client_local_document, where that frontier is s''s last_applied_revision, the highest contiguous
-        canonical revision applied by s, so the revisions applied for s are exactly that document''s contiguous canonical
-        accepted sequence through that frontier, with no gap, no omission, and no extra element; and (4) speculative raw edits
-        are not part of s''s client_local_document: no unaccepted, locally speculative raw edit contributes any content to
-        client_local_document in s, and client_local_document in s consists solely of canonical accepted content.'
+      natural_language: 'For every client state s, if s is the resulting user-visible state of a user-visible client transition
+        that establishes, replaces, or changes client_document_id — including initialization, restoration, switching, publication,
+        and any other visible-document replacement path — so that the document s represents was fixed by that transition,
+        then all of the following hold together: (1) the exact client_document_id coordinate stored in s equals the represented
+        document of s, where the represented document is the independent contract reference coordinate for the semantic document
+        in the phrase "client state representing document D" and is not derived from client_document_id, client_local_document,
+        last_applied_revision, or satisfaction of client_canonical_frontier_coherence; (2) the canonical content of s exactly
+        matches the deterministic replay of that represented document through the visible frontier of s, where the visible
+        frontier of s is the last canonical revision applied by s, i.e. its last_applied_revision; (3) the client_resync_candidate
+        associated with s, if any, is private construction state outside the user-visible observer boundary until publication,
+        and before publication it is not part of s''s user-visible canonical tuple; (4) s''s client_local_document is exactly
+        the deterministic application of all and only the represented document''s canonical accepted revisions through the
+        visible frontier of s: every canonical accepted revision of that document at or below that frontier is applied exactly
+        once, in canonical order, and no other revision, accepted change, or content is part of client_local_document, and,
+        since that frontier is s''s last_applied_revision — the highest contiguous canonical revision applied by s — the revisions
+        applied for s are exactly that document''s contiguous canonical accepted sequence through that frontier, with no gap,
+        no omission, and no extra element; and (5) speculative raw edits are not part of s''s client_local_document: no unaccepted,
+        locally speculative raw edit contributes any content to client_local_document in s, and client_local_document in s
+        consists solely of canonical accepted content.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: bc1dfbc04d78af3380b326585ba39f631ae11cf06c45baf3168796671345f350
+        subject_signature: 93896f7f9fc1dd54910dbf822998a366576ea186c2c43a81011cedd3039c3bbe
         verdict: EQUIVALENT
-        reason: The formula quantifies over exactly the initialization/canonical-publication-established states, preserves
-          represented_document as an independent identity coordinate equated to client_document_id, requires client_local_document
-          to be the exact deterministic all-and-only canonical accepted application through visible_frontier/last_applied_revision,
-          and separately encodes the resync-candidate exclusion until publication and the speculative-raw-edit exclusion,
-          with no added or omitted requirement.
+        reason: The formula applies exactly to establishment states (initialization, publication, restoration, switching,
+          and any other visible-state replacement), and for each such state requires client_document_id to equal the independently
+          represented document, client_local_document to be the exact deterministic application of all and only that document's
+          canonical accepted revisions through last_applied_revision, the resync candidate to remain outside the visible tuple
+          until publication, and speculative raw edits to be excluded, matching the source with no omitted or added requirement.
         differences: []
       strengthening:
-        subject_signature: bc1dfbc04d78af3380b326585ba39f631ae11cf06c45baf3168796671345f350
+        subject_signature: 93896f7f9fc1dd54910dbf822998a366576ea186c2c43a81011cedd3039c3bbe
         verdict: EQUIVALENT
-        reason: The formula quantifies only over states resulting from initialization or canonical publication (including
-          restoration, switching, snapshot replacement, and reconnect/resync), binds client_document_id to the independent
-          represented document, requires client_local_document to be exactly the deterministic all-and-only canonical accepted
-          revisions through visible_frontier/last_applied_revision, and separately encodes the resync-candidate boundary and
-          exclusion of speculative raw edits, with no added or omitted scope, identity, cardinality, or provenance condition.
+        reason: The formula applies exactly to establishment states as defined by the claim, requires client_document_id to
+          equal the independently represented document, and requires client_local_document to be the deterministic application
+          of all and only that document's canonical accepted revisions through last_applied_revision, with the resync candidate
+          outside the visible tuple until publication and speculative raw edits excluded. No scope, identity, cardinality,
+          or boundary requirement is added or omitted.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: bc1dfbc04d78af3380b326585ba39f631ae11cf06c45baf3168796671345f350
+        subject_signature: 93896f7f9fc1dd54910dbf822998a366576ea186c2c43a81011cedd3039c3bbe
         verdict: EQUIVALENT
-        reason: The rendering preserves the initialization/publication scope including restoration, switching, snapshot and
-          resync, the independent identity D with client_document_id = D, the all-and-only deterministic application of D's
-          canonical accepted revisions through last_applied_revision as highest contiguous frontier, the privacy of client_resync_candidate
-          until publication, and the exclusion of speculative raw edits, without adding or omitting any requirement.
+        reason: The round-trip preserves the establishment-state scope (initialization, canonical publication, restoration,
+          switching, snapshot/reconnect replacement and any other visible-state creation/replacement), the independent identity
+          equality client_document_id = D, the deterministic all-and-only contiguous replay of D's canonical accepted revisions
+          through last_applied_revision, and the exclusions of unpublished client_resync_candidate and speculative raw edits,
+          without adding or omitting requirements.
         differences: []
   claim:L157_foreground_reconnect_loses_publication_eligibility_after_document_switch:
     kind: claim
@@ -10111,4 +10131,95 @@ records:
           representation by itself, and closure of all transform and acceptance entrypoints for an owner initialized or resumed
           from such a representation at frontier H until authoritative recovery/reconstruction through H is complete and the
           recovered logical state, head, and OT metadata are installed. No requirement is omitted, added, or materially altered.'
+        differences: []
+  claim:L106_resync_request_covers_start_pending_set:
+    kind: claim
+    subject_id: L106_resync_request_covers_start_pending_set
+    subject_signature: 92d645b96b1223491094c7b8c5ec183312be32453c56286f768035093a09385e
+    roundtrip:
+      subject_signature: 92d645b96b1223491094c7b8c5ec183312be32453c56286f768035093a09385e
+      status: TRANSLATED
+      natural_language: 'For all catch-up responses / resyncs c and all exact full logical edit identities e=(D,k), where
+        D is the document_id coordinate and k is the client_change_id coordinate carried by e, the following five implications
+        hold conjunctively. (1) If e is pending at the start of resync c for that same resync document D — a pending identity
+        for another document does not satisfy this — and e is within the normal 30-day reconnect eligibility horizon for c,
+        then both: the catch-up request for c includes k, i.e. logical_identity_change_id(e), in the pending set supplied
+        under that request, with k interpreted under c''s resync document; and the catch-up request for c includes e for authoritative
+        same-full-identity reconciliation through the response head. (2) If e is pending at the start of resync c for D and
+        within the normal horizon for c, then e has the same document coordinate D as the document being reconnected/resynchronized
+        by c. (3) If e is pending at the start of resync c and e has a defined pending/retry age greater than the 30-day normal
+        reconnect eligibility horizon, then e is outside the normal reconnect horizon in the sense that c does not submit
+        it through normal authoritative reconciliation and the client discards it or uses an explicit expired/conflict/manual-resolution
+        path. (4) If e is pending at the start of resync c for D and within the normal horizon for c, then the client_change_id
+        of e, as supplied under c''s catch-up request, is interpreted only under c''s request document D, and e is not rebound
+        to another document during authoritative reconciliation through c''s response head. (5) If e is pending at the start
+        of resync c and its defined pending/retry age exceeds the normal horizon, then it is not the case that the catch-up
+        request for c includes k, i.e. logical_identity_change_id(e), in the pending set supplied under that request.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 92d645b96b1223491094c7b8c5ec183312be32453c56286f768035093a09385e
+        verdict: EQUIVALENT
+        reason: The formula covers every start-pending identity within the 30-day horizon with request inclusion, same-document
+          matching, reconciliation through the response head, and interpretation only under the request document without rebinding;
+          it separately requires identities exceeding the horizon to use a non-normal expired/conflict/manual path and excludes
+          their change_id from the normal request, matching the source scope, identity coordinates, and exclusions.
+        differences: []
+      strengthening:
+        subject_signature: 92d645b96b1223491094c7b8c5ec183312be32453c56286f768035093a09385e
+        verdict: EQUIVALENT
+        reason: 'The formula exactly covers all start-pending identities within the 30-day horizon: inclusion of their change_id,
+          full-identity reconciliation through the response head, interpretation only under the request document with no rebinding,
+          and for identities whose age exceeds 30 days, exclusion from the normal request plus discard or an explicit expired/conflict/manual
+          path, with no added or omitted requirement.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 92d645b96b1223491094c7b8c5ec183312be32453c56286f768035093a09385e
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves all source guarantees: eligible start-pending identities are included in the request
+          pending set under the request document, interpreted only under that document, and not omitted or rebound through
+          the response head, while identities whose pending/retry age exceeds 30 days are excluded from the normal request
+          and discarded or routed to an explicit expired, conflict, or manual-resolution path.'
+        differences: []
+  claim:L4_append_requires_previous_frontier:
+    kind: claim
+    subject_id: L4_append_requires_previous_frontier
+    subject_signature: 8d2664771a9fc06b70c72a02db21c3ff98e5ff2d47b5318a2fbd69db5dff1b34
+    roundtrip:
+      subject_signature: 8d2664771a9fc06b70c72a02db21c3ff98e5ff2d47b5318a2fbd69db5dff1b34
+      status: TRANSLATED
+      natural_language: 'For every canonical acceptance a and every revision r, if a is the committed form of the candidate
+        canonical change carrying revision r — that is, a is exactly the canonical accepted change that the candidate change
+        carrying revision r became when it committed as a canonical accepted change — then the candidate-commit pre-state
+        latest revision of a is the immediate predecessor of r in the document''s canonical accepted-revision numbering. That
+        pre-state latest revision is the document_latest_revision, i.e. the pre-state latest_revision, of the authoritative
+        pre-state against which a''s candidate change committed: the frontier value of a''s document immediately before a''s
+        acceptance transaction committed. Being the immediate predecessor means r is the next revision position after that
+        pre-state latest revision, no canonical revision lies strictly between them, and that pre-state latest revision is
+        exactly one less than r in the document''s revision arithmetic.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 8d2664771a9fc06b70c72a02db21c3ff98e5ff2d47b5318a2fbd69db5dff1b34
+        verdict: EQUIVALENT
+        reason: 'The formula forall a,r: candidate_change_commits_as_acceptance(a,r) implies revision_is_immediate_predecessor(prestate_latest_revision(a),
+          r), whose meaning is prestate frontier exactly one less than r, faithfully encodes commit => pre.latest_revision
+          == r-1 with no added or omitted requirement.'
+        differences: []
+      strengthening:
+        subject_signature: 8d2664771a9fc06b70c72a02db21c3ff98e5ff2d47b5318a2fbd69db5dff1b34
+        verdict: EQUIVALENT
+        reason: 'The formula forall a, r (candidate commits as acceptance a at r implies the acceptance''s prestate latest
+          revision is the immediate predecessor of r) matches the source: immediate predecessor is defined as exactly one
+          less in revision arithmetic, which is precisely pre.latest_revision == r - 1, with the prestate taken immediately
+          before that acceptance committed and no added scope or guard.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 8d2664771a9fc06b70c72a02db21c3ff98e5ff2d47b5318a2fbd69db5dff1b34
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the sole implication: a candidate canonical change carrying revision r commits only
+          if the authoritative pre-state frontier is r-1; restating that frontier as the immediate predecessor exactly one
+          less than r adds no new requirement and omits none.'
         differences: []
