@@ -4616,6 +4616,7 @@ functions:
     - claim:C10_catchup_represents_exact_missing_suffix
     - claim:L101_client_completes_catchup_through_response_head
     - claim:L121_delta_resync_candidate_starts_from_canonical_client_base
+    - claim:L177_catchup_canonical_sources_preserve_document_provenance
   catchup_response_complete_range_retained_and_readable:
     args:
     - CatchupResponse
@@ -4688,6 +4689,7 @@ functions:
     semantic_anchors:
     - claim:L12_delta_catchup_reads_canonical_revision_range
     - claim:C10_catchup_represents_exact_missing_suffix
+    - claim:L177_catchup_canonical_sources_preserve_document_provenance
   checkpoint_state_equals_canonical_replay_through_frontier:
     args:
     - Revision
@@ -5862,6 +5864,15 @@ functions:
     meaning: Authoritative state representation s is an optimized snapshot or compacted authoritative representation at frontier h.
     semantic_anchors:
     - claim:L173_optimized_lifecycle_representation_resumes_only_through_recovery
+  catchup_candidate_constructed_for_response:
+    args:
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols:
+    - client_resync_candidate
+    meaning: 'A private client_resync_candidate has actually been constructed for catch-up response r: the candidate-construction stage for r was reached and produced a candidate object for r. This predicate records that construction-stage fact only; it asserts nothing about which document the constructed candidate is bound to, nothing about the candidate''s contents or provenance, and nothing about publication.'
+    semantic_anchors:
+    - claim:L177_catchup_canonical_sources_preserve_document_provenance
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -15888,10 +15899,15 @@ claims:
             r: CatchupResponse
           body:
             implies:
-            - call:
-                fn: catchup_response_targets_document
-                args:
-                - var: r
+            - and:
+              - call:
+                  fn: catchup_response_targets_document
+                  args:
+                  - var: r
+              - call:
+                  fn: catchup_candidate_constructed_for_response
+                  args:
+                  - var: r
             - call:
                 fn: catchup_constructed_candidate_bound_to_target_document
                 args:
@@ -15967,6 +15983,19 @@ claims:
                 - var: r
             - call:
                 fn: catchup_response_tail_free_of_speculative_data
+                args:
+                - var: r
+      - forall:
+          vars:
+            r: CatchupResponse
+          body:
+            implies:
+            - call:
+                fn: catchup_response_is_delta_mode
+                args:
+                - var: r
+            - call:
+                fn: catchup_response_delta_free_of_speculative_data
                 args:
                 - var: r
   L19_client_applies_only_contiguous_revisions:
