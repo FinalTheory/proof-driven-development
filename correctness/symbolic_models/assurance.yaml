@@ -10299,3 +10299,69 @@ records:
           the snapshot-tail prohibition on speculative data; its additional clauses are logical restatements or entailed consequences
           of those requirements, with no material weakening or strengthening.
         differences: []
+  claim:L107_client_freezes_speculative_edits_during_resync:
+    kind: claim
+    subject_id: L107_client_freezes_speculative_edits_during_resync
+    subject_signature: 6cc3152e25c7574a55fb22763e03d2a1d727383e9b0debc254983a915db53a1e
+    roundtrip:
+      subject_signature: 6cc3152e25c7574a55fb22763e03d2a1d727383e9b0debc254983a915db53a1e
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following four statements holds. (1) For every client state s and every logical
+        edit identity e: if s is reachable under the normal client protocol, including states reached through restore, view
+        switching, bookkeeping, reconnect/resync, publication, and explicit terminal disposition; and exact identity e remains
+        active in client_pending_edits in s; and in s e remains unresolved, meaning it has not been safely reconciled or explicitly
+        removed, where this unresolved classification does not require a reconnect attempt, publication, current acceptance
+        eligibility, retention of a speculative overlay, or an age within the normal retry/reconnect horizon; then both of
+        the following hold: client_editing_mode is not normal-editable for the document identified by the document coordinate
+        of exact identity e, observing that editing mode independently of whether any edit-producing transition is enabled
+        or executed; and from s no permitted normal editing transition can create or apply a new acceptance-eligible speculative
+        edit for the same document as exact identity e, where creation and application are both included, the new edit need
+        not have identity e, and this observes transition availability independently of the editing-mode label and does not
+        require that the transition actually be selected or executed. (2) For every catchup response c: if c is one reconnect/resync
+        attempt for document D by a normally participating client, which does not require the attempt to be foreground or
+        D to be currently visible, then while resync c is in progress the client creates or applies no new speculative local
+        edit for document D, regardless of whether that new edit would currently be acceptance-eligible. (3) For every catchup
+        response c and every logical edit identity e: if, after reconciled publication or conflict entry for c, exact identity
+        e for the same resync document D remains protocol-eligible and unresolved and remains contained in client_pending_edits,
+        then, while e remains unresolved after c publication/conflict entry, client_editing_mode is not normal-editable for
+        the document of e and no normal editing transition creates or applies a new acceptance-eligible speculative edit for
+        that document. (4) For every catchup response c and every logical edit identity e: if exact identity e=(D,k) is pending
+        at the start of resync c for that same resync document D, where a pending identity for another document does not satisfy
+        this condition, and pending identity e is within the normal 30-day reconnect eligibility horizon for resync c, then
+        the catch-up request for resync c includes, in the pending set supplied under that request, the client_change_id that
+        is the client_change_id coordinate carried by exact full logical edit identity e=(document_id, client_change_id),
+        with k interpreted under c''s resync document.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 6cc3152e25c7574a55fb22763e03d2a1d727383e9b0debc254983a915db53a1e
+        verdict: EQUIVALENT
+        reason: 'The formula preserves all source requirements: the reachable-state invariant jointly requiring pending-active
+          and unresolved status and yielding both non-normal-editable mode and no eligible speculative edit creation/application;
+          the unconditional freeze on any new speculative edit during a resync attempt; continued blocking for identities
+          remaining unresolved after reconciled publication or conflict entry, already entailed by the general invariant;
+          and completeness of the captured pending client_change_id set for identities pending at resync start for the same
+          document within the 30-day horizon, with no eventual-resolution, rebase, or editability guarantee added.'
+        differences: []
+      strengthening:
+        subject_signature: 6cc3152e25c7574a55fb22763e03d2a1d727383e9b0debc254983a915db53a1e
+        verdict: EQUIVALENT
+        reason: 'The formula matches the source on all parts: the reachable-state invariant blocks normal-editable mode and
+          any permitted transition creating or applying a new acceptance-eligible speculative edit whenever an exact identity
+          is both active in client_pending_edits and unresolved; the resync clause freezes all new speculative edits for the
+          resync document while the attempt is in progress, irrespective of eligibility; the post-publication clause restates
+          the same blocking for identities remaining unresolved and pending; and the completeness clause requires every identity
+          pending at resync start and within the 30-day horizon to have its client_change_id included in the catch-up request.
+          No guard, scope, identity coordinate, or exclusion is added or dropped, and no eventual-resolution or rebase guarantee
+          is asserted.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 6cc3152e25c7574a55fb22763e03d2a1d727383e9b0debc254983a915db53a1e
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal unresolved-pending block on both the editing-mode label and transition
+          availability per document, the resync-interval freeze on all new speculative local edits regardless of acceptance
+          eligibility, and the complete captured pending client_change_id set for pending identities for the resynchronized
+          document within the 30-day horizon, with full document/client_change_id identity coordinates and no added eventual-resolution,
+          rebase, or editability guarantee; its extra clauses are entailed clarifications of scope, not new or omitted requirements.
+        differences: []
