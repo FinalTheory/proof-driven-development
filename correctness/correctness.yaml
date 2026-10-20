@@ -564,9 +564,8 @@ refinement:
       blocked_by: []
       signature: 680607daad4419ec89847a16f767a4295da89e4a36f8fb0e3f1b41d1d04b8a33
     L155_unresolved_speculative_edit_has_pending_entry:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: d27e3d17bb80ad1dac8ca0a04b80781e9dba4eb8795f88f72f993aacd1dd7cbb
     G12_client_pending_state_tracks_unresolved_edits:
       status: stable
       blocked_by: []
@@ -743,9 +742,8 @@ refinement:
       blocked_by: []
       signature: 7ae7d43bc4b0edda7ee81c9ba4fc5c5175b95e54d933cc87c38a3ea24abbf2c9
     L203_non_acceptance_terminal_disposition_preserves_edit_provenance:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: da23c9d5fec23fc808c9b6f2c41c8a431f1d63483ff82decfba405a5f1f8a670
     L204_state_dependent_rejection_uses_authoritative_context:
       status: stable
       blocked_by: []
@@ -755,9 +753,8 @@ refinement:
       blocked_by: []
       signature: 3afd4b775874e0f0fcc0c5261712cd91d783b80bdc7ba0cab2d715c03c85c0d7
     L206_terminal_speculative_lifecycle_is_absorbing:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: c9fc52b45f1464dfb860842553c2247d3b7bfc16a59bf601322a491bf334e84a
     L207_visible_canonical_frontier_never_regresses_per_session_document:
       status: stable
       blocked_by: []
@@ -3385,7 +3382,7 @@ claims:
       until authoritative reconciliation or an explicit expiry, conflict/manual resolution, or abandonment
       ends that logical edit's normal speculative lifecycle. A transition that merely deletes or omits
       pending bookkeeping while retaining the unresolved speculative edit does not constitute reconciliation
-      or terminal disposition."
+      or terminal disposition. Mere bookkeeping deletion or relabeling cannot resolve the edit."
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
@@ -4579,7 +4576,8 @@ claims:
       terminates logical_client_edit X with full identity (document_id=D, client_change_id=k), that disposition
       was produced for X and preserves the same full identity through routing/bookkeeping to every pending,
       retained-overlay, and visible-overlay retirement sink. A disposition produced for another logical
-      edit cannot retire X merely by carrying or being rebound to X's identity."
+      edit cannot retire X merely by carrying or being rebound to X's identity. Every non-acceptance terminal
+      disposition that removes or terminally retires a normal speculative lifecycle is an explicit disposition."
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
@@ -4673,7 +4671,9 @@ claims:
       no subsequent restore, tab/view switch, reactivation, ACK/retry bookkeeping, reconnect/resync publication,
       or other transition can reintroduce that same lifecycle into client_pending_edits, client_speculative_overlays,
       or client_visible_speculative_overlays. Archival/non-reactivatable representation may remain outside
-      those normal speculative-state sets."
+      those normal speculative-state sets. Once (D,k)'s normal speculative lifecycle has been terminalized,
+      every later user operation for D is a genuinely new logical edit that receives a new client change
+      id, not a continuation, retry, restore, or reactivation of (D,k)."
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
