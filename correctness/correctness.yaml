@@ -392,9 +392,8 @@ refinement:
       blocked_by: []
       signature: 92ce2cd3bbd4090798be6a9cd89b3b10bff1b56d1c808095cefec293902bdf06
     L99_ot_result_is_bound_to_acceptance_frontier:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: b234a6279976891faea93756e8dc54b9d0856eb350bfff22fab008a4de06e902
     L101_client_completes_catchup_through_response_head:
       status: stable
       blocked_by: []
@@ -465,9 +464,8 @@ refinement:
       blocked_by: []
       signature: 5db30c921aae5b2b1f2a841e8570b721f8b134fe551da3d4af33066139dcef5d
     L123_acceptance_payload_and_identity_share_submitted_request:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 0ec618d9da049514e9ebd46b145d6276e797e26a1199133424e88f6f91e20a87
     C37_pending_identity_resolution_is_bound_to_response_head:
       status: stable
       blocked_by: []
@@ -2135,11 +2133,16 @@ claims:
             identity/base and the selected committed canonical context.
     kind: leaf
   L99_ot_result_is_bound_to_acceptance_frontier:
-    statement: If an OT success result is computed against the canonical committed prefix through
-      revision N, that result may commit as canonical_accepted_change at revision r only while the
-      authoritative acceptance pre-state still has latest_revision = N and r = N + 1; if that
-      frontier has advanced, the stale result cannot commit without a fresh OT transformation
-      against the new canonical prefix.
+    statement: "If an OT success result is computed against the canonical committed prefix through revision
+      N, that result may commit as canonical_accepted_change at revision r only while the authoritative
+      acceptance pre-state still has latest_revision = N and r = N + 1; if that frontier has advanced,
+      the stale result cannot commit without a fresh OT transformation against the new canonical prefix.
+      The acceptance this binds is the one whose payload the OT invocation produced: an acceptance with
+      a canonical acceptance payload record is a committed canonical acceptance; the successful result
+      an OT invocation returns is an actual OT success result, and when that invocation's output is committed
+      as an acceptance, the returned result is that acceptance's exact OT success result; and such an
+      acceptance's OT context is the canonical committed prefix immediately preceding the acceptance,
+      which is the prefix against which its exact result was computed."
     source_refs:
       - ot_input_output
       - accepted_change_log
@@ -2706,7 +2709,13 @@ claims:
       raw_edit and base_revision, and the authoritative document_id and client_change_id persisted
       for that same acceptance are exactly R's submitted identity. No acceptance path may combine
       OT-result payload provenance from one submitted request with document or idempotency identity
-      provenance from another request.
+      provenance from another request. No canonical_accepted_change is created without a successful
+      ot_success_result, and no canonical acceptance is created from an OT reject or rebase-required
+      outcome. Where the successful OT invocation whose output is committed as an acceptance
+      satisfies the OT engine algorithmic convergence contract for that input and prefix, the
+      acceptance itself satisfies the algorithmic convergence contract. The submitted request from
+      which a canonical acceptance is produced is a submitted_request eligible for server-side OT or
+      an authoritative terminal decision.
     source_refs:
       - ot_input_output
       - accepted_change_log
