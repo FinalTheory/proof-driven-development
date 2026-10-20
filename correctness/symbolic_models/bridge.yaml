@@ -3928,7 +3928,6 @@ functions:
     meaning: 'Authoritative state after is the immediate successor of authoritative state before under one committed authoritative protocol transition: the transition''s full authoritative effect separates the two states and no intermediate authoritative state exists between them. Aborted, rolled-back, or never-committed work creates no step and no successor authoritative state; this relation is the single-transition edge relation of the authoritative state graph over which reachability and preservation are stated.'
     semantic_anchors:
     - claim:C7_revision_frontier_is_linear
-    - claim:L4_append_requires_previous_frontier
     - claim:L6_frontier_advance_and_insert_commit_together
     - claim:L29_non_append_lifecycle_preserves_revision_domain
     - claim:L33_committed_append_preserves_existing_revision_prefix
@@ -3960,7 +3959,6 @@ functions:
     meaning: 'The authoritative step from before to after is a committed canonical accepted-change append for document d whose one new canonical accepted change is at revision r: the step''s transition commits exactly that one canonical accepted change for d and no other accepted-history change for d.'
     semantic_anchors:
     - claim:C7_revision_frontier_is_linear
-    - claim:L4_append_requires_previous_frontier
     - claim:L6_frontier_advance_and_insert_commit_together
     - claim:L33_committed_append_preserves_existing_revision_prefix
     - claim:L137_authoritative_history_mutators_are_exhaustively_classified
@@ -4015,7 +4013,6 @@ functions:
     meaning: 'The authoritative step from before to after is a committed append step for document d at revision r whose pre-state frontier is exactly the immediate predecessor of r: document d''s document_latest_revision in before is the revision position immediately before r in the canonical revision numbering, so the append''s new change occupies the next position after the pre-state frontier.'
     semantic_anchors:
     - claim:C7_revision_frontier_is_linear
-    - claim:L4_append_requires_previous_frontier
     - claim:L137_authoritative_history_mutators_are_exhaustively_classified
   state_step_preserves_logical_accepted_prefix:
     args:
@@ -11769,103 +11766,25 @@ claims:
     capability: relational
     contracts: []
     formula:
-      and:
-      - forall:
-          vars:
-            a: CanonicalAcceptance
-            r: Revision
-          body:
-            implies:
-            - call:
-                fn: candidate_change_commits_as_acceptance
-                args:
-                - var: a
-                - var: r
-            - call:
-                fn: revision_is_immediate_predecessor
-                args:
-                - call:
-                    fn: candidate_commit_prestate_latest_revision
-                    args:
-                    - var: a
-                - var: r
-      - forall:
-          vars:
-            before: AuthoritativeState
-            after: AuthoritativeState
-            d: Document
-            r: Revision
-          body:
-            implies:
-            - and:
+      forall:
+        vars:
+          a: CanonicalAcceptance
+          r: Revision
+        body:
+          implies:
+          - call:
+              fn: candidate_change_commits_as_acceptance
+              args:
+              - var: a
+              - var: r
+          - call:
+              fn: revision_is_immediate_predecessor
+              args:
               - call:
-                  fn: authoritative_state_step
+                  fn: candidate_commit_prestate_latest_revision
                   args:
-                  - var: before
-                  - var: after
-              - call:
-                  fn: state_step_commits_append_at_revision
-                  args:
-                  - var: before
-                  - var: after
-                  - var: d
-                  - var: r
-            - exists:
-                vars:
-                  acc: CanonicalAcceptance
-                body:
-                  and:
-                  - call:
-                      fn: state_step_commits_acceptance
-                      args:
-                      - var: before
-                      - var: after
-                      - var: acc
-                  - call:
-                      fn: candidate_change_commits_as_acceptance
-                      args:
-                      - var: acc
-                      - var: r
-      - forall:
-          vars:
-            before: AuthoritativeState
-            after: AuthoritativeState
-            d: Document
-            r: Revision
-            acc: CanonicalAcceptance
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: authoritative_state_step
-                  args:
-                  - var: before
-                  - var: after
-              - call:
-                  fn: state_step_commits_append_at_revision
-                  args:
-                  - var: before
-                  - var: after
-                  - var: d
-                  - var: r
-              - call:
-                  fn: state_step_commits_acceptance
-                  args:
-                  - var: before
-                  - var: after
-                  - var: acc
-              - call:
-                  fn: candidate_change_commits_as_acceptance
-                  args:
-                  - var: acc
-                  - var: r
-            - call:
-                fn: state_step_append_follows_previous_frontier
-                args:
-                - var: before
-                - var: after
-                - var: d
-                - var: r
+                  - var: a
+              - var: r
   L6_frontier_advance_and_insert_commit_together:
     capability: relational
     contracts: []
@@ -12171,6 +12090,34 @@ claims:
                   - var: before
                   - var: after
                   - var: d
+      - forall:
+          vars:
+            before: AuthoritativeState
+            after: AuthoritativeState
+            d: Document
+            r: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: authoritative_state_step
+                  args:
+                  - var: before
+                  - var: after
+              - call:
+                  fn: state_step_commits_append_at_revision
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+                  - var: r
+            - call:
+                fn: state_step_append_follows_previous_frontier
+                args:
+                - var: before
+                - var: after
+                - var: d
+                - var: r
       - forall:
           vars:
             before: AuthoritativeState
