@@ -697,8 +697,7 @@ functions:
     dimensions:
     - document
     - observation
-    meaning: For recovery attempt r targeting document d, the authoritative ownership generation/current-epoch context actually used for r, the recovery_head actually captured for r, the authoritative checkpoint actually selected for r, every accepted_change_log entry actually replayed by r, and the recovered_owner_runtime_state actually installed by r preserve d as the same document identity. The same document binding continues when those authoritative objects are consumed during metadata reconstruction, runtime installation, or service resumption; an extensionally equal authoritative object from another document cannot substitute for d in any of those canonical roles. Candidate heads, checkpoints, or log entries merely examined but not captured, selected, or replayed do not acquire an independent provenance obligation from this relation. This relation imposes no progress or existence requirement on later recovery stages and adds no separate provenance obligation for intermediate derived
-      reconstruction states before installation.
+    meaning: For recovery attempt r targeting document d, the authoritative ownership generation/current-epoch context actually used for r, the recovery_head actually captured for r, the authoritative checkpoint actually selected for r, every accepted_change_log entry actually replayed by r, and the recovered_owner_runtime_state actually installed by r preserve d as the same document identity. The same document binding continues when those authoritative objects are consumed during metadata reconstruction, runtime installation, or service resumption; an extensionally equal authoritative object from another document cannot substitute for d in any of those canonical roles. Candidate heads, checkpoints, or log entries merely examined but not captured, selected, or replayed do not acquire an independent provenance obligation from this relation. This relation imposes no progress or existence requirement on later recovery stages and adds no separate provenance obligation for intermediate derived reconstruction states before installation.
     semantic_anchors:
     - contract:recovery_document_scope_binding
     - source:snapshot_frontier
@@ -2385,8 +2384,7 @@ functions:
     - accepted_change_log
     - recovery_head
     - ot_owner_memory
-    meaning: 'For recovery attempt r, target document d, and its bound recovery_head h, every component of the installed ot_owner_memory is derived exclusively from d''s selected authoritative snapshot_content_with_snapshot_revision P=(content,S) and d''s exact canonical accepted_change_log tail (S,h]. The selected checkpoint, canonical tail entries, recovery_head, and resulting installed ot_owner_memory all preserve the same document identity d. Provenance concerns the actual document-scoped authoritative sources, not merely equality of their values: another document''s extensionally equal checkpoint or history cannot substitute for d''s. Holding these authoritative inputs and h fixed, changing or removing failed-owner memory, new-owner caches, process-local recovery data, or other non-authoritative runtime sources cannot change the complete installed OT state; no installed component may originate from those sources even when its value happens to match the authoritative result. Intermediate
-      computations derived solely from the permitted authoritative inputs are allowed. This relation imposes no requirement that recovery complete, no correctness property of the OT transformation algorithm, and no independent full-history reconstruction equality.'
+    meaning: 'For recovery attempt r, target document d, and its bound recovery_head h, every component of the installed ot_owner_memory is derived exclusively from d''s selected authoritative snapshot_content_with_snapshot_revision P=(content,S) and d''s exact canonical accepted_change_log tail (S,h]. The selected checkpoint, canonical tail entries, recovery_head, and resulting installed ot_owner_memory all preserve the same document identity d. Provenance concerns the actual document-scoped authoritative sources, not merely equality of their values: another document''s extensionally equal checkpoint or history cannot substitute for d''s. Holding these authoritative inputs and h fixed, changing or removing failed-owner memory, new-owner caches, process-local recovery data, or other non-authoritative runtime sources cannot change the complete installed OT state; no installed component may originate from those sources even when its value happens to match the authoritative result. Intermediate computations derived solely from the permitted authoritative inputs are allowed. This relation imposes no requirement that recovery complete, no correctness property of the OT transformation algorithm, and no independent full-history reconstruction equality.'
     semantic_anchors:
     - contract:recovered_ot_state_provenance
     - claim:C25_recovery_derives_complete_ot_metadata_from_truth
@@ -2489,8 +2487,7 @@ functions:
     - accepted_change_log
     - snapshot_content_with_snapshot_revision
     - client_resync_candidate
-    meaning: 'For catch-up response r targeting its requested document D at its already-captured response head H, every canonical payload source actually selected or consumed for that response preserves its semantic authoritative binding to D throughout response construction, private candidate construction, and any publication. In delta mode, every returned canonical accepted change originates from accepted_change_log for D. In snapshot mode, the selected checkpoint is D''s authoritative snapshot_content_with_snapshot_revision and every canonical tail change originates from accepted_change_log for D. Every resulting client_resync_candidate remains bound to the same target D throughout construction and any publication. Substituting another document''s authoritative source fails this relation even if revision, payload, frontier, and replay-result values are identical or its fields are relabeled as D. Sharing content-addressed or deduplicated immutable bytes satisfies this relation when the
-      semantic authoritative reference remains D''s. The relation constrains only stages and sources actually reached or used; it does not require completion, candidate creation, or publication. No selected or consumed canonical payload source may contribute authoritative state beyond H: no selected delta or snapshot-tail acceptance may have canonical revision greater than H, no selected snapshot may have snapshot_revision greater than H, and no returned response, client_resync_candidate, or publication for r may semantically include a canonical acceptance beyond H. This is only an upper temporal boundary; it does not require any particular acceptance at or below H, exact or contiguous range coverage, replay correctness, head-capture correctness, publication atomicity, completion, publication, or progress.'
+    meaning: 'For catch-up response r targeting its requested document D at its already-captured response head H, every canonical payload source actually selected or consumed for that response preserves its semantic authoritative binding to D throughout response construction, private candidate construction, and any publication. In delta mode, every returned canonical accepted change originates from accepted_change_log for D. In snapshot mode, the selected checkpoint is D''s authoritative snapshot_content_with_snapshot_revision and every canonical tail change originates from accepted_change_log for D. Every resulting client_resync_candidate remains bound to the same target D throughout construction and any publication. Substituting another document''s authoritative source fails this relation even if revision, payload, frontier, and replay-result values are identical or its fields are relabeled as D. Sharing content-addressed or deduplicated immutable bytes satisfies this relation when the semantic authoritative reference remains D''s. The relation constrains only stages and sources actually reached or used; it does not require completion, candidate creation, or publication. No selected or consumed canonical payload source may contribute authoritative state beyond H: no selected delta or snapshot-tail acceptance may have canonical revision greater than H, no selected snapshot may have snapshot_revision greater than H, and no returned response, client_resync_candidate, or publication for r may semantically include a canonical acceptance beyond H. This is only an upper temporal boundary; it does not require any particular acceptance at or below H, exact or contiguous range coverage, replay correctness, head-capture correctness, publication atomicity, completion, publication, or progress.'
     semantic_anchors:
     - contract:catchup_canonical_source_provenance
     - claim:C10_catchup_represents_exact_missing_suffix
@@ -2518,8 +2515,7 @@ functions:
     - accepted_change_log
     - snapshot_content_with_snapshot_revision
     - authoritative_history_lifecycle_output
-    meaning: 'For lifecycle execution t targeting document d, every authoritative accepted-history or checkpoint input that actually semantically supplies the transformation remains bound to d throughout its participation, and every durable authoritative_history_lifecycle_output actually installed or published by t remains bound to d. These are document-scoped semantic ownership/reference bindings: relabeling an authoritative history or checkpoint belonging to another document does not satisfy the relation, even when revision, payload, frontier, and replay-result values coincide. Physical content-addressed blobs, immutable pages, or other bytes may be shared when the authoritative references remain bound to d. Merely inspecting and rejecting an unrelated candidate does not make that candidate a semantic input. The relation requires no input or output stage to occur and imposes no completion, replay-equivalence, frontier, recovery-correctness, physical-retention, or physical-object-identity
-      requirement.'
+    meaning: 'For lifecycle execution t targeting document d, every authoritative accepted-history or checkpoint input that actually semantically supplies the transformation remains bound to d throughout its participation, and every durable authoritative_history_lifecycle_output actually installed or published by t remains bound to d. These are document-scoped semantic ownership/reference bindings: relabeling an authoritative history or checkpoint belonging to another document does not satisfy the relation, even when revision, payload, frontier, and replay-result values coincide. Physical content-addressed blobs, immutable pages, or other bytes may be shared when the authoritative references remain bound to d. Merely inspecting and rejecting an unrelated candidate does not make that candidate a semantic input. The relation requires no input or output stage to occur and imposes no completion, replay-equivalence, frontier, recovery-correctness, physical-retention, or physical-object-identity requirement.'
     semantic_anchors:
     - contract:authoritative_history_lifecycle_provenance
     - claim:L178_non_append_lifecycle_preserves_authoritative_document_provenance
@@ -2615,8 +2611,7 @@ functions:
     - accepted_idempotency_evidence
     - canonical_accepted_change
     - accepted_change_log
-    meaning: 'accepted_evidence_origin_valid(e,a) holds exactly when the fact that e is authoritative accepted-idempotency evidence is established from canonical acceptance a by at least one contract-permitted provenance mode: (1) e is the committed accepted row/unique identity a itself; or (2) e is a separate hot-path accepted-key evidence record/index whose durable commit/abort is atomic with a in the same acceptance transaction; or (3) e is lifecycle replacement/equivalent evidence whose accepted-status provenance chain is anchored exclusively in a and a was already committed before that replacement was created. No reservation, in-progress arbitration, pre-commit/aborted state, timeout, cancellation, or other never-committed attempt makes this predicate true merely by sharing the same key or later corresponding to a committed acceptance. Preparatory/provisional data may exist, but it cannot itself establish the accepted status; for the hot-path separate-record case the accepted status
-      is established by the atomic commit with a. This predicate does not assert existence, uniqueness/cardinality, retry eligibility, liveness, delivery/order, physical row retention, or payload/revision/frontier properties.'
+    meaning: 'accepted_evidence_origin_valid(e,a) holds exactly when the fact that e is authoritative accepted-idempotency evidence is established from canonical acceptance a by at least one contract-permitted provenance mode: (1) e is the committed accepted row/unique identity a itself; or (2) e is a separate hot-path accepted-key evidence record/index whose durable commit/abort is atomic with a in the same acceptance transaction; or (3) e is lifecycle replacement/equivalent evidence whose accepted-status provenance chain is anchored exclusively in a and a was already committed before that replacement was created. No reservation, in-progress arbitration, pre-commit/aborted state, timeout, cancellation, or other never-committed attempt makes this predicate true merely by sharing the same key or later corresponding to a committed acceptance. Preparatory/provisional data may exist, but it cannot itself establish the accepted status; for the hot-path separate-record case the accepted status is established by the atomic commit with a. This predicate does not assert existence, uniqueness/cardinality, retry eligibility, liveness, delivery/order, physical row retention, or payload/revision/frontier properties.'
     semantic_anchors:
     - contract:accepted_evidence_provenance
   success_ack_exposed:
@@ -2714,8 +2709,7 @@ functions:
     - client_change_id
     - raw_edit
     - base_revision
-    meaning: For the processing path that yields definitive rejection decision d from exact submitted request r and carries the rejection that becomes authoritative REJECTED terminal result t, every applicable validation, OT/rebase evaluation, asynchronous routing, per-key arbitration, and terminal-commit boundary preserves r as the producer binding. Revalidation, recomputation, or repackaging is permitted only when the rejection that can feed t remains produced from that same exact request r; substituting another request instance or logical edit and later repairing the endpoint does not satisfy this relation, even when the substitute is extensionally equal. The preserved binding carries r's exact document_id/client_change_id and, when the definitive reason depends on them, r's raw_edit/base_revision semantics. This predicate requires no listed stage to exist when inapplicable and asserts no single-valued terminal arbitration, replay of an already-linearized result, current-owner-generation
-      authorization, liveness, retry, or delivery.
+    meaning: For the processing path that yields definitive rejection decision d from exact submitted request r and carries the rejection that becomes authoritative REJECTED terminal result t, every applicable validation, OT/rebase evaluation, asynchronous routing, per-key arbitration, and terminal-commit boundary preserves r as the producer binding. Revalidation, recomputation, or repackaging is permitted only when the rejection that can feed t remains produced from that same exact request r; substituting another request instance or logical edit and later repairing the endpoint does not satisfy this relation, even when the substitute is extensionally equal. The preserved binding carries r's exact document_id/client_change_id and, when the definitive reason depends on them, r's raw_edit/base_revision semantics. This predicate requires no listed stage to exist when inapplicable and asserts no single-valued terminal arbitration, replay of an already-linearized result, current-owner-generation authorization, liveness, retry, or delivery.
     semantic_anchors:
     - contract:definitive_rejection_request_binding
   later_user_operations_after_terminalized_lifecycle_are_fresh:
@@ -2741,8 +2735,7 @@ functions:
     - client_change_id
     - raw_edit
     - base_revision
-    meaning: 'For submitted request r whose semantic source is logical edit e, every request-lineage representation actually reached through request construction, serialization, dispatch, and normal retry preserves e as the semantic source of the complete submitted tuple. If e was created with identity (document_id=D, client_change_id=k) against canonical authoring state D@F with logical operation X, every reached representation remains bound to that same e and carries document_id=D, client_change_id=k, base_revision=F, and a server-visible raw_edit whose semantics are X against the captured D@F authoring state. Physical encoding may change when the semantic operation and source binding are preserved. A temporary substitution or cross-binding from another logical edit or operation fails this predicate even if a later stage restores the original endpoint tuple. The predicate constrains only stages actually reached: it requires no dispatch, retry, OT invocation, acceptance, authoritative terminal-decision
-      completion, or other progress; it requires no client-side rebase behavior, no byte-identical serialization, and no uniqueness of client_change_id across distinct logical edits.'
+    meaning: 'For submitted request r whose semantic source is logical edit e, every request-lineage representation actually reached through request construction, serialization, dispatch, and normal retry preserves e as the semantic source of the complete submitted tuple. If e was created with identity (document_id=D, client_change_id=k) against canonical authoring state D@F with logical operation X, every reached representation remains bound to that same e and carries document_id=D, client_change_id=k, base_revision=F, and a server-visible raw_edit whose semantics are X against the captured D@F authoring state. Physical encoding may change when the semantic operation and source binding are preserved. A temporary substitution or cross-binding from another logical edit or operation fails this predicate even if a later stage restores the original endpoint tuple. The predicate constrains only stages actually reached: it requires no dispatch, retry, OT invocation, acceptance, authoritative terminal-decision completion, or other progress; it requires no client-side rebase behavior, no byte-identical serialization, and no uniqueness of client_change_id across distinct logical edits.'
     semantic_anchors:
     - contract:logical_edit_request_payload_binding
   claim_accepted_terminal_result_producer_matches:
@@ -3942,6 +3935,15 @@ functions:
     - claim:L139_non_append_lifecycle_preserves_gap_free_state_shape
     - claim:L28_authoritative_epoch_never_regresses_or_reuses
     - claim:C8_stale_owner_is_fenced
+  covered_authoritative_state_step:
+    args:
+    - AuthoritativeState
+    - AuthoritativeState
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Authoritative state after is the immediate successor of authoritative state before under one committed authoritative protocol transition that belongs to the covered transition classes: for every document whose accepted_change_log or document_latest_revision coordinates the transition creates or changes, the transition is that document''s document-state initialization producing after, or a committed canonical accepted-change append for that document, or an authoritative non-append representation/lifecycle transition for that document that accepts no new edit. A transition that creates or changes no document''s coordinates is a covered step vacuously. Only genuine authoritative_state_step transitions are covered steps, and a transition that creates or changes some document''s coordinates without belonging to one of these classes for that document is not a covered step.'
+    semantic_anchors:
+    - claim:L137_authoritative_history_mutators_are_exhaustively_classified
   document_initialization_state:
     args:
     - AuthoritativeState
@@ -4264,6 +4266,7 @@ functions:
     semantic_anchors:
     - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
     - claim:L205_visible_speculative_effect_is_unique_per_identity
+    - claim:L179_speculative_overlay_identity_provenance_is_preserved
   speculative_overlay_client_change_id:
     args:
     - Overlay
@@ -4273,6 +4276,7 @@ functions:
     meaning: The client_change_id coordinate of the full logical identity (document_id, client_change_id) of the logical edit that speculative overlay representation o represents.
     semantic_anchors:
     - claim:L205_visible_speculative_effect_is_unique_per_identity
+    - claim:L179_speculative_overlay_identity_provenance_is_preserved
   recovery_attempt_reaches_checkpoint_selection:
     args:
     - RecoveryAttempt
@@ -5268,8 +5272,7 @@ functions:
     dimensions:
     - document
     - observation
-    meaning: 'For recovery attempt r targeting document d, the document-scope binding holds across the full scope of r''s recovery lifecycle: every authoritative owner/epoch context of r, and -- whenever selected, captured, consumed, constructed, installed, or used -- the recovery_head, the checkpoint, the canonical accepted_change_log tail entries (bound under each of those modes, not only when replayed), the rebuilt logical/OT runtime state (including intermediate derived reconstruction states, bound from construction onward and not only once installed), the installed recovered_owner_runtime_state, and the resumed owner context (bound as itself a document-scoped entity whenever service resumes under it) remain document-scoped to that same d. This obligation applies to every recovery input, context, or state of r that actually exists at any stage of the attempt, even if the attempt later stalls, crashes, or aborts before or after recovery_head capture; an authoritative object or owner context
-      from another document cannot satisfy the recovery merely because its frontier, payload, logical state, or reconstructed metadata is extensionally equal to d''s. It imposes no requirement that any later recovery stage occur or that recovery complete.'
+    meaning: 'For recovery attempt r targeting document d, the document-scope binding holds across the full scope of r''s recovery lifecycle: every authoritative owner/epoch context of r, and -- whenever selected, captured, consumed, constructed, installed, or used -- the recovery_head, the checkpoint, the canonical accepted_change_log tail entries (bound under each of those modes, not only when replayed), the rebuilt logical/OT runtime state (including intermediate derived reconstruction states, bound from construction onward and not only once installed), the installed recovered_owner_runtime_state, and the resumed owner context (bound as itself a document-scoped entity whenever service resumes under it) remain document-scoped to that same d. This obligation applies to every recovery input, context, or state of r that actually exists at any stage of the attempt, even if the attempt later stalls, crashes, or aborts before or after recovery_head capture; an authoritative object or owner context from another document cannot satisfy the recovery merely because its frontier, payload, logical state, or reconstructed metadata is extensionally equal to d''s. It imposes no requirement that any later recovery stage occur or that recovery complete.'
     semantic_anchors:
     - claim:L174_recovery_inputs_and_state_are_document_bound
     - claim:C9_recovery_reconstructs_committed_state
@@ -5537,6 +5540,8 @@ functions:
     semantic_anchors:
     - contract:visible_speculative_overlay_document_binding
     - claim:L132_visible_overlay_document_binding_established_on_publication
+    - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
+    - claim:L179_speculative_overlay_identity_provenance_is_preserved
   speculative_overlay_represents_logical_edit:
     args:
     - ClientState
@@ -5588,8 +5593,7 @@ functions:
     - client_change_id
     - raw_edit
     - base_revision
-    meaning: 'Submitted request r''s complete submitted tuple is bound to logical edit e at the submitted-request endpoint: r''s document_id, client_change_id, and base_revision are e''s identity (document_id = D, client_change_id = k) and authoring frontier F from e''s canonical authoring state D@F, and the logical operation encoded by r''s submitted raw_edit is e''s own operation against that same captured D@F authoring state. Equivalently, the request construction, serialization, dispatch, and normal retry that produced the submitted request r did not preserve e''s (D, k, F) while substituting a semantically different logical operation into r''s submitted raw_edit. This predicate speaks only about the submitted request r itself, as submitted: it asserts nothing about any intermediate request-lineage representation, imposes no condition on a stage that does not survive into the submitted request, and is not falsified by a transient substitution that was undone before submission. It does
-      not by itself assert that r represents no other logical edit, and it requires no dispatch, retry, OT invocation, acceptance, or terminal-decision progress beyond r being the submitted request.'
+    meaning: 'Submitted request r''s complete submitted tuple is bound to logical edit e at the submitted-request endpoint: r''s document_id, client_change_id, and base_revision are e''s identity (document_id = D, client_change_id = k) and authoring frontier F from e''s canonical authoring state D@F, and the logical operation encoded by r''s submitted raw_edit is e''s own operation against that same captured D@F authoring state. Equivalently, the request construction, serialization, dispatch, and normal retry that produced the submitted request r did not preserve e''s (D, k, F) while substituting a semantically different logical operation into r''s submitted raw_edit. This predicate speaks only about the submitted request r itself, as submitted: it asserts nothing about any intermediate request-lineage representation, imposes no condition on a stage that does not survive into the submitted request, and is not falsified by a transient substitution that was undone before submission. It does not by itself assert that r represents no other logical edit, and it requires no dispatch, retry, OT invocation, acceptance, or terminal-decision progress beyond r being the submitted request.'
     semantic_anchors:
     - claim:L182_logical_edit_request_payload_binding_is_preserved
   ot_success_computed_against_frontier:
@@ -5760,8 +5764,7 @@ functions:
     - client_change_id
     - raw_edit
     - base_revision
-    meaning: 'For submitted request r whose semantic source is logical edit e: no step of the request construction, serialization, dispatch, or normal retry that produced r preserves e''s identity and authoring frontier (document_id = D, client_change_id = k, base_revision = F, from e''s canonical authoring state D@F) while substituting a semantically different logical operation for e''s own operation into the raw_edit being carried. Those processes may change the request''s physical representation only in semantics-preserving ways. A substitution of a different logical operation under e''s (D, k, F) falsifies this predicate even if a later step of those processes restores e''s operation before submission. This predicate constrains the behavior of the four named processes themselves: it asserts nothing about any intermediate representation as an object -- in particular it does not assert that any intermediate representation is a submitted request, remains bound to e''s complete tuple, or
-      carries (D, k, F) at all -- and it requires no byte-identical serialization and no dispatch, retry, OT invocation, acceptance, or terminal-decision progress beyond the processes that produced r. It does not by itself assert that r represents no other logical edit.'
+    meaning: 'For submitted request r whose semantic source is logical edit e: no step of the request construction, serialization, dispatch, or normal retry that produced r preserves e''s identity and authoring frontier (document_id = D, client_change_id = k, base_revision = F, from e''s canonical authoring state D@F) while substituting a semantically different logical operation for e''s own operation into the raw_edit being carried. Those processes may change the request''s physical representation only in semantics-preserving ways. A substitution of a different logical operation under e''s (D, k, F) falsifies this predicate even if a later step of those processes restores e''s operation before submission. This predicate constrains the behavior of the four named processes themselves: it asserts nothing about any intermediate representation as an object -- in particular it does not assert that any intermediate representation is a submitted request, remains bound to e''s complete tuple, or carries (D, k, F) at all -- and it requires no byte-identical serialization and no dispatch, retry, OT invocation, acceptance, or terminal-decision progress beyond the processes that produced r. It does not by itself assert that r represents no other logical edit.'
     semantic_anchors:
     - claim:L182_logical_edit_request_payload_binding_is_preserved
   acceptance_linearization_prestate_latest_revision:
@@ -5873,6 +5876,24 @@ functions:
     meaning: 'A private client_resync_candidate has actually been constructed for catch-up response r: the candidate-construction stage for r was reached and produced a candidate object for r. This predicate records that construction-stage fact only; it asserts nothing about which document the constructed candidate is bound to, nothing about the candidate''s contents or provenance, and nothing about publication.'
     semantic_anchors:
     - claim:L177_catchup_canonical_sources_preserve_document_provenance
+  later_reachable_via_binding_preserving_same_document_chain:
+    args:
+    - ClientState
+    - ClientState
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'User-visible client state l is reachable from user-visible client state e through a chain of subsequent user-visible transitions throughout which the document represented by e remains the visible document, and the same-document property is preserved along that chain: at every state on the chain, every speculative overlay exposed at that state has that document as its document_id.'
+    semantic_anchors:
+    - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
+  speculative_overlay_carried_client_change_id:
+    args:
+    - Overlay
+    returns: ClientChangeId
+    catalog_symbols:
+    - client_change_id
+    meaning: 'The client_change_id recorded on speculative overlay representation o itself: the client change identity the overlay carries as a retained or exposed speculative overlay.'
+    semantic_anchors:
+    - claim:L179_speculative_overlay_identity_provenance_is_preserved
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -12270,11 +12291,107 @@ claims:
                       - var: s0
                       - var: s
                     - transitive_closure:
-                        fn: authoritative_state_step
+                        fn: covered_authoritative_state_step
                         from:
                           var: s0
                         to:
                           var: s
+      - forall:
+          vars:
+            before: AuthoritativeState
+            after: AuthoritativeState
+            d: Document
+            r: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: authoritative_state_step
+                  args:
+                  - var: before
+                  - var: after
+              - call:
+                  fn: state_step_commits_append_at_revision
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+                  - var: r
+            - and:
+              - call:
+                  fn: state_step_extends_history_by_exactly_one_at_revision
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+                  - var: r
+              - call:
+                  fn: state_step_advances_frontier_to_appended_revision
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+                  - var: r
+      - forall:
+          vars:
+            before: AuthoritativeState
+            after: AuthoritativeState
+          body:
+            implies:
+            - call:
+                fn: covered_authoritative_state_step
+                args:
+                - var: before
+                - var: after
+            - call:
+                fn: authoritative_state_step
+                args:
+                - var: before
+                - var: after
+      - forall:
+          vars:
+            s: AuthoritativeState
+            d: Document
+          body:
+            implies:
+            - call:
+                fn: document_initialization_state
+                args:
+                - var: s
+                - var: d
+            - and:
+              - call:
+                  fn: canonical_history_gap_free_for_document
+                  args:
+                  - var: s
+                  - var: d
+              - call:
+                  fn: accepted_history_ends_exactly_at_frontier
+                  args:
+                  - var: s
+                  - var: d
+      - forall:
+          vars:
+            s: AuthoritativeState
+            d: Document
+          body:
+            implies:
+            - call:
+                fn: document_has_authoritative_state
+                args:
+                - var: s
+                - var: d
+            - and:
+              - call:
+                  fn: canonical_history_gap_free_for_document
+                  args:
+                  - var: s
+                  - var: d
+              - call:
+                  fn: accepted_history_ends_exactly_at_frontier
+                  args:
+                  - var: s
+                  - var: d
   C7_revision_frontier_is_linear:
     capability: relational
     contracts:
@@ -13597,7 +13714,7 @@ claims:
                         - var: o
                     - eq:
                       - call:
-                          fn: speculative_overlay_document_id
+                          fn: speculative_overlay_carried_document_id
                           args:
                           - var: o
                       - call:
@@ -13616,7 +13733,7 @@ claims:
                       - var: o
                   - eq:
                     - call:
-                        fn: speculative_overlay_document_id
+                        fn: speculative_overlay_carried_document_id
                         args:
                         - var: o
                     - call:
@@ -13631,7 +13748,7 @@ claims:
             implies:
             - and:
               - call:
-                  fn: same_session_later_visible_continuous_same_document
+                  fn: later_reachable_via_binding_preserving_same_document_chain
                   args:
                   - var: e
                   - var: l
@@ -13669,7 +13786,11 @@ claims:
                         args:
                         - var: e
                     - call:
-                        fn: same_session_later_visible_continuous_same_document
+                        fn: visible_overlay_document_binding_holds
+                        args:
+                        - var: e
+                    - call:
+                        fn: later_reachable_via_binding_preserving_same_document_chain
                         args:
                         - var: e
                         - var: s
@@ -13744,11 +13865,35 @@ claims:
                 args:
                 - var: s
                 - var: o
-          - call:
-              fn: speculative_identity_provenance_ok
-              args:
-              - var: s
-              - var: o
+          - and:
+            - call:
+                fn: speculative_overlay_represents_full_identity_edit
+                args:
+                - var: s
+                - var: o
+            - call:
+                fn: speculative_identity_provenance_ok
+                args:
+                - var: s
+                - var: o
+            - eq:
+              - call:
+                  fn: speculative_overlay_carried_document_id
+                  args:
+                  - var: o
+              - call:
+                  fn: speculative_overlay_document_id
+                  args:
+                  - var: o
+            - eq:
+              - call:
+                  fn: speculative_overlay_carried_client_change_id
+                  args:
+                  - var: o
+              - call:
+                  fn: speculative_overlay_client_change_id
+                  args:
+                  - var: o
   L202_speculative_overlay_operation_provenance_is_preserved:
     capability: relational
     contracts:
