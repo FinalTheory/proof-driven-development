@@ -497,9 +497,8 @@ refinement:
       blocked_by: []
       signature: 4120c94bbbe8edd3755e6fc28c3853961d59d624be5f8be40aa894f67337e15a
     L130_reconnect_start_is_bound_to_visible_client_tuple:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 4a8a327f6139a9e1cd7becaabe948e22a33a79192d4f20389da307a5a8e21f6f
     L131_post_recovery_acceptance_state_is_exhaustive:
       status: stable
       blocked_by: []
@@ -2929,11 +2928,13 @@ claims:
   L130_reconnect_start_is_bound_to_visible_client_tuple:
     statement: 'For every normal foreground reconnect/catch-up attempt for document D, attempt initiation
       is permitted only while the current user-visible tuple represents D, and the reconnect-start document
-      identity, canonical client document, and last_applied_revision L used to construct the attempt are
-      captured from that same visible tuple or one exact private copy of that tuple. Reconnect-start construction
-      may not independently reread, substitute, synthesize, or cross-bind any of those three coordinates
-      across a visible-state transition. Background or non-visible per-document synchronization is outside
-      this obligation.'
+      identity (that tuple''s client_document_id), canonical client document, and last_applied_revision
+      L used to construct the attempt are captured from that same visible tuple or one exact private copy
+      of that tuple. Initiation permission includes initiation enablement: an attempt may be initiated
+      only from a user-visible state at which reconnect initiation is enabled, so every state an attempt
+      is initiated from is an initiation-enabled state. Reconnect-start construction may not independently
+      reread, substitute, synthesize, or cross-bind any of those three coordinates across a visible-state
+      transition. Background or non-visible per-document synchronization is outside this obligation.'
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
