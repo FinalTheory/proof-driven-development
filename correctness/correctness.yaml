@@ -6406,7 +6406,16 @@ assurance:
         individually load-bearing.
       signature: 7ce279b35a37158e613c3cc45a858c2d82073faa35c0fe31bcfc6613f9d8b743
     G11_visible_speculative_overlays_match_document:
-      status: unaudited
+      status: machine_checked
+      rationale: 'Trusted symbolic translations exist for G11 and all six direct premises L132, L133,
+        L176, L179, L202 and L205. L133 and L179 were re-certified under their fixB signatures after the
+        D16/D17 statement supplements: L133 replaced the shared continuous-relation atom with a leaf-local
+        binding-preserving chain atom and added the C3 binding witness; L179 gained coordinate-wise identity
+        clauses and a leaf-local carried client_change_id accessor. The live composition check (direct
+        SMT, require_trusted) finds the premises together with NOT(G11) UNSAT (ENTAILED). Independent
+        mutation tests that replace any single premise with True become SAT with a concrete counterexample,
+        demonstrating that all six premises are individually necessary.'
+      signature: 2014c7230d44c75051a50c3cc7c04797986408a642771bc29b9f2dd44059cfb4
     C39_authoritative_history_state_is_gap_free:
       status: unaudited
     G12_client_pending_state_tracks_unresolved_edits:
