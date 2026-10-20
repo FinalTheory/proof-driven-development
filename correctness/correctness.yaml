@@ -6380,7 +6380,13 @@ assurance:
     C37_pending_identity_resolution_is_bound_to_response_head:
       status: unaudited
     G10_user_visible_client_state_matches_document:
-      status: unaudited
+      status: machine_checked
+      rationale: Trusted symbolic translations exist for G10 and both direct premises C38 and L207;
+        C38's composition is machine_checked in the same batch (registered immediately before this
+        operation). The live composition check (direct SMT, require_trusted) finds the premises
+        together with NOT(G10) UNSAT (ENTAILED). The fixA design simulation's ablations show C38 and
+        L207 are each individually load-bearing for G10.
+      signature: 11aa404328de26790c849b80194f2715ce74846026475f363d7c1d630275d1ea
     C38_client_frontier_matches_canonical_base:
       status: machine_checked
       rationale: Trusted symbolic translations exist for C38 and both direct premises L128 and L129,
