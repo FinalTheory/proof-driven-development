@@ -659,9 +659,8 @@ refinement:
       blocked_by: []
       signature: 2aa288f58b1d322400b6c836849a7fadc8488a46f47be37ee614225f6cd536cd
     L177_catchup_canonical_sources_preserve_document_provenance:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 52fcf56ab9ee641112fa5bd7920ab2f92da2b07da9c33b6edbaa6928a6800231
     L178_non_append_lifecycle_preserves_authoritative_document_provenance:
       status: stable
       blocked_by: []
@@ -4012,7 +4011,12 @@ claims:
     statement: "catchup_canonical_source_provenance holds for every catch-up targeting D: delta rows come
       from accepted_change_log(D); snapshot mode selects D's authoritative checkpoint and reads the tail
       from accepted_change_log(D); the constructed client_resync_candidate stays bound to D. An extensionally
-      equal source object from D2 != D cannot satisfy the obligation."
+      equal source object from D2 != D cannot satisfy the obligation. For a catch-up targeting document
+      D at its already-captured response head H, every canonical payload source remains document-scoped
+      to D through candidate construction and publication. Canonical acceptances after the captured response
+      head H are outside that catch-up response. In snapshot mode, no speculative data appears anywhere
+      in the returned snapshot tail portion: every returned tail payload item is canonical accepted data,
+      not an unaccepted, uncommitted, or locally speculative change."
     source_refs:
       - snapshot_frontier
       - reconnect_revision_boundary
