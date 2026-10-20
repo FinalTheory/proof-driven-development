@@ -6279,7 +6279,17 @@ assurance:
     signature: bded98d52de6ba4f6a3390fbdd756a61baff5135de4a53a5a6f2ed563d4708d0
   composition:
     G0_acked_edit_survives_failover:
-      status: unaudited
+      status: machine_checked
+      rationale: "Trusted symbolic translations exist for G0 and all three direct premises (L143, L144,
+        L146) at their current signatures. The composition check (direct_smt) returns ENTAILED under require_trusted.
+        Load-bearing mutation tests (premise replaced by True) return COUNTEREXAMPLE for L143 and L144,
+        so the composition is not vacuous. L146 is not individually load-bearing in the current encoding:
+        with L146 replaced by True the composition remains ENTAILED, because the survival of the ack-justifying
+        acceptance through recovery is already carried by L143's completed-recovery replay match together
+        with L144's commit-before-ack ordering. This is recorded here explicitly rather than blocking
+        registration (the D9 recording question); L146 remains a premise of G0 and its translation is
+        TRUSTED."
+      signature: 0a2a46536e0a2c6997d5f88689ddfc0f35f15492cb0cdb4b6f3a20c05aa504f0
     G1_retry_is_logically_exactly_once:
       status: unaudited
     G2_canonical_history_is_linear_and_fenced:
