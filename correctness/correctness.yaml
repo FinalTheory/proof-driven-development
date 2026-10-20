@@ -485,13 +485,11 @@ refinement:
       blocked_by: []
       signature: 1dcf66ef900edaba412a9cb9c8425a8de65def35a0e47bc1ff508b0a58b152ae
     L128_client_canonical_frontier_is_established_on_publication:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 46dbe17dfcb2d3bd510cb009f2648855c848e8584e5231a70d8a59adf7704bd6
     L129_client_canonical_frontier_is_preserved_by_visible_transitions:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 9e073a8251b8bc9c36ac46307e498bcaddcb79a67566ce6c9fc68f77048bdb88
     C38_client_frontier_matches_canonical_base:
       status: stable
       blocked_by: []
@@ -2847,7 +2845,10 @@ claims:
       document D canonical accepted revisions through last_applied_revision. This includes publication
       from restoration, document/view switching, snapshot replacement, or reconnect/resync state. Private
       client_resync_candidate state is outside this boundary until publication, and speculative raw edits
-      are not part of client_local_document.'
+      are not part of client_local_document. An initialization and every canonical publication covered
+      by this claim, and any other transition that creates or replaces a user-visible client state, establish
+      the visible document in their resulting user-visible state; that resulting state is an establishment
+      state of this claim, and the coherence requirement above applies to every establishment state.'
     source_refs:
       - authoritative_truth
       - snapshot_frontier
@@ -2878,6 +2879,11 @@ claims:
       tuple whose document identity, materialized canonical document, and frontier come from
       different canonical bases. Private client_resync_candidate state remains outside this observer
       boundary until publication, and speculative raw edits are not part of client_local_document.
+      Every user-visible client state is either an establishment state, the resulting user-visible
+      state of a client initialization or of a canonical publication or of any other transition that
+      creates or replaces the user-visible client state, or is reachable from an establishment state
+      through the subsequent user-visible transitions this claim governs; no user-visible client
+      state arises in any other way.
     source_refs:
       - authoritative_truth
       - snapshot_frontier
