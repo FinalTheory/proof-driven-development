@@ -5895,6 +5895,16 @@ functions:
     meaning: 'The client_change_id recorded on speculative overlay representation o itself: the client change identity the overlay carries as a retained or exposed speculative overlay.'
     semantic_anchors:
     - claim:L179_speculative_overlay_identity_provenance_is_preserved
+  requests_share_submitted_raw_edit:
+    args:
+    - Request
+    - Request
+    returns: Bool
+    catalog_symbols:
+    - raw_edit
+    meaning: 'Submitted requests rq1 and rq2 carry the same submitted raw_edit: the raw edit submitted with rq1 and the raw edit submitted with rq2 are one and the same edit content, so OT payload provenance from either request is provenance from a single raw edit. This compares the two requests'' submitted payloads only; it asserts nothing about their document identity, client_change_id, or base revision, which are the separate request_document / request_change_id / request_base_revision coordinates.'
+    semantic_anchors:
+    - claim:L123_acceptance_payload_and_identity_share_submitted_request
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -18382,6 +18392,11 @@ claims:
                     fn: request_base_revision
                     args:
                     - var: rq2
+              - call:
+                  fn: requests_share_submitted_raw_edit
+                  args:
+                  - var: rq1
+                  - var: rq2
       - forall:
           vars:
             a: CanonicalAcceptance
