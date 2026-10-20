@@ -1130,6 +1130,7 @@ functions:
     meaning: Both states are ordinary user-visible states in the same normal client/session; the second is later than the first, and the session continuously represents the same document from the first state through the second state.
     semantic_anchors:
     - source:reconnect_revision_boundary
+    - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
   same_session_later_visible_same_document:
     args:
     - ClientState
@@ -4237,6 +4238,7 @@ functions:
     meaning: Client state s is the resulting user-visible state of a user-visible client transition that establishes, replaces, or changes client_document_id -- including initialization, restoration, switching, publication, and any other visible-document replacement path -- so the document s represents was fixed by that transition.
     semantic_anchors:
     - claim:L132_visible_overlay_document_binding_established_on_publication
+    - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
   visible_overlay_document_binding_holds:
     args:
     - ClientState
@@ -4245,6 +4247,7 @@ functions:
     meaning: 'The visible_speculative_overlay_document_binding property holds of the whole user-visible client state s: every speculative overlay exposed in s belongs to the document s represents.'
     semantic_anchors:
     - claim:L132_visible_overlay_document_binding_established_on_publication
+    - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
   speculative_overlay_document_id:
     args:
     - Overlay
@@ -13521,27 +13524,47 @@ claims:
     capability: relational
     contracts: []
     formula:
-      forall:
-        vars:
-          e: ClientState
-          l: ClientState
-        body:
-          implies:
-          - and:
-            - call:
-                fn: user_visible_overlay_mutation_step
-                args:
-                - var: e
-                - var: l
-            - eq:
+      and:
+      - forall:
+          vars:
+            e: ClientState
+            l: ClientState
+          body:
+            implies:
+            - and:
               - call:
-                  fn: represented_document
-                  args:
-                  - var: l
-              - call:
-                  fn: represented_document
+                  fn: user_visible_overlay_mutation_step
                   args:
                   - var: e
+                  - var: l
+              - eq:
+                - call:
+                    fn: represented_document
+                    args:
+                    - var: l
+                - call:
+                    fn: represented_document
+                    args:
+                    - var: e
+              - forall:
+                  vars:
+                    o: Overlay
+                  body:
+                    implies:
+                    - call:
+                        fn: visible_overlay
+                        args:
+                        - var: e
+                        - var: o
+                    - eq:
+                      - call:
+                          fn: speculative_overlay_document_id
+                          args:
+                          - var: o
+                      - call:
+                          fn: represented_document
+                          args:
+                          - var: e
             - forall:
                 vars:
                   o: Overlay
@@ -13550,7 +13573,7 @@ claims:
                   - call:
                       fn: visible_overlay
                       args:
-                      - var: e
+                      - var: l
                       - var: o
                   - eq:
                     - call:
@@ -13560,26 +13583,57 @@ claims:
                     - call:
                         fn: represented_document
                         args:
+                        - var: l
+      - forall:
+          vars:
+            e: ClientState
+            l: ClientState
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: same_session_later_visible_continuous_same_document
+                  args:
+                  - var: e
+                  - var: l
+              - call:
+                  fn: visible_overlay_document_binding_holds
+                  args:
+                  - var: e
+            - call:
+                fn: visible_overlay_document_binding_holds
+                args:
+                - var: l
+      - forall:
+          vars:
+            s: ClientState
+            o: Overlay
+          body:
+            implies:
+            - call:
+                fn: visible_overlay
+                args:
+                - var: s
+                - var: o
+            - or:
+              - call:
+                  fn: client_state_establishes_visible_document
+                  args:
+                  - var: s
+              - exists:
+                  vars:
+                    e: ClientState
+                  body:
+                    and:
+                    - call:
+                        fn: client_state_establishes_visible_document
+                        args:
                         - var: e
-          - forall:
-              vars:
-                o: Overlay
-              body:
-                implies:
-                - call:
-                    fn: visible_overlay
-                    args:
-                    - var: l
-                    - var: o
-                - eq:
-                  - call:
-                      fn: speculative_overlay_document_id
-                      args:
-                      - var: o
-                  - call:
-                      fn: represented_document
-                      args:
-                      - var: l
+                    - call:
+                        fn: same_session_later_visible_continuous_same_document
+                        args:
+                        - var: e
+                        - var: s
   L176_visible_speculative_overlay_is_backed_by_retained_state:
     capability: relational
     contracts:
@@ -13640,20 +13694,14 @@ claims:
           o: Overlay
         body:
           implies:
-          - and:
-            - or:
-              - call:
-                  fn: retained_overlay
-                  args:
-                  - var: s
-                  - var: o
-              - call:
-                  fn: visible_overlay
-                  args:
-                  - var: s
-                  - var: o
+          - or:
             - call:
-                fn: speculative_overlay_represents_full_identity_edit
+                fn: retained_overlay
+                args:
+                - var: s
+                - var: o
+            - call:
+                fn: visible_overlay
                 args:
                 - var: s
                 - var: o
