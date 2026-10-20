@@ -8767,45 +8767,65 @@ records:
   claim:L133_visible_overlay_document_binding_preserved_by_local_transitions:
     kind: claim
     subject_id: L133_visible_overlay_document_binding_preserved_by_local_transitions
-    subject_signature: d688b20dc8dcbfaa2852f7fb092f900116dfdacdb9aac2b1753114655760eaf0
+    subject_signature: cd65dc1bbe4a6519818c80366297ad7d698d5374cacfb29de656df2ac70dd09b
     roundtrip:
-      subject_signature: d688b20dc8dcbfaa2852f7fb092f900116dfdacdb9aac2b1753114655760eaf0
+      subject_signature: cd65dc1bbe4a6519818c80366297ad7d698d5374cacfb29de656df2ac70dd09b
       status: TRANSLATED
-      natural_language: For all client states e and l, if there is a single user-visible overlay mutation step from e to l
-        — that is, l is the resulting state of one user-visible client transition applied in e that creates, removes, suppresses,
-        reactivates, or otherwise mutates the client-visible speculative overlays, a relation classified only by its effect
-        on the visible speculative overlays — and the document represented by l is equal to the document represented by e,
-        and for every overlay o, if o is visible as a speculative overlay in e then the speculative overlay document_id of
-        o is equal to the document represented by e, then for every overlay o, if o is visible as a speculative overlay in
-        l then the speculative overlay document_id of o is equal to the document represented by l.
+      natural_language: 'The proposition is a conjunction of three statements, using these meanings: represented_document(s)
+        is the semantic document D in the phrase ''client state representing document D'', as an independent contract reference
+        coordinate, not derived from client_document_id, client_local_document, last_applied_revision, or satisfaction of
+        client_canonical_frontier_coherence; visible_overlay(s, o) means overlay o is currently exposed as a speculative user-visible
+        overlay in client state s; speculative_overlay_carried_document_id(o) is the document_id recorded on the speculative
+        overlay representation o itself, the document identity the overlay carries as an exposed speculative overlay; user_visible_overlay_mutation_step(before,
+        after) means after is the resulting state of one user-visible client transition applied in before where that transition
+        creates, removes, suppresses, reactivates, or otherwise mutates client_visible_speculative_overlays, classifying the
+        step by its effect on the visible speculative overlays only and not asserting which document either state represents
+        or whether the represented document changes; client_state_establishes_visible_document(s) means s is the resulting
+        user-visible state of a user-visible client transition that establishes, replaces, or changes client_document_id --
+        including initialization, restoration, switching, publication, and any other visible-document replacement path --
+        so the document s represents was fixed by that transition; later_reachable_via_binding_preserving_same_document_chain(e,
+        l) means user-visible client state l is reachable from user-visible client state e through a chain of subsequent user-visible
+        transitions throughout which the document represented by e remains the visible document, and the same-document property
+        is preserved along that chain in that at every state on the chain, every speculative overlay exposed at that state
+        has that document as its document_id; and visible_overlay_document_binding_holds(s) means the visible_speculative_overlay_document_binding
+        property holds of the whole user-visible client state s, namely every speculative overlay exposed in s belongs to
+        the document s represents. (1) For all client states e and l, if user_visible_overlay_mutation_step(e, l) holds, and
+        represented_document(l) equals represented_document(e), and for every overlay o, if visible_overlay(e, o) holds then
+        speculative_overlay_carried_document_id(o) equals represented_document(e), then for every overlay o, if visible_overlay(l,
+        o) holds then speculative_overlay_carried_document_id(o) equals represented_document(l). (2) For all client states
+        e and l, if later_reachable_via_binding_preserving_same_document_chain(e, l) holds and visible_overlay_document_binding_holds(e)
+        holds, then visible_overlay_document_binding_holds(l) holds. (3) For all client states s and overlays o, if visible_overlay(s,
+        o) holds, then either client_state_establishes_visible_document(s) holds, or there exists a client state e such that
+        client_state_establishes_visible_document(e) holds and visible_overlay_document_binding_holds(e) holds and later_reachable_via_binding_preserving_same_document_chain(e,
+        s) holds.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: d688b20dc8dcbfaa2852f7fb092f900116dfdacdb9aac2b1753114655760eaf0
+        subject_signature: cd65dc1bbe4a6519818c80366297ad7d698d5374cacfb29de656df2ac70dd09b
         verdict: EQUIVALENT
-        reason: The formula quantifies over a before/after pair linked by a user-visible overlay-mutation step, requires the
-          represented document to be unchanged and every overlay visible in the before state to have that document_id, and
-          concludes every overlay visible in the after state has the (same) represented document_id, matching the preservation
-          claim with no added or dropped guard.
+        reason: The single-step conjunct exactly encodes preservation under an overlay-mutating transition when represented_document
+          is unchanged and the predecessor satisfies the same-document property; the chain conjunct and provenance disjunction
+          exactly encode reachability from a visible-document establishment state via a same-document, binding-preserving
+          chain.
         differences: []
       strengthening:
-        subject_signature: d688b20dc8dcbfaa2852f7fb092f900116dfdacdb9aac2b1753114655760eaf0
+        subject_signature: cd65dc1bbe4a6519818c80366297ad7d698d5374cacfb29de656df2ac70dd09b
         verdict: EQUIVALENT
-        reason: 'The formula exactly encodes the source: for any pair of states linked by one user-visible overlay-mutating
-          transition, with the precondition that every overlay visible in the prior state has document_id equal to its represented
-          document and the represented document is unchanged, it requires every overlay visible in the resulting state to
-          have document_id equal to that same represented document. No scope, guard, identity, or cardinality condition is
-          added or omitted.'
+        reason: The formula encodes single-step overlay-mutation preservation under an unchanged represented document, preservation
+          along binding-preserving same-document chains, and the establishment-or-reachable-from-establishment provenance
+          disjunction for every overlay-exposing state, with represented_document and overlay-carried document_id kept distinct;
+          no requirement is added or omitted.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: d688b20dc8dcbfaa2852f7fb092f900116dfdacdb9aac2b1753114655760eaf0
+        subject_signature: cd65dc1bbe4a6519818c80366297ad7d698d5374cacfb29de656df2ac70dd09b
         verdict: EQUIVALENT
-        reason: 'Both assert the same single-step preservation: for any user-visible state whose exposed speculative overlays
-          all have document_id equal to its represented document, any user-visible transition mutating those overlays while
-          the represented document remains unchanged yields a state whose exposed speculative overlays all have document_id
-          equal to that same represented document. The round-trip''s explicit one-step quantification is the inductive form
-          of the original''s subsequent-transitions wording, with no added or omitted precondition, scope, identity, or conclusion.'
+        reason: 'The rendering faithfully decomposes the original: (1) is the single-step preservation of the same-document
+          property for overlay-mutating transitions while the represented document is unchanged, with the overlay''s carried
+          document_id and the represented document kept as distinct coordinates; (2) is the chain closure of that preservation;
+          and (3) restates the provenance disjunction that every overlay-exposing state either establishes its visible document
+          or is reachable from a binding-holding establishment state via a same-document, property-preserving chain. No precondition,
+          quantifier, identity coordinate, or guarantee is added or dropped.'
         differences: []
   claim:L176_visible_speculative_overlay_is_backed_by_retained_state:
     kind: claim
