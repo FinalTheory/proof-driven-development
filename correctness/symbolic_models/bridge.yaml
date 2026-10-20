@@ -2725,6 +2725,7 @@ functions:
     semantic_anchors:
     - contract:terminal_speculative_lifecycle_closure
     - claim:G12_client_pending_state_tracks_unresolved_edits
+    - claim:L206_terminal_speculative_lifecycle_is_absorbing
   request_logical_edit_tuple_preserved_through_lifecycle:
     args:
     - Request
@@ -13161,40 +13162,62 @@ claims:
     contracts:
     - non_acceptance_terminal_disposition_binding
     formula:
-      forall:
-        vars:
-          t: ProtocolTransition
-          e: LogicalEditIdentity
-        body:
-          implies:
-          - and:
+      and:
+      - forall:
+          vars:
+            t: ProtocolTransition
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_client_protocol_transition
+                  args:
+                  - var: t
+              - call:
+                  fn: non_acceptance_retirement_transition
+                  args:
+                  - var: t
+                  - var: e
+            - and:
+              - call:
+                  fn: non_acceptance_disposition_preserves_edit_identity
+                  args:
+                  - var: t
+                  - var: e
+              - call:
+                  fn: non_acceptance_disposition_preserves_edit_identity_to_pending_sink
+                  args:
+                  - var: t
+                  - var: e
+              - call:
+                  fn: non_acceptance_disposition_preserves_edit_identity_to_retained_overlay_sink
+                  args:
+                  - var: t
+                  - var: e
+              - call:
+                  fn: non_acceptance_disposition_preserves_edit_identity_to_visible_overlay_sink
+                  args:
+                  - var: t
+                  - var: e
+      - forall:
+          vars:
+            t: ProtocolTransition
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_client_protocol_transition
+                  args:
+                  - var: t
+              - call:
+                  fn: non_acceptance_retirement_transition
+                  args:
+                  - var: t
+                  - var: e
             - call:
-                fn: reachable_client_protocol_transition
-                args:
-                - var: t
-            - call:
-                fn: non_acceptance_retirement_transition
-                args:
-                - var: t
-                - var: e
-          - and:
-            - call:
-                fn: non_acceptance_disposition_preserves_edit_identity
-                args:
-                - var: t
-                - var: e
-            - call:
-                fn: non_acceptance_disposition_preserves_edit_identity_to_pending_sink
-                args:
-                - var: t
-                - var: e
-            - call:
-                fn: non_acceptance_disposition_preserves_edit_identity_to_retained_overlay_sink
-                args:
-                - var: t
-                - var: e
-            - call:
-                fn: non_acceptance_disposition_preserves_edit_identity_to_visible_overlay_sink
+                fn: explicit_non_acceptance_retirement_transition
                 args:
                 - var: t
                 - var: e
@@ -13240,6 +13263,11 @@ claims:
                       args:
                       - var: s
                       - var: e
+                - call:
+                    fn: later_user_operations_after_terminalized_lifecycle_are_fresh
+                    args:
+                    - var: s
+                    - var: e
         - forall:
             vars:
               earlier: ClientState
