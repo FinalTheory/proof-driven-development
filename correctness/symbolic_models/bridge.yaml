@@ -235,6 +235,7 @@ functions:
     meaning: The base revision carried by request r.
     semantic_anchors:
     - contract:request_authoring_frontier_binding
+    - claim:L123_acceptance_payload_and_identity_share_submitted_request
   request_raw_edit_bound_to_source_content:
     args:
     - Request
@@ -15235,12 +15236,6 @@ claims:
                               - var: a
                               - var: r
                         - and:
-                          - eq:
-                            - call:
-                                fn: acceptance_prestate_latest_revision
-                                args:
-                                - var: a
-                            - var: n
                           - call:
                               fn: acceptance_revision_is_successor_of
                               args:
@@ -18336,9 +18331,34 @@ claims:
                   args:
                   - var: a
                   - var: rq2
-            - eq:
-              - var: rq1
-              - var: rq2
+            - and:
+              - eq:
+                - call:
+                    fn: request_document
+                    args:
+                    - var: rq1
+                - call:
+                    fn: request_document
+                    args:
+                    - var: rq2
+              - eq:
+                - call:
+                    fn: request_change_id
+                    args:
+                    - var: rq1
+                - call:
+                    fn: request_change_id
+                    args:
+                    - var: rq2
+              - eq:
+                - call:
+                    fn: request_base_revision
+                    args:
+                    - var: rq1
+                - call:
+                    fn: request_base_revision
+                    args:
+                    - var: rq2
       - forall:
           vars:
             a: CanonicalAcceptance
