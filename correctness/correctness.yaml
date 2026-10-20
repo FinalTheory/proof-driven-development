@@ -404,21 +404,18 @@ refinement:
       blocked_by: []
       signature: a94c1e137be40ee990de390be276aaaf34c04e6b05007c3a462051377030826f
     L106_resync_request_covers_start_pending_set:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: fdd46ec338be55831fe27c3ab096613edd2bae0a819bc2d569ae05ab48f3380e
     L107_client_freezes_speculative_edits_during_resync:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: e50c8b24ecfb8e2b45090fd374fd24c41c72dac98e23008cb058908d3d078775
     L108_acceptance_preserves_request_identity:
       status: stable
       blocked_by: []
       signature: 3feb1498840ff792b6e7e05e1726db4d4fe6045b45c26514fdf436f7b27ceffa
     L109_resync_publication_is_atomic_and_monotonic:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 0471fe70dbccf6eff7a7cffe0095f512f5b28b201804aa2f82183a3161854d2f
     L110_client_retires_matching_speculative_overlay_before_canonical_publication:
       status: stable
       blocked_by: []
@@ -2238,7 +2235,9 @@ claims:
       eligibility horizon; each supplied eligible k is interpreted only under the request document
       D, and no eligible start-pending (D,k) is omitted or rebound to another document during
       authoritative reconciliation through that request response head. Expired identities are
-      outside the normal authoritative reconciliation request.
+      outside the normal authoritative reconciliation request. An identity whose pending/retry age
+      exceeds 30 days is discarded or handled through an explicit expired, conflict, or
+      manual-resolution path.
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
@@ -2263,8 +2262,11 @@ claims:
       from the moment a client begins reconnect/resync and captures the pending client_change_id set for
       its catch-up request until that attempt either publishes a reconciled canonical state or enters
       explicit conflict/reconciliation state, the client creates or applies no new speculative local edit
-      to the document being resynchronized. No eventual resolution, automatic local-rebase, or eventual-editability
-      guarantee is implied.'
+      to the document being resynchronized. The pending client_change_id set captured when the attempt
+      begins is complete: it contains the client_change_id of every speculative local edit identity that
+      is pending for the document being resynchronized when the attempt begins and remains within the
+      30-day normal reconnect eligibility horizon. No eventual resolution, automatic local-rebase, or
+      eventual-editability guarantee is implied.'
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
@@ -2328,7 +2330,11 @@ claims:
       candidate's specified reconciliation work is complete; no checkpoint/tail/intermediate
       candidate prefix is user-visible, no previously removed speculative overlay or
       pending-resolution state is restored by that response, and the user-visible canonical frontier
-      never decreases.
+      never decreases. Once canonical acceptance for a pending identity (D,k) is included through
+      the candidate's response head, that publication removes or suppresses the speculative overlay
+      for (D,k) before or atomically with publication, so no user-visible state exposes both
+      representations; and no intermediate resync candidate exposes a canonical prefix that already
+      contains acceptance(D,k) together with its overlay.
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
