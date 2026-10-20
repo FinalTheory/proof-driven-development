@@ -4239,6 +4239,8 @@ functions:
     semantic_anchors:
     - claim:L132_visible_overlay_document_binding_established_on_publication
     - claim:L133_visible_overlay_document_binding_preserved_by_local_transitions
+    - claim:L128_client_canonical_frontier_is_established_on_publication
+    - claim:L129_client_canonical_frontier_is_preserved_by_visible_transitions
   visible_overlay_document_binding_holds:
     args:
     - ClientState
@@ -14385,7 +14387,7 @@ claims:
         body:
           implies:
           - call:
-              fn: client_state_established_by_initialization_or_canonical_publication
+              fn: client_state_establishes_visible_document
               args:
               - var: s
           - and:
@@ -14513,6 +14515,38 @@ claims:
                 fn: client_resync_candidate_outside_visible_tuple
                 args:
                 - var: s
+      - forall:
+          vars:
+            s: ClientState
+          body:
+            implies:
+            - call:
+                fn: user_visible_canonical_state
+                args:
+                - var: s
+            - or:
+              - call:
+                  fn: client_state_establishes_visible_document
+                  args:
+                  - var: s
+              - exists:
+                  vars:
+                    e: ClientState
+                  body:
+                    and:
+                    - call:
+                        fn: client_state_establishes_visible_document
+                        args:
+                        - var: e
+                    - call:
+                        fn: user_visible_canonical_state
+                        args:
+                        - var: e
+                    - call:
+                        fn: later_reachable_client_state_via_visible_tuple_transitions
+                        args:
+                        - var: e
+                        - var: s
   C38_client_frontier_matches_canonical_base:
     capability: relational
     contracts:
