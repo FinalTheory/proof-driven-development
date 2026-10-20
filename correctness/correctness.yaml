@@ -508,9 +508,8 @@ refinement:
       blocked_by: []
       signature: 16081cd4a26207e1a939ee55530be34b0d4db229260cb51d53aa00c94e3f943a
     L133_visible_overlay_document_binding_preserved_by_local_transitions:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 58c629fa003e029026eabe408a279a75ab05fa4b790f744745a8058c6dbc2ac9
     G11_visible_speculative_overlays_match_document:
       status: stable
       blocked_by: []
@@ -664,9 +663,8 @@ refinement:
       blocked_by: []
       signature: 6128622216b25c956068d6370877b9761b864e12cc67d5a1c30ff7eaac65ee20
     L179_speculative_overlay_identity_provenance_is_preserved:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 7788728b8e1213169c821ab4f69327e7fe17edd9d9d31e2e0eb06fce33b6e1c0
     L180_non_append_lifecycle_preserves_logical_state_at_frontier:
       status: stable
       blocked_by: []
@@ -3002,7 +3000,12 @@ claims:
     statement: From any user-visible client state representing document D in which every exposed
       speculative overlay has document_id D, every subsequent user-visible transition that creates,
       removes, suppresses, reactivates, or otherwise mutates client_visible_speculative_overlays
-      while D remains the visible document preserves that same-document property.
+      while D remains the visible document preserves that same-document property. Consequently,
+      every user-visible client state that exposes a speculative overlay either is itself the
+      resulting state of a transition that established the visible document binding for its
+      document, or is reachable from such an establishment state through a chain of subsequent
+      transitions throughout which that document remains the visible document, and the same-document
+      property is preserved along that chain.
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
@@ -4071,13 +4074,13 @@ claims:
             rebinding while allowing byte-level deduplication.
     kind: leaf
   L179_speculative_overlay_identity_provenance_is_preserved:
-    statement: 'speculative_overlay_identity_provenance holds for every logical_client_edit created with
-      full identity (document_id=D, client_change_id=k): every retained representation in client_speculative_overlays
-      and every exposed representation in client_visible_speculative_overlays preserves exactly that same
-      (D,k) across creation, retention, restoration, tab/view switching, suppression/reactivation, ACK/retry
-      bookkeeping, canonical publication, resync publication, and every other client transition that preserves
-      the same logical edit. A transition may suppress, retain, restore, expose, or terminally dispose
-      the edit, but while it preserves that logical edit it may not regenerate, substitute, drop, or cross-bind
+    statement: 'speculative_overlay_identity_provenance holds for every logical_client_edit: every retained
+      representation in client_speculative_overlays and every exposed representation in client_visible_speculative_overlays
+      preserves exactly that edit''s complete creation identity (document_id=D, client_change_id=k) across
+      creation, retention, restoration, tab/view switching, suppression/reactivation, ACK/retry bookkeeping,
+      canonical publication, resync publication, and every other client transition that preserves the
+      same logical edit. A transition may suppress, retain, restore, expose, or terminally dispose the
+      edit, but while it preserves that logical edit it may not regenerate, substitute, drop, or cross-bind
       either identity coordinate.'
     source_refs:
       - reconnect_revision_boundary
