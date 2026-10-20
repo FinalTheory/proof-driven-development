@@ -528,9 +528,8 @@ refinement:
       blocked_by: []
       signature: 756969a644ed94a2bd790a3ad3eb283b30763ae7143792daa859b92de9f5c57e
     L137_authoritative_history_mutators_are_exhaustively_classified:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 757406b6d70e8ae1c8dfc9be0f0f47a6a9dbe09e749c5ac527566f48fcb7ba8a
     C39_authoritative_history_state_is_gap_free:
       status: stable
       blocked_by: []
@@ -3140,8 +3139,16 @@ claims:
     statement: 'Every authoritative write that can create or change accepted_change_log or document_latest_revision
       is covered by at least one correctness-relevant transition class whose preservation proof applies:
       document-state initialization, a committed canonical accepted-change append, or an authoritative
-      non-append representation/lifecycle transition that accepts no new edit. No authoritative mutation
-      path may change either symbol without belonging to one of these covered classes.'
+      non-append representation/lifecycle transition that accepts no new edit. In these covered classes,
+      the append class is the committed accepted-change append as the canonical-history guarantee states
+      it: each such append at revision r preserves the entire prior logical accepted prefix, adds exactly
+      revision r as the next position, and advances document_latest_revision to r. The covered classes
+      are exactly the transition classes across whose steps the frontier coherence of that guarantee is
+      preserved step by step: in every authoritative state for a document, accepted_change_log and document_latest_revision
+      denote exactly one gap-free canonical accepted prefix ending at document_latest_revision. No authoritative
+      mutation path may change either symbol without belonging to one of these covered classes. Consequently,
+      every authoritative state for a document is either produced by document-state initialization or
+      reachable from that document''s initialization state through transitions in these covered classes.'
     source_refs:
       - authoritative_truth
       - final_architecture
