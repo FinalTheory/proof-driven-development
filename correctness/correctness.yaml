@@ -6291,7 +6291,22 @@ assurance:
     G5_retry_resolves_idempotently:
       status: unaudited
     C7_revision_frontier_is_linear:
-      status: unaudited
+      status: machine_checked
+      rationale: "Trusted symbolic translations exist for C7 and all six direct premises (L4, L6, L22,
+        L29, L33, L137) at their current signatures (L137 ea5fdc3c... under the D10/D11-A statement supplement
+        with the fixC bridge; L4 8d266477... retreated to its reviewer-blessed clause 1). The composition
+        check (finite_transitive_invariant_lift_then_smt) returns ENTAILED. Load-bearing mutation tests
+        (premise replaced by True) return COUNTEREXAMPLE for L29 and L137, so the composition is not vacuous.
+        Four premises are not individually load-bearing in the current encoding, each recorded here in
+        the manner of D9 rather than blocking registration: L4, because with L4 retreated to clause 1
+        per D11 the step-level append guard its dropped clauses used to supply is asserted by L137 itself
+        as the append class's definitional guard (the guard D11-A wrote into L137's statement from C7's
+        own words) -- D11 pre-registered exactly this outcome; and L6, L22 and L33, because the fixC-strengthened
+        L137 now asserts their former supply directly under its supplemented statement (the universal
+        frontier-coherence invariant and initialization base case absorb L22's and part of L6's supply;
+        the append-effect conclusion absorbs L33's and the rest of L6's). All four remain premises of
+        C7 and their translations are TRUSTED."
+      signature: 8ef8251ff6db91a4ce55baa90b2954c1324f390457f656bd5207b3971ea4db1c
     C8_stale_owner_is_fenced:
       status: unaudited
     C9_recovery_reconstructs_committed_state:
