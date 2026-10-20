@@ -10223,3 +10223,79 @@ records:
           if the authoritative pre-state frontier is r-1; restating that frontier as the immediate predecessor exactly one
           less than r adds no new requirement and omits none.'
         differences: []
+  claim:L177_catchup_canonical_sources_preserve_document_provenance:
+    kind: claim
+    subject_id: L177_catchup_canonical_sources_preserve_document_provenance
+    subject_signature: 410f5cc5f083b1e9105e12da30f95396fec6f58f2e95221001327ecfd46993dd
+    roundtrip:
+      subject_signature: 410f5cc5f083b1e9105e12da30f95396fec6f58f2e95221001327ecfd46993dd
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following seven universal statements holds. (1) For every catch-up response
+        r, if r is a catch-up or reconnect response for some target document D and the response-specific head value H for
+        that attempt has already been captured and fixed, then r''s canonical sources preserve document scope: for r targeting
+        its requested document D at its already-captured response head H, every canonical payload source actually selected
+        or consumed for r preserves its semantic authoritative binding to D throughout response construction, private candidate
+        construction, and any publication; in delta mode every returned canonical accepted change originates from the accepted_change_log
+        for D, and in snapshot mode the selected checkpoint is D''s authoritative snapshot_content_with_snapshot_revision
+        and every canonical tail change originates from the accepted_change_log for D; every resulting client_resync_candidate
+        remains bound to the same target D throughout construction and any publication; substituting another document''s authoritative
+        source fails this even if revision, payload, frontier, and replay-result values are identical or its fields are relabeled
+        as D, while sharing content-addressed or deduplicated immutable bytes satisfies this when the semantic authoritative
+        reference remains D''s; this constrains only stages and sources actually reached or used and does not require completion,
+        candidate creation, or publication; and no selected or consumed canonical payload source may contribute authoritative
+        state beyond H, namely no selected delta or snapshot-tail acceptance may have canonical revision greater than H, no
+        selected snapshot may have snapshot_revision greater than H, and no returned response, client_resync_candidate, or
+        publication for r may semantically include a canonical acceptance beyond H, this being only an upper temporal boundary
+        that does not require any particular acceptance at or below H, exact or contiguous range coverage, replay correctness,
+        head-capture correctness, publication atomicity, completion, publication, or progress. (2) For every catch-up response
+        r, if r targets some document D and a private client_resync_candidate has actually been constructed for r, in that
+        the candidate-construction stage for r was reached and produced a candidate object for r, then a private client_resync_candidate
+        is constructed for r and that constructed candidate is bound to r''s target document D throughout its construction,
+        its canonical document is D, and no other document''s candidate or source is substituted for it even if extensionally
+        equal. (3) For every catch-up response r, if r targets some document D and r is a snapshot-replacement-mode catch-up
+        response, in that catch-up selected a checkpoint for r and r is to be constructed by snapshot replacement rather than
+        by delta/range application, then r actually selects, as its snapshot checkpoint, the target document D''s authoritative
+        snapshot_content_with_snapshot_revision, not another document''s checkpoint and not an unselected placeholder. (4)
+        For every catch-up response r and every canonical acceptance a, if r targets some document and a is one of the changes
+        returned in the delta portion of r, then a is a member of the accepted_change_log of D, where D is the target document
+        of r, and an extensionally equal accepted change from another document''s log does not satisfy this. (5) For every
+        catch-up response r and every canonical acceptance a, if r targets some document and a is one of the changes returned
+        in the tail portion of r, then a is a member of the accepted_change_log of D, where D is the target document of r,
+        and an extensionally equal accepted change from another document''s log does not satisfy this. (6) For every catch-up
+        response r, if r is a snapshot-replacement-mode catch-up response, then no speculative data appears anywhere in r''s
+        returned snapshot tail portion, in that every returned tail payload item is canonical accepted data, not an unaccepted,
+        uncommitted, or locally speculative change. (7) For every catch-up response r, if r is a retained-delta-mode catch-up
+        response, in that catch-up selected the retained canonical revision range for r and r is to be constructed by returning
+        canonical accepted changes from that range rather than by snapshot replacement, then no speculative data appears anywhere
+        in r''s returned delta portion, in that every returned payload item is canonical accepted data, not an unaccepted,
+        uncommitted, or locally speculative change.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 410f5cc5f083b1e9105e12da30f95396fec6f58f2e95221001327ecfd46993dd
+        verdict: EQUIVALENT
+        reason: 'The formula preserves all source requirements: the scope predicate enforces document-D binding through construction
+          and publication, rejects extensional substitution from another document, allows deduplicated bytes only when the
+          authoritative reference remains D''s, and excludes canonical acceptances and snapshot revisions beyond captured
+          head H. Separate conjuncts enforce candidate binding when constructed, snapshot selection of D''s authoritative
+          checkpoint, delta and tail membership in accepted_change_log(D), and snapshot-tail freedom from speculative data;
+          the delta speculative conjunct follows from delta rows originating in the accepted log. No range, completion, or
+          publication requirement is added beyond the source.'
+        differences: []
+      strengthening:
+        subject_signature: 410f5cc5f083b1e9105e12da30f95396fec6f58f2e95221001327ecfd46993dd
+        verdict: EQUIVALENT
+        reason: The formula preserves the document-scoped provenance for delta and snapshot-tail changes, requires D's authoritative
+          checkpoint and candidate binding to D, excludes extensional substitution from another document and acceptances beyond
+          captured head H, and requires speculative-free snapshot tail; speculative-free delta follows from delta rows being
+          sourced exclusively from accepted_change_log(D).
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 410f5cc5f083b1e9105e12da30f95396fec6f58f2e95221001327ecfd46993dd
+        verdict: EQUIVALENT
+        reason: The rendering preserves document-scoped provenance for delta and snapshot-tail sources, D-bound candidate
+          construction, exclusion of extensionally equal sources from another document, the captured-head H upper bound, and
+          the snapshot-tail prohibition on speculative data; its additional clauses are logical restatements or entailed consequences
+          of those requirements, with no material weakening or strengthening.
+        differences: []
