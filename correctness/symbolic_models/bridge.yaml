@@ -11635,13 +11635,25 @@ claims:
           vars:
             c: CatchupResponse
             h: Revision
+            f: Revision
           body:
             implies:
-            - call:
-                fn: catchup_response_head_is
-                args:
-                - var: c
-                - var: h
+            - and:
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: c
+                  - var: h
+              - call:
+                  fn: resync_visible_frontier_at_candidate_readiness
+                  args:
+                  - var: c
+                  - var: f
+              - call:
+                  fn: revision_at_or_before
+                  args:
+                  - var: f
+                  - var: h
             - call:
                 fn: resync_state_exposed_only_by_atomic_publication
                 args:
@@ -11690,11 +11702,22 @@ claims:
             e: LogicalEditIdentity
           body:
             implies:
-            - call:
-                fn: resync_identity_matches_document
-                args:
-                - var: c
-                - var: e
+            - and:
+              - call:
+                  args:
+                  - var: c
+                  - var: e
+                  fn: pending_identity_at_resync_start
+              - call:
+                  args:
+                  - var: c
+                  - var: e
+                  fn: resync_identity_within_normal_horizon
+              - call:
+                  fn: resync_identity_matches_document
+                  args:
+                  - var: c
+                  - var: e
             - call:
                 fn: stale_resync_cannot_restore_retired_overlay
                 args:
