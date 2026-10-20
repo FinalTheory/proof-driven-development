@@ -6382,7 +6382,15 @@ assurance:
     G10_user_visible_client_state_matches_document:
       status: unaudited
     C38_client_frontier_matches_canonical_base:
-      status: unaudited
+      status: machine_checked
+      rationale: Trusted symbolic translations exist for C38 and both direct premises L128 and L129,
+        re-certified under their post-restoration signatures after the D21(a) statement supplements
+        (L128 establishment reading, L129 generation sentence) and the restoration of L128's
+        wide-guard establishment clause and L129's generation clause. The live composition check
+        (direct SMT, require_trusted) finds the premises together with NOT(C38) UNSAT (ENTAILED).
+        Independent premise ablations in the fixA design simulation show each premise is
+        individually load-bearing.
+      signature: 7ce279b35a37158e613c3cc45a858c2d82073faa35c0fe31bcfc6613f9d8b743
     G11_visible_speculative_overlays_match_document:
       status: unaudited
     C39_authoritative_history_state_is_gap_free:
