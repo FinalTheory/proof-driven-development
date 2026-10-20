@@ -8856,41 +8856,48 @@ records:
   claim:L179_speculative_overlay_identity_provenance_is_preserved:
     kind: claim
     subject_id: L179_speculative_overlay_identity_provenance_is_preserved
-    subject_signature: 58a67082a8529b11c09394496eeb2dc9b608fe26977113308608e3009ed4c9e3
+    subject_signature: bc8fba7ec43e2024fa2b0ec082979eb7df644a2d65f9093332208cb9c30b7a46
     roundtrip:
-      subject_signature: 58a67082a8529b11c09394496eeb2dc9b608fe26977113308608e3009ed4c9e3
+      subject_signature: bc8fba7ec43e2024fa2b0ec082979eb7df644a2d65f9093332208cb9c30b7a46
       status: TRANSLATED
-      natural_language: For every client state s and every overlay o, if (o remains in the retained client_speculative_overlays
-        in state s or o is currently exposed as a speculative user-visible overlay in state s) and o in state s represents
-        a logical client edit that was created with a full identity, namely an edit whose creation identity is the complete
-        pair consisting of a document_id and a client_change_id, with both coordinates assigned at creation, then the retained/exposed
-        representation o in state s preserves the same logical edit's complete creation identity.
+      natural_language: 'For every client state s and every overlay o, if o is a retained overlay in s or o is a visible overlay
+        in s (or both), then all of the following hold conjunctively: (1) overlay o in state s represents a logical client
+        edit that was created with a full identity, namely the complete pair (document_id, client_change_id) with both coordinates
+        assigned at creation, where this condition classifies only the represented edit''s creation identity; (2) the retained
+        or exposed representation o in state s preserves the same logical edit''s complete creation identity; (3) the document_id
+        recorded on speculative overlay representation o itself, being the document identity that o carries as an exposed
+        speculative overlay, equals the document_id coordinate of the full logical identity (document_id, client_change_id)
+        of the logical edit that o represents; and (4) the client_change_id recorded on speculative overlay representation
+        o itself, being the client change identity that o carries as a retained or exposed speculative overlay, equals the
+        client_change_id coordinate of the full logical identity (document_id, client_change_id) of the logical edit that
+        o represents.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 58a67082a8529b11c09394496eeb2dc9b608fe26977113308608e3009ed4c9e3
+        subject_signature: bc8fba7ec43e2024fa2b0ec082979eb7df644a2d65f9093332208cb9c30b7a46
         verdict: EQUIVALENT
-        reason: The formula universally quantifies over all states and overlays, restricts to retained or visible representations
-          of edits created with full identity, and requires speculative_identity_provenance_ok, defined as preserving that
-          edit's complete (document_id, client_change_id) creation identity. This covers all identity-preserving transitions
-          state-wise without adding visibility, reconciliation, or uniqueness requirements.
+        reason: The formula universally quantifies over all states and overlays, applies to retained or visible overlays,
+          and requires the represented edit to have a full creation identity, provenance preservation, and equality of both
+          carried identity coordinates (document_id and client_change_id) with that edit's identity, without adding visibility
+          or uniqueness requirements.
         differences: []
       strengthening:
-        subject_signature: 58a67082a8529b11c09394496eeb2dc9b608fe26977113308608e3009ed4c9e3
+        subject_signature: bc8fba7ec43e2024fa2b0ec082979eb7df644a2d65f9093332208cb9c30b7a46
         verdict: EQUIVALENT
-        reason: The formula quantifies over all states and overlays, guards by retained-or-visible status together with representing
-          a logical edit created with the complete (D,k) identity, and concludes the predicate defined as preserving that
-          same complete creation identity. This matches the source scope, applicability, and identity-preservation requirement
-          without adding visibility, uniqueness, reconciliation, or other extra conditions.
+        reason: The formula universally quantifies over states and overlays, applies exactly when an overlay is retained or
+          visible, and requires preservation of the represented edit's complete creation identity, decomposed into equality
+          of both carried coordinates (document_id and client_change_id) with that edit's coordinates. It adds no visibility,
+          uniqueness, rebase, or other requirement beyond the source, and its state-universal form captures preservation across
+          transitions while the same logical edit is retained or exposed.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 58a67082a8529b11c09394496eeb2dc9b608fe26977113308608e3009ed4c9e3
+        subject_signature: bc8fba7ec43e2024fa2b0ec082979eb7df644a2d65f9093332208cb9c30b7a46
         verdict: EQUIVALENT
-        reason: The round-trip quantifies over every state and every retained or exposed overlay representing an edit created
-          with the full (document_id, client_change_id) pair, and requires preservation of that complete creation identity,
-          matching the original's scope, both identity coordinates, and its limitation to representations that persist; terminal
-          disposal and non-visibility are not required.
+        reason: The rendering applies to every retained or visible overlay in every state and requires both its document_id
+          and client_change_id to equal the complete creation identity of the logical edit it represents; quantification over
+          all states captures preservation across all identity-preserving transitions without adding visibility, uniqueness,
+          or reconciliation requirements.
         differences: []
   claim:L154_pending_edit_identity_provenance_is_preserved:
     kind: claim
