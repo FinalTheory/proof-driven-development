@@ -2695,6 +2695,7 @@ functions:
     - claim:C36_reconnect_starts_from_canonical_client_frontier
     - claim:C38_client_frontier_matches_canonical_base
     - claim:L132_visible_overlay_document_binding_established_on_publication
+    - claim:L130_reconnect_start_is_bound_to_visible_client_tuple
   definitive_rejection_path_preserves_bound_request:
     args:
     - TerminalResultRecord
@@ -4437,6 +4438,7 @@ functions:
     meaning: 'Normal foreground reconnect/catch-up initiation is enabled from user-visible client state s: s is a user-visible tuple from which such an attempt may be initiated.'
     semantic_anchors:
     - claim:L136_reconnect_initiation_visible_frontier_is_canonical
+    - claim:L130_reconnect_start_is_bound_to_visible_client_tuple
   ot_invocation_consumes_submitted_request:
     args:
     - OTInvocation
@@ -17940,6 +17942,103 @@ claims:
                 args:
                 - var: s
                 - var: h
+  L130_reconnect_start_is_bound_to_visible_client_tuple:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            c: CatchupAttempt
+            s: ClientState
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: normal_foreground_reconnect_attempt
+                  args:
+                  - var: c
+              - call:
+                  fn: reconnect_attempt_initiated_from_visible_state
+                  args:
+                  - var: c
+                  - var: s
+            - and:
+              - eq:
+                - call:
+                    fn: represented_document
+                    args:
+                    - var: s
+                - call:
+                    fn: reconnect_attempt_document
+                    args:
+                    - var: c
+              - call:
+                  fn: reconnect_start_base_captured_from_visible_state
+                  args:
+                  - var: c
+                  - var: s
+              - eq:
+                - call:
+                    fn: reconnect_start_last_applied_revision
+                    args:
+                    - var: c
+                - call:
+                    fn: visible_frontier
+                    args:
+                    - var: s
+              - call:
+                  fn: user_visible_canonical_state
+                  args:
+                  - var: s
+              - call:
+                  fn: reconnect_initiation_enabled_at_visible_state
+                  args:
+                  - var: s
+      - forall:
+          vars:
+            c: CatchupAttempt
+            s: ClientState
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: normal_foreground_reconnect_attempt
+                  args:
+                  - var: c
+              - call:
+                  fn: reconnect_attempt_initiated_from_visible_state
+                  args:
+                  - var: c
+                  - var: s
+            - and:
+              - eq:
+                - call:
+                    fn: client_document_id_value
+                    args:
+                    - var: s
+                - call:
+                    fn: reconnect_attempt_document
+                    args:
+                    - var: c
+      - forall:
+          vars:
+            c: CatchupAttempt
+          body:
+            implies:
+            - call:
+                fn: normal_foreground_reconnect_attempt
+                args:
+                - var: c
+            - exists:
+                vars:
+                  s: ClientState
+                body:
+                  call:
+                    fn: reconnect_attempt_initiated_from_visible_state
+                    args:
+                    - var: c
+                    - var: s
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
