@@ -9860,56 +9860,78 @@ records:
   claim:L99_ot_result_is_bound_to_acceptance_frontier:
     kind: claim
     subject_id: L99_ot_result_is_bound_to_acceptance_frontier
-    subject_signature: dc750a9e5381f408f3e4557bb6aefc8ca54759045d21aac1b74d00eaaa36b7a3
+    subject_signature: 61c6fc0b05c89c70e32549363bb54bd221f51ea7826c7370b3bd928ee028cc18
     roundtrip:
-      subject_signature: dc750a9e5381f408f3e4557bb6aefc8ca54759045d21aac1b74d00eaaa36b7a3
+      subject_signature: 61c6fc0b05c89c70e32549363bb54bd221f51ea7826c7370b3bd928ee028cc18
       status: TRANSLATED
-      natural_language: 'For every OT success result r, if r is a successful result actually produced by an OT computation
-        in an in-scope protocol execution, whether subsequently accepted, retained, retried, rejected at acceptance arbitration,
-        or discarded, then there exists a revision n such that both of the following hold: (1) n is the ot_computation_frontier
-        of the canonical committed document prefix against which the OT computation that produced r was computed, meaning
-        that computation consumed the canonical committed accepted_change_log prefix through revision n; this asserts only
-        that computation-time fact about r and the prefix it consumed, nothing about any representation or handoff of r after
-        its computation, requires no retention of r, and by itself imposes no condition on when r may become a canonical_accepted_change.
-        And (2) for every canonical acceptance a, if a is a committed canonical accepted-change record in authoritative accepted
-        history and canonical acceptance a is bound to the exact successful OT result r that produced its accepted payload,
-        with no synthesized or substituted result qualifying, then all three of the following hold: (a) acceptance_prestate_latest_revision(a)
-        equals n, where that value is, for committed acceptance a, the authoritative document_latest_revision of a''s document
-        immediately before a''s acceptance linearization point, being the actual acceptance pre-state value and not an earlier
-        read, an owner-memory estimate, a submitted frontier field, or the post-acceptance value; (b) acceptance_revision_is_successor_of(a,
-        n) holds, meaning the canonical revision assigned to acceptance a is exactly n+1, the immediate next revision after
-        n, and this predicate asserts only that revision relationship and does not assert commitment, OT provenance, or the
-        authoritative acceptance pre-state; and (c) acceptance_linearization_prestate_latest_revision(a) equals n, where that
-        value is, for committed acceptance a, the latest_revision of the authoritative acceptance pre-state of a''s document
-        immediately before a''s acceptance linearization point, namely that pre-state''s document_latest_revision, being the
-        actual acceptance pre-state value named and not an earlier read, an owner-memory estimate, a submitted frontier field,
-        the post-acceptance value, or a pre-state read at any distinct candidate-commit step.'
+      natural_language: 'All of the following hold conjunctively. (1) For every OT success result r, if r is a successful
+        result actually produced by an OT computation in an in-scope protocol execution (whether subsequently accepted, retained,
+        retried, rejected at acceptance arbitration, or discarded; this alone asserts no frontier preservation, acceptance
+        eligibility, or algorithmic correctness), then there exists a revision n such that n is the ot_computation_frontier
+        of the canonical committed document prefix against which the OT computation that produced r was computed — i.e., that
+        computation consumed the canonical committed accepted_change_log prefix through revision n, a computation-time fact
+        that by itself asserts nothing about any representation or handoff of r after its computation, requires no retention
+        of r, and imposes no condition on when r may become a canonical_accepted_change — and, for every canonical acceptance
+        a, if a is a committed canonical accepted-change record in authoritative accepted history and a is bound to exactly
+        r as the successful OT result that produced its accepted payload (with no synthesized or substituted result qualifying),
+        then both: the canonical revision assigned to a is exactly n+1, the immediate next revision after n, and the latest_revision
+        of the authoritative acceptance pre-state of a''s document immediately before a''s acceptance linearization point
+        (that pre-state''s document_latest_revision, being the actual acceptance pre-state value, not an earlier read, an
+        owner-memory estimate, a submitted frontier field, the post-acceptance value, or a pre-state read at any distinct
+        candidate-commit step) equals n. (2) For every canonical acceptance a, if a is a canonical_accepted_change in authoritative
+        accepted history (every such canonical acceptance requiring successful OT provenance for its accepted payload), then
+        a is a committed canonical accepted-change record in authoritative accepted history. (3) For every OT invocation i
+        and every OT success result sr, if sr is the successful OT result returned by i — i completed with a successful transformed
+        change and sr is that exact output result, an invocation rejected by the engine as invalid or rebase-required having
+        no such result — then sr is a successful result actually produced by an OT computation in an in-scope protocol execution,
+        in the sense defined in (1). (4) For every OT invocation i, canonical acceptance a, and OT success result sr, if the
+        successful output of i is the accepted payload committed as a — a is the canonical_accepted_change created by committing
+        i''s OT result, not a synthesized or separately produced change — and sr is the successful OT result returned by i,
+        then a is bound to exactly sr as the successful OT result that produced its accepted payload. (5) For every canonical
+        acceptance a, request rq, OT invocation i, OT success result sr, and revision n, if all of the following hold: a was
+        produced from submitted request rq; i is the OT-engine invocation performed for submitted request rq, with the transform
+        input the engine receives for i being exactly rq''s submitted raw_edit and rq''s submitted client base_revision, not
+        a substituted edit, a substituted base, or another request''s input; sr is the successful OT result returned by i;
+        a is bound to exactly sr as the successful OT result that produced its accepted payload; the document context fed
+        to i represents exactly one canonical committed prefix of the document through a definite revision frontier, with
+        every change in the context belonging to that committed canonical prefix and no speculative, uncommitted, or mismatched-document
+        content in the context; sr was computed against frontier n in the sense defined in (1); and the canonical revision
+        assigned to a is exactly n+1 — then the successful OT result committed as canonical acceptance a was computed for
+        request rq against the canonical committed prefix immediately preceding a''s accepted revision.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: dc750a9e5381f408f3e4557bb6aefc8ca54759045d21aac1b74d00eaaa36b7a3
+        subject_signature: 61c6fc0b05c89c70e32549363bb54bd221f51ea7826c7370b3bd928ee028cc18
         verdict: EQUIVALENT
-        reason: The formula binds each actual OT result to the frontier n against which it was computed and requires every
-          committed acceptance using that exact result to have acceptance pre-state latest_revision equal to n and assigned
-          revision n+1, exactly the canonical frontier-binding and stale-result prohibition; the duplicated pre-state functions
-          both denote the same authoritative pre-linearization value and add no distinct requirement.
+        reason: 'The formula''s first clause binds every committed acceptance exact-linked to an actual OT success result
+          to acceptance-prestate latest_revision equal to that result''s computation frontier N and acceptance revision exactly
+          N+1, which is precisely the source''s frontier-binding and stale-result prohibition. The remaining clauses faithfully
+          encode the definitional sentences: payload-record acceptances are committed, invocation-returned results are actual
+          OT success results, a committed invocation output makes its returned result the acceptance''s exact result, and
+          the bound acceptance''s OT context is the canonical committed prefix immediately preceding it (through N, given
+          revision N+1 and computed-against N). No source requirement is omitted, added, or altered in quantifier scope, provenance
+          direction, or identity coordinates.'
         differences: []
       strengthening:
-        subject_signature: dc750a9e5381f408f3e4557bb6aefc8ca54759045d21aac1b74d00eaaa36b7a3
+        subject_signature: 61c6fc0b05c89c70e32549363bb54bd221f51ea7826c7370b3bd928ee028cc18
         verdict: EQUIVALENT
-        reason: For every actual OT success result, the formula fixes its computation frontier n and requires any committed
-          acceptance bound to that exact result to have acceptance pre-state latest_revision equal to n and assigned revision
-          exactly n+1; this precisely bars stale-frontier commitment, leaving commitment possible only via a fresh result
-          computed at the advanced frontier.
+        reason: 'The formula maps each part of the statement faithfully: a committed acceptance bound to the exact OT result
+          requires revision successor of the result''s computation frontier N and acceptance-linearization pre-state latest_revision
+          equal to N; a payload-record acceptance is committed; an invocation''s returned success result is actual; an invocation
+          output committed as an acceptance makes that result the acceptance''s exact result; and, for the originating request
+          and invocation, the computed-against frontier together with the successor revision identifies the OT context as
+          the canonical committed prefix immediately preceding the acceptance. No requirement is added, omitted, or altered
+          in scope, provenance direction, or identity.'
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: dc750a9e5381f408f3e4557bb6aefc8ca54759045d21aac1b74d00eaaa36b7a3
+        subject_signature: 61c6fc0b05c89c70e32549363bb54bd221f51ea7826c7370b3bd928ee028cc18
         verdict: EQUIVALENT
-        reason: 'The rendering preserves the frontier binding: an OT result computed against prefix through n may be the exact
-          result bound to a committed canonical acceptance only when the authoritative acceptance pre-state latest_revision/document_latest_revision
-          immediately before linearization equals n and the assigned acceptance revision is n+1; no material weakening, strengthening,
-          or coordinate collapse beyond the source statement and contract definitions.'
+        reason: The rendering preserves the frontier binding (pre-state latest_revision = N and assigned revision N+1 for
+          any acceptance bound to the exact OT result), the exact-provenance direction from invocation output to committed
+          acceptance, the committed-record status, and the identification of the acceptance's OT context with the canonical
+          prefix through N immediately preceding it; its clarifications only unpack authoritative pre-state identity and exact,
+          non-substituted binding without adding or omitting a requirement.
         differences: []
   claim:L126_pending_reconciliation_preserves_resync_canonical_candidate:
     kind: claim
