@@ -3215,6 +3215,7 @@ functions:
     - claim:C43_terminal_outcome_entry_state_is_coherent
     - claim:L192_terminal_publication_preserves_store_identity_provenance
     - claim:L213_terminal_result_store_records_have_single_acceptance_creation_provenance
+    - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
   migration_preserves_terminal_result_record:
     args:
     - ProtocolTransition
@@ -5970,6 +5971,50 @@ functions:
     returns: Bool
     semantic_anchors:
     - claim:L155_unresolved_speculative_edit_has_pending_entry
+  transition_resulting_state_within_retry_horizon:
+    args:
+    - ProtocolTransition
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols: []
+    meaning: The authoritative state resulting from transition x remains within the configured normal retry eligibility horizon for the exact full idempotency identity k = (document_id, client_change_id). This predicate classifies only the horizon position, for identity k, of the authoritative state that results from x; it does not assume any fixed duration, and it asserts nothing about x's pre-state, about whether x preserves or creates any outcome, or about any other identity.
+    semantic_anchors:
+    - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
+  recovery_attempt_installs_strictly_newer_epoch_and_fresh_generation:
+    args:
+    - RecoveryAttempt
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Recovery attempt r installs a strictly newer epoch and a fresh owner generation for its target document before or atomically with r reaching the point of becoming authoritative or acceptance-eligible: the epoch r installs is strictly greater than the superseded generation''s epoch, and the owner generation r installs is a fresh generation identity distinct from the superseded generation''s. This predicate asserts that installation outcome relative to that point; it does not assert that r reaches the point, and it imposes no requirement on an attempt that stalls, crashes, or aborts before reaching it.'
+    semantic_anchors:
+    - claim:C9_recovery_reconstructs_committed_state
+  recovered_logical_state_equals_canonical_replay_through_head:
+    args:
+    - RecoveryAttempt
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: The recovered logical document state installed by recovery attempt r equals deterministic canonical replay of the accepted revisions of r's target document through revision h. This predicate states that value equality of the installed recovered logical state; it does not assert how the state was produced, that any checkpoint selection or tail replay step occurred, that r completed, or which frontier the recovered owner serves at.
+    semantic_anchors:
+    - claim:C9_recovery_reconstructs_committed_state
+  recovered_owner_service_frontier_is:
+    args:
+    - RecoveryAttempt
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'The recovered service frontier of the owner established by recovery attempt r is exactly revision h: the frontier at which that recovered owner stands to serve r''s target document after r''s completion is h, neither behind nor ahead of h. This predicate states the recovered owner''s frontier coordinate only; it does not assert the contents of the recovered state or any local-head or next-candidate representation of that frontier.'
+    semantic_anchors:
+    - claim:C9_recovery_reconstructs_committed_state
+  post_recovery_history_dependent_state_equivalent_to_clean_reconstruction:
+    args:
+    - RecoveryAttempt
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: Every document-history-dependent runtime state value on the recovered owner established by recovery attempt r that can influence server-side OT transformation or canonical acceptance is equivalent to a clean reconstruction from the authoritative canonical history of r's target document through revision h, so the canonical semantics resumed under r's recovered owner are unchanged. This predicate asserts the equivalence of those values to the clean reconstruction; it does not confine them to any particular component, container, or representation, and containment of a value in some component without that equivalence does not satisfy it.
+    semantic_anchors:
+    - claim:C9_recovery_reconstructs_committed_state
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -10238,6 +10283,16 @@ claims:
                   args:
                   - var: s
                   - var: k
+              - call:
+                  fn: acceptance_or_rejection_path_for_key
+                  args:
+                  - var: x
+                  - var: k
+              - call:
+                  fn: transition_resulting_state_within_retry_horizon
+                  args:
+                  - var: x
+                  - var: k
             - call:
                 fn: transition_preserves_terminal_outcome
                 args:
@@ -10280,6 +10335,7 @@ claims:
       - forall:
           vars:
             x: ProtocolTransition
+            s: AuthoritativeState
             k: IdempotencyKey
           body:
             implies:
@@ -10293,6 +10349,20 @@ claims:
                   fn: idempotency_key_is_eligible
                   args:
                   - var: k
+              - call:
+                  fn: authoritative_terminal_state_transition_at
+                  args:
+                  - var: x
+                  - var: s
+              - call:
+                  fn: reachable_authoritative_state
+                  args:
+                  - var: s
+              - call:
+                  fn: terminal_key_within_retry_horizon
+                  args:
+                  - var: s
+                  - var: k
             - call:
                 fn: terminal_path_passes_shared_arbitration_gate
                 args:
@@ -10301,12 +10371,30 @@ claims:
       - forall:
           vars:
             t: TerminalResultRecord
+            s: AuthoritativeState
+            k: IdempotencyKey
           body:
             implies:
-            - call:
-                fn: accepted_terminal_created_for_eligible_identity
-                args:
-                - var: t
+            - and:
+              - call:
+                  fn: accepted_terminal_created_for_eligible_identity
+                  args:
+                  - var: t
+              - call:
+                  fn: terminal_result_in_state_for_key
+                  args:
+                  - var: t
+                  - var: s
+                  - var: k
+              - call:
+                  fn: reachable_authoritative_state
+                  args:
+                  - var: s
+              - call:
+                  fn: terminal_key_within_retry_horizon
+                  args:
+                  - var: s
+                  - var: k
             - exists:
                 vars:
                   a: CanonicalAcceptance
@@ -16395,156 +16483,22 @@ claims:
     - recovery_document_scope_binding
     formula:
       and:
-      - and:
-        - forall:
-            vars:
-              r: RecoveryAttempt
-            body:
-              implies:
-              - call:
-                  fn: recovery_attempt_establishes_owner_generation
-                  args:
-                  - var: r
-              - call:
-                  fn: new_owner_recovery_attempt
-                  args:
-                  - var: r
-        - forall:
-            vars:
-              r: RecoveryAttempt
-            body:
-              implies:
-              - and:
-                - call:
-                    fn: recovery_attempt_establishes_owner_generation
-                    args:
-                    - var: r
-                - call:
-                    fn: recovery_attempt_reaches_authoritative_publication
-                    args:
-                    - var: r
-              - call:
-                  fn: recovery_attempt_publication_is_fresh_generation
-                  args:
-                  - var: r
-      - forall:
-          vars:
-            t: ProtocolTransition
-            d: Document
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: authoritative_handoff_for_document
-                  args:
-                  - var: t
-                  - var: d
-              - exists:
-                  vars:
-                    r: RecoveryAttempt
-                  body:
-                    and:
-                    - call:
-                        fn: recovery_attempt_establishes_owner_generation
-                        args:
-                        - var: r
-                    - call:
-                        fn: recovery_attempt_reaches_authoritative_publication
-                        args:
-                        - var: r
-                    - eq:
-                      - call:
-                          fn: recovery_target_document
-                          args:
-                          - var: r
-                      - var: d
-            - call:
-                fn: handoff_installs_strictly_greater_epoch
-                args:
-                - var: t
-                - var: d
-      - forall:
-          vars:
-            t: ProtocolTransition
-            d: Document
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: authoritative_handoff_for_document
-                  args:
-                  - var: t
-                  - var: d
-              - exists:
-                  vars:
-                    r: RecoveryAttempt
-                  body:
-                    and:
-                    - call:
-                        fn: recovery_attempt_establishes_owner_generation
-                        args:
-                        - var: r
-                    - call:
-                        fn: recovery_attempt_reaches_authoritative_publication
-                        args:
-                        - var: r
-                    - eq:
-                      - call:
-                          fn: recovery_target_document
-                          args:
-                          - var: r
-                      - var: d
-            - call:
-                fn: handoff_installs_fresh_generation_id
-                args:
-                - var: t
-                - var: d
-      - forall:
-          vars:
-            t: ProtocolTransition
-            d: Document
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: authoritative_handoff_for_document
-                  args:
-                  - var: t
-                  - var: d
-              - exists:
-                  vars:
-                    r: RecoveryAttempt
-                  body:
-                    and:
-                    - call:
-                        fn: recovery_attempt_establishes_owner_generation
-                        args:
-                        - var: r
-                    - call:
-                        fn: recovery_attempt_reaches_authoritative_publication
-                        args:
-                        - var: r
-                    - eq:
-                      - call:
-                          fn: recovery_target_document
-                          args:
-                          - var: r
-                      - var: d
-            - and:
-              - call:
-                  fn: handoff_installs_strictly_greater_epoch
-                  args:
-                  - var: t
-                  - var: d
-              - call:
-                  fn: handoff_installs_fresh_generation_id
-                  args:
-                  - var: t
-                  - var: d
       - forall:
           vars:
             r: RecoveryAttempt
-            d: Document
+          body:
+            implies:
+            - call:
+                fn: recovery_attempt_establishes_owner_generation
+                args:
+                - var: r
+            - call:
+                fn: new_owner_recovery_attempt
+                args:
+                - var: r
+      - forall:
+          vars:
+            r: RecoveryAttempt
           body:
             implies:
             - and:
@@ -16552,424 +16506,31 @@ claims:
                   fn: new_owner_recovery_attempt
                   args:
                   - var: r
-              - eq:
+              - call:
+                  fn: recovery_attempt_reaches_authoritative_publication
+                  args:
+                  - var: r
+            - call:
+                fn: recovery_attempt_installs_strictly_newer_epoch_and_fresh_generation
+                args:
+                - var: r
+      - forall:
+          vars:
+            r: RecoveryAttempt
+          body:
+            implies:
+            - call:
+                fn: new_owner_recovery_attempt
+                args:
+                - var: r
+            - call:
+                fn: recovery_inputs_states_and_resumed_context_preserve_document_scope
+                args:
                 - call:
                     fn: recovery_target_document
                     args:
                     - var: r
-                - var: d
-              - call:
-                  fn: recovery_head_capture_event
-                  args:
-                  - var: r
-            - call:
-                fn: document_epoch_advanced_before_recovery_head_capture
-                args:
                 - var: r
-                - var: d
-      - and:
-        - forall:
-            vars:
-              r: RecoveryAttempt
-            body:
-              implies:
-              - call:
-                  fn: recovery_document_scope_attempt
-                  args:
-                  - var: r
-              - call:
-                  fn: recovery_sources_preserve_document_scope
-                  args:
-                  - call:
-                      fn: recovery_target_document
-                      args:
-                      - var: r
-                  - var: r
-        - forall:
-            vars:
-              r: RecoveryAttempt
-            body:
-              implies:
-              - call:
-                  fn: new_owner_recovery_attempt
-                  args:
-                  - var: r
-              - call:
-                  fn: recovery_inputs_and_installed_ot_preserve_target_document_scope
-                  args:
-                  - var: r
-        - forall:
-            vars:
-              r: RecoveryAttempt
-            body:
-              implies:
-              - call:
-                  fn: recovery_document_scope_attempt
-                  args:
-                  - var: r
-              - call:
-                  fn: recovery_inputs_states_and_resumed_context_preserve_document_scope
-                  args:
-                  - call:
-                      fn: recovery_target_document
-                      args:
-                      - var: r
-                  - var: r
-      - forall:
-          vars:
-            r: RecoveryAttempt
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: new_owner_recovery_attempt
-                  args:
-                  - var: r
-              - call:
-                  fn: recovery_completed
-                  args:
-                  - var: r
-            - call:
-                fn: recovery_inputs_and_installed_ot_preserve_target_document_scope
-                args:
-                - var: r
-      - and:
-        - forall:
-            vars:
-              r: RecoveryAttempt
-            body:
-              implies:
-              - and:
-                - call:
-                    fn: new_owner_recovery_attempt
-                    args:
-                    - var: r
-                - call:
-                    fn: recovery_attempt_reaches_checkpoint_selection
-                    args:
-                    - var: r
-              - and:
-                - call:
-                    fn: recovery_attempt_selects_exactly_one_checkpoint
-                    args:
-                    - var: r
-                - call:
-                    fn: recovery_selected_checkpoint_is_authoritative_published
-                    args:
-                    - var: r
-                - call:
-                    fn: recovery_selected_checkpoint_publication_is_atomic
-                    args:
-                    - var: r
-        - forall:
-            vars:
-              r: RecoveryAttempt
-            body:
-              implies:
-              - and:
-                - call:
-                    fn: new_owner_recovery_attempt
-                    args:
-                    - var: r
-                - call:
-                    fn: recovery_attempt_reaches_checkpoint_selection
-                    args:
-                    - var: r
-                - call:
-                    fn: recovery_attempt_progresses_to_completion_installation_or_tail
-                    args:
-                    - var: r
-              - and:
-                - call:
-                    fn: recovery_installed_replay_base_is_selected_checkpoint
-                    args:
-                    - var: r
-                - call:
-                    fn: recovery_selected_checkpoint_installed_before_tail_and_completion
-                    args:
-                    - var: r
-      - forall:
-          vars:
-            r: RecoveryAttempt
-            v: Revision
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: new_owner_recovery_attempt
-                  args:
-                  - var: r
-              - call:
-                  fn: recovery_selected_checkpoint_frontier_is
-                  args:
-                  - var: r
-                  - var: v
-            - call:
-                fn: checkpoint_state_equals_canonical_replay_through_frontier
-                args:
-                - var: v
-      - and:
-        - forall:
-            vars:
-              r: RecoveryAttempt
-              s: Revision
-              h: Revision
-              a: CanonicalAcceptance
-              v: Revision
-            body:
-              implies:
-              - and:
-                - and:
-                  - call:
-                      fn: recovery_selected_checkpoint_frontier_is
-                      args:
-                      - var: r
-                      - var: s
-                  - call:
-                      fn: recovery_attempt_captured_head_is
-                      args:
-                      - var: r
-                      - var: h
-                  - call:
-                      fn: recovery_captured_head_is_authoritative_frontier
-                      args:
-                      - var: r
-                      - var: h
-                - call:
-                    fn: canonical_acceptance_revision_is
-                    args:
-                    - var: a
-                    - var: v
-                - call:
-                    fn: revision_in_checkpoint_tail_range
-                    args:
-                    - var: v
-                    - var: s
-                    - var: h
-              - call:
-                  fn: recovery_replay_applies_accepted_change
-                  args:
-                  - var: r
-                  - var: a
-        - forall:
-            vars:
-              r: RecoveryAttempt
-              s: Revision
-              h: Revision
-              a: CanonicalAcceptance
-              v: Revision
-            body:
-              implies:
-              - and:
-                - and:
-                  - call:
-                      fn: recovery_selected_checkpoint_frontier_is
-                      args:
-                      - var: r
-                      - var: s
-                  - call:
-                      fn: recovery_attempt_captured_head_is
-                      args:
-                      - var: r
-                      - var: h
-                  - call:
-                      fn: recovery_captured_head_is_authoritative_frontier
-                      args:
-                      - var: r
-                      - var: h
-                - call:
-                    fn: recovery_replay_applies_accepted_change
-                    args:
-                    - var: r
-                    - var: a
-                - call:
-                    fn: canonical_acceptance_revision_is
-                    args:
-                    - var: a
-                    - var: v
-              - call:
-                  fn: revision_in_checkpoint_tail_range
-                  args:
-                  - var: v
-                  - var: s
-                  - var: h
-        - forall:
-            vars:
-              r: RecoveryAttempt
-              s: Revision
-              h: Revision
-            body:
-              implies:
-              - and:
-                - call:
-                    fn: recovery_selected_checkpoint_frontier_is
-                    args:
-                    - var: r
-                    - var: s
-                - call:
-                    fn: recovery_attempt_captured_head_is
-                    args:
-                    - var: r
-                    - var: h
-                - call:
-                    fn: recovery_captured_head_is_authoritative_frontier
-                    args:
-                    - var: r
-                    - var: h
-              - call:
-                  fn: recovery_replay_applies_tail_exactly_once_in_order
-                  args:
-                  - var: r
-      - forall:
-          vars:
-            r: RecoveryAttempt
-            s: Revision
-            h: Revision
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: recovery_selected_loaded_checkpoint_frontier_is
-                  args:
-                  - var: r
-                  - var: s
-              - call:
-                  fn: recovery_attempt_authoritative_recovery_head_is
-                  args:
-                  - var: r
-                  - var: h
-            - call:
-                fn: revision_at_or_before
-                args:
-                - var: s
-                - var: h
-      - forall:
-          vars:
-            r: RecoveryAttempt
-          body:
-            implies:
-            - call:
-                fn: recovery_head_capture_event
-                args:
-                - var: r
-            - call:
-                fn: recovery_head_preserved
-                args:
-                - var: r
-      - and:
-        - forall:
-            vars:
-              r: RecoveryAttempt
-              h: Revision
-            body:
-              implies:
-              - and:
-                - call:
-                    fn: new_owner_recovery_attempt
-                    args:
-                    - var: r
-                - call:
-                    fn: recovery_completed
-                    args:
-                    - var: r
-                - call:
-                    fn: recovery_attempt_captured_head_is
-                    args:
-                    - var: r
-                    - var: h
-              - and:
-                - call:
-                    fn: recovered_local_head_initialized_to
-                    args:
-                    - var: r
-                    - var: h
-                - exists:
-                    vars:
-                      v: Revision
-                    body:
-                      and:
-                      - call:
-                          fn: revision_is_immediate_predecessor
-                          args:
-                          - var: h
-                          - var: v
-                      - call:
-                          fn: recovered_next_candidate_revision_is
-                          args:
-                          - var: r
-                          - var: v
-        - forall:
-            vars:
-              r: RecoveryAttempt
-              h: Revision
-            body:
-              implies:
-              - and:
-                - call:
-                    fn: new_owner_recovery_attempt
-                    args:
-                    - var: r
-                - call:
-                    fn: recovery_owner_resumes_acceptance
-                    args:
-                    - var: r
-                - call:
-                    fn: recovery_attempt_captured_head_is
-                    args:
-                    - var: r
-                    - var: h
-              - and:
-                - call:
-                    fn: recovered_local_head_initialized_to
-                    args:
-                    - var: r
-                    - var: h
-                - exists:
-                    vars:
-                      v: Revision
-                    body:
-                      and:
-                      - call:
-                          fn: revision_is_immediate_predecessor
-                          args:
-                          - var: h
-                          - var: v
-                      - call:
-                          fn: recovered_next_candidate_revision_is
-                          args:
-                          - var: r
-                          - var: v
-      - forall:
-          vars:
-            r: RecoveryAttempt
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: new_owner_recovery_attempt
-                  args:
-                  - var: r
-              - call:
-                  fn: recovery_owner_performs_canonical_acceptance
-                  args:
-                  - var: r
-            - and:
-              - call:
-                  fn: recovery_checkpoint_installed
-                  args:
-                  - var: r
-              - call:
-                  fn: recovery_tail_replayed_through_captured_head
-                  args:
-                  - var: r
-              - call:
-                  fn: recovery_ot_metadata_rebuilt
-                  args:
-                  - var: r
-              - call:
-                  fn: recovery_local_state_initialized_through_head
-                  args:
-                  - var: r
       - forall:
           vars:
             r: RecoveryAttempt
@@ -16982,27 +16543,46 @@ claims:
                   args:
                   - var: r
               - call:
-                  fn: recovery_completed
-                  args:
-                  - var: r
-              - call:
-                  fn: recovery_used_to_resume_owner_service
-                  args:
-                  - var: r
-              - call:
-                  fn: recovery_attempt_captured_head_is
+                  fn: recovery_completed_at_authoritative_head
                   args:
                   - var: r
                   - var: h
+            - and:
+              - call:
+                  fn: recovered_logical_state_equals_canonical_replay_through_head
+                  args:
+                  - var: r
+                  - var: h
+              - call:
+                  fn: recovered_owner_service_frontier_is
+                  args:
+                  - var: r
+                  - var: h
+      - forall:
+          vars:
+            r: RecoveryAttempt
+            h: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: new_owner_recovery_attempt
+                  args:
+                  - var: r
+              - call:
+                  fn: recovery_owner_resumes_acceptance
+                  args:
+                  - var: r
               - call:
                   fn: recovery_completed_at_authoritative_head
                   args:
                   - var: r
                   - var: h
             - call:
-                fn: post_recovery_history_dependent_state_is_exhaustive
+                fn: post_recovery_history_dependent_state_equivalent_to_clean_reconstruction
                 args:
                 - var: r
+                - var: h
   L10_replay_covers_exact_tail_in_order_once:
     capability: relational
     contracts: []
@@ -17407,6 +16987,10 @@ claims:
                   fn: authoritative_history_lifecycle_transition_completes
                   args:
                   - var: t
+              - call:
+                  fn: authoritative_history_lifecycle_completes_without_accepting_new_edit
+                  args:
+                  - var: t
               - exists:
                   vars:
                     pre: AuthoritativeState
@@ -17432,7 +17016,6 @@ claims:
           vars:
             t: ProtocolTransition
             d: Document
-            pre: AuthoritativeState
             post: AuthoritativeState
             h: Revision
           body:
@@ -17448,25 +17031,19 @@ claims:
                   args:
                   - var: t
               - call:
-                  fn: authoritative_history_lifecycle_source_state
+                  fn: authoritative_history_lifecycle_completes_without_accepting_new_edit
                   args:
                   - var: t
-                  - var: pre
+              - call:
+                  fn: authoritative_history_lifecycle_transition_completes_at_frontier
+                  args:
+                  - var: t
+                  - var: h
               - call:
                   fn: authoritative_history_lifecycle_result_state
                   args:
                   - var: t
                   - var: post
-              - call:
-                  fn: state_exposes_document_frontier
-                  args:
-                  - var: pre
-                  - var: d
-              - call:
-                  fn: authoritative_latest_revision_equals_frontier
-                  args:
-                  - var: pre
-                  - var: h
             - and:
               - call:
                   fn: state_exposes_document_frontier
