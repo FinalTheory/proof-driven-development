@@ -297,6 +297,7 @@ functions:
     - claim:L12_delta_catchup_reads_canonical_revision_range
     - claim:C10_catchup_represents_exact_missing_suffix
     - claim:L101_client_completes_catchup_through_response_head
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
   catchup_response_identifies_selected_checkpoint:
     args:
     - CatchupResponse
@@ -506,6 +507,7 @@ functions:
     - claim:L99_ot_result_is_bound_to_acceptance_frontier
     - claim:L123_acceptance_payload_and_identity_share_submitted_request
     - claim:L182_logical_edit_request_payload_binding_is_preserved
+    - claim:G1_retry_is_logically_exactly_once
   acceptance_document:
     args:
     - CanonicalAcceptance
@@ -715,6 +717,7 @@ functions:
     - claim:L20_acceptance_paths_are_authoritatively_mediated
     - claim:C14_all_acceptance_paths_honor_idempotency_identity
     - claim:C13_idempotency_key_is_temporally_unique
+    - claim:G1_retry_is_logically_exactly_once
   transition_is_authoritatively_gate_mediated:
     args:
     - ProtocolTransition
@@ -736,6 +739,7 @@ functions:
     - claim:L14_accepted_idempotency_identity_survives_lifecycle
     - claim:L27_concurrent_first_acceptance_is_atomically_arbitrated
     - claim:C13_idempotency_key_is_temporally_unique
+    - claim:G1_retry_is_logically_exactly_once
   transition_creates_acceptance:
     args:
     - ProtocolTransition
@@ -748,6 +752,7 @@ functions:
     - claim:C13_idempotency_key_is_temporally_unique
     - claim:L14_accepted_idempotency_identity_survives_lifecycle
     - claim:L27_concurrent_first_acceptance_is_atomically_arbitrated
+    - claim:G1_retry_is_logically_exactly_once
   transition_idempotency_key:
     args:
     - ProtocolTransition
@@ -760,6 +765,7 @@ functions:
     meaning: The authoritative idempotency key of the acceptance that transition t attempts to create or creates; the composite identity k = (document_id, client_change_id) for that acceptance. Every acceptance-capable transition is associated with exactly one such key; this projection names that key only and does not assert that t creates an acceptance, is arbitrated for one, or observes any prior acceptance for it. This key is also the key under which any acceptance event t creates is entered in the authoritative acceptance_events log, so the temporal-uniqueness count over acceptance_events is keyed by this value.
     semantic_anchors:
     - claim:C13_idempotency_key_is_temporally_unique
+    - claim:G1_retry_is_logically_exactly_once
   acceptance_transition_for_key:
     args:
     - ProtocolTransition
@@ -771,6 +777,7 @@ functions:
     - claim:C13_idempotency_key_is_temporally_unique
     - claim:L14_accepted_idempotency_identity_survives_lifecycle
     - claim:L27_concurrent_first_acceptance_is_atomically_arbitrated
+    - claim:G1_retry_is_logically_exactly_once
   transition_decision_precedes:
     args:
     - ProtocolTransition
@@ -790,6 +797,7 @@ functions:
     semantic_anchors:
     - claim:C13_idempotency_key_is_temporally_unique
     - claim:L14_accepted_idempotency_identity_survives_lifecycle
+    - claim:G1_retry_is_logically_exactly_once
   acceptance_event_occurred_for_key:
     args:
     - AuthoritativeState
@@ -818,6 +826,7 @@ functions:
     semantic_anchors:
     - claim:L27_concurrent_first_acceptance_is_atomically_arbitrated
     - claim:C13_idempotency_key_is_temporally_unique
+    - claim:G1_retry_is_logically_exactly_once
   pending_edit:
     args:
     - ClientState
@@ -2474,6 +2483,7 @@ functions:
     - claim:L159_owner_append_authorization_is_generation_bound
     - source:owner_failover
     - claim:C8_stale_owner_is_fenced
+    - claim:G2_canonical_history_is_linear_and_fenced
   append_tuple_bound_to_executing_document_generation:
     args:
     - Document
@@ -2490,6 +2500,7 @@ functions:
     - claim:L159_owner_append_authorization_is_generation_bound
     - source:owner_failover
     - claim:C8_stale_owner_is_fenced
+    - claim:G2_canonical_history_is_linear_and_fenced
     dimensions:
     - document
     - observation
@@ -3853,6 +3864,7 @@ functions:
     - claim:C10_catchup_represents_exact_missing_suffix
     - claim:L41_recovery_checkpoint_does_not_exceed_recovery_head
     - claim:C9_recovery_reconstructs_committed_state
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
   classification_evidence_preserved_throughout_horizon:
     args:
     - CatchupResponse
@@ -3895,6 +3907,7 @@ functions:
     meaning: Revision f is the user-visible canonical frontier (the client's last_applied_revision for the resync document) at the moment candidate response c is ready to publish.
     semantic_anchors:
     - claim:L109_resync_publication_is_atomic_and_monotonic
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
   resync_visible_frontier_after_response_handling:
     args:
     - CatchupResponse
@@ -3968,6 +3981,7 @@ functions:
     - claim:L216_authoritative_state_descends_from_initialization
     - claim:L217_append_step_commits_acceptance_at_previous_frontier
     - claim:L218_append_at_next_position_preserves_frontier_shape
+    - claim:G2_canonical_history_is_linear_and_fenced
   covered_authoritative_state_step:
     args:
     - AuthoritativeState
@@ -4194,6 +4208,7 @@ functions:
     - claim:C39_authoritative_history_state_is_gap_free
     - claim:L215_denotation_change_is_coordinate_change
     - claim:L216_authoritative_state_descends_from_initialization
+    - claim:G2_canonical_history_is_linear_and_fenced
   handoff_installs_strictly_greater_epoch:
     args:
     - ProtocolTransition
@@ -4209,6 +4224,7 @@ functions:
     - claim:L156_owner_handoff_installs_fresh_epoch
     - claim:C8_stale_owner_is_fenced
     - claim:C9_recovery_reconstructs_committed_state
+    - claim:G2_canonical_history_is_linear_and_fenced
   handoff_installs_fresh_generation_id:
     args:
     - ProtocolTransition
@@ -4221,6 +4237,7 @@ functions:
     - claim:L168_owner_handoff_installs_fresh_generation
     - claim:C8_stale_owner_is_fenced
     - claim:C9_recovery_reconstructs_committed_state
+    - claim:G2_canonical_history_is_linear_and_fenced
   acceptance_append_supplied_epoch_matches_current:
     args:
     - CanonicalAcceptance
@@ -4251,6 +4268,7 @@ functions:
     semantic_anchors:
     - claim:L5_append_requires_current_epoch
     - claim:C8_stale_owner_is_fenced
+    - claim:G2_canonical_history_is_linear_and_fenced
   authoritative_lifecycle_transition_for_document:
     args:
     - ProtocolTransition
@@ -4261,6 +4279,7 @@ functions:
     semantic_anchors:
     - claim:L28_authoritative_epoch_never_regresses_or_reuses
     - claim:C8_stale_owner_is_fenced
+    - claim:G2_canonical_history_is_linear_and_fenced
   lifecycle_transition_never_decreases_or_restores_epoch:
     args:
     - ProtocolTransition
@@ -4275,6 +4294,7 @@ functions:
     semantic_anchors:
     - claim:L28_authoritative_epoch_never_regresses_or_reuses
     - claim:C8_stale_owner_is_fenced
+    - claim:G2_canonical_history_is_linear_and_fenced
   explicit_non_acceptance_retirement_transition:
     args:
     - ProtocolTransition
@@ -4567,6 +4587,7 @@ functions:
     semantic_anchors:
     - claim:L5_append_requires_current_epoch
     - claim:C8_stale_owner_is_fenced
+    - claim:G2_canonical_history_is_linear_and_fenced
   lifecycle_transition_follows_epoch_supersession:
     args:
     - ProtocolTransition
@@ -4581,6 +4602,7 @@ functions:
     semantic_anchors:
     - claim:L28_authoritative_epoch_never_regresses_or_reuses
     - claim:C8_stale_owner_is_fenced
+    - claim:G2_canonical_history_is_linear_and_fenced
   state_step_is_lifecycle_transition:
     args:
     - AuthoritativeState
@@ -4592,6 +4614,7 @@ functions:
     semantic_anchors:
     - claim:L28_authoritative_epoch_never_regresses_or_reuses
     - claim:C8_stale_owner_is_fenced
+    - claim:G2_canonical_history_is_linear_and_fenced
   state_step_follows_epoch_supersession:
     args:
     - AuthoritativeState
@@ -4603,6 +4626,7 @@ functions:
     semantic_anchors:
     - claim:L28_authoritative_epoch_never_regresses_or_reuses
     - claim:C8_stale_owner_is_fenced
+    - claim:G2_canonical_history_is_linear_and_fenced
   state_step_decreases_document_epoch:
     args:
     - AuthoritativeState
@@ -4614,6 +4638,7 @@ functions:
     semantic_anchors:
     - claim:L28_authoritative_epoch_never_regresses_or_reuses
     - claim:C8_stale_owner_is_fenced
+    - claim:G2_canonical_history_is_linear_and_fenced
   superseded_epoch_value_is_current:
     args:
     - AuthoritativeState
@@ -4628,6 +4653,7 @@ functions:
     semantic_anchors:
     - claim:L28_authoritative_epoch_never_regresses_or_reuses
     - claim:C8_stale_owner_is_fenced
+    - claim:G2_canonical_history_is_linear_and_fenced
   append_tuple_matches_current_generation_at_commit:
     args:
     - ProtocolTransition
@@ -4645,6 +4671,7 @@ functions:
     semantic_anchors:
     - claim:L159_owner_append_authorization_is_generation_bound
     - claim:C8_stale_owner_is_fenced
+    - claim:G2_canonical_history_is_linear_and_fenced
   pending_representation_of_logical_edit:
     args:
     - ClientState
@@ -5971,6 +5998,7 @@ functions:
     returns: Bool
     semantic_anchors:
     - claim:L109_resync_publication_is_atomic_and_monotonic
+    - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
   transition_preserves_frontier_absence_evidence:
     args:
     - ProtocolTransition
@@ -6069,6 +6097,7 @@ functions:
     catalog_symbols: []
     semantic_anchors:
     - claim:L34_retries_of_logical_edit_reuse_identity
+    - claim:G1_retry_is_logically_exactly_once
     meaning: 'Request r is a submission of logical edit e: r is one of the requests by which logical edit e is submitted to the server, including e''s original first submission and every later retransmission
       or retry submission of the same edit. A submission of a different logical edit does not satisfy this predicate for e.'
   reprocessing_attempt_for_key:
@@ -6138,6 +6167,7 @@ functions:
     - claim:L35_losing_retry_resolves_through_canonical_acceptance
     - claim:L54_absent_key_winner_returns_its_canonical_acceptance
     - claim:L55_successful_retry_resolution_paths_are_exhaustive
+    - claim:G1_retry_is_logically_exactly_once
     meaning: 'Canonical acceptance a is the canonical accepted change for key k produced by attempt t itself: t is a''s acceptance producer, and a is committed as t''s own acceptance production for k. An
       acceptance produced by a different attempt, or merely returned by t, does not satisfy this predicate for t.'
   attempt_resolution_outcome_returns_acceptance:
@@ -6888,23 +6918,219 @@ claims:
     contracts: []
     capability: relational
     formula:
-      forall:
-        vars:
-          t: ProtocolTransition
-          e: LogicalEdit
-        body:
-          implies:
-          - call:
-              fn: ack_loss_reconnect_retry_acceptance_transition
-              args:
-              - var: t
-              - var: e
-          - not:
-              call:
-                fn: transition_creates_second_acceptance_for_logical_edit
-                args:
-                - var: t
-                - var: e
+      and:
+      - forall:
+          vars:
+            t1: ProtocolTransition
+            t2: ProtocolTransition
+            e: LogicalEdit
+            k: IdempotencyKey
+            r1: Request
+            r2: Request
+            a1: CanonicalAcceptance
+            a2: CanonicalAcceptance
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: acceptance_transition_for_key
+                  args:
+                  - var: t1
+                  - var: k
+              - call:
+                  fn: acceptance_capable_transition
+                  args:
+                  - var: t1
+              - call:
+                  fn: transition_creates_acceptance
+                  args:
+                  - var: t1
+              - call:
+                  fn: acceptance_transition_within_retry_horizon
+                  args:
+                  - var: t1
+              - eq:
+                - call:
+                    fn: transition_idempotency_key
+                    args:
+                    - var: t1
+                - var: k
+              - call:
+                  fn: attempt_produces_canonical_acceptance_for_key
+                  args:
+                  - var: t1
+                  - var: k
+                  - var: a1
+              - call:
+                  fn: acceptance_produced_from_request
+                  args:
+                  - var: a1
+                  - var: r1
+              - call:
+                  fn: request_submits_logical_edit
+                  args:
+                  - var: r1
+                  - var: e
+              - call:
+                  fn: acceptance_transition_for_key
+                  args:
+                  - var: t2
+                  - var: k
+              - call:
+                  fn: acceptance_capable_transition
+                  args:
+                  - var: t2
+              - call:
+                  fn: transition_creates_acceptance
+                  args:
+                  - var: t2
+              - call:
+                  fn: acceptance_transition_within_retry_horizon
+                  args:
+                  - var: t2
+              - eq:
+                - call:
+                    fn: transition_idempotency_key
+                    args:
+                    - var: t2
+                - var: k
+              - call:
+                  fn: attempt_produces_canonical_acceptance_for_key
+                  args:
+                  - var: t2
+                  - var: k
+                  - var: a2
+              - call:
+                  fn: acceptance_produced_from_request
+                  args:
+                  - var: a2
+                  - var: r2
+              - call:
+                  fn: request_submits_logical_edit
+                  args:
+                  - var: r2
+                  - var: e
+            - eq:
+              - var: t1
+              - var: t2
+      - forall:
+          vars:
+            t: ProtocolTransition
+            e: LogicalEdit
+            k: IdempotencyKey
+            r: Request
+            a: CanonicalAcceptance
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: acceptance_transition_for_key
+                  args:
+                  - var: t
+                  - var: k
+              - call:
+                  fn: acceptance_capable_transition
+                  args:
+                  - var: t
+              - call:
+                  fn: transition_creates_acceptance
+                  args:
+                  - var: t
+              - call:
+                  fn: acceptance_transition_within_retry_horizon
+                  args:
+                  - var: t
+              - eq:
+                - call:
+                    fn: transition_idempotency_key
+                    args:
+                    - var: t
+                - var: k
+              - call:
+                  fn: attempt_produces_canonical_acceptance_for_key
+                  args:
+                  - var: t
+                  - var: k
+                  - var: a
+              - call:
+                  fn: acceptance_produced_from_request
+                  args:
+                  - var: a
+                  - var: r
+              - call:
+                  fn: request_submits_logical_edit
+                  args:
+                  - var: r
+                  - var: e
+              - not:
+                  call:
+                    fn: gate_observes_key_already_accepted
+                    args:
+                    - var: t
+            - not:
+                call:
+                  fn: transition_creates_multiple_acceptances_for_key
+                  args:
+                  - var: t
+                  - var: k
+      - forall:
+          vars:
+            t: ProtocolTransition
+            e: LogicalEdit
+            k: IdempotencyKey
+            r: Request
+            a: CanonicalAcceptance
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: acceptance_transition_for_key
+                  args:
+                  - var: t
+                  - var: k
+              - call:
+                  fn: acceptance_capable_transition
+                  args:
+                  - var: t
+              - call:
+                  fn: transition_creates_acceptance
+                  args:
+                  - var: t
+              - call:
+                  fn: acceptance_transition_within_retry_horizon
+                  args:
+                  - var: t
+              - eq:
+                - call:
+                    fn: transition_idempotency_key
+                    args:
+                    - var: t
+                - var: k
+              - call:
+                  fn: attempt_produces_canonical_acceptance_for_key
+                  args:
+                  - var: t
+                  - var: k
+                  - var: a
+              - call:
+                  fn: acceptance_produced_from_request
+                  args:
+                  - var: a
+                  - var: r
+              - call:
+                  fn: request_submits_logical_edit
+                  args:
+                  - var: r
+                  - var: e
+              - call:
+                  fn: gate_observes_key_already_accepted
+                  args:
+                  - var: t
+            - not:
+                call:
+                  fn: transition_creates_acceptance
+                  args:
+                  - var: t
   G2_canonical_history_is_linear_and_fenced:
     contracts: []
     capability: relational
@@ -6915,46 +7141,235 @@ claims:
             s: AuthoritativeState
             d: Document
           body:
-            and:
+            implies:
+            - call:
+                fn: state_denotes_accepted_history_for_document
+                args:
+                - var: s
+                - var: d
             - call:
                 fn: canonical_history_gap_free_for_document
                 args:
                 - var: s
                 - var: d
-            - not:
-                call:
-                  fn: superseded_generation_is_authoritative
+      - forall:
+          vars:
+            before: AuthoritativeState
+            after: AuthoritativeState
+            d: Document
+          body:
+            implies:
+            - and:
+              - transitive_closure:
+                  fn: authoritative_state_step
+                  from:
+                    var: before
+                  to:
+                    var: after
+              - implies:
+                - call:
+                    fn: state_denotes_accepted_history_for_document
+                    args:
+                    - var: after
+                    - var: d
+                - call:
+                    fn: canonical_history_gap_free_for_document
+                    args:
+                    - var: before
+                    - var: d
+            - implies:
+              - call:
+                  fn: state_denotes_accepted_history_for_document
                   args:
-                  - var: s
+                  - var: after
+                  - var: d
+              - call:
+                  fn: canonical_history_gap_free_for_document
+                  args:
+                  - var: after
                   - var: d
       - forall:
           vars:
             t: ProtocolTransition
             d: Document
           body:
-            and:
-            - implies:
+            implies:
+            - call:
+                fn: authoritative_handoff_for_document
+                args:
+                - var: t
+                - var: d
+            - and:
               - call:
-                  fn: authoritative_handoff_for_document
+                  fn: handoff_installs_strictly_greater_epoch
                   args:
                   - var: t
                   - var: d
               - call:
-                  fn: handoff_installs_strictly_new_generation
+                  fn: handoff_installs_fresh_generation_id
                   args:
                   - var: t
                   - var: d
+      - forall:
+          vars:
+            t: ProtocolTransition
+            d: Document
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: authoritative_lifecycle_transition_for_document
+                  args:
+                  - var: t
+                  - var: d
+              - call:
+                  fn: lifecycle_transition_follows_epoch_supersession
+                  args:
+                  - var: t
+                  - var: d
+            - call:
+                fn: lifecycle_transition_never_decreases_or_restores_epoch
+                args:
+                - var: t
+                - var: d
+      - forall:
+          vars:
+            before: AuthoritativeState
+            after: AuthoritativeState
+            d: Document
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: authoritative_state_step
+                  args:
+                  - var: before
+                  - var: after
+              - call:
+                  fn: state_step_is_lifecycle_transition
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+              - call:
+                  fn: state_step_follows_epoch_supersession
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
             - implies:
+              - call:
+                  fn: superseded_epoch_value_is_current
+                  args:
+                  - var: after
+                  - var: d
+              - call:
+                  fn: superseded_epoch_value_is_current
+                  args:
+                  - var: before
+                  - var: d
+      - forall:
+          vars:
+            before: AuthoritativeState
+            after: AuthoritativeState
+            d: Document
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: authoritative_state_step
+                  args:
+                  - var: before
+                  - var: after
+              - call:
+                  fn: state_step_is_lifecycle_transition
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+              - call:
+                  fn: state_step_follows_epoch_supersession
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+            - not:
+                call:
+                  fn: state_step_decreases_document_epoch
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+      - forall:
+          vars:
+            t: ProtocolTransition
+            d: Document
+          body:
+            implies:
+            - call:
+                fn: canonical_append_attempt_for_document
+                args:
+                - var: t
+                - var: d
+            - call:
+                fn: append_tuple_bound_to_executing_document_generation
+                args:
+                - var: d
+                - var: t
+      - forall:
+          vars:
+            t: ProtocolTransition
+            d: Document
+          body:
+            implies:
+            - call:
+                fn: canonical_append_for_document
+                args:
+                - var: t
+                - var: d
+            - call:
+                fn: append_uses_exact_current_document_generation
+                args:
+                - var: t
+                - var: d
+      - forall:
+          vars:
+            t: ProtocolTransition
+            d: Document
+          body:
+            implies:
+            - and:
               - call:
                   fn: canonical_append_for_document
                   args:
                   - var: t
                   - var: d
               - call:
-                  fn: append_uses_exact_current_document_generation
+                  fn: canonical_append_commits_candidate_change
                   args:
                   - var: t
                   - var: d
+            - call:
+                fn: append_commit_supplied_epoch_matches_current
+                args:
+                - var: t
+                - var: d
+      - forall:
+          vars:
+            t: ProtocolTransition
+            d: Document
+          body:
+            implies:
+            - call:
+                fn: canonical_append_for_document
+                args:
+                - var: t
+                - var: d
+            - call:
+                fn: append_tuple_matches_current_generation_at_commit
+                args:
+                - var: t
+                - var: d
   G3_snapshot_and_recovery_preserve_state:
     contracts:
     - logical_state_equivalence_at_frontier
@@ -7523,28 +7938,48 @@ claims:
                   - var: c
                   - var: e
                   fn: resync_intermediate_candidate_excludes_canonical_speculative_duplicate
-            - implies:
-              - and:
-                - call:
-                    args:
-                    - var: c
-                    - var: e
-                    fn: pending_identity_at_resync_start
-                - call:
-                    args:
-                    - var: c
-                    - var: e
-                    fn: resync_identity_within_normal_horizon
-                - call:
-                    args:
-                    - var: c
-                    - var: e
-                    fn: resync_identity_matches_document
-              - call:
-                  args:
-                  - var: c
-                  - var: e
-                  fn: stale_resync_cannot_restore_retired_overlay
+            - forall:
+                vars:
+                  h: Revision
+                  f: Revision
+                body:
+                  implies:
+                  - and:
+                    - call:
+                        args:
+                        - var: c
+                        - var: e
+                        fn: pending_identity_at_resync_start
+                    - call:
+                        args:
+                        - var: c
+                        - var: e
+                        fn: resync_identity_within_normal_horizon
+                    - call:
+                        args:
+                        - var: c
+                        - var: e
+                        fn: resync_identity_matches_document
+                    - call:
+                        fn: catchup_response_head_is
+                        args:
+                        - var: c
+                        - var: h
+                    - call:
+                        fn: resync_visible_frontier_at_candidate_readiness
+                        args:
+                        - var: c
+                        - var: f
+                    - not:
+                        call:
+                          fn: revision_at_or_before
+                          args:
+                          - var: f
+                          - var: h
+                  - call:
+                      args:
+                      - var: c
+                      fn: stale_response_cannot_restore_removed_overlay_or_pending_resolution_state
             - implies:
               - and:
                 - call:

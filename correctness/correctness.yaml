@@ -921,6 +921,8 @@ claims:
       - owner_failover
       - storage_selection
       - final_architecture
+    formal_intent: 'Within the 30-day normal retry/reconnect eligibility horizon, count(acceptance_events
+      where idempotency_key = (document_id, client_change_id)) <= 1 for each logical edit.'
   G2_canonical_history_is_linear_and_fenced:
     kind: root
     statement: >-
@@ -941,6 +943,11 @@ claims:
       - owner_failover
       - storage_selection
       - final_architecture
+    formal_intent: 'For each document D: the accepted_change_log denoted by authoritative state is a single
+      gap-free revision sequence; document_current_epoch strictly increases at every ownership handoff
+      and a fresh document_owner_generation_id is installed before or atomically with the new generation
+      becoming acceptance-eligible; a canonical append for D commits only when the owner_epoch and append_owner_generation_id
+      supplied with the append are bound to and match D''s authoritative current ownership generation.'
   G3_snapshot_and_recovery_preserve_state:
     kind: root
     statement: >-
@@ -2279,6 +2286,8 @@ claims:
       exposes both representations. An acceptance(D2,k) for D2 != D is irrelevant. No intermediate resync
       candidate may expose a canonical prefix that already contains acceptance(D,k) together with its
       overlay, and a stale response may not restore an overlay removed by a newer published reconciliation.
+      The frontier a resync candidate is measured against is the client''s last_applied_revision at candidate
+      readiness: a response whose head does not cover that last_applied_revision is stale for this purpose.
       An identity whose pending/retry age exceeds 30 days is not submitted through normal authoritative
       reconciliation; it is discarded or handled through an explicit expired, conflict, or manual-resolution
       path outside this guarantee. If any protocol-eligible pending edit remains unresolved after reconciled
