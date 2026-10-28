@@ -293,9 +293,8 @@ refinement:
       blocked_by: []
       signature: 68ef8ac1a01508b495e986c4b34d3b9d90e02821dda2bd788f60e55d56ddad7a
     C16_non_append_lifecycle_preserves_logical_revision_prefix:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 224f4116a26cbaf6b809078b4e10d8692bf68732966fe515f7d41ba1d21faf1d
     L29_non_append_lifecycle_preserves_revision_domain:
       status: stable
       blocked_by: []
@@ -816,6 +815,12 @@ refinement:
       status: pending
       blocked_by: []
     L218_append_at_next_position_preserves_frontier_shape:
+      status: pending
+      blocked_by: []
+    L219_lifecycle_completion_frontier_matches_after_appends_head:
+      status: pending
+      blocked_by: []
+    L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier:
       status: pending
       blocked_by: []
 assumptions:
@@ -1625,6 +1630,9 @@ claims:
       - L178_non_append_lifecycle_preserves_authoritative_document_provenance
       - L180_non_append_lifecycle_preserves_logical_state_at_frontier
       - L181_non_append_lifecycle_preserves_authoritative_frontier
+      - L172_snapshot_compaction_preserves_concurrent_append_suffix
+      - L219_lifecycle_completion_frontier_matches_after_appends_head
+      - L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier
     source_refs:
       - authoritative_truth
       - snapshot_frontier
@@ -5155,6 +5163,56 @@ claims:
             exactly at the advanced frontier.
           kind: fault_injection
     kind: leaf
+  L219_lifecycle_completion_frontier_matches_after_appends_head:
+    mechanisms:
+      - accepted_history_log
+      - snapshot_checkpoint
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - final_architecture
+    statement: For every authoritative non-append snapshotting, checkpoint-replacement, cleanup, or
+      compaction lifecycle transition targeting document D that completes, a revision H is the
+      authoritative frontier at the transition's completion if and only if H is the
+      document_latest_revision of D after all canonical appends for D that committed before the
+      transition completes.
+    verification:
+      verifiers:
+        - intent: Across generated lifecycle executions with canonical appends committing before,
+            during, and after the transition's completion, compare the transition-level completion
+            frontier against the target document's document_latest_revision computed from the
+            committed-append prefix at completion; require the two readings to pick out exactly the
+            same revision in every schedule.
+          kind: differential_test
+    kind: leaf
+  L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier:
+    mechanisms:
+      - accepted_history_log
+      - snapshot_checkpoint
+      - revision_frontier_guard
+    source_refs:
+      - authoritative_truth
+      - snapshot_frontier
+      - final_architecture
+    statement: For every authoritative non-append snapshotting, checkpoint-replacement, cleanup, or
+      compaction lifecycle transition targeting document D that completes without accepting a new
+      edit and overlaps no canonical append for D, the transition has an authoritative pre-state
+      that exposes D's frontier, and that pre-state's document_latest_revision equals the
+      authoritative frontier at the transition's completion.
+    verification:
+      verifiers:
+        - intent: Enumerate every transition class that can write a document's
+            document_latest_revision coordinate between a non-append lifecycle transition's
+            pre-state and its completion; require that the only such writers are canonical
+            accepted-change append commits, each of which is concurrent with (overlaps) the
+            lifecycle transition, so a lifecycle transition overlapped by no append observes an
+            unchanged frontier.
+          kind: control_flow
+        - intent: Generate completing no-new-edit lifecycle transitions overlapped by no append
+            across generated histories; require a recorded pre-state exposing the target document's
+            frontier with document_latest_revision equal to the completion frontier.
+          kind: property_test
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -6501,7 +6559,7 @@ id_allocator:
     A: 7
     G: 13
     C: 48
-    L: 219
+    L: 221
     D: 15
     T: 3
 assurance:
@@ -6994,6 +7052,10 @@ assurance:
       status: planned
     L218_append_at_next_position_preserves_frontier_shape:
       status: planned
+    L219_lifecycle_completion_frontier_matches_after_appends_head:
+      status: planned
+    L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier:
+      status: planned
 formalization:
   claims:
     G0_acked_edit_survives_failover:
@@ -7319,6 +7381,10 @@ formalization:
     L217_append_step_commits_acceptance_at_previous_frontier:
       mode: symbolic
     L218_append_at_next_position_preserves_frontier_shape:
+      mode: symbolic
+    L219_lifecycle_completion_frontier_matches_after_appends_head:
+      mode: symbolic
+    L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier:
       mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:

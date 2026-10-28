@@ -1324,6 +1324,7 @@ functions:
     - claim:L181_non_append_lifecycle_preserves_authoritative_frontier
     - claim:C16_non_append_lifecycle_preserves_logical_revision_prefix
     - claim:L172_snapshot_compaction_preserves_concurrent_append_suffix
+    - claim:L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier
   representation_resumes_owner_service:
     args:
     - AuthoritativeState
@@ -2513,6 +2514,8 @@ functions:
     - claim:L180_non_append_lifecycle_preserves_logical_state_at_frontier
     - claim:L181_non_append_lifecycle_preserves_authoritative_frontier
     - claim:L172_snapshot_compaction_preserves_concurrent_append_suffix
+    - claim:L219_lifecycle_completion_frontier_matches_after_appends_head
+    - claim:L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier
   authoritative_history_lifecycle_preserves_document_scope:
     args:
     - Document
@@ -4095,6 +4098,7 @@ functions:
     - claim:L181_non_append_lifecycle_preserves_authoritative_frontier
     - claim:C16_non_append_lifecycle_preserves_logical_revision_prefix
     - claim:L172_snapshot_compaction_preserves_concurrent_append_suffix
+    - claim:L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier
   accepted_history_ends_exactly_at_frontier:
     args:
     - AuthoritativeState
@@ -5126,6 +5130,8 @@ functions:
     - claim:L181_non_append_lifecycle_preserves_authoritative_frontier
     - claim:C16_non_append_lifecycle_preserves_logical_revision_prefix
     - claim:L172_snapshot_compaction_preserves_concurrent_append_suffix
+    - claim:L219_lifecycle_completion_frontier_matches_after_appends_head
+    - claim:L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier
   authoritative_history_lifecycle_source_state:
     args:
     - ProtocolTransition
@@ -5136,6 +5142,7 @@ functions:
     semantic_anchors:
     - claim:L181_non_append_lifecycle_preserves_authoritative_frontier
     - claim:C16_non_append_lifecycle_preserves_logical_revision_prefix
+    - claim:L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier
   authoritative_history_lifecycle_result_state:
     args:
     - ProtocolTransition
@@ -5167,6 +5174,7 @@ functions:
     meaning: 'Revision h is the document_latest_revision of lifecycle procedure t''s target document after all canonical appends for that document that committed before t completes: h counts every canonical append committed during t''s overlap and no append that commits only after t completes.'
     semantic_anchors:
     - claim:L172_snapshot_compaction_preserves_concurrent_append_suffix
+    - claim:L219_lifecycle_completion_frontier_matches_after_appends_head
   lifecycle_preserves_concurrent_append_suffix:
     args:
     - ProtocolTransition
@@ -5672,6 +5680,7 @@ functions:
     semantic_anchors:
     - claim:L180_non_append_lifecycle_preserves_logical_state_at_frontier
     - claim:C16_non_append_lifecycle_preserves_logical_revision_prefix
+    - claim:L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier
   authoritative_history_lifecycle_transition_completes_at_frontier:
     args:
     - ProtocolTransition
@@ -5682,6 +5691,8 @@ functions:
     semantic_anchors:
     - claim:L180_non_append_lifecycle_preserves_logical_state_at_frontier
     - claim:C16_non_append_lifecycle_preserves_logical_revision_prefix
+    - claim:L219_lifecycle_completion_frontier_matches_after_appends_head
+    - claim:L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier
   authoritative_history_lifecycle_overlaps_appends:
     args:
     - ProtocolTransition
@@ -5691,6 +5702,7 @@ functions:
     meaning: 'Authoritative history lifecycle procedure t targeting document d overlaps one or more canonical accepted-change appends for d: at least one canonical append for d is concurrent with t, in that the append''s execution overlaps t''s execution. Such an append may commit while t is in progress, or it may commit only after t completes; an append that commits only after t completes is outside t''s post-state and is not counted in t''s completion head.'
     semantic_anchors:
     - claim:L172_snapshot_compaction_preserves_concurrent_append_suffix
+    - claim:L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier
   representation_initializes_owner_service:
     args:
     - AuthoritativeState
@@ -18304,6 +18316,106 @@ claims:
                     args:
                       - var: after
                       - var: d
+  L219_lifecycle_completion_frontier_matches_after_appends_head:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          t: ProtocolTransition
+          d: Document
+          h: Revision
+        body:
+          implies:
+          - and:
+            - call:
+                fn: non_append_authoritative_history_lifecycle_for_document
+                args:
+                - var: t
+                - var: d
+            - call:
+                fn: authoritative_history_lifecycle_transition_completes
+                args:
+                - var: t
+          - and:
+            - implies:
+              - call:
+                  fn: authoritative_history_lifecycle_transition_completes_at_frontier
+                  args:
+                  - var: t
+                  - var: h
+              - call:
+                  fn: lifecycle_completion_head_after_overlapping_appends
+                  args:
+                  - var: t
+                  - var: h
+            - implies:
+              - call:
+                  fn: lifecycle_completion_head_after_overlapping_appends
+                  args:
+                  - var: t
+                  - var: h
+              - call:
+                  fn: authoritative_history_lifecycle_transition_completes_at_frontier
+                  args:
+                  - var: t
+                  - var: h
+  L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          t: ProtocolTransition
+          d: Document
+          h: Revision
+        body:
+          implies:
+          - and:
+            - call:
+                fn: non_append_authoritative_history_lifecycle_for_document
+                args:
+                - var: t
+                - var: d
+            - call:
+                fn: authoritative_history_lifecycle_transition_completes
+                args:
+                - var: t
+            - call:
+                fn: authoritative_history_lifecycle_completes_without_accepting_new_edit
+                args:
+                - var: t
+            - not:
+                call:
+                  fn: authoritative_history_lifecycle_overlaps_appends
+                  args:
+                  - var: t
+                  - var: d
+            - call:
+                fn: authoritative_history_lifecycle_transition_completes_at_frontier
+                args:
+                - var: t
+                - var: h
+          - exists:
+              vars:
+                pre: AuthoritativeState
+              body:
+                and:
+                - call:
+                    fn: authoritative_history_lifecycle_source_state
+                    args:
+                    - var: t
+                    - var: pre
+                - call:
+                    fn: state_exposes_document_frontier
+                    args:
+                    - var: pre
+                    - var: d
+                - call:
+                    fn: authoritative_latest_revision_equals_frontier
+                    args:
+                    - var: pre
+                    - var: h
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
