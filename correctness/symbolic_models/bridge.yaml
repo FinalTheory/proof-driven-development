@@ -1213,6 +1213,7 @@ functions:
     meaning: Explicit non-acceptance retirement transition t establishes, before or atomically with the destructive retirement, that exact identity e's normal speculative lifecycle is terminalized in the resulting reachable client state and no longer active in pending, retained speculative, or visible speculative state, so terminal_speculative_lifecycle_closure applies to every later reachable state.
     semantic_anchors:
     - claim:G12_client_pending_state_tracks_unresolved_edits
+    - claim:L206_terminal_speculative_lifecycle_is_absorbing
   non_acceptance_retirement_transition:
     args:
     - ProtocolTransition
@@ -4275,6 +4276,7 @@ functions:
     meaning: Protocol transition t uses a non_acceptance_terminal_disposition to terminally retire the normal speculative lifecycle of exact logical edit identity e.
     semantic_anchors:
     - claim:L203_non_acceptance_terminal_disposition_preserves_edit_provenance
+    - claim:L206_terminal_speculative_lifecycle_is_absorbing
   client_state_establishes_visible_document:
     args:
     - ClientState
@@ -13240,6 +13242,11 @@ claims:
                     - var: earlier
                     - var: e
               - and:
+                - call:
+                    fn: terminalized_speculative_identity
+                    args:
+                    - var: later
+                    - var: e
                 - not:
                     call:
                       fn: pending_identity_active
@@ -13292,6 +13299,27 @@ claims:
                   - var: e
             - call:
                 fn: explicit_terminal_disposition_establishes_terminalized_lifecycle
+                args:
+                - var: t
+                - var: e
+      - forall:
+          vars:
+            e: LogicalEditIdentity
+            t: ProtocolTransition
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_client_protocol_transition
+                  args:
+                  - var: t
+              - call:
+                  fn: explicit_non_acceptance_retirement_transition
+                  args:
+                  - var: t
+                  - var: e
+            - call:
+                fn: non_acceptance_retirement_establishes_terminalized_lifecycle
                 args:
                 - var: t
                 - var: e
