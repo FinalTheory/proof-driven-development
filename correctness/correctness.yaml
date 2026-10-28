@@ -202,9 +202,8 @@ refinement:
       blocked_by: []
       signature: dcda8719e6947058e5750bd23906c7f5cdbc3afd6164ffd2d1a2f6809d60e754
     C7_revision_frontier_is_linear:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 201169a9c7903e9ebf9166e3b5c2d3a9122bbc710374a45cd7e67acd258af1b4
     C8_stale_owner_is_fenced:
       status: stable
       blocked_by: []
@@ -538,9 +537,8 @@ refinement:
       blocked_by: []
       signature: aae3b9fde16914d5997037827af60fb2ac7407a14d2312b3956b26c6c08537b6
     C39_authoritative_history_state_is_gap_free:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: efe2b8502392ddca63728cb526d9b9ea3f4e441e0168e9dd9d79afec1a7aa2e2
     L138_committed_append_preserves_gap_free_state_shape:
       status: stable
       blocked_by: []
@@ -808,6 +806,18 @@ refinement:
       status: stable
       blocked_by: []
       signature: 58ed209733c23788db4ac68c0eda67354b8a0907396e3a22608b5b669bf19058
+    L215_denotation_change_is_coordinate_change:
+      status: pending
+      blocked_by: []
+    L216_authoritative_state_descends_from_initialization:
+      status: pending
+      blocked_by: []
+    L217_append_step_commits_acceptance_at_previous_frontier:
+      status: pending
+      blocked_by: []
+    L218_append_at_next_position_preserves_frontier_shape:
+      status: pending
+      blocked_by: []
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -1054,6 +1064,10 @@ claims:
       - L29_non_append_lifecycle_preserves_revision_domain
       - L33_committed_append_preserves_existing_revision_prefix
       - L137_authoritative_history_mutators_are_exhaustively_classified
+      - L215_denotation_change_is_coordinate_change
+      - L216_authoritative_state_descends_from_initialization
+      - L217_append_step_commits_acceptance_at_previous_frontier
+      - L218_append_at_next_position_preserves_frontier_shape
     source_refs:
       - accepted_change_log
       - reconnect_revision_boundary
@@ -3244,6 +3258,8 @@ claims:
       - L139_non_append_lifecycle_preserves_gap_free_state_shape
       - L140_initial_authoritative_history_is_gap_free
       - L137_authoritative_history_mutators_are_exhaustively_classified
+      - L215_denotation_change_is_coordinate_change
+      - L216_authoritative_state_descends_from_initialization
   L138_committed_append_preserves_gap_free_state_shape:
     statement: If an authoritative pre-state has one gap-free accepted revision sequence and a
       canonical accepted-change append commits, the authoritative post-state also has one gap-free
@@ -5025,6 +5041,120 @@ claims:
             head-bound classification behaviour for all tested heads H.
           kind: fault_injection
     kind: leaf
+  L215_denotation_change_is_coordinate_change:
+    mechanisms:
+      - accepted_history_log
+      - acceptance_transaction
+      - revision_frontier_guard
+    source_refs:
+      - accepted_change_log
+      - authoritative_truth
+      - final_architecture
+    statement: "For every authoritative state step and every document D: if the step changes whether the
+      accepted history denoted for D is one gap-free revision sequence, or changes whether that denoted
+      history ends exactly at D's frontier, or changes whether an accepted history is denoted for D at
+      all between the step's two endpoint states, then the step creates or changes D's accepted_change_log
+      or document_latest_revision coordinates in their logical denotation."
+    verification:
+      verifiers:
+        - intent: "Enumerate every authoritative transition path (canonical acceptance, document-state
+            initialization, snapshot publication, compaction, recovery replay, cleanup, storage replacement)
+            and check its observable effect on each document's denoted history: any path that can change
+            whether a document's denoted history is gap-free, whether it ends exactly at the frontier,
+            or whether a history is denoted at all must be classified as creating or changing that document's
+            coordinates; reject any path that produces such a denotational change while classified as
+            not touching the document."
+          kind: control_flow
+    kind: leaf
+  L216_authoritative_state_descends_from_initialization:
+    formal_intent: The set of authoritative states that denote an accepted history for a document,
+      or that include a document-state instance for it, is the reflexive-transitive closure of
+      document-state initialization under authoritative state steps; there is no third authoritative
+      introduction edge for authoritative document state.
+    mechanisms:
+      - accepted_history_log
+      - revision_frontier_guard
+    source_refs:
+      - accepted_change_log
+      - authoritative_truth
+      - owner_failover
+      - final_architecture
+    statement: "Every authoritative state that denotes an accepted_change_log for document D, and every
+      authoritative state that includes an authoritative document-state instance for D (a state in which
+      D's accepted_change_log and document_latest_revision coordinates are present and under observation),
+      is either the authoritative state produced by D's document-state initialization or is reachable
+      from an initialization state for D through a finite sequence of authoritative state steps. No authoritative
+      state for D arises as an independent root outside that descent: initialization, import, repair,
+      recovery, restoration, or migration may not introduce an authoritative state for D except as the
+      initialization state itself or as a descendant of one through authoritative transitions."
+    verification:
+      verifiers:
+        - intent: Enumerate every writer, initialization/import/repair path, recovery/restoration
+            path, and representation-migration path that can make an authoritative state for a
+            document observable, and prove each resulting state either is the document's
+            initialization state or descends from one through authoritative transitions.
+          kind: control_flow
+        - intent: Model document-state initialization and every authoritative transition class
+            (committed append, non-append lifecycle, recovery/restart, snapshot/checkpoint
+            installation) as a per-document state graph and reject any reachable state that denotes
+            a history for the document, or includes a document-state instance for it, without an
+            initialization-state ancestor.
+          kind: state_machine
+    kind: leaf
+  L217_append_step_commits_acceptance_at_previous_frontier:
+    mechanisms:
+      - acceptance_transaction
+      - accepted_history_log
+      - revision_frontier_guard
+    source_refs:
+      - accepted_change_log
+      - authoritative_truth
+      - final_architecture
+    statement: "Every committed canonical accepted-change append step for a document D at revision r commits
+      exactly the candidate_canonical_change at r as a canonical acceptance whose pre-state latest_revision
+      is D's document_latest_revision in the step's pre-state. That pre-state frontier is the revision
+      position immediately before r in the canonical revision numbering, so the append occupies the next
+      position after the pre-state frontier: the step's append follows D's previous frontier."
+    verification:
+      verifiers:
+        - intent: "Inspect the acceptance transaction and every committed append path: require the step's
+            committed change to be exactly the candidate change at r in canonical-acceptance form, with
+            the acceptance's recorded pre-state frontier equal to the step pre-state's frontier for the
+            same document, and require the conditional-append guard (pre-state latest revision immediately
+            before r) to be enforced at commit."
+          kind: control_flow
+        - intent: Generate committed append steps whose appended revision is the next position after
+            the pre-state frontier and steps attempting any other position; require the former to
+            satisfy the previous-frontier relation and the latter to be rejected before commit.
+          kind: property_test
+    kind: leaf
+  L218_append_at_next_position_preserves_frontier_shape:
+    mechanisms:
+      - acceptance_transaction
+      - accepted_history_log
+      - revision_frontier_guard
+    source_refs:
+      - accepted_change_log
+      - authoritative_truth
+      - final_architecture
+    statement: If an authoritative pre-state denotes one gap-free accepted revision sequence for a
+      document D ending exactly at D's frontier, and a committed canonical accepted-change append
+      step for D at revision r follows D's previous frontier, meaning D's pre-state frontier is the
+      revision position immediately before r in the canonical revision numbering, then the
+      authoritative post-state also denotes one gap-free accepted revision sequence for D ending
+      exactly at its frontier.
+    verification:
+      verifiers:
+        - intent: Generate authoritative pre-states whose denoted history is one gap-free accepted
+            revision sequence ending exactly at the frontier, execute every successful canonical
+            append path at the next revision position, and require the committed post-state history
+            to remain one gap-free accepted revision sequence ending exactly at its frontier.
+          kind: property_test
+        - intent: Race and crash canonical acceptance around its commit boundaries; every observable
+            committed post-state must still denote one gap-free accepted revision sequence ending
+            exactly at the advanced frontier.
+          kind: fault_injection
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -6371,7 +6501,7 @@ id_allocator:
     A: 7
     G: 13
     C: 48
-    L: 215
+    L: 219
     D: 15
     T: 3
 assurance:
@@ -6856,6 +6986,14 @@ assurance:
       status: planned
     L214_pending_identity_classification_evidence_survives_lifecycle:
       status: planned
+    L215_denotation_change_is_coordinate_change:
+      status: planned
+    L216_authoritative_state_descends_from_initialization:
+      status: planned
+    L217_append_step_commits_acceptance_at_previous_frontier:
+      status: planned
+    L218_append_at_next_position_preserves_frontier_shape:
+      status: planned
 formalization:
   claims:
     G0_acked_edit_survives_failover:
@@ -7173,6 +7311,14 @@ formalization:
     L213_terminal_result_store_records_have_single_acceptance_creation_provenance:
       mode: symbolic
     L214_pending_identity_classification_evidence_survives_lifecycle:
+      mode: symbolic
+    L215_denotation_change_is_coordinate_change:
+      mode: symbolic
+    L216_authoritative_state_descends_from_initialization:
+      mode: symbolic
+    L217_append_step_commits_acceptance_at_previous_frontier:
+      mode: symbolic
+    L218_append_at_next_position_preserves_frontier_shape:
       mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:
