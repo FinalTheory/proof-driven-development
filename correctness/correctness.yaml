@@ -206,8 +206,9 @@ refinement:
       blocked_by: []
       signature: 201169a9c7903e9ebf9166e3b5c2d3a9122bbc710374a45cd7e67acd258af1b4
     C8_stale_owner_is_fenced:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 6edcced758a207c60fd90a7261d94f9e86b5c29373b27e31887334c4089ad991
     C9_recovery_reconstructs_committed_state:
       status: stable
       blocked_by: []
