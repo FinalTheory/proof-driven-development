@@ -184,11 +184,11 @@ refinement:
     G1_retry_is_logically_exactly_once:
       status: stable
       blocked_by: []
-      signature: 8b2c41c61f69621c1766843b518213272b59ae002a00e5fc5f622ed2e52cdef9
+      signature: 41d9db6e87eacdbc1629e8534586e2fdac58634eb70b55c714fb673be8ab6040
     G2_canonical_history_is_linear_and_fenced:
       status: stable
       blocked_by: []
-      signature: 0f4b61533f5a7fa9d1bccc8a830992174c65b649bc4100513baf28727df67f3b
+      signature: 4a81b08bba4cde645e6a7c0f9586d3b6ac54039f9e47408e478bb9c1bad9c230
     G3_snapshot_and_recovery_preserve_state:
       status: stable
       blocked_by: []
@@ -404,7 +404,7 @@ refinement:
     G7_reconnect_does_not_double_render_accepted_optimistic_edit:
       status: stable
       blocked_by: []
-      signature: 9488e25e1f8c71d535822c34728d02dffdb4c6587df6edf61b78f62fe2834456
+      signature: a6a7615a814dbe5c605c217e953700dde50b0308df9af9cf3f6c4125c48bff38
     L106_resync_request_covers_start_pending_set:
       status: stable
       blocked_by: []
