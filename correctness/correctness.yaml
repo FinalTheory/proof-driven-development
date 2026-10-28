@@ -5088,13 +5088,14 @@ claims:
       - owner_failover
       - final_architecture
     statement: "Every authoritative state that denotes an accepted_change_log for document D, and every
-      authoritative state that includes an authoritative document-state instance for D (a state in which
-      D's accepted_change_log and document_latest_revision coordinates are present and under observation),
-      is either the authoritative state produced by D's document-state initialization or is reachable
-      from an initialization state for D through a finite sequence of authoritative state steps. No authoritative
-      state for D arises as an independent root outside that descent: initialization, import, repair,
-      recovery, restoration, or migration may not introduce an authoritative state for D except as the
-      initialization state itself or as a descendant of one through authoritative transitions."
+      authoritative state that includes an authoritative document-state instance for D (the instance under
+      observation for D, whether either of D's accepted_change_log and document_latest_revision coordinates
+      is well-formed, malformed, missing, inconsistent, or being authoritatively published), is either
+      the authoritative state produced by D's document-state initialization or is reachable from an initialization
+      state for D through a finite sequence of authoritative state steps. No authoritative state for D
+      arises as an independent root outside that descent: initialization, import, repair, recovery, restoration,
+      or migration may not introduce an authoritative state for D except as the initialization state itself
+      or as a descendant of one through authoritative transitions."
     verification:
       verifiers:
         - intent: Enumerate every writer, initialization/import/repair path, recovery/restoration
