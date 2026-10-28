@@ -1732,12 +1732,13 @@ claims:
       - retry_resolution
   L35_losing_retry_resolves_through_canonical_acceptance:
     statement: 'When a reprocessing attempt reaches absent-key arbitration and loses to an overlapping
-      contender, it may remain pending or terminate by timeout or cancellation. If it produces an acceptance-resolution
-      outcome — a successful, non-timeout, non-cancellation outcome whose returned result is an acceptance
-      for that key — then that returned acceptance is the canonical accepted result for that key, and
-      either the attempt produced it, in which case the attempt is the sole acceptance producer for that
-      key, or it is exactly the canonical accepted result produced by another attempt; it never exposes
-      arbitration conflict as a successful resolution or creates another acceptance.'
+      contender, it may remain pending or terminate by timeout or cancellation. Any canonical acceptance
+      for that key that the attempt itself produces makes the attempt the sole acceptance producer for
+      that key. If the attempt produces an acceptance-resolution outcome — a successful, non-timeout,
+      non-cancellation outcome whose returned result is an acceptance for that key — that returned acceptance
+      is the canonical accepted result for that key, and it was produced either by the attempt itself,
+      as sole acceptance producer, or by another attempt. The attempt never exposes arbitration conflict
+      as a successful resolution or creates another acceptance.'
     verification:
       verifiers:
         - kind: state_machine
