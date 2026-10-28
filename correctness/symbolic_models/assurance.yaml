@@ -10678,3 +10678,152 @@ records:
           frontier endpoints, or an additional gap-free condition, so it neither weakens nor strengthens the contract, and
           no distinct coordinates are collapsed.'
         differences: []
+  claim:L214_pending_identity_classification_evidence_survives_lifecycle:
+    kind: claim
+    subject_id: L214_pending_identity_classification_evidence_survives_lifecycle
+    subject_signature: 3a0bdd30ea6db37c552946eb6ecc0b7af05d2e1085eeb826116b38d570322cae
+    roundtrip:
+      subject_signature: 3a0bdd30ea6db37c552946eb6ecc0b7af05d2e1085eeb826116b38d570322cae
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following five statements holds. (1) For every logical edit identity e and
+        every revision r, if a canonical acceptance for the exact full identity e commits at canonical revision r, and e is
+        a normal_retry_eligible_identity (the logical edit identified by e remains within the normal retry/reconnect eligibility
+        boundary), and e is a pending identity (the logical edit identified by e is a speculative edit that the client still
+        holds awaiting classification, and whether a canonical acceptance for the exact full identity e exists, and if one
+        exists at which revision it commits, is the outstanding question that a resync must answer for e), then for every
+        protocol transition t, if t is a durable retention transition (a snapshotting, compaction, cleanup, or other durable
+        retention transition) and t occurs after the canonical acceptance of e and while e remains within the normal retry/reconnect
+        eligibility boundary, then across t the logical accepted_identity_frontier_evidence binding of e to r is preserved:
+        after t the authoritative evidence still binds the same full identity e to the same revision r with the exact included-through-head
+        query semantics (e included through head H iff r <= H), although physical representation may change and physical rows
+        may be deleted under a replacement representation, but the logical binding is not dropped, relabeled, or reinterpreted.
+        (2) For every logical edit identity e and every revision r, if a canonical acceptance for the exact full identity
+        e commits at canonical revision r, and e is a normal_retry_eligible_identity, and e is a pending identity as defined
+        above, then for every protocol transition t, if t is a completed recovery transition (a completed recovery/restart
+        reconstruction transition) and t occurs after the canonical acceptance of e and while e remains within the normal
+        retry/reconnect eligibility boundary, then across t the logical accepted_identity_frontier_evidence binding of e to
+        r is preserved with the same semantics as in (1). (3) For every logical edit identity e, if e is a normal_retry_eligible_identity
+        and e is a pending identity as defined above and there does not exist any revision r such that a canonical acceptance
+        for the exact full identity e commits at canonical revision r, then both of the following hold: (a) for every protocol
+        transition t, if t is a durable retention transition and t occurs while e remains within its normal retry/reconnect
+        eligibility boundary (the same eligibility boundary that normal_retry_eligible names, so t falls inside e''s normal
+        eligibility horizon; this timing condition does not require that a canonical acceptance for e exists and does not
+        require t to occur after any acceptance), then across t the equivalent frontier evidence for e is preserved: the frontier-bounded
+        logical accepted history of e''s document from which the absence of any canonical acceptance for e through any head
+        is determined remains unchanged, so after t the authoritative state still determines the same absence of acceptance
+        for e through every head up to the preserved frontier, although physical representation may change, but that absence
+        determination for e may not be dropped, relabeled, or reinterpreted; and (b) for every protocol transition t, if t
+        is a completed recovery transition and t occurs while e remains within its normal retry/reconnect eligibility boundary
+        as just defined, then across t the equivalent frontier evidence for e is preserved with the same absence-determination
+        semantics as in (a). (4) For every catchup response / resync c and every logical edit identity e, if the exact logical
+        edit identity e=(D,k) is pending at the start of resync c for that same resync document D (a pending identity for
+        another document does not satisfy this), and e is within the normal 30-day reconnect eligibility horizon for resync
+        c, and there exists a revision r such that a canonical acceptance for the exact full identity e commits at canonical
+        revision r, then for resync c and identity e, snapshotting, compaction, cleanup, and recovery transitions preserve
+        enough same-identity accepted revision or equivalent frontier evidence throughout e''s normal eligibility horizon
+        to make the head-bound classification of e. (5) For every catchup response / resync c and every logical edit identity
+        e, if the exact logical edit identity e=(D,k) is pending at the start of resync c for that same resync document D,
+        and e is within the normal 30-day reconnect eligibility horizon for resync c, and there does not exist any revision
+        r such that a canonical acceptance for the exact full identity e commits at canonical revision r, then for resync
+        c and identity e, snapshotting, compaction, cleanup, and recovery transitions preserve enough same-identity accepted
+        revision or equivalent frontier evidence throughout e''s normal eligibility horizon to make the head-bound classification
+        of e.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 3a0bdd30ea6db37c552946eb6ecc0b7af05d2e1085eeb826116b38d570322cae
+        verdict: EQUIVALENT
+        reason: The formula separately covers accepted and unaccepted pending eligible identities, requires both durable-retention
+          and completed-recovery transitions within the eligibility horizon to preserve respectively the exact r-binding (included
+          through H iff r <= H) and the frontier absence evidence, and restates the resync-start, in-horizon classification
+          sufficiency in both cases, with no added or omitted requirements.
+        differences: []
+      strengthening:
+        subject_signature: 3a0bdd30ea6db37c552946eb6ecc0b7af05d2e1085eeb826116b38d570322cae
+        verdict: EQUIVALENT
+        reason: 'The formula covers both cases exactly: for an accepted pending eligible identity it requires every durable-retention
+          and completed-recovery transition within the post-acceptance eligibility window to preserve the frontier-evidence
+          binding to r with r <= H semantics; for an identity with no canonical acceptance it requires the same transition
+          classes within the normal eligibility horizon to preserve the frontier absence evidence; and it separately requires,
+          for resyncs where the identity is pending at resync start and within the normal horizon, in both the acceptance-exists
+          and no-acceptance cases, that enough classification evidence is preserved throughout the horizon. No requirement
+          is extended beyond the eligibility boundary and none is omitted.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 3a0bdd30ea6db37c552946eb6ecc0b7af05d2e1085eeb826116b38d570322cae
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves both branches exactly: for an accepted pending normal-retry-eligible identity it
+          keeps the same full-identity binding to r with iff r <= H semantics across durable-retention and completed-recovery
+          transitions within the eligibility horizon, and for a non-accepted identity it preserves the equivalent frontier-bounded
+          history determining absence through any head across the same transitions within that horizon, including the correct
+          timing asymmetry for the no-acceptance case. It also preserves the resync-classification sufficiency scoped to the
+          same identity pending at that resync''s start and imposes nothing beyond the eligibility horizon.'
+        differences: []
+  claim:L97_client_adopts_snapshot_before_tail:
+    kind: claim
+    subject_id: L97_client_adopts_snapshot_before_tail
+    subject_signature: 504537fdc883621aad513d8ccae5247edcd6318aac83490e0df257c7b1bbbf0d
+    roundtrip:
+      subject_signature: 504537fdc883621aad513d8ccae5247edcd6318aac83490e0df257c7b1bbbf0d
+      status: TRANSLATED
+      natural_language: 'The following six universally quantified conditions hold conjunctively. (1) For every client state
+        s and revision s_rev, if s is the state produced by installing the catch-up-selected checkpoint (content, s_rev) with
+        replacement semantics — meaning s exposes exactly that checkpoint''s content as the client''s canonical document state,
+        the installation is one atomic installation step with no returned or interleaved tail revision applied inside it,
+        s_rev is the checkpoint''s frontier, and a torn or interrupted exposure of checkpoint content does not satisfy this
+        installation predicate — then the visible frontier of s, i.e., the last canonical revision applied by s, equals s_rev.
+        (2) For every client state s and revision s_rev, if s is such a checkpoint-installation state for s_rev, then s is
+        within the selected checkpoint catch-up for s_rev, i.e., s is a state of the catch-up attempt that selected the checkpoint
+        (content, s_rev) for this client, at or after that selection. (3) For every client state s, authoritative state cp,
+        and revision s_rev, if all of the following hold: (a) s exposes cp as its canonical document content, where cp is
+        the content component of the catch-up-selected checkpoint P = (cp, s_rev), and this exposure relation covers every
+        exposure of that checkpoint content, including the completed installation state, any later state resting on it, and
+        any torn, interrupted, or partial exposure of the checkpoint content during an installation that did not complete,
+        whether or not the exposing state''s frontier is correct; (b) there does not exist a revision v such that s applies
+        v — meaning v is taken as an applied canonical revision of the client''s document in s, rather than being ignored
+        as a duplicate or buffered for gap recovery — and v is not at or before s_rev in the canonical revision order; and
+        (c) there do not exist a client state s2 and a revision v2 such that s2 occurs strictly before s within one and the
+        same catch-up attempt (s is reachable from s2 by one or more client-protocol transitions of that attempt, and s2 is
+        a different, earlier state than s), s2 applies v2, and v2 is not at or before s_rev; then the visible frontier of
+        s equals s_rev. (4) For every client state s, authoritative state cp, and revision s_rev, if the same three conditions
+        (a), (b), and (c) as in clause (3) all hold, then s is within the selected checkpoint catch-up for s_rev, i.e., s
+        is a state of the catch-up attempt that selected the checkpoint (content, s_rev) for this client, at or after that
+        selection, including the state in which the checkpoint is installed, states before installation within the same attempt,
+        and later states of the attempt whose canonical state rests on that checkpoint. (5) For every client state s, revision
+        v, and revision s_rev, if s is within the selected checkpoint catch-up for s_rev, s applies v, and v is not at or
+        before s_rev, then s_rev is at or before the visible frontier of s. (6) For every client state s, revision v, and
+        revision s_rev, if s is within the selected checkpoint catch-up for s_rev, s applies v, and v is not at or before
+        s_rev, then there exists a client state s0 such that s0 is a checkpoint-installation state for s_rev and s0 occurs
+        strictly before s within one and the same catch-up attempt.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 504537fdc883621aad513d8ccae5247edcd6318aac83490e0df257c7b1bbbf0d
+        verdict: EQUIVALENT
+        reason: 'The formula preserves the safety and ordering scope: installation states are in the selected catch-up and
+          have frontier exactly S, pre-tail checkpoint exposures are in that catch-up and cannot pair the content with a frontier
+          other than S, and any application above S in that catch-up requires frontier at least S plus a preceding installation
+          state. It imposes no requirement that an installation occur, so a clean abort remains allowed.'
+        differences: []
+      strengthening:
+        subject_signature: 504537fdc883621aad513d8ccae5247edcd6318aac83490e0df257c7b1bbbf0d
+        verdict: EQUIVALENT
+        reason: 'The formula covers each source facet without adding or omitting obligations: installation states (whose predicate
+          meaning encodes exactly the selected checkpoint with replacement semantics) have visible_frontier equal to S; any
+          pre-tail exposure of checkpoint content, including torn or later resting states, must pair with frontier S, with
+          post-tail states exempted by the no-above-S-application guards; and any application of a revision above S within
+          the selecting catch-up requires frontier at least S and a strictly preceding installation state for S. No clause
+          asserts an installation unconditionally, so a clean abort with no installation remains allowed.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 504537fdc883621aad513d8ccae5247edcd6318aac83490e0df257c7b1bbbf0d
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original safety and ordering obligations: installation states expose exactly
+          the selected checkpoint content with frontier equal to S; any exposure of that content, including torn or interrupted
+          exposure, must have frontier S when no revision above S has been applied in the state or earlier in the same attempt;
+          and a revision above S may be applied only within that catch-up after a prior installation state, with S at or before
+          the frontier. It imposes no unconditional requirement that a selected checkpoint be installed, matching the permitted
+          clean abort.'
+        differences: []
