@@ -1305,102 +1305,104 @@ records:
   claim:G5_retry_resolves_idempotently:
     kind: claim
     subject_id: G5_retry_resolves_idempotently
-    subject_signature: 93c1b9a7210b8c86927bdd3ba4fcb6ea270582b709e259cadd96d9b4c331947c
+    subject_signature: f7a83ada49ea85cc96c5e7dbc58ab70703ab8e26698f853d312514e05410c0df
     roundtrip:
-      subject_signature: 93c1b9a7210b8c86927bdd3ba4fcb6ea270582b709e259cadd96d9b4c331947c
+      subject_signature: f7a83ada49ea85cc96c5e7dbc58ab70703ab8e26698f853d312514e05410c0df
       status: TRANSLATED
       natural_language: 'The conjunction of all of the following holds. (1) For every authoritative state s and every idempotency
         key k, if s is reachable under the canonical server protocol and failure model and k, as the exact full composite
-        identity (document_id, client_change_id), is within the configured normal retry eligibility horizon in s (this predicate
-        assuming no fixed duration such as 30 days), then all of the following hold in s for k: s contains at most one durable
-        terminal result for the exact full composite identity k, with equal client_change_id values in different document
-        namespaces counting as distinct identities; if that exact identity has an ACCEPTED terminal outcome in s, the canonical
-        accepted history for that same document contains the matching canonical acceptance for that exact identity and no
-        incompatible REJECTED outcome exists for that same identity; if that exact identity has a REJECTED terminal outcome
-        in s, the canonical accepted history for that same document contains no canonical acceptance for that exact identity;
-        and the terminal outcome for k is immutable in the sense that, once a terminal outcome for k has linearized, every
-        later acceptance or definitive-rejection transition for that same identity whose resulting authoritative state remains
-        within the configured normal retry eligibility horizon for k preserves the same single-valued outcome, with post-horizon
-        transitions or re-submissions outside this immutability predicate and with no added progress requirement. (2a) For
-        every terminal result record t, if t is an authoritative ACCEPTED (canonical result) outcome and t is within the normal
-        retry eligibility horizon (i.e., the full identity t carries is still a normal_retry_eligible_identity, the horizon
-        in which producer provenance must be retained, this horizon predicate classifying horizon membership only), then there
-        exists a canonical acceptance a such that a is a committed canonical accepted-change record in authoritative accepted
-        history, the full idempotency key carried by t equals the authoritative idempotency identity carried by a, and t carries
-        a canonical result produced by the same acceptance execution that produced and committed a for the same full identity,
-        with that producer provenance correct at authoritative terminalization and remaining the same in any later lifecycle
-        representation on which this relation is asserted, without requiring that the binding metadata have been materialized
-        during acceptance-transaction assembly and without treating a transient intermediate metadata substitution discarded
-        before authoritative terminalization as a violation. (2b) For every protocol transition x and every terminal result
-        records before and after, if x is an authoritative lifecycle representation change, within the normal retry eligibility
-        horizon, that preserves one already-linearized ACCEPTED logical terminal outcome from representation before to representation
-        after while possibly rewriting its durable physical representation, with before and after carrying the same full idempotency
-        identity, then there exists a canonical acceptance a such that a is committed as in (2a), the full idempotency key
-        carried by before equals the identity carried by a, the full idempotency key carried by after also equals the identity
-        carried by a, and the producer-match relation described in (2a) holds both for before with a and for after with a.
-        (3) For every terminal result record t, if t is an authoritative REJECTED (definitive rejection reason) outcome, then,
-        letting d be the definitive rejection decision from which t derives and letting r be the exact submitted request for
-        which d was produced, both of the following hold: t and r carry the exact same full (document_id, client_change_id)
-        identity; and, when the definitive rejection reason depends on raw_edit or base_revision, d uses those exact values
-        from r. (4) For every terminal result record t, if t is an authoritative rejected terminal result whose definitive
-        rejection reason''s truth depends on document/history state, then, with d as in (3), d is bound to authoritative same-document
-        rejection context rather than unvalidated stale owner-local state, and the authoritative context/evidence for d remains
-        sufficient when t linearizes, either because it is current or because a reason-specific guard, monotonicity argument,
-        or revalidation preserves the rejection truth. (5) For every external terminal result x, if x is a definitive externally
-        terminal result exposed to a client and x belongs to the normal retry eligibility horizon for its logical edit, whether
-        x is returned by the initial normal submission or by an in-horizon retry/reprocessing attempt (a post-expiry re-submission
-        being outside this horizon predicate), then x exactly reproduces the already-linearized authoritative terminal outcome
-        for the same full key that is the full idempotency key associated with x, and attempt-local transient computations
-        cannot substitute a conflicting result. (6a) For every authoritative state s and every idempotency key k, if s is
-        reachable as in (1), then if the composite identity k is within the 30-day normal retry/reconnect eligibility horizon
-        in s, k is also within the configured normal retry eligibility horizon in s as in (1). (6b) For every request r, if
-        r is a normal submitted request representing one logical edit within the 30-day normal retry eligibility horizon,
-        then r preserves the same full request identity, raw_edit semantics, and canonical authoring frontier for its logical
-        operation, and those coordinates are not cross-bound from another operation. (6c) For every protocol transition t
-        and every idempotency key k, if t is any acceptance attempt or definitive-rejection attempt for the exact full key
-        k while that logical identity remains within the 30-day normal retry eligibility horizon, with no acceptance or definitive-rejection
-        path excluded by being classified outside some narrower terminal-result subprotocol and with post-expiry re-submission
-        outside this predicate, then t arbitrates through the same single authoritative per-key terminal state used by every
-        competing acceptance and definitive-rejection attempt for k, and no independent arbitration domain may decide a second
-        terminal outcome. (6d) For every protocol transition t and every terminal result records before and after, if t is
-        an authoritative lifecycle representation rewrite, within the 30-day normal retry eligibility horizon, from representation
-        before to representation after for the same already-linearized logical terminal outcome and the same full idempotency
-        key, with the durable physical representation possibly changing, then t preserves the same already-linearized logical
-        terminal outcome from before to after: an ACCEPTED outcome preserves the exact canonical result, and a REJECTED outcome
-        preserves the same definitive rejection reason, with physical representation allowed to change and, for REJECTED,
-        without requiring preservation of the same rejection-decision object or producer when the exact request binding and
-        required authoritative-context justification remain valid.'
+        identity (document_id, client_change_id), is within the configured normal retry eligibility horizon in s — this horizon
+        predicate assuming no fixed duration such as 30 days — then all four hold in s for k: s contains at most one durable
+        terminal result for that exact identity, with equal client_change_id values in different document namespaces counting
+        as distinct identities; if that exact identity has an ACCEPTED terminal outcome in s, canonical accepted history for
+        the same document contains the matching canonical acceptance for that exact identity and no incompatible REJECTED
+        outcome exists for that same identity; if that exact identity has a REJECTED terminal outcome in s, canonical accepted
+        history for the same document contains no canonical acceptance for that exact identity; and the terminal outcome for
+        k is immutable in that, once a terminal outcome for that exact identity has linearized, every later acceptance or
+        definitive-rejection transition for the same identity whose resulting authoritative state remains within the configured
+        normal retry eligibility horizon for k preserves the same single-valued outcome, post-horizon transitions or re-submissions
+        being outside this immutable-outcome predicate and this predicate adding no progress requirement. (2a) For every terminal
+        result record t, if t is an authoritative ACCEPTED(canonical result) terminal result and t is within the normal retry
+        eligibility horizon — meaning the full identity t carries is still a normal_retry_eligible_identity, the horizon in
+        which producer provenance must be retained, this predicate classifying horizon membership only and not itself asserting
+        producer provenance, origin authority, or lifecycle preservation — then there exists a canonical acceptance a such
+        that all hold: a is a committed canonical accepted-change record in authoritative accepted history; the full idempotency
+        key carried by t equals the authoritative idempotency identity carried by a; and t carries a canonical result produced
+        by the same acceptance execution that produced and committed a for the same full identity, this producer-provenance
+        relation having to be correct at authoritative terminalization and remain the same in any later lifecycle representation
+        on which it is asserted, but not requiring the binding metadata to have been materialized during acceptance-transaction
+        assembly and not treating a transient intermediate metadata substitution discarded before authoritative terminalization
+        as a violation. (2b) For every protocol transition x and terminal result records before and after, if x is an authoritative
+        lifecycle representation change, within the normal retry eligibility horizon, that preserves one already-linearized
+        ACCEPTED logical terminal outcome from before to after while possibly rewriting its durable physical representation,
+        with before and after carrying the same full idempotency identity, then there exists a canonical acceptance a such
+        that all hold: a is committed as in (2a); the key carried by before equals the identity carried by a; the key carried
+        by after equals the identity carried by a; and the claim-level producer-match relation in (2a) holds both for before
+        with a and for after with a. (3) For every terminal result record t, if t is an authoritative REJECTED(definitive
+        rejection reason) terminal result, then both hold with respect to the definitive rejection decision from which t derives
+        and the exact submitted request for which that decision was produced: t and that request carry the exact same full
+        (document_id, client_change_id) identity; and, when the definitive rejection reason depends on raw_edit or base_revision,
+        that decision uses those exact values from its bound submitted request. (4) For every terminal result record t, if
+        t is an authoritative rejected terminal result whose definitive rejection reason''s truth depends on document/history
+        state, then both hold for the decision from which t derives: that decision is bound to authoritative same-document
+        rejection context rather than unvalidated stale owner-local state; and the authoritative context/evidence for that
+        decision remains sufficient when t linearizes, either because it is current or because a reason-specific guard, monotonicity
+        argument, or revalidation preserves the rejection truth. (5) For every external terminal result x, if x is a definitive
+        externally terminal result exposed to a client — pending, timeout, cancellation, transport-loss, and crash-before-terminal-commit
+        observations not being such results — and x belongs to the normal retry eligibility horizon for its logical edit,
+        whether returned by the initial normal submission or by an in-horizon retry/reprocessing attempt, a post-expiry re-submission
+        being outside this horizon predicate, then x is emitted from, derived from, and exactly reproduces the already-linearized
+        authoritative terminal outcome for the same full key that x carries; an attempt-local computation that independently
+        produces identical content without deriving from that committed outcome does not satisfy this, and attempt-local transient
+        computations cannot substitute a conflicting result. (6a) For every authoritative state s and idempotency key k, if
+        s is reachable as in (1), then if the composite identity k is within the 30-day normal retry/reconnect eligibility
+        horizon in s, k is within the configured normal retry eligibility horizon in s in the sense of the terminal-key horizon
+        predicate in (1). (6b) For every request r, if r is a normal submitted request representing one logical edit within
+        the 30-day normal retry eligibility horizon, then r preserves the same full request identity, raw_edit semantics,
+        and canonical authoring frontier for its logical operation, those coordinates not being cross-bound from another operation.
+        (6c) For every protocol transition t and idempotency key k, if t is any acceptance attempt or definitive-rejection
+        attempt for the exact full key k while that logical identity remains within the 30-day normal retry eligibility horizon
+        — no acceptance or definitive-rejection path being excluded by being classified outside some narrower terminal-result
+        subprotocol, and post-expiry re-submission being outside this predicate — then t arbitrates through the same single
+        authoritative per-key terminal state used by every competing acceptance and definitive-rejection attempt for k, with
+        no independent arbitration domain allowed to decide a second terminal outcome. (6d) For every protocol transition
+        t and terminal result records before and after, if t is an authoritative lifecycle representation rewrite, within
+        the 30-day normal retry eligibility horizon, from before to after for the same already-linearized logical terminal
+        outcome and the same full idempotency key, the durable physical representation possibly changing, then t preserves
+        the same already-linearized logical terminal outcome from before to after: an ACCEPTED outcome preserves the exact
+        canonical result, and a REJECTED outcome preserves the same definitive rejection reason, physical representation possibly
+        changing and, for REJECTED, this preservation not requiring preservation of the same rejection-decision object or
+        producer when the exact request binding and required authoritative-context justification remain valid.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 93c1b9a7210b8c86927bdd3ba4fcb6ea270582b709e259cadd96d9b4c331947c
+        subject_signature: f7a83ada49ea85cc96c5e7dbc58ab70703ab8e26698f853d312514e05410c0df
         verdict: EQUIVALENT
-        reason: 'Every claim requirement is faithfully encoded: retry-request identity/payload/frontier coherence, per-key
-          at-most-one terminal outcome with ACCEPTED/REJECTED mutual exclusion and immutability in reachable in-horizon states,
-          accepted producer binding to a committed canonical acceptance for the exact full identity including preservation
-          across lifecycle rewrites, rejected binding to the decision''s exact submitted request identity and raw_edit/base_revision
-          values, state-dependent rejection requiring same-document authoritative context sufficient at terminalization (with
-          request-intrinsic reasons exempt), shared per-key arbitration for all in-horizon attempts, exact-outcome preservation
-          across lifecycle rewrites, and external results exactly reproducing the linearized authoritative outcome within
-          the horizon, with post-expiry resubmission excluded and no liveness requirement added. The predicate carve-outs
-          (no assembly-time metadata materialization, no rejected decision-object identity preservation) match the claim statement
-          itself rather than the stronger contract context, so they are not weakenings.'
+        reason: 'The formula preserves all claim requirements: per-key at-most-one, mutual exclusion, immutability and shared
+          arbitration within the retry horizon; accepted producer binding with the same committed acceptance across lifecycle
+          rewrites; rejected binding to the exact submitted request identity and raw_edit/base_revision context; state-dependent
+          rejection requiring same-document authoritative context sufficient at terminalization, with no such requirement
+          for request-intrinsic reasons; retry request identity/raw_edit/frontier coherence; and external results deriving
+          from and exactly reproducing the already-linearized authoritative outcome, with non-terminal uncertainty and post-expiry
+          resubmission excluded and no added progress requirement.'
         differences: []
       strengthening:
-        subject_signature: 93c1b9a7210b8c86927bdd3ba4fcb6ea270582b709e259cadd96d9b4c331947c
+        subject_signature: f7a83ada49ea85cc96c5e7dbc58ab70703ab8e26698f853d312514e05410c0df
         verdict: EQUIVALENT
-        reason: The formula preserves the horizon-scoped single-valued terminal coherence, accepted producer and lifecycle
-          binding, rejected request binding, state-dependent authoritative-context binding, external-result reproduction,
-          retry-request coherence, shared per-key arbitration, and lifecycle immutability, with the same full identities and
-          exclusions and no added or omitted requirement.
+        reason: The formula covers all five contracts and the statement's extra elements with matching full-identity (D,k)
+          scoping, horizon guards, provenance direction, single-valued arbitration, immutability and lifecycle preservation,
+          and non-terminal/post-expiry exclusions; no source requirement is omitted and no out-of-boundary requirement is
+          added.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 93c1b9a7210b8c86927bdd3ba4fcb6ea270582b709e259cadd96d9b4c331947c
+        subject_signature: f7a83ada49ea85cc96c5e7dbc58ab70703ab8e26698f853d312514e05410c0df
         verdict: EQUIVALENT
-        reason: The rendering preserves the original's quantifiers, full-identity coordinates, horizon and post-expiry boundaries,
-          single-valued immutable arbitration, accepted and rejected provenance bindings, state-dependent context sufficiency,
-          and external-response reproduction, without adding or omitting a material guarantee.
+        reason: 'The rendering preserves all claim guarantees: single-valued coherent terminal outcomes with mutual exclusion
+          and immutability within the normal horizon, accepted-result producer binding including lifecycle preservation, rejected-result
+          request binding and state-dependent authoritative-context binding, derived exact reproduction for external terminal
+          results, same per-key arbitration, request identity/raw-edit/frontier preservation, non-terminal uncertainty, post-expiry
+          exclusion, and the 30-day bridge to the configured horizon without adding a progress requirement.'
         differences: []
   claim:G12_client_pending_state_tracks_unresolved_edits:
     kind: claim
@@ -3818,48 +3820,52 @@ records:
   contract:terminal_response_outcome_binding:
     kind: contract
     subject_id: terminal_response_outcome_binding
-    subject_signature: a57f3bc4d390e5873400c3a260bef47221c8dcba901f33ce66c60f3d8461dc05
+    subject_signature: 053206ffac4525bd30721fe3dc14046ba1a0b0651c0600f7566d1dedf0f010da
     roundtrip:
-      subject_signature: a57f3bc4d390e5873400c3a260bef47221c8dcba901f33ce66c60f3d8461dc05
+      subject_signature: 053206ffac4525bd30721fe3dc14046ba1a0b0651c0600f7566d1dedf0f010da
       status: TRANSLATED
-      natural_language: For every ExternalTerminalResult x, if x is a definitive result exposed to a client and belongs to
-        the normal retry eligibility horizon for its logical edit, then x exactly reproduces the already-linearized authoritative
-        terminal outcome associated with x's full idempotency key, consisting of document_id plus client_change_id. This requirement
-        covers both the initial normal submission and any in-horizon retry or reprocessing attempt. Attempt-local transient
-        computations cannot substitute a conflicting result. The authoritative outcome is ACCEPTED with its canonical result
-        or REJECTED with its definitive reason; within the normal retry horizon, a key has at most one durable terminal result,
-        and uncertainty has no terminal entry. Post-expiry re-submissions are outside this requirement. The implication does
-        not require any externally terminal result to occur and imposes no additional liveness, delivery, ordering, or temporal
-        behavior beyond the stated relation to an already-linearized authoritative terminal outcome.
+      natural_language: 'For every ExternalTerminalResult x, if x satisfies both of the following conditions, then x must
+        satisfy the provenance-binding relation stated in the consequent: (1) x is a definitive externally terminal result
+        exposed to a client, i.e., a definitive result for one logical operation after the corresponding authoritative terminal
+        result has linearized, where pending, timeout, cancellation, transport-loss, and crash-before-terminal-commit observations
+        are not externally terminal results and do not satisfy this condition; and (2) x belongs to the normal retry eligibility
+        horizon for its logical edit, whether x is returned by the initial normal submission or by an in-horizon retry/reprocessing
+        attempt, where a post-expiry re-submission is outside this condition. The consequent is that x, paired with its full
+        idempotency key obtained from x — the authoritative deduplication identity for a logical edit, concretely document_id
+        plus client_change_id — reproduces the authoritative outcome: x is emitted from, i.e., derived from, and exactly reproduces
+        the already-linearized authoritative terminal outcome for that same full key, as recorded in the authoritative per-idempotency-key
+        terminal outcome state in which, within the normal retry horizon, a key has at most one durable terminal result, either
+        ACCEPTED with a canonical result or REJECTED with a definitive reason, and uncertainty has no terminal entry. An attempt-local
+        computation that independently produces identical content without deriving from that committed outcome does not satisfy
+        this relation, and attempt-local transient computations cannot substitute a conflicting result. This provenance binding
+        constrains only the identity/provenance relation between its source and bound symbols for every modeled occurrence
+        covered by the formula and does not imply liveness, delivery, ordering, or additional temporal behavior unless explicitly
+        encoded.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: a57f3bc4d390e5873400c3a260bef47221c8dcba901f33ce66c60f3d8461dc05
+        subject_signature: 053206ffac4525bd30721fe3dc14046ba1a0b0651c0600f7566d1dedf0f010da
         verdict: EQUIVALENT
-        reason: Universal quantification covers every definitive external terminal result from an initial submission or in-horizon
-          retry. The consequent binds that result to the already-linearized authoritative outcome for its full document_id
-          and client_change_id identity, requiring exact reproduction and excluding conflicting transient outcomes. Non-terminal
-          observations and post-expiry re-submissions remain excluded. The supplied meanings preserve provenance and identity
-          without adding liveness, delivery, or other temporal requirements.
+        reason: The formula quantifies over every externally terminal result within the retry horizon and requires it, via
+          its full idempotency key, to be derived from and exactly reproduce the already-linearized authoritative terminal
+          outcome, matching the provenance binding, identity, and exclusions of the canonical contract with no added or omitted
+          requirement.
         differences: []
       strengthening:
-        subject_signature: a57f3bc4d390e5873400c3a260bef47221c8dcba901f33ce66c60f3d8461dc05
+        subject_signature: 053206ffac4525bd30721fe3dc14046ba1a0b0651c0600f7566d1dedf0f010da
         verdict: EQUIVALENT
-        reason: The formula binds every covered definitive external result to the already-linearized authoritative outcome
-          for its full idempotency key, requiring exact reproduction and excluding conflicting transient results. The applicability
-          guard includes initial submissions and in-horizon retries while excluding post-expiry re-submissions; non-terminal
-          observations remain outside scope. The supplied meanings preserve identity and provenance without adding cardinality,
-          liveness, or temporal requirements beyond the source.
+        reason: The formula universally binds every definitive externally terminal result within the normal retry horizon,
+          via its full idempotency key, to derivation from and exact reproduction of the already-linearized authoritative
+          outcome for that same key, matching the source provenance, identity, scope, and exclusions for non-terminal observations
+          and post-horizon re-submissions without adding or omitting requirements.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: a57f3bc4d390e5873400c3a260bef47221c8dcba901f33ce66c60f3d8461dc05
+        subject_signature: 053206ffac4525bd30721fe3dc14046ba1a0b0651c0600f7566d1dedf0f010da
         verdict: EQUIVALENT
-        reason: The rendering preserves universal binding of externally terminal results to the already-linearized authoritative
-          outcome for the full document_id plus client_change_id identity. It preserves outcome fidelity, authoritative cardinality,
-          and the prohibition on conflicting attempt-local results. Non-terminal observations remain outside its definitive-result
-          scope, and post-expiry re-submissions remain excluded. It adds no liveness, delivery, ordering, or independent temporal
-          guarantee.
+        reason: The rendering preserves the provenance-binding scope, full key identity, derivation and exact reproduction
+          from the already-linearized single authoritative terminal outcome, non-terminal exclusions, retry-horizon boundary,
+          and the bar on attempt-local substitution, without adding liveness, delivery, ordering, or other requirements.
         differences: []
   contract:unresolved_pending_blocks_normal_editing:
     kind: contract
@@ -11862,4 +11868,54 @@ records:
           authoritative reconciliation or terminal disposition, the allowance for other non-reconciling non-disposing actions,
           and the consequence that the edit is not classified, justified, or treated as resolved/terminalized and remains
           unresolved despite dropped representations.
+        differences: []
+  claim:L161_definitive_retry_response_comes_from_terminal_outcome:
+    kind: claim
+    subject_id: L161_definitive_retry_response_comes_from_terminal_outcome
+    subject_signature: 2a8288c51dff670657ec3b40ee2f92714cbfdd50fa9976883b5e305a0b355b91
+    roundtrip:
+      subject_signature: 2a8288c51dff670657ec3b40ee2f92714cbfdd50fa9976883b5e305a0b355b91
+      status: TRANSLATED
+      natural_language: 'For every external terminal result x, if both of the following hold: (1) x is a definitive externally
+        terminal result record exposed to a client — that is, a definitive result exposed to the client for one logical operation
+        after the corresponding authoritative terminal result has linearized, where pending, timeout, cancellation, transport-loss,
+        and crash-before-terminal-commit observations are not externally terminal results and do not satisfy this condition;
+        and (2) x is within the normal retry eligibility horizon for its logical edit, whether x is returned by the initial
+        normal submission or by an in-horizon retry or reprocessing attempt, where a post-expiry re-submission is outside
+        this condition — then x reproduces the authoritative outcome for the full idempotency key associated with x, where
+        that key is the authoritative deduplication identity for a logical edit, concretely document_id plus client_change_id.
+        Reproducing in this sense means x is emitted from, derived from, and exactly reproduces the already-linearized authoritative
+        terminal outcome for that same full key, from the authoritative per-idempotency-key terminal outcome state in which,
+        within the normal retry horizon, a key has at most one durable terminal result, either ACCEPTED with a canonical result
+        or REJECTED with a definitive reason, and uncertainty has no terminal entry; an attempt-local computation that independently
+        produces identical content without deriving from that committed outcome does not satisfy this relation, and attempt-local
+        transient computations cannot substitute a conflicting result.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 2a8288c51dff670657ec3b40ee2f92714cbfdd50fa9976883b5e305a0b355b91
+        verdict: EQUIVALENT
+        reason: The universal formula restricts to definitive externally terminal results within the normal retry horizon
+          and requires each to be derived from and exactly reproduce the authoritative terminal outcome for its own full idempotency
+          key, matching the source provenance, identity, ACCEPTED/REJECTED content, and non-terminal exclusions with no added
+          or dropped requirement.
+        differences: []
+      strengthening:
+        subject_signature: 2a8288c51dff670657ec3b40ee2f92714cbfdd50fa9976883b5e305a0b355b91
+        verdict: EQUIVALENT
+        reason: The formula quantifies over exactly the externally terminal results within the normal retry horizon and requires
+          each to be derived from and exactly reproduce the authoritative terminal outcome for its own full idempotency key,
+          matching the source provenance, identity, and ACCEPTED/REJECTED reproduction requirements. Non-terminal observations
+          are excluded by the record predicate, and post-horizon re-submissions are excluded by the horizon guard, with no
+          added cardinality, existence, or cross-claim bridge.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 2a8288c51dff670657ec3b40ee2f92714cbfdd50fa9976883b5e305a0b355b91
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal quantification over externally terminal results within the normal retry
+          horizon, the full (document_id, client_change_id) identity, the provenance requirement that the result be emitted
+          from and exactly reproduce the already-committed authoritative ACCEPTED or REJECTED outcome, the at-most-one terminal
+          outcome per key, and the exclusion of pending, timeout, cancellation, transport loss, and crash-before-commit as
+          non-terminal, with no material weakening or strengthening.
         differences: []
