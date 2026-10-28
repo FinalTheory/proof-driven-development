@@ -4154,6 +4154,7 @@ functions:
     meaning: 'The authoritative step from before to after is the acceptance-commit step of canonical acceptance a: the step''s transition is the authoritative acceptance transaction whose commit makes a the canonical accepted change, so this step is the state-graph edge produced by a''s acceptance transaction committing.'
     semantic_anchors:
     - claim:L4_append_requires_previous_frontier
+    - claim:L217_append_step_commits_acceptance_at_previous_frontier
   state_step_creates_or_changes_document_coordinates:
     args:
     - AuthoritativeState
@@ -4541,6 +4542,7 @@ functions:
     meaning: 'The document of canonical acceptance a: the document whose canonical accepted history a belongs to, that is, the document of the candidate_canonical_change whose committed form a is.'
     semantic_anchors:
     - claim:L5_append_requires_current_epoch
+    - claim:L217_append_step_commits_acceptance_at_previous_frontier
   canonical_append_commits_candidate_change:
     args:
     - ProtocolTransition
@@ -18168,75 +18170,87 @@ claims:
     contracts: []
     formula:
       and:
-        - forall:
-            vars:
-              before: AuthoritativeState
-              after: AuthoritativeState
-              d: Document
-              r: Revision
-            body:
-              implies:
-                - and:
-                    - call:
-                        fn: authoritative_state_step
-                        args:
-                          - var: before
-                          - var: after
-                    - call:
-                        fn: state_step_commits_append_at_revision
-                        args:
-                          - var: before
-                          - var: after
-                          - var: d
-                          - var: r
-                - exists:
-                    vars:
-                      acc: CanonicalAcceptance
-                    body:
-                      and:
-                        - call:
-                            fn: candidate_change_commits_as_acceptance
-                            args:
-                              - var: acc
-                              - var: r
-                        - eq:
-                            - call:
-                                fn: candidate_commit_prestate_latest_revision
-                                args:
-                                  - var: acc
-                            - call:
-                                fn: state_document_latest_revision
-                                args:
-                                  - var: before
-                                  - var: d
-        - forall:
-            vars:
-              before: AuthoritativeState
-              after: AuthoritativeState
-              d: Document
-              r: Revision
-            body:
-              implies:
-                - and:
-                    - call:
-                        fn: authoritative_state_step
-                        args:
-                          - var: before
-                          - var: after
-                    - call:
-                        fn: state_step_commits_append_at_revision
-                        args:
-                          - var: before
-                          - var: after
-                          - var: d
-                          - var: r
-                - call:
-                    fn: state_step_append_follows_previous_frontier
-                    args:
+      - forall:
+          vars:
+            before: AuthoritativeState
+            after: AuthoritativeState
+            d: Document
+            r: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: authoritative_state_step
+                  args:
+                  - var: before
+                  - var: after
+              - call:
+                  fn: state_step_commits_append_at_revision
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+                  - var: r
+            - exists:
+                vars:
+                  acc: CanonicalAcceptance
+                body:
+                  and:
+                  - call:
+                      fn: state_step_commits_acceptance
+                      args:
                       - var: before
                       - var: after
-                      - var: d
+                      - var: acc
+                  - eq:
+                    - call:
+                        fn: canonical_acceptance_document
+                        args:
+                        - var: acc
+                    - var: d
+                  - call:
+                      fn: candidate_change_commits_as_acceptance
+                      args:
+                      - var: acc
                       - var: r
+                  - eq:
+                    - call:
+                        fn: candidate_commit_prestate_latest_revision
+                        args:
+                        - var: acc
+                    - call:
+                        fn: state_document_latest_revision
+                        args:
+                        - var: before
+                        - var: d
+      - forall:
+          vars:
+            before: AuthoritativeState
+            after: AuthoritativeState
+            d: Document
+            r: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: authoritative_state_step
+                  args:
+                  - var: before
+                  - var: after
+              - call:
+                  fn: state_step_commits_append_at_revision
+                  args:
+                  - var: before
+                  - var: after
+                  - var: d
+                  - var: r
+            - call:
+                fn: state_step_append_follows_previous_frontier
+                args:
+                - var: before
+                - var: after
+                - var: d
+                - var: r
   L218_append_at_next_position_preserves_frontier_shape:
     capability: relational
     contracts: []
