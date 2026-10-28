@@ -2823,6 +2823,7 @@ functions:
     meaning: The ACCEPTED terminal-result creation t and matching canonical accepted-change creation a carry the same full idempotency identity, concretely the same (document_id, client_change_id). This relation asserts same-key identity only; producer provenance, transaction atomicity, commit outcome, and implementation-path choice remain separate.
     semantic_anchors:
     - claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance
+    - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
   accepted_terminal_creation_pair_co_commits:
     args:
     - TerminalResultRecord
@@ -10402,6 +10403,11 @@ claims:
                   and:
                   - call:
                       fn: accepted_terminal_matching_creation_pair
+                      args:
+                      - var: t
+                      - var: a
+                  - call:
+                      fn: accepted_terminal_matching_creation_identity_matches
                       args:
                       - var: t
                       - var: a
