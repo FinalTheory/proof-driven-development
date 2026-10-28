@@ -5959,6 +5959,17 @@ functions:
     meaning: 'Logical edit identity e is a pending identity: the logical edit identified by e is a speculative edit that the client still holds awaiting classification, and whether a canonical acceptance for the exact full identity e exists - and, if one exists, at which revision it commits - is the outstanding question that a resync must answer for e. This predicate classifies only that e is such a pending identity (D,k); it does not assert that e is a normal_retry_eligible_identity, that any canonical acceptance for e exists, or that any particular resync covers e.'
     semantic_anchors:
     - claim:L214_pending_identity_classification_evidence_survives_lifecycle
+  bookkeeping_only_pending_removal_transition:
+    args:
+    - ProtocolTransition
+    - LogicalEditIdentity
+    catalog_symbols:
+    - client_pending_edits
+    - client_speculative_overlays
+    meaning: Transition t performs only bookkeeping changes for exact logical edit identity e — deleting or omitting pending bookkeeping, or bookkeeping deletion or relabeling — while e remains an unresolved acceptance-eligible logical edit within the normal retry/reconnect eligibility horizon that remains represented in client_speculative_overlays, without authoritative reconciliation and without an explicit terminal disposition (expiry, conflict/manual resolution, or abandonment) that ends e's normal speculative lifecycle.
+    returns: Bool
+    semantic_anchors:
+    - claim:L155_unresolved_speculative_edit_has_pending_entry
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -12922,7 +12933,7 @@ claims:
                   args:
                   - var: t
               - call:
-                  fn: bookkeeping_only_speculative_removal_transition
+                  fn: bookkeeping_only_pending_removal_transition
                   args:
                   - var: t
                   - var: e

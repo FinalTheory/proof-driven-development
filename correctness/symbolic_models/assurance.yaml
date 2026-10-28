@@ -10799,3 +10799,54 @@ records:
           the frontier. It imposes no unconditional requirement that a selected checkpoint be installed, matching the permitted
           clean abort.'
         differences: []
+  claim:L155_unresolved_speculative_edit_has_pending_entry:
+    kind: claim
+    subject_id: L155_unresolved_speculative_edit_has_pending_entry
+    subject_signature: 8c3c96b80281de58a53963773069b167eb6002ab241a815111c9166e64a69d19
+    roundtrip:
+      subject_signature: 8c3c96b80281de58a53963773069b167eb6002ab241a815111c9166e64a69d19
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following two statements holds. (1) For every client state s and every overlay
+        o, if s is a reachable client state — i.e., s is reachable under the normal client protocol, including states reached
+        through restore, view switching, bookkeeping, reconnect/resync, publication, and explicit terminal disposition, with
+        impossible client states excluded — and, in state s, o represents an unresolved acceptance-eligible logical edit within
+        the normal retry/reconnect horizon that remains retained in client_speculative_overlays, then the logical edit identity
+        represented by overlay token o remains active in client_pending_edits in client state s, where client_pending_edits
+        are unresolved logical client edits retained by client_change_id while their canonical acceptance outcome or conflict
+        disposition is not yet known. (2) For every protocol transition t and every logical edit identity e, if t is a reachable
+        client protocol transition — i.e., t occurs on a reachable execution of the normal client speculative lifecycle, with
+        impossible transitions and transitions outside that lifecycle excluded — and t is a bookkeeping-only pending removal
+        transition for exact logical edit identity e — i.e., t performs only bookkeeping changes for e, deleting or omitting
+        pending bookkeeping, or bookkeeping deletion or relabeling, while e remains an unresolved acceptance-eligible logical
+        edit within the normal retry/reconnect eligibility horizon that remains represented in client_speculative_overlays,
+        without authoritative reconciliation and without an explicit terminal disposition (expiry, conflict/manual resolution,
+        or abandonment) that ends e''s normal speculative lifecycle — then t does not resolve e''s lifecycle: t does not classify,
+        justify, or semantically treat exact logical edit identity e as resolved or terminalized, and e remains unresolved
+        in protocol semantics even if buggy physical bookkeeping representations were dropped.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 8c3c96b80281de58a53963773069b167eb6002ab241a815111c9166e64a69d19
+        verdict: EQUIVALENT
+        reason: The formula's state invariant requires pending_edit for every reachable state and retained unresolved acceptance-eligible
+          in-horizon overlay edit, matching the coverage until reconciliation or terminal disposition, and its transition
+          conjunct separately encodes that a bookkeeping-only deletion, omission, or relabeling retaining such an edit does
+          not resolve or terminalize its lifecycle, with no added or dropped guards, identity, cardinality, or scope conditions.
+        differences: []
+      strengthening:
+        subject_signature: 8c3c96b80281de58a53963773069b167eb6002ab241a815111c9166e64a69d19
+        verdict: EQUIVALENT
+        reason: The state invariant requires pending_edit for every reachable-state overlay representing an unresolved, acceptance-eligible
+          edit within the eligibility horizon, and the transition clause exactly preserves that bookkeeping-only deletion,
+          omission, or relabeling without reconciliation or an explicit terminal disposition does not resolve or terminalize
+          the edit, with no added scope, cardinality, or exclusion change.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 8c3c96b80281de58a53963773069b167eb6002ab241a815111c9166e64a69d19
+        verdict: EQUIVALENT
+        reason: Both preserve the same state invariant for unresolved, acceptance-eligible edits within the normal retry/reconnect
+          horizon that remain in client_speculative_overlays, requiring a matching client_pending_edits entry, and both preserve
+          that bookkeeping-only deletion or relabeling does not reconcile, resolve, or terminally dispose of the edit, with
+          no added or omitted scope, identity, or cardinality requirement.
+        differences: []
