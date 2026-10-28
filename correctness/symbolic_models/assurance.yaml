@@ -10428,95 +10428,67 @@ records:
   claim:L137_authoritative_history_mutators_are_exhaustively_classified:
     kind: claim
     subject_id: L137_authoritative_history_mutators_are_exhaustively_classified
-    subject_signature: ea5fdc3ce8f172e3f700de1f4b5ff021a63310c2dc2430cd726ff4d699115660
+    subject_signature: c24238d2c365722dfe7e77df19be3b87eaa2179c6d11c57968b81516f50b79b1
     roundtrip:
-      subject_signature: ea5fdc3ce8f172e3f700de1f4b5ff021a63310c2dc2430cd726ff4d699115660
+      subject_signature: c24238d2c365722dfe7e77df19be3b87eaa2179c6d11c57968b81516f50b79b1
       status: TRANSLATED
-      natural_language: 'The conjunction of the following ten statements holds. (1) For every authoritative state before,
-        authoritative state after, and document d, if after is the immediate successor of before under one committed authoritative
-        protocol transition (authoritative_state_step(before, after)), and d does not have an authoritative document-state
-        instance in before, and d does have an authoritative document-state instance in after, whose accepted_change_log and
-        document_latest_revision coordinates are those observed, then after is document_initialization_state for d: the state
-        produced by d''s document-state initialization, the first authoritative state of d in which its accepted_change_log
-        and document_latest_revision coordinates are created with their initialized values. (2) For every before, after, and
-        d, if authoritative_state_step(before, after) holds and the step from before to after creates or changes d''s coordinates,
-        meaning before and after differ in whether d has an authoritative document-state instance, or in the logical accepted
-        history denoted for d, or in d''s document_latest_revision value, with a change only to the physical representation
-        that preserves logical denotation and frontier value not counting, then at least one of the following holds: after
-        is document_initialization_state for d; or there exists a revision r such that the step is a committed canonical accepted-change
-        append for d whose one new canonical accepted change is at r and which commits no other accepted-history change for
-        d; or the step is an authoritative non-append representation/lifecycle transition for d that accepts no new edit,
-        changing d''s authoritative representation or lifecycle state while committing no canonical accepted change for d.
-        (3) For every before, after, d, and revision r, if authoritative_state_step(before, after) holds and the step commits
-        an append for d at r as in (2), then the step follows the previous frontier for d at r: d''s document_latest_revision
-        in before is exactly the revision position immediately before r in the canonical revision numbering, so the append''s
-        new change occupies the next position after the pre-state frontier. (4) For every before, after, d, and r, if authoritative_state_step(before,
-        after) holds, the step commits an append for d at r, the step extends d''s logical accepted history by exactly one
-        at r, meaning d''s logical accepted history in after equals its logical accepted history in before followed by exactly
-        one new canonical accepted change at r with every previously accepted revision retained by the same logical change,
-        no pre-existing change rewritten, replaced, or removed, and no other revision added, with semantics-preserving compaction
-        not counting as a change, the step follows the previous frontier for d at r, the step advances d''s document_latest_revision
-        to exactly r in after, meaning that advance to r becomes authoritatively visible in after as the co-visible companion
-        of the insertion of the matching canonical accepted change at r by the same committed append, and both the accepted
-        canonical history for d in before is one gap-free revision sequence and the logical canonical accepted history denoted
-        for d in before, starting at d''s canonical beginning, ends exactly at before''s document_latest_revision for d with
-        no logically represented accepted revision above that frontier, an empty history ending at the initial frontier and
-        missing or undefined coordinates not satisfying this, then both the accepted canonical history for d in after is one
-        gap-free revision sequence and the logical canonical accepted history denoted for d in after, starting at d''s canonical
-        beginning, ends exactly at after''s document_latest_revision for d with no logically represented accepted revision
-        above that frontier, an empty history ending at the initial frontier and missing or undefined coordinates not satisfying
-        this. (5) For every before, after, and d, if authoritative_state_step(before, after) holds, the step does not create
-        or change d''s coordinates as defined in (2), d has an authoritative document-state instance in before, and in before
-        d''s accepted canonical history is gap-free and its accepted history ends exactly at its frontier as defined in (4),
-        then in after d''s accepted canonical history is gap-free and its accepted history ends exactly at its frontier as
-        defined in (4). (6) For every authoritative state s and document d, if d has an authoritative document-state instance
-        in s, then there exists an authoritative state s0 such that s0 is document_initialization_state for d and either s0
-        equals s or s is reachable from s0 by the transitive closure of covered_authoritative_state_step, where a covered
-        step is an immediate committed authoritative protocol transition belonging to the covered classes: for every document
-        whose accepted_change_log or document_latest_revision coordinates it creates or changes, it is that document''s initialization
-        producing after, or a committed canonical accepted-change append for that document, or an authoritative non-append
-        representation/lifecycle transition for that document accepting no new edit, a transition creating or changing no
-        document''s coordinates being covered vacuously, only genuine authoritative_state_step transitions being covered,
-        and a transition creating or changing some document''s coordinates without belonging to one of those classes for that
-        document not being covered. (7) For every before, after, d, and r, if authoritative_state_step(before, after) holds
-        and the step commits an append for d at r as in (2), then both the step extends d''s history by exactly one at r as
-        defined in (4) and the step advances d''s frontier to the appended revision r as defined in (4). (8) For every before
-        and after, if covered_authoritative_state_step(before, after) holds as defined in (6), then authoritative_state_step(before,
-        after) holds. (9) For every s and d, if s is document_initialization_state for d, then in s d''s accepted canonical
-        history is gap-free and its accepted history ends exactly at its frontier as defined in (4). (10) For every s and
-        d, if d has an authoritative document-state instance in s, then in s d''s accepted canonical history is gap-free and
-        its accepted history ends exactly at its frontier as defined in (4).'
+      natural_language: 'The conjunction of the following two statements holds. (1) For every authoritative state ''before'',
+        every authoritative state ''after'', and every document d: if ''after'' is the immediate successor of ''before'' under
+        one committed authoritative protocol transition — i.e., the transition''s full authoritative effect separates the
+        two states, no intermediate authoritative state exists between them, and aborted, rolled-back, or never-committed
+        work creates no such step and no successor authoritative state — and ''before'' does not include an authoritative
+        document-state instance for d (where including such an instance is a scope condition only, covering the instance whose
+        accepted_change_log and document_latest_revision coordinates are being observed, including initialized documents with
+        an empty accepted history, and not excluding an instance because either coordinate is malformed, missing, inconsistent,
+        or being authoritatively published, and is not a coherence assertion), and ''after'' does include an authoritative
+        document-state instance for d, then ''after'' is a document initialization state for d, meaning ''after'' is d''s
+        authoritative state as produced by document-state initialization, the first authoritative state of d, in which d''s
+        accepted_change_log and document_latest_revision coordinates are created with their initialized values, initialization
+        being the only transition class that creates a document''s authoritative history/frontier coordinates. (2) For every
+        authoritative state ''before'', every authoritative state ''after'', and every document d: if ''after'' is the immediate
+        successor of ''before'' under one committed authoritative protocol transition as described above, and the step from
+        ''before'' to ''after'' creates, destroys, or changes d''s accepted_change_log or document_latest_revision coordinates
+        in their logical denotation — meaning ''before'' and ''after'' differ in whether d has an authoritative document-state
+        instance, or in the logical accepted history denoted for d, or in d''s document_latest_revision value, while a step
+        that changes only the physical representation of d''s history while preserving its logical denotation and frontier
+        value does not satisfy this condition — then at least one of the following three alternatives holds: (a) ''after''
+        is a document initialization state for d as described in (1); or (b) there exists a revision r such that the step
+        from ''before'' to ''after'' commits an append at revision r for d, meaning it is a committed canonical accepted-change
+        append for d whose one new canonical accepted change is at revision r and which commits exactly that one canonical
+        accepted change for d and no other accepted-history change for d; or (c) the step from ''before'' to ''after'' accepts
+        no new edit for d, meaning it is an authoritative non-append representation/lifecycle transition for d that changes
+        d''s authoritative representation or lifecycle state while committing no canonical accepted change for d, excluding
+        steps that do not change d''s representation or lifecycle state (including steps that accept edits only for other
+        documents and steps that leave d entirely untouched) and excluding steps that commit an append for d.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: ea5fdc3ce8f172e3f700de1f4b5ff021a63310c2dc2430cd726ff4d699115660
+        subject_signature: c24238d2c365722dfe7e77df19be3b87eaa2179c6d11c57968b81516f50b79b1
         verdict: EQUIVALENT
-        reason: The formula classifies every coordinate-changing authoritative step per document as initialization, a committed
-          append, or a non-append transition accepting no new edit; append steps are separately required to follow the prior
-          frontier, extend the logical history by exactly that revision, and advance the frontier to it; all authoritative
-          document states and initialization states are required gap-free and ending exactly at the frontier; and every document
-          state is required to be its initialization state or reachable from it through covered steps, matching the source
-          exhaustiveness, append-preservation, coherence, no-uncovered-mutation, and reachability requirements with no material
-          omission or addition.
+        reason: The formula forces any step where an authoritative instance first appears to end in document initialization,
+          and forces every step whose logical accepted-history or frontier coordinate is created or changed into exactly the
+          initialization, exactly-one canonical append, or non-append no-new-edit classes. The helper meanings preserve the
+          logical-versus-physical-representation distinction, the exactly-one append cardinality, and instance presence being
+          independent of coordinate coherence.
         differences: []
       strengthening:
-        subject_signature: ea5fdc3ce8f172e3f700de1f4b5ff021a63310c2dc2430cd726ff4d699115660
+        subject_signature: c24238d2c365722dfe7e77df19be3b87eaa2179c6d11c57968b81516f50b79b1
         verdict: EQUIVALENT
-        reason: The formula captures the exhaustive classification of coordinate-creating/changing steps, the append guarantee
-          of prior-prefix preservation with exactly one next revision and frontier advance to that revision, universal gap-free
-          frontier coherence in every document state, the prohibition on unclassified mutations, and production by or covered-step
-          reachability from document initialization, with no added or omitted requirement; the additional conditional preservation
-          and covered-implies-step clauses are consequences of those clauses and the supplied predicate meanings.
+        reason: 'The formula exactly captures the source: instance creation (absent before, present after under a committed
+          step) is forced to be initialization, and every step creating or changing the logical accepted-history denotation
+          or revision frontier is forced into the disjunction of initialization, an append committing exactly one canonical
+          change at some revision, or a non-append representation/lifecycle step committing no canonical change. Physical-only
+          rewrites preserving logical denotation and frontier are excluded by the coordinate-change predicate, and instance
+          presence is treated as a scope predicate independent of coherence, matching the source boundaries with no added
+          or omitted requirement.'
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: ea5fdc3ce8f172e3f700de1f4b5ff021a63310c2dc2430cd726ff4d699115660
+        subject_signature: c24238d2c365722dfe7e77df19be3b87eaa2179c6d11c57968b81516f50b79b1
         verdict: EQUIVALENT
-        reason: The rendering preserves the original's exhaustive three-class classification of every coordinate-creating
-          or coordinate-changing authoritative step, the append class's exact-one extension at the next frontier position
-          with frontier advancement to r, the unconditional gap-free frontier-coherence invariant for every document state,
-          and initialization-or-reachability of every document state through covered steps, with no requirement weakened or
-          added.
+        reason: The rendering preserves the exhaustive three-class classification for logical (not merely physical) creation
+          or change of either coordinate, the instance-presence/coherence independence and initialization-as-creation rule,
+          the exactly-one-change append rule, and the non-append/no-new-edit condition, without narrowing or adding requirements.
         differences: []
   claim:L109_resync_publication_is_atomic_and_monotonic:
     kind: claim

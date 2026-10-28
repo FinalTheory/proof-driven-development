@@ -204,7 +204,7 @@ refinement:
     C7_revision_frontier_is_linear:
       status: stable
       blocked_by: []
-      signature: 3e1dfb04cfcc9ac9282b94d067cfa22a11a4e52dcddf5a23eff8530ba2d46de1
+      signature: 201169a9c7903e9ebf9166e3b5c2d3a9122bbc710374a45cd7e67acd258af1b4
     C8_stale_owner_is_fenced:
       status: stable
       blocked_by: []
@@ -474,8 +474,9 @@ refinement:
       blocked_by: []
       signature: 8a929e32e046e771ea12c2539434fadba672108e215c0fed75188ed769a1b093
     C37_pending_identity_resolution_is_bound_to_response_head:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 066aed1ce223b2776db55c24696479345b0328bdbbf67a2b8cf627a9c968c4b8
     L124_pending_identity_classifier_uses_same_identity_and_response_head:
       status: stable
       blocked_by: []
@@ -533,12 +534,13 @@ refinement:
       blocked_by: []
       signature: 756969a644ed94a2bd790a3ad3eb283b30763ae7143792daa859b92de9f5c57e
     L137_authoritative_history_mutators_are_exhaustively_classified:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: aae3b9fde16914d5997037827af60fb2ac7407a14d2312b3956b26c6c08537b6
     C39_authoritative_history_state_is_gap_free:
       status: stable
       blocked_by: []
-      signature: 9a0414ce48f1e523c75d5c9adf8af4eb22716da31809726bb0f9732743a36f3a
+      signature: efe2b8502392ddca63728cb526d9b9ea3f4e441e0168e9dd9d79afec1a7aa2e2
     L138_committed_append_preserves_gap_free_state_shape:
       status: stable
       blocked_by: []
