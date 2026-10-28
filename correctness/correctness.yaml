@@ -188,15 +188,15 @@ refinement:
     G2_canonical_history_is_linear_and_fenced:
       status: stable
       blocked_by: []
-      signature: 869db4ca83e8f3c81d0b39c6cd20b457b4d5de83df2ce524db542764b1870f6c
+      signature: 0f4b61533f5a7fa9d1bccc8a830992174c65b649bc4100513baf28727df67f3b
     G3_snapshot_and_recovery_preserve_state:
       status: stable
       blocked_by: []
-      signature: 25047ab07e0c2b7623cada1e36634817531b3311d80ca5f411662482f3f88047
+      signature: aad3be39764bfe78048793fc7a5d39a42fa2161c516ccf630ef832aed7fafb47
     G4_reconnect_converges_without_gap_or_duplicate:
       status: stable
       blocked_by: []
-      signature: 3fe1ea7dea203401c0bafcbc0df88e33a1f24fb503678bcbe4543974692de7df
+      signature: a7d109a7f2035b110eaecdc52ce9b300e131fcb48a6057277625e2a872c297fe
     G5_retry_resolves_idempotently:
       status: stable
       blocked_by: []
@@ -432,7 +432,7 @@ refinement:
     G9_accepted_idempotency_evidence_matches_committed_acceptance:
       status: stable
       blocked_by: []
-      signature: f5d3590ff6905f8f7128a92b8219df004afbba45b39bf947cbdda65830442268
+      signature: 3074c02d1c43224a087ee6b2dc2be8b04a55a632aa5d37e08b70a748ba01c988
     L113_request_raw_edit_is_bound_to_authoring_frontier:
       status: stable
       blocked_by: []
