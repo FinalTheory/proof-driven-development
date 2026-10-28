@@ -5146,12 +5146,20 @@ claims:
       - accepted_change_log
       - authoritative_truth
       - final_architecture
-    statement: If an authoritative pre-state denotes one gap-free accepted revision sequence for a
-      document D ending exactly at D's frontier, and a committed canonical accepted-change append
-      step for D at revision r follows D's previous frontier, meaning D's pre-state frontier is the
-      revision position immediately before r in the canonical revision numbering, then the
-      authoritative post-state also denotes one gap-free accepted revision sequence for D ending
-      exactly at its frontier.
+    statement: If an authoritative pre-state denotes, for a document D, one gap-free accepted
+      revision sequence ending exactly at D's frontier — where ending exactly at the frontier means
+      the denoted history starts at D's canonical beginning and ends at D's latest revision frontier
+      with no logically represented accepted revision above that frontier, the history being its
+      logical denotation across authoritative representations rather than the set of physically
+      retained accepted rows, an empty accepted history ending at D's initial frontier, and a state
+      whose authoritative coordinates for D are missing or undefined denoting no such history — and
+      one committed authoritative transition from that pre-state to its immediate successor state
+      (aborted, rolled-back, or never-committed work creating no such step) is a canonical
+      accepted-change append step for D that commits exactly the one new canonical accepted change
+      at revision r and no other accepted-history change for D, and that append follows D's previous
+      frontier, meaning D's pre-state frontier is the revision position immediately before r in the
+      canonical revision numbering, then the authoritative post-state also denotes one gap-free
+      accepted revision sequence for D ending exactly at its frontier in the same sense.
     verification:
       verifiers:
         - intent: Generate authoritative pre-states whose denoted history is one gap-free accepted
