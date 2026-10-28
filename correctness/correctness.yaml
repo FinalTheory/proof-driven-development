@@ -6660,7 +6660,12 @@ assurance:
     G5_retry_resolves_idempotently:
       status: unaudited
     C7_revision_frontier_is_linear:
-      status: unaudited
+      status: machine_checked
+      rationale: 'symbolic-compose ENTAILED (solver unsat) over TRUSTED premise translations. Premise-ablation
+        diagnostics (not a soundness gate): 9 of 10 premises individually load-bearing (L6, L22, L29,
+        L33, L137, L215, L216, L217, L218); L4_append_requires_previous_frontier not individually load-bearing
+        - redundancy recorded per D23, edge retained.'
+      signature: 84d9ab0886327ace9bd5c4ce941a2d763b420d0153d6a37d472cfc339f6e3e67
     C8_stale_owner_is_fenced:
       status: unaudited
     C9_recovery_reconstructs_committed_state:
