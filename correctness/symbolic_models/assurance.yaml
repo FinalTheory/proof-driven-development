@@ -11007,3 +11007,86 @@ records:
           H at completion; and equality of the denoted logical state to deterministic canonical replay through H. No requirement
           is omitted, added, or materially altered.'
         differences: []
+  claim:C9_recovery_reconstructs_committed_state:
+    kind: claim
+    subject_id: C9_recovery_reconstructs_committed_state
+    subject_signature: c1428d71f5ee1f73ce73b0e51f5c35f78d8aff510c09ac37f136259d1d540a79
+    roundtrip:
+      subject_signature: c1428d71f5ee1f73ce73b0e51f5c35f78d8aff510c09ac37f136259d1d540a79
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following five universally quantified implications holds. (1) For every recovery
+        attempt r, if r is a recovery or reconstruction attempt whose role is to establish or re-establish an authoritative
+        owner generation for its target document — including owner-identity change, cold takeover, warm-standby promotion,
+        and same-owner restart or reacquisition, with this classification resting on the attempt''s role from its initiation
+        and not depending on the attempt later reaching owner-generation installation, recovery-head capture, or completion,
+        and excluding reconstruction activity that does not establish or re-establish authoritative ownership — then r is
+        within the canonical new-owner recovery boundary for its target document, a classification established by entering
+        that boundary and not depending on successful progress, so that r remains a new-owner recovery attempt if it stalls,
+        crashes, or aborts before owner-generation installation, recovery-head capture, or completion, and recovery or reconstruction
+        activity outside the canonical new-owner recovery boundary is excluded. (2) For every recovery attempt r, if r is
+        a new-owner recovery attempt as in (1) and r reaches authoritative or acceptance-eligible publication, i.e. the point
+        at which the owner generation r establishes becomes authoritative or acceptance-eligible, then r installs a strictly
+        newer epoch and a fresh owner generation for its target document before or atomically with r reaching that point of
+        becoming authoritative or acceptance-eligible: the epoch r installs is strictly greater than the superseded generation''s
+        epoch, and the owner generation r installs is a fresh generation identity distinct from the superseded generation''s;
+        this does not assert that r reaches that point, and it imposes no requirement on an attempt that stalls, crashes,
+        or aborts before reaching it. (3) For every recovery attempt r, if r is a new-owner recovery attempt as in (1), then,
+        for d being the target document identity bound to r, the document-scope binding holds across the full scope of r''s
+        recovery lifecycle: every authoritative owner/epoch context of r, and — whenever selected, captured, consumed, constructed,
+        installed, or used — the recovery_head, the checkpoint, the canonical accepted_change_log tail entries (bound under
+        each of those modes, not only when replayed), the rebuilt logical/OT runtime state (including intermediate derived
+        reconstruction states, bound from construction onward and not only once installed), the installed recovered_owner_runtime_state,
+        and the resumed owner context (bound as itself a document-scoped entity whenever service resumes under it) remain
+        document-scoped to that same d; this obligation applies to every recovery input, context, or state of r that actually
+        exists at any stage of the attempt, even if the attempt later stalls, crashes, or aborts before or after recovery_head
+        capture; an authoritative object or owner context from another document cannot satisfy the recovery merely because
+        its frontier, payload, logical state, or reconstructed metadata is extensionally equal to d''s; and it imposes no
+        requirement that any later recovery stage occur or that recovery complete. (4) For every recovery attempt r and every
+        revision h, if r is a new-owner recovery attempt as in (1) and r completed at authoritative head h — i.e. h is the
+        recovery head captured by r and h is the authoritative frontier H, the document_latest_revision of r''s target document,
+        at which r''s completed recovery stands, this stating the authoritative-head scope coordinate of the completed recovery
+        only, not the contents of the recovered state and not, by itself, how the captured value was bound at capture time
+        — then both of the following hold: (a) the recovered logical document state installed by r equals deterministic canonical
+        replay of the accepted revisions of r''s target document through revision h, this stating value equality of the installed
+        recovered logical state only and not how the state was produced, that any checkpoint selection or tail replay step
+        occurred, that r completed, or which frontier the recovered owner serves at; and (b) the recovered service frontier
+        of the owner established by r is exactly revision h, i.e. the frontier at which that recovered owner stands to serve
+        r''s target document after r''s completion is h, neither behind nor ahead of h, this stating the recovered owner''s
+        frontier coordinate only and not the contents of the recovered state or any local-head or next-candidate representation
+        of that frontier. (5) For every recovery attempt r and every revision h, if r is a new-owner recovery attempt as in
+        (1), the recovered owner established by r resumes canonical acceptance service after r''s reconstruction — i.e. that
+        owner performs or is enabled to perform canonical acceptance on the basis of r''s recovered state — and r completed
+        at authoritative head h as in (4), then every document-history-dependent runtime state value on the recovered owner
+        established by r that can influence server-side OT transformation or canonical acceptance is equivalent to a clean
+        reconstruction from the authoritative canonical history of r''s target document through revision h, so the canonical
+        semantics resumed under r''s recovered owner are unchanged; this asserts the equivalence of those values to the clean
+        reconstruction, does not confine them to any particular component, container, or representation, and containment of
+        a value in some component without that equivalence does not satisfy it.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: c1428d71f5ee1f73ce73b0e51f5c35f78d8aff510c09ac37f136259d1d540a79
+        verdict: EQUIVALENT
+        reason: 'The formula preserves all claim components: role-based classification independent of progress, epoch/generation
+          installation conditioned on reaching authoritative publication, document-scope provenance across all actually established
+          stages without requiring completion, replay equality and frontier identity on completion at H, and clean-reconstruction
+          equivalence for history-dependent state on resumed acceptance.'
+        differences: []
+      strengthening:
+        subject_signature: c1428d71f5ee1f73ce73b0e51f5c35f78d8aff510c09ac37f136259d1d540a79
+        verdict: EQUIVALENT
+        reason: The formula preserves the classification independent of progress, the conditional strictly-newer epoch and
+          fresh generation at authoritative publication, the lifecycle-wide document-scope provenance binding for all actually
+          established inputs and contexts, the completion-at-H replay equality and service frontier, and the clean-reconstruction
+          equivalence upon resumed acceptance, with no added or omitted requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: c1428d71f5ee1f73ce73b0e51f5c35f78d8aff510c09ac37f136259d1d540a79
+        verdict: EQUIVALENT
+        reason: The rendering preserves the attempt classification and its independence from progress, the conditional strictly-newer
+          epoch and fresh generation installation, the document-scope provenance binding across all actually-established stages
+          including abort cases and the bar on extensionally-equal cross-document substitution, the completion equalities
+          for recovered logical state and service frontier at H, and the resumed-acceptance runtime-state equivalence to clean
+          reconstruction through H, without adding or omitting a requirement.
+        differences: []
