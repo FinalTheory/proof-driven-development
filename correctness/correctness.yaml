@@ -206,9 +206,8 @@ refinement:
       blocked_by: []
       signature: 201169a9c7903e9ebf9166e3b5c2d3a9122bbc710374a45cd7e67acd258af1b4
     C8_stale_owner_is_fenced:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 385efa38e193977bd82677a67e5984b70c8dc4627f4c7b46be97421f92222c6a
     C9_recovery_reconstructs_committed_state:
       status: stable
       blocked_by: []
@@ -1070,11 +1069,13 @@ claims:
       Every authoritative ownership handoff for document D installs a strictly greater document_current_epoch
       and fresh document_owner_generation_id before or atomically with the new generation becoming authoritative
       and acceptance-eligible. After supersession, the authoritative epoch never decreases or restores
-      a superseded value. owner_generation_authorization_binding holds for every canonical append: document
-      scope, owner_epoch, and append_owner_generation_id remain bound to the immutable server-side generation
-      for D executing the append and must match D's authoritative current epoch/generation at commit,
-      so neither a superseded generation nor another document's generation can regain append authority
-      through copied or colliding fencing values.
+      a superseded value. owner_generation_authorization_binding holds for every canonical append attempt
+      and for every canonical append: for every canonical append attempt targeting D, whether or not that
+      attempt commits, the attempt's document scope, owner_epoch, and append_owner_generation_id remain
+      bound to the immutable server-side generation for D actually executing that attempt; and every canonical
+      append must match D's authoritative current epoch/generation at commit, so neither a superseded
+      generation nor another document's generation can regain append authority through copied or colliding
+      fencing values.
     depends_on:
       - L5_append_requires_current_epoch
       - L28_authoritative_epoch_never_regresses_or_reuses
