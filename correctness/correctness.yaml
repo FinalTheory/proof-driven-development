@@ -575,9 +575,8 @@ refinement:
       blocked_by: []
       signature: 1fd95998c4eb288dc07badfb959a030fb025754d6f9bcbf077a37fcaeb3a58c0
     G12_client_pending_state_tracks_unresolved_edits:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 9f7c8300f2d24ad7697e7a812f9c81f2fc9f03cf3247630fa6a67051ba04cec0
     L156_owner_handoff_installs_fresh_epoch:
       status: stable
       blocked_by: []
@@ -821,6 +820,9 @@ refinement:
       status: pending
       blocked_by: []
     L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier:
+      status: pending
+      blocked_by: []
+    L221_bookkeeping_speculative_removal_does_not_resolve_lifecycle:
       status: pending
       blocked_by: []
 assumptions:
@@ -3542,6 +3544,7 @@ claims:
       - L206_terminal_speculative_lifecycle_is_absorbing
       - L208_externally_rejected_edit_terminalizes_speculative_lifecycle
       - L209_accepted_reconciliation_terminalizes_speculative_lifecycle
+      - L221_bookkeeping_speculative_removal_does_not_resolve_lifecycle
     kind: root
   L156_owner_handoff_installs_fresh_epoch:
     statement: For every authoritative transition from one document-owner generation to a distinct
@@ -5222,6 +5225,31 @@ claims:
             frontier with document_latest_revision equal to the completion frontier.
           kind: property_test
     kind: leaf
+  L221_bookkeeping_speculative_removal_does_not_resolve_lifecycle:
+    mechanisms:
+      - catchup_protocol
+      - client_document_scoped_speculative_state
+    source_refs:
+      - reconnect_revision_boundary
+      - final_architecture
+    statement: "For every reachable client protocol transition and every logical edit identity, a transition
+      that performs bookkeeping deletion, relabeling, or loss of the identity's pending or retained speculative
+      representation — its client_pending_edits or client_speculative_overlays bookkeeping — without authoritative
+      reconciliation and without an explicit or equivalent terminal disposition that ends the identity's
+      normal speculative lifecycle does not resolve that lifecycle: the edit remains unresolved in protocol
+      semantics even if the physical bookkeeping representations were dropped."
+    verification:
+      verifiers:
+        - intent: Enumerate every bookkeeping path that deletes, relabels, or loses a pending or
+            retained speculative representation; require that none of them classifies the edit as
+            resolved or terminalized unless the path is an authoritative reconciliation or an
+            explicit terminal disposition.
+          kind: control_flow
+        - intent: Generate reachable executions containing bookkeeping-only
+            speculative-representation removal transitions; require the removed edit to remain
+            unresolved in protocol semantics afterwards rather than resolved or terminalized.
+          kind: state_machine
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -6568,7 +6596,7 @@ id_allocator:
     A: 7
     G: 13
     C: 48
-    L: 221
+    L: 222
     D: 15
     T: 3
 assurance:
@@ -7065,6 +7093,8 @@ assurance:
       status: planned
     L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier:
       status: planned
+    L221_bookkeeping_speculative_removal_does_not_resolve_lifecycle:
+      status: planned
 formalization:
   claims:
     G0_acked_edit_survives_failover:
@@ -7394,6 +7424,8 @@ formalization:
     L219_lifecycle_completion_frontier_matches_after_appends_head:
       mode: symbolic
     L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier:
+      mode: symbolic
+    L221_bookkeeping_speculative_removal_does_not_resolve_lifecycle:
       mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:

@@ -1179,6 +1179,7 @@ functions:
     - claim:L155_unresolved_speculative_edit_has_pending_entry
     - claim:L203_non_acceptance_terminal_disposition_preserves_edit_provenance
     - claim:L206_terminal_speculative_lifecycle_is_absorbing
+    - claim:L221_bookkeeping_speculative_removal_does_not_resolve_lifecycle
   bookkeeping_only_speculative_removal_transition:
     args:
     - ProtocolTransition
@@ -1191,6 +1192,7 @@ functions:
     semantic_anchors:
     - claim:G12_client_pending_state_tracks_unresolved_edits
     - claim:L155_unresolved_speculative_edit_has_pending_entry
+    - claim:L221_bookkeeping_speculative_removal_does_not_resolve_lifecycle
   bookkeeping_removal_does_not_resolve_lifecycle:
     args:
     - ProtocolTransition
@@ -1201,6 +1203,7 @@ functions:
     semantic_anchors:
     - claim:G12_client_pending_state_tracks_unresolved_edits
     - claim:L155_unresolved_speculative_edit_has_pending_entry
+    - claim:L221_bookkeeping_speculative_removal_does_not_resolve_lifecycle
   non_acceptance_retirement_establishes_terminalized_lifecycle:
     args:
     - ProtocolTransition
@@ -13211,27 +13214,6 @@ claims:
                 args:
                 - var: t
                 - var: e
-      - forall:
-          vars:
-            e: LogicalEditIdentity
-            t: ProtocolTransition
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: reachable_client_protocol_transition
-                  args:
-                  - var: t
-              - call:
-                  fn: bookkeeping_only_speculative_removal_transition
-                  args:
-                  - var: t
-                  - var: e
-            - call:
-                fn: bookkeeping_removal_does_not_resolve_lifecycle
-                args:
-                - var: t
-                - var: e
   L158_pending_retirement_requires_matching_acceptance_identity:
     capability: relational
     contracts:
@@ -18936,6 +18918,31 @@ claims:
     contracts:
     - state_dependent_rejection_context_binding
     formula_from_contracts: true
+  L221_bookkeeping_speculative_removal_does_not_resolve_lifecycle:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          e: LogicalEditIdentity
+          t: ProtocolTransition
+        body:
+          implies:
+          - and:
+            - call:
+                fn: reachable_client_protocol_transition
+                args:
+                - var: t
+            - call:
+                fn: bookkeeping_only_speculative_removal_transition
+                args:
+                - var: t
+                - var: e
+          - call:
+              fn: bookkeeping_removal_does_not_resolve_lifecycle
+              args:
+              - var: t
+              - var: e
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
