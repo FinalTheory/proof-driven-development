@@ -382,9 +382,8 @@ refinement:
       blocked_by: []
       signature: 3dfa805647fdf5dda0ec45d007f54897f5b62242ead0cd9caf131df097b4a14c
     L97_client_adopts_snapshot_before_tail:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: dc7c47fb45bf379dd9d72dfc74becc262a9c1300298058a6cb94894a6b486950
     G6_accepted_change_preserves_ot_semantics:
       status: stable
       blocked_by: []
@@ -533,9 +532,8 @@ refinement:
       blocked_by: []
       signature: 756969a644ed94a2bd790a3ad3eb283b30763ae7143792daa859b92de9f5c57e
     L137_authoritative_history_mutators_are_exhaustively_classified:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: fb5f939ee60b23bc11c4d9c5193e1a9ba36376969e0b8890e1d5fa41eaa83b62
     C39_authoritative_history_state_is_gap_free:
       status: stable
       blocked_by: []
@@ -805,9 +803,8 @@ refinement:
       blocked_by: []
       signature: c06fb00080d76cd33991ac139849c4335e2a0ac323d62259ae882e48bd118c1d
     L214_pending_identity_classification_evidence_survives_lifecycle:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 36a37b51adbb72ea6bd8033f9390b7071c0b173c18dd9dbd277cafc76958fcb3
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -2091,10 +2088,14 @@ claims:
             each new-owner attempt; require the transition to the recovering owner's strictly
             greater epoch to commit before H is captured.
   L97_client_adopts_snapshot_before_tail:
-    statement: When catch-up selects checkpoint P=(content,S), the client installs exactly P with
-      replacement semantics and advances last_applied_revision to S before applying any returned or
-      interleaved revision above S; an interrupted installation cannot expose checkpoint content
-      paired with a different client frontier.
+    statement: 'When catch-up selects checkpoint P=(content,S), the client installs exactly P with replacement
+      semantics and advances last_applied_revision to S before applying any returned or interleaved revision
+      above S; an interrupted installation cannot expose checkpoint content paired with a different client
+      frontier. This proposition is a safety and ordering obligation: it constrains every installation
+      that occurs (which must be exactly the selected P, with last_applied_revision advanced to S before
+      any revision above S is applied) and forbids exposing checkpoint content paired with a different
+      frontier; it does not require that a selected checkpoint be installed, and a catch-up attempt may
+      abort cleanly with no installation and no user-visible effect.'
     source_refs:
       - snapshot_frontier
       - reconnect_revision_boundary
@@ -3194,9 +3195,16 @@ claims:
       belongs to at least one of the three covered transition classes: document-state initialization,
       a committed canonical accepted-change append, or an authoritative non-append representation/lifecycle
       transition that accepts no new edit. No authoritative mutation path may change either symbol without
-      belonging to one of these covered classes. Document-state initialization is the transition class
-      that creates a document''s accepted_change_log and document_latest_revision coordinates, and a committed
-      canonical accepted-change append step commits exactly one canonical accepted change for the document.'
+      belonging to one of these covered classes. Document-state initialization is the only transition
+      class that creates a document''s accepted_change_log and document_latest_revision coordinates, and
+      a committed canonical accepted-change append step commits exactly one canonical accepted change
+      for the document. Creating or changing a symbol means creating or changing the logical coordinate
+      it denotes - the accepted history denoted for the document, or the document_latest_revision value;
+      a step that only rewrites the physical representation of the history while preserving its logical
+      denotation and frontier value does not create or change either symbol. Whether a document has an
+      authoritative document-state instance is judged by the presence of that instance, independently
+      of whether its coordinates are coherent. On an authoritative step, accepting a new edit for a document
+      and committing a canonical accepted change for that document are the same event.'
     source_refs:
       - authoritative_truth
       - final_architecture
@@ -4973,16 +4981,21 @@ claims:
       - final_architecture
     statement: "For every pending identity (D,k) that is a normal_retry_eligible_identity, snapshotting,
       compaction, cleanup, and recovery preserve the classification evidence for that same full identity
-      throughout the identity's normal eligibility horizon. If a canonical acceptance(D,k) commits at
-      revision r, every durable retention transition and every completed recovery/restart transition preserves
-      the accepted_identity_frontier_evidence binding of (D,k) to r, with the exact query semantics that
-      (D,k) is included through a response head H iff r <= H; physical representation may change, but
-      that logical binding may not be dropped, relabeled, or reinterpreted. If no canonical acceptance(D,k)
-      exists, the same transitions preserve the equivalent frontier evidence for (D,k): the frontier-bounded
-      accepted history of D from which the absence of any acceptance(D,k) through any head is determined.
-      The evidence preserved in either case is enough to make the head-bound classification of (D,k) throughout
-      that eligibility horizon. After the identity leaves the normal retry/reconnect eligibility boundary,
-      this proposition requires neither classification evidence nor immediate physical cleanup."
+      throughout the identity's normal eligibility horizon. A pending identity (D,k) is a logical edit
+      identity whose speculative edit the client still holds awaiting classification: whether a canonical
+      acceptance(D,k) exists, and if so at which revision it commits, is the outstanding question that
+      a resync must answer for that identity. If a canonical acceptance(D,k) commits at revision r, every
+      durable retention transition and every completed recovery/restart transition preserves the accepted_identity_frontier_evidence
+      binding of (D,k) to r, with the exact query semantics that (D,k) is included through a response
+      head H iff r <= H; physical representation may change, but that logical binding may not be dropped,
+      relabeled, or reinterpreted. If no canonical acceptance(D,k) exists, the same transitions preserve
+      the equivalent frontier evidence for (D,k): the frontier-bounded accepted history of D from which
+      the absence of any acceptance(D,k) through any head is determined. The evidence preserved in either
+      case is enough to make the head-bound classification of (D,k) throughout that eligibility horizon:
+      the classification the preserved evidence must be enough to make is the one performed for (D,k)
+      at a resync, when (D,k) is pending at the start of that resync and is resolved against that resync
+      response's head. After the identity leaves the normal retry/reconnect eligibility boundary, this
+      proposition requires neither classification evidence nor immediate physical cleanup."
     verification:
       verifiers:
         - intent: 'Explore every durable retention transition and every completed recovery/restart transition

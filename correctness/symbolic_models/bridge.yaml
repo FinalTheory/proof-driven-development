@@ -5942,6 +5942,23 @@ functions:
     meaning: 'Terminal result record t is the creation record of the authoritative ACCEPTED terminal_result for the eligible full idempotency identity k, and the single acceptance execution that produced the ACCEPTED result for k is the sole origin of t''s presence in durable_terminal_outcome_store: that producing acceptance execution''s creation act for identity k is the only write that creates t in the store, and no other write path of any kind - whether a copy, repair, backfill, or attempt-local materialization - originates an authoritative ACCEPTED terminal_result for k in the store. A lifecycle path (such as migration, restore, or representation change) that re-materializes this same logical creation record preserves the record; it does not originate it and so is not another creation of it. This predicate classifies only the creation provenance of store record t for identity k; it does not assert a matching canonical acceptance object, that object''s committed status, transaction atomicity, or payload content.'
     semantic_anchors:
     - claim:L213_terminal_result_store_records_have_single_acceptance_creation_provenance
+  transition_within_identity_normal_eligibility_horizon:
+    args:
+    - ProtocolTransition
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Transition t occurs while identity e remains within its normal retry/reconnect eligibility boundary - the same eligibility boundary that identity_is_normal_retry_eligible names - so t falls inside e''s normal eligibility horizon. This predicate classifies only the timing of t relative to e''s eligibility boundary: it does not require that a canonical acceptance for e exists, and it does not require t to occur after any acceptance.'
+    semantic_anchors:
+    - claim:L214_pending_identity_classification_evidence_survives_lifecycle
+  identity_is_pending_identity:
+    args:
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Logical edit identity e is a pending identity: the logical edit identified by e is a speculative edit that the client still holds awaiting classification, and whether a canonical acceptance for the exact full identity e exists - and, if one exists, at which revision it commits - is the outstanding question that a resync must answer for e. This predicate classifies only that e is such a pending identity (D,k); it does not assert that e is a normal_retry_eligible_identity, that any canonical acceptance for e exists, or that any particular resync covers e.'
+    semantic_anchors:
+    - claim:L214_pending_identity_classification_evidence_survives_lifecycle
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -18127,15 +18144,17 @@ claims:
           body:
             implies:
             - and:
-              - &id001
-                call:
+              - call:
                   fn: canonical_acceptance_for_identity_commits_at_revision
                   args:
                   - var: e
                   - var: r
-              - &id002
-                call:
+              - call:
                   fn: identity_is_normal_retry_eligible
+                  args:
+                  - var: e
+              - call:
+                  fn: identity_is_pending_identity
                   args:
                   - var: e
             - forall:
@@ -18166,8 +18185,19 @@ claims:
           body:
             implies:
             - and:
-              - *id001
-              - *id002
+              - call:
+                  fn: canonical_acceptance_for_identity_commits_at_revision
+                  args:
+                  - var: e
+                  - var: r
+              - call:
+                  fn: identity_is_normal_retry_eligible
+                  args:
+                  - var: e
+              - call:
+                  fn: identity_is_pending_identity
+                  args:
+                  - var: e
             - forall:
                 vars:
                   t: ProtocolTransition
@@ -18195,8 +18225,15 @@ claims:
           body:
             implies:
             - and:
-              - *id002
-              - not: &id003
+              - call:
+                  fn: identity_is_normal_retry_eligible
+                  args:
+                  - var: e
+              - call:
+                  fn: identity_is_pending_identity
+                  args:
+                  - var: e
+              - not:
                   exists:
                     vars:
                       r: Revision
@@ -18218,7 +18255,7 @@ claims:
                           args:
                           - var: t
                       - call:
-                          fn: transition_within_identity_eligibility_window
+                          fn: transition_within_identity_normal_eligibility_horizon
                           args:
                           - var: t
                           - var: e
@@ -18238,7 +18275,7 @@ claims:
                           args:
                           - var: t
                       - call:
-                          fn: transition_within_identity_eligibility_window
+                          fn: transition_within_identity_normal_eligibility_horizon
                           args:
                           - var: t
                           - var: e
@@ -18264,7 +18301,15 @@ claims:
                   args:
                   - var: c
                   - var: e
-              - *id003
+              - exists:
+                  vars:
+                    r: Revision
+                  body:
+                    call:
+                      fn: canonical_acceptance_for_identity_commits_at_revision
+                      args:
+                      - var: e
+                      - var: r
             - call:
                 fn: classification_evidence_preserved_throughout_horizon
                 args:
@@ -18287,7 +18332,16 @@ claims:
                   args:
                   - var: c
                   - var: e
-              - not: *id003
+              - not:
+                  exists:
+                    vars:
+                      r: Revision
+                    body:
+                      call:
+                        fn: canonical_acceptance_for_identity_commits_at_revision
+                        args:
+                        - var: e
+                        - var: r
             - call:
                 fn: classification_evidence_preserved_throughout_horizon
                 args:
