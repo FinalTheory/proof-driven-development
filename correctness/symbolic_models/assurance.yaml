@@ -1045,45 +1045,69 @@ records:
   claim:G1_retry_is_logically_exactly_once:
     kind: claim
     subject_id: G1_retry_is_logically_exactly_once
-    subject_signature: 99aeafd7510e12db257758a66f587187ace5b2fa4bcdb0901c1fe5f67e47fa17
+    subject_signature: 7ca97104bb67ca49eb86fb30522d8f06c9a24b4ba6af7b996474a62a2c06b8b4
     roundtrip:
-      subject_signature: 99aeafd7510e12db257758a66f587187ace5b2fa4bcdb0901c1fe5f67e47fa17
+      subject_signature: 7ca97104bb67ca49eb86fb30522d8f06c9a24b4ba6af7b996474a62a2c06b8b4
       status: TRANSLATED
-      natural_language: 'For every protocol transition t and every logical client edit e, if t is acceptance-capable processing
-        caused by ACK loss, reconnect, or retry of e for a normally participating client while e''s (document_id, client_change_id)
-        remains within the 30-day normal retry/reconnect eligibility horizon, then t does not cause e to have more than one
-        committed canonical acceptance: t neither commits another acceptance for e when one already existed nor creates multiple
-        accepted records for e within t itself. Here, document_id is the stable identifier of one collaborative document,
-        and client_change_id is a client-supplied protocol identifier for a logical client edit; this proposition does not
-        assert that client_change_id is stable across retries or unique across distinct logical edits.'
+      natural_language: 'The proposition is the conjunction of the following three universally quantified statements. (1)
+        For all protocol transitions t1 and t2, logical edit e, idempotency key k, requests r1 and r2, and canonical acceptances
+        a1 and a2: if all of the following hold for t1 — t1 is an acceptance transition for key k; t1 is acceptance-capable,
+        meaning it is any normal submission, retry, delayed execution, owner-recovery, resumed-owner, or other protocol transition
+        capable of creating a canonical accepted change; t1 creates an acceptance; t1''s accepted-key gate decision occurs
+        while its idempotency key remains within the 30-day normal retry/reconnect eligibility horizon, this condition classifying
+        only the timing of that decision and not by itself asserting that t1 creates or observes an acceptance; the authoritative
+        idempotency key of t1, namely the composite key (document_id, client_change_id) for the acceptance t1 attempts to
+        create or creates, equals k; t1 itself produces canonical acceptance a1 as its own acceptance production for k, where
+        an acceptance produced by a different attempt or merely returned by t1 does not count; a1 was produced from request
+        r1; and r1 is a submission of logical edit e, including e''s original first submission and every later retransmission
+        or retry submission of the same edit and not a submission of a different logical edit — and all of the analogous conditions
+        hold for t2 with a2 and r2, namely t2 is an acceptance transition for the same key k, t2 is acceptance-capable, t2
+        creates an acceptance, t2''s gate decision occurs within the same 30-day retry horizon condition, t2''s authoritative
+        idempotency key equals k, t2 itself produces canonical acceptance a2 for k, a2 was produced from request r2, and r2
+        is a submission of the same logical edit e, then t1 equals t2. (2) For all protocol transition t, logical edit e,
+        idempotency key k, request r, and canonical acceptance a: if t is an acceptance transition for k, t is acceptance-capable,
+        t creates an acceptance, t''s gate decision occurs while k remains within the 30-day normal retry/reconnect eligibility
+        horizon, t''s authoritative idempotency key equals k, t itself produces canonical acceptance a for k, a was produced
+        from request r, r is a submission of logical edit e as defined above, and at t''s authoritative accepted-key gate
+        decision authoritative state does not record t''s idempotency key as already accepted, then t does not create more
+        than one acceptance event, that is more than one canonical accepted change, for key k within t itself. (3) For all
+        protocol transition t, logical edit e, idempotency key k, request r, and canonical acceptance a: if t is an acceptance
+        transition for k, t is acceptance-capable, t creates an acceptance, t''s gate decision occurs while k remains within
+        the 30-day normal retry/reconnect eligibility horizon, t''s authoritative idempotency key equals k, t itself produces
+        canonical acceptance a for k, a was produced from request r, r is a submission of logical edit e as defined above,
+        and at t''s authoritative accepted-key gate decision authoritative state does record t''s idempotency key as already
+        accepted, then t does not create an acceptance. The antecedent of (3) as written itself includes that t creates an
+        acceptance, so (3) is preserved exactly as stated, with that condition included rather than removed.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 99aeafd7510e12db257758a66f587187ace5b2fa4bcdb0901c1fe5f67e47fa17
+        subject_signature: 7ca97104bb67ca49eb86fb30522d8f06c9a24b4ba6af7b996474a62a2c06b8b4
         verdict: EQUIVALENT
-        reason: The universal implication preserves the normally participating client guard, ACK-loss/reconnect/retry causation,
-          and the 30-day eligibility boundary for the full (document_id, client_change_id) identity. Its consequent prohibits
-          creating more than one canonical acceptance for the same logical edit, including duplicates created within one transition
-          or across transitions. Expired identities remain outside the guarantee, and no eventual acceptance requirement or
-          additional identity assumption is introduced.
+        reason: Cross-transition uniqueness is enforced by t1=t2 for any two acceptance-creating, acceptance-capable transitions
+          sharing the same idempotency key k=(document_id, client_change_id), the same logical edit e via the acceptance-from-request
+          provenance chain, and gate decisions within the 30-day retry horizon; within-transition multiplicity is covered
+          exhaustively by the complementary gate cases (not observing an already-accepted key forbids multiple acceptances
+          from one transition, and observing an already-accepted key forbids any creation), together yielding count of acceptance
+          events per key per logical edit <= 1 within the horizon, with expired-identity resubmissions outside the antecedent
+          scope as in the source.
         differences: []
       strengthening:
-        subject_signature: 99aeafd7510e12db257758a66f587187ace5b2fa4bcdb0901c1fe5f67e47fa17
+        subject_signature: 7ca97104bb67ca49eb86fb30522d8f06c9a24b4ba6af7b996474a62a2c06b8b4
         verdict: EQUIVALENT
-        reason: The antecedent preserves normal client participation, ACK-loss/reconnect/retry causation, and the 30-day eligibility
-          boundary for the document/client-change identity. The consequent prohibits creating more than one canonical acceptance
-          for the same logical edit, covering both prior acceptance and multiple acceptances within one transition. Universal
-          quantification adds no guarantee outside that guarded scope, and expired-identity resubmissions remain excluded.
+        reason: 'The formula captures count <= 1 per (document_id, client_change_id) within the 30-day horizon: the first
+          conjunct forces any two horizon-eligible acceptance-producing transitions for the same key and logical edit to be
+          identical, the second forbids a single fresh-gate transition from creating multiple acceptances for the key, and
+          the third forbids creation when the gate already observes the key accepted. No material scope, provenance, identity,
+          or cardinality condition is added or omitted.'
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 99aeafd7510e12db257758a66f587187ace5b2fa4bcdb0901c1fe5f67e47fa17
+        subject_signature: 7ca97104bb67ca49eb86fb30522d8f06c9a24b4ba6af7b996474a62a2c06b8b4
         verdict: EQUIVALENT
-        reason: The rendering preserves the per-logical-edit at-most-one canonical acceptance guarantee, its causal restriction
-          to ACK loss, reconnect, or retry, the normally participating client condition, and the same identity coordinates
-          and 30-day eligibility horizon. Its transition-level formulation covers both repeated acceptance across transitions
-          and multiple acceptances within one transition. Expired identities remain outside the guarantee, and identifier
-          stability and uniqueness are not added as guarantees.
+        reason: 'The conjunction encodes exactly count <= 1 per logical edit and idempotency key within the 30-day gate-decision
+          horizon: (1) forbids two distinct producing transitions, (2) forbids more than one creation within a single unrecorded-gate
+          transition, and (3), as an implication, forbids creation when the gate already records the key; returned acceptances
+          are correctly excluded, and no horizon, identity, provenance, or scope extension is added.'
         differences: []
   claim:G2_canonical_history_is_linear_and_fenced:
     kind: claim
