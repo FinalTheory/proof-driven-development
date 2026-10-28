@@ -200,7 +200,7 @@ refinement:
     G5_retry_resolves_idempotently:
       status: stable
       blocked_by: []
-      signature: 2d67370f0d0281d4e31c7202b1a95420be54c34df2bf9b22e1ee72aaa7c0ec7b
+      signature: dcda8719e6947058e5750bd23906c7f5cdbc3afd6164ffd2d1a2f6809d60e754
     C7_revision_frontier_is_linear:
       status: stable
       blocked_by: []
@@ -616,7 +616,7 @@ refinement:
     C40_terminal_outcome_is_single_valued_per_idempotency_key:
       status: stable
       blocked_by: []
-      signature: 4f74097c5163dfde615f2a0ae6dc939f0e9b90cf3b9179dfb62474bd03084f60
+      signature: e844707b7f04e004d738b498f3710baa270a4e3091dbc5c50fb61bf2c58723a4
     L165_pending_identity_revision_evidence_survives_retention:
       status: stable
       blocked_by: []
@@ -698,8 +698,9 @@ refinement:
       blocked_by: []
       signature: cf5fcdf17873511be176e7d0159696fe1273058dc9e62decb7d8e641bff61cd1
     C43_terminal_outcome_entry_state_is_coherent:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 868b34d2241da8bbc896f6cb971c48dc9c2c8c5f8b8a1b3807d16036dee00bf7
     C44_terminal_outcome_entry_matches_canonical_acceptance:
       status: stable
       blocked_by: []
