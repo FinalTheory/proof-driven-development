@@ -1188,7 +1188,7 @@ functions:
     catalog_symbols:
     - client_pending_edits
     - client_speculative_overlays
-    meaning: Transition t performs bookkeeping deletion, relabeling, or loss of pending/retained speculative representation for exact logical edit identity e without authoritative reconciliation and without an explicit/equivalent terminal disposition that ends e's normal speculative lifecycle.
+    meaning: Transition t performs bookkeeping deletion, relabeling, or loss of pending/retained speculative representation for exact logical edit identity e without authoritative reconciliation and without an explicit/equivalent terminal disposition that ends e's normal speculative lifecycle. The removal is bookkeeping-only with respect to e; this predicate does not require t to do nothing else, and t may also perform other actions provided none of them authoritatively reconciles e or terminally disposes of e's lifecycle.
     semantic_anchors:
     - claim:G12_client_pending_state_tracks_unresolved_edits
     - claim:L155_unresolved_speculative_edit_has_pending_entry
@@ -1199,7 +1199,7 @@ functions:
     - LogicalEditIdentity
     returns: Bool
     catalog_symbols: []
-    meaning: Bookkeeping-only transition t does not classify, justify, or semantically treat exact logical edit identity e as resolved or terminalized; the edit remains unresolved in protocol semantics even if buggy physical bookkeeping representations were dropped.
+    meaning: Bookkeeping-only transition t does not classify, justify, or semantically treat exact logical edit identity e as resolved or terminalized; the edit remains unresolved in protocol semantics even if the physical bookkeeping representations were dropped.
     semantic_anchors:
     - claim:G12_client_pending_state_tracks_unresolved_edits
     - claim:L155_unresolved_speculative_edit_has_pending_entry
@@ -1935,7 +1935,7 @@ functions:
     returns: Bool
     catalog_symbols:
     - externally_terminal_result
-    meaning: x is a definitive externally_terminal_result exposed to a client.
+    meaning: x is a definitive externally_terminal_result exposed to a client; pending, timeout, cancellation, transport-loss, and crash-before-terminal-commit observations are not externally terminal results and do not satisfy this predicate.
     semantic_anchors:
     - contract:terminal_response_outcome_binding
   external_terminal_result_within_retry_horizon:
@@ -1960,7 +1960,7 @@ functions:
     returns: Bool
     catalog_symbols:
     - idempotency_terminal_outcomes
-    meaning: External terminal result x exactly reproduces the already-linearized authoritative terminal outcome for the same full key k; attempt-local transient computations cannot substitute a conflicting result.
+    meaning: External terminal result x is emitted from — derived from — and exactly reproduces the already-linearized authoritative terminal outcome for the same full key k; an attempt-local computation that independently produces identical content without deriving from that committed outcome does not satisfy this relation, and attempt-local transient computations cannot substitute a conflicting result.
     semantic_anchors:
     - contract:terminal_response_outcome_binding
   normal_retry_submitted_request:
