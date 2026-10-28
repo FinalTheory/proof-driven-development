@@ -6667,7 +6667,11 @@ assurance:
         - redundancy recorded per D23, edge retained.'
       signature: 84d9ab0886327ace9bd5c4ce941a2d763b420d0153d6a37d472cfc339f6e3e67
     C8_stale_owner_is_fenced:
-      status: unaudited
+      status: machine_checked
+      rationale: 'symbolic-compose ENTAILED (solver unsat) over TRUSTED premise translations. Premise-ablation
+        diagnostics (not a soundness gate): all 5 premises (L5, L28, L156, L159, L168) individually load-bearing;
+        no redundancy.'
+      signature: c24b4b70b249435b05f2a962fbb5e5fef07d33a0286322cdd3f0c7f9fc227f6e
     C9_recovery_reconstructs_committed_state:
       status: unaudited
     C10_catchup_represents_exact_missing_suffix:
@@ -6824,7 +6828,12 @@ assurance:
         L221) individually load-bearing; no redundancy.'
       signature: 500c4959498adbb7cf76a2b50f9321e4bbae185b7b1fa053bd36bdd92d13ab00
     C40_terminal_outcome_is_single_valued_per_idempotency_key:
-      status: unaudited
+      status: machine_checked
+      rationale: 'symbolic-compose ENTAILED (solver unsat) over TRUSTED premise translations, on the D5
+        all-reachable-states reading of the contract. Premise-ablation diagnostics (not a soundness gate):
+        L162, L163, L164 individually load-bearing; C42 and C43 not individually load-bearing - joint/alternative
+        support recorded per D24, edges retained.'
+      signature: dbd2bfca02239dca265d983f86086e9012721bc29ccf4db6760bc5ab0f1dc179
     C41_pending_identity_revision_evidence_survives_lifecycle:
       status: machine_checked
       rationale: "Trusted symbolic translations exist for C41 and both direct premises L165 and L166.
