@@ -186,8 +186,9 @@ refinement:
       blocked_by: []
       signature: 41d9db6e87eacdbc1629e8534586e2fdac58634eb70b55c714fb673be8ab6040
     G2_canonical_history_is_linear_and_fenced:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 421aa923cf8a36febfe02629fffca152e8768155d4fa5128a22615d8a28cf013
     G3_snapshot_and_recovery_preserve_state:
       status: stable
       blocked_by: []
@@ -401,8 +402,9 @@ refinement:
       blocked_by: []
       signature: c4f81922770e1e994b49cbf1563f8f59fa9c5641ff21975a8f59e9c33f546f22
     G7_reconnect_does_not_double_render_accepted_optimistic_edit:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: fb015c2fa84993d15cef1873af2b6769bc2f7d7543b217f35c7a91c7f366d301
     L106_resync_request_covers_start_pending_set:
       status: stable
       blocked_by: []
