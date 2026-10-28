@@ -200,10 +200,11 @@ refinement:
     G5_retry_resolves_idempotently:
       status: stable
       blocked_by: []
-      signature: dcda8719e6947058e5750bd23906c7f5cdbc3afd6164ffd2d1a2f6809d60e754
+      signature: 942d10194b772193216b4cf5f9c2cf032ba312ae415586c46087fe596f87c3f1
     C7_revision_frontier_is_linear:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 9ce3cb8d3e7d5a518febe1cd662dde74de2a8376a3fc92fd5303dc7088428ac7
     C8_stale_owner_is_fenced:
       status: stable
       blocked_by: []
@@ -293,8 +294,9 @@ refinement:
       blocked_by: []
       signature: 68ef8ac1a01508b495e986c4b34d3b9d90e02821dda2bd788f60e55d56ddad7a
     C16_non_append_lifecycle_preserves_logical_revision_prefix:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 0efb9a4e9f4bd7f59641424bffa7d03358c745ac726348cd0745d54415d58328
     L29_non_append_lifecycle_preserves_revision_domain:
       status: stable
       blocked_by: []
@@ -536,8 +538,9 @@ refinement:
       blocked_by: []
       signature: aae3b9fde16914d5997037827af60fb2ac7407a14d2312b3956b26c6c08537b6
     C39_authoritative_history_state_is_gap_free:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: a1257167d7080da50f367ba7a355e1a347c700d562506082344b60d2b57a60f4
     L138_committed_append_preserves_gap_free_state_shape:
       status: stable
       blocked_by: []
@@ -575,8 +578,9 @@ refinement:
       blocked_by: []
       signature: 1fd95998c4eb288dc07badfb959a030fb025754d6f9bcbf077a37fcaeb3a58c0
     G12_client_pending_state_tracks_unresolved_edits:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 7f81026983a978a9e4cd257a32e8367dd0b74444694ee6acb7b2a0e6a2db291d
     L156_owner_handoff_installs_fresh_epoch:
       status: stable
       blocked_by: []
