@@ -186,9 +186,8 @@ refinement:
       blocked_by: []
       signature: 41d9db6e87eacdbc1629e8534586e2fdac58634eb70b55c714fb673be8ab6040
     G2_canonical_history_is_linear_and_fenced:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 4a81b08bba4cde645e6a7c0f9586d3b6ac54039f9e47408e478bb9c1bad9c230
     G3_snapshot_and_recovery_preserve_state:
       status: stable
       blocked_by: []
@@ -402,9 +401,8 @@ refinement:
       blocked_by: []
       signature: c4f81922770e1e994b49cbf1563f8f59fa9c5641ff21975a8f59e9c33f546f22
     G7_reconnect_does_not_double_render_accepted_optimistic_edit:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: a6a7615a814dbe5c605c217e953700dde50b0308df9af9cf3f6c4125c48bff38
     L106_resync_request_covers_start_pending_set:
       status: stable
       blocked_by: []
@@ -928,8 +926,17 @@ claims:
     statement: >-
       For each document D, accepted history is a single gap-free revision sequence. Every authoritative
       ownership handoff installs a strictly greater epoch and fresh immutable owner-generation identity
-      before or atomically with the new generation becoming acceptance-eligible; superseded epochs/generations
-      never become authoritative again. Every canonical append for D commits only when its document-scoped
+      before or atomically with the new generation becoming acceptance-eligible. An owner generation is
+      one concrete immutable server-side ownership tenure for D, with document-scoped authority identity
+      (D, its installed epoch, its owner-generation identity). Superseded epochs and superseded ownership
+      tenures never become authoritative again. Throughout every canonical append attempt targeting D,
+      including successful, rejected, aborted, delayed, and interrupted attempts whether or not they commit,
+      the supplied owner_epoch and append_owner_generation_id originate from and remain bound to the immutable
+      trusted server-side owner generation actually executing that attempt, whose ownership document is
+      D. Neither coordinate nor the document namespace may be copied, substituted, refreshed, or rebound
+      to impersonate another generation; equal scalar values from another document or generation do not
+      establish this provenance. This binding does not require the executing generation to remain authoritative
+      current or the attempt to commit. Every canonical append for D commits only when its document-scoped
       generation authorization—D together with its epoch and generation-bound server-side append identity—matches
       D's authoritative current ownership generation. Equality to copied/current scalar fencing values,
       including an accidental collision with another document's ownership tuple, cannot authorize a different
@@ -2285,14 +2292,15 @@ claims:
       the speculative overlay for (D,k) before or atomically with publication, so no user-visible state
       exposes both representations. An acceptance(D2,k) for D2 != D is irrelevant. No intermediate resync
       candidate may expose a canonical prefix that already contains acceptance(D,k) together with its
-      overlay, and a stale response may not restore an overlay removed by a newer published reconciliation.
-      The frontier a resync candidate is measured against is the client''s last_applied_revision at candidate
-      readiness: a response whose head does not cover that last_applied_revision is stale for this purpose.
-      An identity whose pending/retry age exceeds 30 days is not submitted through normal authoritative
-      reconciliation; it is discarded or handled through an explicit expired, conflict, or manual-resolution
-      path outside this guarantee. If any protocol-eligible pending edit remains unresolved after reconciled
-      publication or conflict entry, the client remains non-normal-editable/read-only or in explicit conflict/reconciliation
-      state and creates no new acceptance-eligible speculative edit until those unresolved edits are explicitly
+      overlay, and a stale response may not restore a speculative overlay or pending-resolution state
+      that was removed by a newer published reconciliation. The frontier a resync candidate is measured
+      against is the client''s last_applied_revision at candidate readiness: a response whose head does
+      not cover that last_applied_revision is stale for this purpose. An identity whose pending/retry
+      age exceeds 30 days is not submitted through normal authoritative reconciliation; it is discarded
+      or handled through an explicit expired, conflict, or manual-resolution path outside this guarantee.
+      If any protocol-eligible pending edit remains unresolved after reconciled publication or conflict
+      entry, the client remains non-normal-editable/read-only or in explicit conflict/reconciliation state
+      and creates no new acceptance-eligible speculative edit until those unresolved edits are explicitly
       reconciled or removed. This claim makes no automatic local-rebase, conflict-resolution, or progress
       guarantee.'
     source_refs:
