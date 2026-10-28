@@ -5717,65 +5717,49 @@ records:
   claim:L192_terminal_publication_preserves_store_identity_provenance:
     kind: claim
     subject_id: L192_terminal_publication_preserves_store_identity_provenance
-    subject_signature: 55c2c92c5a0e8f595c68329b2b14ecbac6ade08058da1a7fc218ceae7a17d243
+    subject_signature: aafe42d42955077023793b10c02a61481816ffa836c8375aeec457175cb2bf92
     roundtrip:
-      subject_signature: 55c2c92c5a0e8f595c68329b2b14ecbac6ade08058da1a7fc218ceae7a17d243
+      subject_signature: aafe42d42955077023793b10c02a61481816ffa836c8375aeec457175cb2bf92
       status: TRANSLATED
-      natural_language: 'The conjunction of the following holds. (1) For every terminal result record t, if t is published,
-        then the document of t equals the document of the stored record reproduced by t, and the client change id of t equals
-        the client change id of that stored record, where the stored record is the authoritative terminal_result in the durable
-        terminal outcome store that the published t reproduces. (2) For every t, if t is published and t is an authoritative
-        ACCEPTED terminal result record, then that stored record is also an authoritative ACCEPTED terminal result record
-        and that stored record is the authoritative creation of an ACCEPTED terminal_result for one eligible full idempotency
-        identity. (3) For every t, if t is published and its stored record is an authoritative ACCEPTED terminal result record,
-        then t is an authoritative ACCEPTED terminal result record. (4) For every t, if t is published and t is an authoritative
-        REJECTED terminal result record, then its stored record is an authoritative REJECTED terminal result record. (5) For
-        every t, if t is published and its stored record is an authoritative REJECTED terminal result record, then t is an
-        authoritative REJECTED terminal result record. (6) For every t, if t is published, then t is equal to its stored record.
-        (7) For every t, if t is published and t is an authoritative ACCEPTED terminal result record, then t is the authoritative
-        creation of an ACCEPTED terminal_result for one eligible full idempotency identity. (8) For every terminal result
-        record r, if r is an authoritative ACCEPTED terminal result record and r is the authoritative creation of an ACCEPTED
-        terminal_result for one eligible full idempotency identity, then r is the authoritative creation of an ACCEPTED terminal_result
-        for one eligible full idempotency identity and there exists a canonical acceptance a such that all of the following
-        hold: r and a are the ACCEPTED terminal-result creation and its matching canonical accepted-change creation for one
-        logical acceptance; that creation pair atomically commits, sharing one authoritative transaction boundary so they
-        commit or roll back together with no reachable authoritative post-boundary state containing exactly one side; the
-        matching canonical acceptance a is committed for the corresponding ACCEPTED terminal outcome by the acceptance execution
-        that produced a; r is bound to the acceptance execution for a, in that the canonical result carried by r was produced
-        by the same acceptance execution that produced a; the matching canonical accepted change for r''s full identity is
-        present in canonical accepted history; and r and a carry the same full (document_id, client_change_id) identity. (9)
-        For every authoritative state s, idempotency key k, and terminal result record t, if t is the terminal_result contained
-        in the terminal outcome store in state s for the exact full idempotency identity k and t is an authoritative ACCEPTED
-        terminal result record, then t is the authoritative creation of an ACCEPTED terminal_result for one eligible full
-        idempotency identity. (10) For every terminal result record r and canonical acceptances a1 and a2, if r and a1 are
-        a matching ACCEPTED creation pair and r and a2 are a matching ACCEPTED creation pair, then a1 equals a2.'
+      natural_language: For every terminal result record t, all of the following hold. (1) If t is published, meaning t is
+        exposed to a protocol consumer through an authoritative publication path for its identity, then the document_id component
+        of the full identity carried by t equals the document_id component of the full identity carried by the stored record
+        of t, and the client_change_id component of the full identity carried by t equals the client_change_id component of
+        the full identity carried by the stored record of t, where the stored record of t is the authoritative terminal_result
+        in the durable_terminal_outcome_store that the published terminal result t reproduces, with t and its stored record
+        carrying the same full identity. (2) If t is published and t is an accepted terminal result record, meaning t is an
+        authoritative ACCEPTED (canonical result) outcome, then the stored record of t is also an accepted terminal result
+        record. (3) If t is published and the stored record of t is an accepted terminal result record, then t is also an
+        accepted terminal result record. (4) If t is published and t is a rejected terminal result record, meaning t is an
+        authoritative REJECTED (definitive rejection reason) outcome, then the stored record of t is also a rejected terminal
+        result record. (5) If t is published and the stored record of t is a rejected terminal result record, then t is also
+        a rejected terminal result record. (6) If t is published, then t equals the stored record of t.
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 55c2c92c5a0e8f595c68329b2b14ecbac6ade08058da1a7fc218ceae7a17d243
+        subject_signature: aafe42d42955077023793b10c02a61481816ffa836c8375aeec457175cb2bf92
         verdict: EQUIVALENT
-        reason: The formula requires every published result to equal its stored record with matching document_id and client_change_id,
-          preserves ACCEPTED/REJECTED kind in both directions, and requires every stored or published ACCEPTED record to be
-          the eligible-identity creation record bound to a unique matching canonical acceptance that is produced and committed
-          by the same acceptance execution and atomically committed with that result.
+        reason: For every published terminal result, the formula requires equality of both document_id and client_change_id
+          with its durable stored record, biconditional preservation of ACCEPTED and REJECTED status in both directions, and
+          full record equality t = stored(t), which together encode exact reproduction for the same full identity and exclude
+          substitution of another key, another stored value, or an attempt-local result.
         differences: []
       strengthening:
-        subject_signature: 55c2c92c5a0e8f595c68329b2b14ecbac6ade08058da1a7fc218ceae7a17d243
+        subject_signature: aafe42d42955077023793b10c02a61481816ffa836c8375aeec457175cb2bf92
         verdict: EQUIVALENT
-        reason: The formula preserves the publication scope, full document/change identity, exact reproduction of the stored
-          record for both ACCEPTED and REJECTED results, and, for stored ACCEPTED results, eligible-identity creation by the
-          same acceptance execution with atomic co-commit of the matching canonical acceptance and a unique matching acceptance,
-          without adding or omitting a source requirement.
+        reason: The formula restricts to published records, asserts document and client_change_id equality with the stored
+          record, preserves ACCEPTED and REJECTED status in both directions, and requires full record equality t = stored(t),
+          which together faithfully encode exact reproduction of the authoritative stored result for the same full identity
+          with no substitution.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 55c2c92c5a0e8f595c68329b2b14ecbac6ade08058da1a7fc218ceae7a17d243
+        subject_signature: aafe42d42955077023793b10c02a61481816ffa836c8375aeec457175cb2bf92
         verdict: EQUIVALENT
-        reason: 'The rendering preserves exact reproduction as record equality for the same full (document_id, client_change_id)
-          identity, preserves ACCEPTED/REJECTED status in both directions, and preserves ACCEPTED provenance: a stored or
-          published ACCEPTED result is the authoritative creation record for its eligible full identity, produced by the same
-          single acceptance execution whose one atomic transaction commits both that result and its matching canonical accepted
-          change. No source requirement is omitted and no material requirement is added.'
+        reason: 'The rendering preserves the original guarantee: every published ACCEPTED or REJECTED terminal result must
+          match, in both document_id and client_change_id identity components and in full record equality, the authoritative
+          terminal_result in the durable store, with accepted/rejected status preserved in both directions, excluding substitution
+          of another key, another stored value, or an attempt-local result.'
         differences: []
   claim:L190_authoritative_terminal_publication_surfaces_are_exhaustive:
     kind: claim
@@ -10600,4 +10584,53 @@ records:
           dual exposure, and no restoration by a stale response. The added clarifications (exact identity/document match,
           pending at resync start, internal unexposed state not counting as exposure, and clause (7)''s scope note) do not
           narrow or expand the original contract.'
+        differences: []
+  claim:L213_terminal_result_store_records_have_single_acceptance_creation_provenance:
+    kind: claim
+    subject_id: L213_terminal_result_store_records_have_single_acceptance_creation_provenance
+    subject_signature: 5bdab2929f8281176e7b4d25daad5fb52b5b1889205171da2615a710b58cfa0b
+    roundtrip:
+      subject_signature: 5bdab2929f8281176e7b4d25daad5fb52b5b1889205171da2615a710b58cfa0b
+      status: TRANSLATED
+      natural_language: 'For every authoritative state s, every idempotency key k, and every terminal result record t, if
+        both of the following hold: (1) t is the terminal_result contained in the terminal outcome store in authoritative
+        state s for the exact full idempotency identity k, and (2) t is an authoritative ACCEPTED (canonical result) outcome,
+        then t is the creation record of the authoritative ACCEPTED terminal_result for the eligible full idempotency identity
+        k, and the single acceptance execution that produced the ACCEPTED result for k is the sole origin of t''s presence
+        in the durable_terminal_outcome_store: that producing acceptance execution''s creation act for identity k is the only
+        write that creates t in the store, and no other write path of any kind — whether a copy, repair, backfill, or attempt-local
+        materialization — originates an authoritative ACCEPTED terminal_result for k in the store. A lifecycle path (such
+        as migration, restore, or representation change) that re-materializes this same logical creation record preserves
+        the record; it does not originate it and so is not another creation of it. This final condition classifies only the
+        creation provenance of store record t for identity k; it does not assert a matching canonical acceptance object, that
+        object''s committed status, transaction atomicity, or payload content.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 5bdab2929f8281176e7b4d25daad5fb52b5b1889205171da2615a710b58cfa0b
+        verdict: EQUIVALENT
+        reason: 'The formula universally quantifies over every authoritative state, full idempotency key, and record, and
+          for any accepted terminal_result present for that key requires exactly the source provenance: it is the creation
+          record for its eligible full identity whose sole origin is the single acceptance execution that produced it, excluding
+          any other originating write path. The lifecycle clarification preserves that same logical creation record and does
+          not introduce a new origin.'
+        differences: []
+      strengthening:
+        subject_signature: 5bdab2929f8281176e7b4d25daad5fb52b5b1889205171da2615a710b58cfa0b
+        verdict: EQUIVALENT
+        reason: 'The formula universally requires every authoritative ACCEPTED record present in the store for a key to satisfy
+          exactly the source''s single-acceptance creation-provenance condition: it must be the creation record for its eligible
+          full identity whose sole creating write is the producing acceptance execution, with no other write path originating
+          such a record. The predicate''s copy/repair/backfill exclusions merely unpack ''no other write path creates'', its
+          lifecycle clause only distinguishes re-materializing the same logical record from originating a new one, and it
+          expressly adds no acceptance-object, atomicity, status, or payload guarantees beyond the claim.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 5bdab2929f8281176e7b4d25daad5fb52b5b1889205171da2615a710b58cfa0b
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original''s scope, identity coordinates, and single-acceptance-execution creation
+          provenance: an authoritative ACCEPTED terminal_result in the store is only the creation record for its eligible
+          full identity produced by that execution, with no other write path originating such a record; the enumerated forbidden
+          paths and the lifecycle re-materialization clarification do not add or remove any requirement.'
         differences: []

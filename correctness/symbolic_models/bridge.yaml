@@ -1598,6 +1598,7 @@ functions:
     - claim:C44_terminal_outcome_entry_matches_canonical_acceptance
     - claim:C43_terminal_outcome_entry_state_is_coherent
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
+    - claim:L213_terminal_result_store_records_have_single_acceptance_creation_provenance
   terminal_result_idempotency_key:
     args:
     - TerminalResultRecord
@@ -2139,6 +2140,7 @@ functions:
     - claim:L106_resync_request_covers_start_pending_set
     - claim:L107_client_freezes_speculative_edits_during_resync
     - claim:L109_resync_publication_is_atomic_and_monotonic
+    - claim:L214_pending_identity_classification_evidence_survives_lifecycle
   resync_identity_matches_document:
     args:
     - CatchupResponse
@@ -2164,6 +2166,7 @@ functions:
     - claim:L106_resync_request_covers_start_pending_set
     - claim:L109_resync_publication_is_atomic_and_monotonic
     - claim:L107_client_freezes_speculative_edits_during_resync
+    - claim:L214_pending_identity_classification_evidence_survives_lifecycle
   resync_identity_age_exceeds_normal_horizon:
     args:
     - CatchupResponse
@@ -3211,6 +3214,7 @@ functions:
     - claim:L184_terminal_outcome_entry_has_single_authoritative_value
     - claim:C43_terminal_outcome_entry_state_is_coherent
     - claim:L192_terminal_publication_preserves_store_identity_provenance
+    - claim:L213_terminal_result_store_records_have_single_acceptance_creation_provenance
   migration_preserves_terminal_result_record:
     args:
     - ProtocolTransition
@@ -3730,6 +3734,7 @@ functions:
     - claim:L165_pending_identity_revision_evidence_survives_retention
     - claim:L166_recovery_preserves_pending_identity_revision_evidence
     - claim:C41_pending_identity_revision_evidence_survives_lifecycle
+    - claim:L214_pending_identity_classification_evidence_survives_lifecycle
   canonical_acceptance_for_identity_commits_at_revision:
     args:
     - LogicalEditIdentity
@@ -3743,6 +3748,7 @@ functions:
     - claim:L124_pending_identity_classifier_uses_same_identity_and_response_head
     - claim:C37_pending_identity_resolution_is_bound_to_response_head
     - claim:L166_recovery_preserves_pending_identity_revision_evidence
+    - claim:L214_pending_identity_classification_evidence_survives_lifecycle
   frontier_evidence_binds_identity_to_revision:
     args:
     - LogicalEditIdentity
@@ -3764,6 +3770,7 @@ functions:
     semantic_anchors:
     - claim:L165_pending_identity_revision_evidence_survives_retention
     - claim:C41_pending_identity_revision_evidence_survives_lifecycle
+    - claim:L214_pending_identity_classification_evidence_survives_lifecycle
   completed_recovery_transition:
     args:
     - ProtocolTransition
@@ -3773,6 +3780,7 @@ functions:
     semantic_anchors:
     - claim:L166_recovery_preserves_pending_identity_revision_evidence
     - claim:C41_pending_identity_revision_evidence_survives_lifecycle
+    - claim:L214_pending_identity_classification_evidence_survives_lifecycle
   transition_preserves_frontier_evidence_binding:
     args:
     - ProtocolTransition
@@ -3786,6 +3794,7 @@ functions:
     - claim:L165_pending_identity_revision_evidence_survives_retention
     - claim:L166_recovery_preserves_pending_identity_revision_evidence
     - claim:C41_pending_identity_revision_evidence_survives_lifecycle
+    - claim:L214_pending_identity_classification_evidence_survives_lifecycle
   classifier_reports_accepted_at_revision:
     args:
     - CatchupResponse
@@ -3836,6 +3845,7 @@ functions:
     meaning: For resync c and identity e, snapshotting, compaction, cleanup, and recovery transitions preserve enough same-identity accepted revision or equivalent frontier evidence throughout e's normal eligibility horizon to make the head-bound classification of e.
     semantic_anchors:
     - claim:C37_pending_identity_resolution_is_bound_to_response_head
+    - claim:L214_pending_identity_classification_evidence_survives_lifecycle
   transition_within_identity_eligibility_window:
     args:
     - ProtocolTransition
@@ -3846,6 +3856,7 @@ functions:
     semantic_anchors:
     - claim:L165_pending_identity_revision_evidence_survives_retention
     - claim:C41_pending_identity_revision_evidence_survives_lifecycle
+    - claim:L214_pending_identity_classification_evidence_survives_lifecycle
   catchup_request_includes_pending_change_id:
     args:
     - CatchupResponse
@@ -5913,6 +5924,24 @@ functions:
     returns: Bool
     semantic_anchors:
     - claim:L109_resync_publication_is_atomic_and_monotonic
+  transition_preserves_frontier_absence_evidence:
+    args:
+    - ProtocolTransition
+    - LogicalEditIdentity
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Across transition t, the equivalent frontier evidence for identity e is preserved: the frontier-bounded logical accepted history of e''s document from which the absence of any canonical acceptance for e through any head is determined remains unchanged, so after t the authoritative state still determines the same absence of acceptance for e through every head up to the preserved frontier. Physical representation may change, but that absence determination for e may not be dropped, relabeled, or reinterpreted.'
+    semantic_anchors:
+    - claim:L214_pending_identity_classification_evidence_survives_lifecycle
+  accepted_terminal_store_record_created_for_key_solely_by_producing_acceptance:
+    args:
+    - TerminalResultRecord
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols: []
+    meaning: 'Terminal result record t is the creation record of the authoritative ACCEPTED terminal_result for the eligible full idempotency identity k, and the single acceptance execution that produced the ACCEPTED result for k is the sole origin of t''s presence in durable_terminal_outcome_store: that producing acceptance execution''s creation act for identity k is the only write that creates t in the store, and no other write path of any kind - whether a copy, repair, backfill, or attempt-local materialization - originates an authoritative ACCEPTED terminal_result for k in the store. A lifecycle path (such as migration, restore, or representation change) that re-materializes this same logical creation record preserves the record; it does not originate it and so is not another creation of it. This predicate classifies only the creation provenance of store record t for identity k; it does not assert a matching canonical acceptance object, that object''s committed status, transaction atomicity, or payload content.'
+    semantic_anchors:
+    - claim:L213_terminal_result_store_records_have_single_acceptance_creation_provenance
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -9511,13 +9540,6 @@ claims:
                       fn: published_terminal_result_stored_record
                       args:
                       - var: t
-              - call:
-                  fn: accepted_terminal_created_for_eligible_identity
-                  args:
-                  - call:
-                      fn: published_terminal_result_stored_record
-                      args:
-                      - var: t
       - forall:
           vars:
             t: TerminalResultRecord
@@ -9596,119 +9618,6 @@ claims:
                   fn: published_terminal_result_stored_record
                   args:
                   - var: t
-      - forall:
-          vars:
-            t: TerminalResultRecord
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: terminal_result_published
-                  args:
-                  - var: t
-              - call:
-                  fn: accepted_terminal_result_record
-                  args:
-                  - var: t
-            - call:
-                fn: accepted_terminal_created_for_eligible_identity
-                args:
-                - var: t
-      - forall:
-          vars:
-            r: TerminalResultRecord
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: accepted_terminal_result_record
-                  args:
-                  - var: r
-              - call:
-                  fn: accepted_terminal_created_for_eligible_identity
-                  args:
-                  - var: r
-            - and:
-              - call:
-                  fn: accepted_terminal_created_for_eligible_identity
-                  args:
-                  - var: r
-              - exists:
-                  vars:
-                    a: CanonicalAcceptance
-                  body:
-                    and:
-                    - call:
-                        fn: accepted_terminal_matching_creation_pair
-                        args:
-                        - var: r
-                        - var: a
-                    - call:
-                        fn: accepted_terminal_creation_pair_atomically_commits
-                        args:
-                        - var: r
-                        - var: a
-                    - call:
-                        fn: accepted_terminal_matching_acceptance_committed
-                        args:
-                        - var: a
-                    - call:
-                        fn: terminal_result_bound_to_acceptance_execution
-                        args:
-                        - var: r
-                        - var: a
-                    - call:
-                        fn: terminal_result_has_matching_canonical_acceptance
-                        args:
-                        - var: r
-                    - call:
-                        fn: accepted_terminal_binding_identity_matches
-                        args:
-                        - var: r
-                        - var: a
-      - forall:
-          vars:
-            s: AuthoritativeState
-            k: IdempotencyKey
-            t: TerminalResultRecord
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: terminal_result_in_state_for_key
-                  args:
-                  - var: t
-                  - var: s
-                  - var: k
-              - call:
-                  fn: accepted_terminal_result_record
-                  args:
-                  - var: t
-            - call:
-                fn: accepted_terminal_created_for_eligible_identity
-                args:
-                - var: t
-      - forall:
-          vars:
-            r: TerminalResultRecord
-            a1: CanonicalAcceptance
-            a2: CanonicalAcceptance
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: accepted_terminal_matching_creation_pair
-                  args:
-                  - var: r
-                  - var: a1
-              - call:
-                  fn: accepted_terminal_matching_creation_pair
-                  args:
-                  - var: r
-                  - var: a2
-            - eq:
-              - var: a1
-              - var: a2
   L195_rejected_terminal_publication_excludes_canonical_acceptance:
     capability: relational
     contracts: []
@@ -12169,272 +12078,6 @@ claims:
                   - var: before
                   - var: after
                   - var: d
-      - forall:
-          vars:
-            before: AuthoritativeState
-            after: AuthoritativeState
-            d: Document
-            r: Revision
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: authoritative_state_step
-                  args:
-                  - var: before
-                  - var: after
-              - call:
-                  fn: state_step_commits_append_at_revision
-                  args:
-                  - var: before
-                  - var: after
-                  - var: d
-                  - var: r
-            - call:
-                fn: state_step_append_follows_previous_frontier
-                args:
-                - var: before
-                - var: after
-                - var: d
-                - var: r
-      - forall:
-          vars:
-            before: AuthoritativeState
-            after: AuthoritativeState
-            d: Document
-            r: Revision
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: authoritative_state_step
-                  args:
-                  - var: before
-                  - var: after
-              - call:
-                  fn: state_step_commits_append_at_revision
-                  args:
-                  - var: before
-                  - var: after
-                  - var: d
-                  - var: r
-              - call:
-                  fn: state_step_extends_history_by_exactly_one_at_revision
-                  args:
-                  - var: before
-                  - var: after
-                  - var: d
-                  - var: r
-              - call:
-                  fn: state_step_append_follows_previous_frontier
-                  args:
-                  - var: before
-                  - var: after
-                  - var: d
-                  - var: r
-              - call:
-                  fn: state_step_advances_frontier_to_appended_revision
-                  args:
-                  - var: before
-                  - var: after
-                  - var: d
-                  - var: r
-              - and:
-                - call:
-                    fn: canonical_history_gap_free_for_document
-                    args:
-                    - var: before
-                    - var: d
-                - call:
-                    fn: accepted_history_ends_exactly_at_frontier
-                    args:
-                    - var: before
-                    - var: d
-            - and:
-              - call:
-                  fn: canonical_history_gap_free_for_document
-                  args:
-                  - var: after
-                  - var: d
-              - call:
-                  fn: accepted_history_ends_exactly_at_frontier
-                  args:
-                  - var: after
-                  - var: d
-      - forall:
-          vars:
-            before: AuthoritativeState
-            after: AuthoritativeState
-            d: Document
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: authoritative_state_step
-                  args:
-                  - var: before
-                  - var: after
-              - not:
-                  call:
-                    fn: state_step_creates_or_changes_document_coordinates
-                    args:
-                    - var: before
-                    - var: after
-                    - var: d
-              - call:
-                  fn: document_has_authoritative_state
-                  args:
-                  - var: before
-                  - var: d
-              - and:
-                - call:
-                    fn: canonical_history_gap_free_for_document
-                    args:
-                    - var: before
-                    - var: d
-                - call:
-                    fn: accepted_history_ends_exactly_at_frontier
-                    args:
-                    - var: before
-                    - var: d
-            - and:
-              - call:
-                  fn: canonical_history_gap_free_for_document
-                  args:
-                  - var: after
-                  - var: d
-              - call:
-                  fn: accepted_history_ends_exactly_at_frontier
-                  args:
-                  - var: after
-                  - var: d
-      - forall:
-          vars:
-            s: AuthoritativeState
-            d: Document
-          body:
-            implies:
-            - call:
-                fn: document_has_authoritative_state
-                args:
-                - var: s
-                - var: d
-            - exists:
-                vars:
-                  s0: AuthoritativeState
-                body:
-                  and:
-                  - call:
-                      fn: document_initialization_state
-                      args:
-                      - var: s0
-                      - var: d
-                  - or:
-                    - eq:
-                      - var: s0
-                      - var: s
-                    - transitive_closure:
-                        fn: covered_authoritative_state_step
-                        from:
-                          var: s0
-                        to:
-                          var: s
-      - forall:
-          vars:
-            before: AuthoritativeState
-            after: AuthoritativeState
-            d: Document
-            r: Revision
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: authoritative_state_step
-                  args:
-                  - var: before
-                  - var: after
-              - call:
-                  fn: state_step_commits_append_at_revision
-                  args:
-                  - var: before
-                  - var: after
-                  - var: d
-                  - var: r
-            - and:
-              - call:
-                  fn: state_step_extends_history_by_exactly_one_at_revision
-                  args:
-                  - var: before
-                  - var: after
-                  - var: d
-                  - var: r
-              - call:
-                  fn: state_step_advances_frontier_to_appended_revision
-                  args:
-                  - var: before
-                  - var: after
-                  - var: d
-                  - var: r
-      - forall:
-          vars:
-            before: AuthoritativeState
-            after: AuthoritativeState
-          body:
-            implies:
-            - call:
-                fn: covered_authoritative_state_step
-                args:
-                - var: before
-                - var: after
-            - call:
-                fn: authoritative_state_step
-                args:
-                - var: before
-                - var: after
-      - forall:
-          vars:
-            s: AuthoritativeState
-            d: Document
-          body:
-            implies:
-            - call:
-                fn: document_initialization_state
-                args:
-                - var: s
-                - var: d
-            - and:
-              - call:
-                  fn: canonical_history_gap_free_for_document
-                  args:
-                  - var: s
-                  - var: d
-              - call:
-                  fn: accepted_history_ends_exactly_at_frontier
-                  args:
-                  - var: s
-                  - var: d
-      - forall:
-          vars:
-            s: AuthoritativeState
-            d: Document
-          body:
-            implies:
-            - call:
-                fn: document_has_authoritative_state
-                args:
-                - var: s
-                - var: d
-            - and:
-              - call:
-                  fn: canonical_history_gap_free_for_document
-                  args:
-                  - var: s
-                  - var: d
-              - call:
-                  fn: accepted_history_ends_exactly_at_frontier
-                  args:
-                  - var: s
-                  - var: d
   C7_revision_frontier_is_linear:
     capability: relational
     contracts:
@@ -12595,42 +12238,25 @@ claims:
     capability: relational
     contracts: []
     formula:
-      and:
-      - forall:
-          vars:
-            s: AuthoritativeState
-            d: Document
-          body:
-            implies:
+      forall:
+        vars:
+          s: AuthoritativeState
+          d: Document
+        body:
+          implies:
+          - call:
+              fn: document_initialization_state
+              args:
+              - var: s
+              - var: d
+          - and:
             - call:
-                fn: document_history_initialization_state
-                args:
-                - var: s
-                - var: d
-            - and:
-              - call:
-                  fn: canonical_history_gap_free_for_document
-                  args:
-                  - var: s
-                  - var: d
-              - call:
-                  fn: state_denotes_accepted_history_for_document
-                  args:
-                  - var: s
-                  - var: d
-      - forall:
-          vars:
-            s: AuthoritativeState
-            d: Document
-          body:
-            implies:
-            - call:
-                fn: document_initialization_state
+                fn: canonical_history_gap_free_for_document
                 args:
                 - var: s
                 - var: d
             - call:
-                fn: document_history_initialization_state
+                fn: state_denotes_accepted_history_for_document
                 args:
                 - var: s
                 - var: d
@@ -16500,56 +16126,6 @@ claims:
                       args:
                       - var: s0
                       - var: s
-      - forall:
-          vars:
-            s: ClientState
-            s_rev: Revision
-          body:
-            implies:
-            - call:
-                fn: client_state_within_selected_checkpoint_catchup
-                args:
-                - var: s
-                - var: s_rev
-            - or:
-              - exists:
-                  vars:
-                    s0: ClientState
-                  body:
-                    call:
-                      fn: client_state_is_checkpoint_installation
-                      args:
-                      - var: s0
-                      - var: s_rev
-              - exists:
-                  vars:
-                    s1: ClientState
-                    cp: AuthoritativeState
-                  body:
-                    and:
-                    - call:
-                        fn: client_state_exposes_checkpoint_content
-                        args:
-                        - var: s1
-                        - var: cp
-                        - var: s_rev
-                    - eq:
-                      - call:
-                          fn: visible_frontier
-                          args:
-                          - var: s1
-                      - var: s_rev
-                    - not:
-                        call:
-                          fn: client_state_is_checkpoint_installation
-                          args:
-                          - var: s1
-                          - var: s_rev
-                    - call:
-                        fn: client_state_within_selected_checkpoint_catchup
-                        args:
-                        - var: s1
-                        - var: s_rev
   L101_client_completes_catchup_through_response_head:
     capability: relational
     contracts: []
@@ -18511,6 +18087,212 @@ claims:
                   fn: ot_rejects_invalid_or_rebase_required
                   args:
                   - var: i
+  L213_terminal_result_store_records_have_single_acceptance_creation_provenance:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            s: AuthoritativeState
+            k: IdempotencyKey
+            t: TerminalResultRecord
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: terminal_result_in_state_for_key
+                  args:
+                  - var: t
+                  - var: s
+                  - var: k
+              - call:
+                  fn: accepted_terminal_result_record
+                  args:
+                  - var: t
+            - call:
+                fn: accepted_terminal_store_record_created_for_key_solely_by_producing_acceptance
+                args:
+                - var: t
+                - var: k
+  L214_pending_identity_classification_evidence_survives_lifecycle:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            e: LogicalEditIdentity
+            r: Revision
+          body:
+            implies:
+            - and:
+              - &id001
+                call:
+                  fn: canonical_acceptance_for_identity_commits_at_revision
+                  args:
+                  - var: e
+                  - var: r
+              - &id002
+                call:
+                  fn: identity_is_normal_retry_eligible
+                  args:
+                  - var: e
+            - forall:
+                vars:
+                  t: ProtocolTransition
+                body:
+                  implies:
+                  - and:
+                    - call:
+                        fn: durable_retention_transition
+                        args:
+                        - var: t
+                    - call:
+                        fn: transition_within_identity_eligibility_window
+                        args:
+                        - var: t
+                        - var: e
+                  - call:
+                      fn: transition_preserves_frontier_evidence_binding
+                      args:
+                      - var: t
+                      - var: e
+                      - var: r
+      - forall:
+          vars:
+            e: LogicalEditIdentity
+            r: Revision
+          body:
+            implies:
+            - and:
+              - *id001
+              - *id002
+            - forall:
+                vars:
+                  t: ProtocolTransition
+                body:
+                  implies:
+                  - and:
+                    - call:
+                        fn: completed_recovery_transition
+                        args:
+                        - var: t
+                    - call:
+                        fn: transition_within_identity_eligibility_window
+                        args:
+                        - var: t
+                        - var: e
+                  - call:
+                      fn: transition_preserves_frontier_evidence_binding
+                      args:
+                      - var: t
+                      - var: e
+                      - var: r
+      - forall:
+          vars:
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - *id002
+              - not: &id003
+                  exists:
+                    vars:
+                      r: Revision
+                    body:
+                      call:
+                        fn: canonical_acceptance_for_identity_commits_at_revision
+                        args:
+                        - var: e
+                        - var: r
+            - and:
+              - forall:
+                  vars:
+                    t: ProtocolTransition
+                  body:
+                    implies:
+                    - and:
+                      - call:
+                          fn: durable_retention_transition
+                          args:
+                          - var: t
+                      - call:
+                          fn: transition_within_identity_eligibility_window
+                          args:
+                          - var: t
+                          - var: e
+                    - call:
+                        fn: transition_preserves_frontier_absence_evidence
+                        args:
+                        - var: t
+                        - var: e
+              - forall:
+                  vars:
+                    t: ProtocolTransition
+                  body:
+                    implies:
+                    - and:
+                      - call:
+                          fn: completed_recovery_transition
+                          args:
+                          - var: t
+                      - call:
+                          fn: transition_within_identity_eligibility_window
+                          args:
+                          - var: t
+                          - var: e
+                    - call:
+                        fn: transition_preserves_frontier_absence_evidence
+                        args:
+                        - var: t
+                        - var: e
+      - forall:
+          vars:
+            c: CatchupResponse
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: pending_identity_at_resync_start
+                  args:
+                  - var: c
+                  - var: e
+              - call:
+                  fn: resync_identity_within_normal_horizon
+                  args:
+                  - var: c
+                  - var: e
+              - *id003
+            - call:
+                fn: classification_evidence_preserved_throughout_horizon
+                args:
+                - var: c
+                - var: e
+      - forall:
+          vars:
+            c: CatchupResponse
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: pending_identity_at_resync_start
+                  args:
+                  - var: c
+                  - var: e
+              - call:
+                  fn: resync_identity_within_normal_horizon
+                  args:
+                  - var: c
+                  - var: e
+              - not: *id003
+            - call:
+                fn: classification_evidence_preserved_throughout_horizon
+                args:
+                - var: c
+                - var: e
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant

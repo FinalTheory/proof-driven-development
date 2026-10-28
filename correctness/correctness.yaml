@@ -474,9 +474,8 @@ refinement:
       blocked_by: []
       signature: 8a929e32e046e771ea12c2539434fadba672108e215c0fed75188ed769a1b093
     C37_pending_identity_resolution_is_bound_to_response_head:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 910b5130b5c7681182cf073689514a1b2c5f2a20e36136754d28b96f234f664e
     L124_pending_identity_classifier_uses_same_identity_and_response_head:
       status: stable
       blocked_by: []
@@ -534,9 +533,8 @@ refinement:
       blocked_by: []
       signature: 756969a644ed94a2bd790a3ad3eb283b30763ae7143792daa859b92de9f5c57e
     L137_authoritative_history_mutators_are_exhaustively_classified:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 39a2bfe5eba13731daa8976c5bf22185510d2187e8d1ec7db53282d6f0e7bfd2
     C39_authoritative_history_state_is_gap_free:
       status: stable
       blocked_by: []
@@ -805,6 +803,9 @@ refinement:
       status: stable
       blocked_by: []
       signature: c06fb00080d76cd33991ac139849c4335e2a0ac323d62259ae882e48bd118c1d
+    L214_pending_identity_classification_evidence_survives_lifecycle:
+      status: pending
+      blocked_by: []
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -2791,6 +2792,7 @@ claims:
       - L124_pending_identity_classifier_uses_same_identity_and_response_head
       - C41_pending_identity_revision_evidence_survives_lifecycle
       - A6_normal_retry_reconnect_identity_is_eligible_for_30_days
+      - L214_pending_identity_classification_evidence_survives_lifecycle
   L124_pending_identity_classifier_uses_same_identity_and_response_head:
     statement: For every protocol-eligible pending identity (document_id=D, client_change_id=k)
       within the 30-day normal reconnect eligibility horizon supplied under a catch-up request for
@@ -3190,7 +3192,9 @@ claims:
       belongs to at least one of the three covered transition classes: document-state initialization,
       a committed canonical accepted-change append, or an authoritative non-append representation/lifecycle
       transition that accepts no new edit. No authoritative mutation path may change either symbol without
-      belonging to one of these covered classes.'
+      belonging to one of these covered classes. Document-state initialization is the transition class
+      that creates a document''s accepted_change_log and document_latest_revision coordinates, and a committed
+      canonical accepted-change append step commits exactly one canonical accepted change for the document.'
     source_refs:
       - authoritative_truth
       - final_architecture
@@ -4954,6 +4958,49 @@ claims:
             produced it, and reject any other creation path.
           kind: control_flow
     kind: leaf
+  L214_pending_identity_classification_evidence_survives_lifecycle:
+    mechanisms:
+      - accepted_history_log
+      - snapshot_checkpoint
+      - recovery_replay
+      - idempotency_gate
+    source_refs:
+      - accepted_change_log
+      - snapshot_frontier
+      - reconnect_revision_boundary
+      - final_architecture
+    statement: "For every pending identity (D,k) that is a normal_retry_eligible_identity, snapshotting,
+      compaction, cleanup, and recovery preserve the classification evidence for that same full identity
+      throughout the identity's normal eligibility horizon. If a canonical acceptance(D,k) commits at
+      revision r, every durable retention transition and every completed recovery/restart transition preserves
+      the accepted_identity_frontier_evidence binding of (D,k) to r, with the exact query semantics that
+      (D,k) is included through a response head H iff r <= H; physical representation may change, but
+      that logical binding may not be dropped, relabeled, or reinterpreted. If no canonical acceptance(D,k)
+      exists, the same transitions preserve the equivalent frontier evidence for (D,k): the frontier-bounded
+      accepted history of D from which the absence of any acceptance(D,k) through any head is determined.
+      The evidence preserved in either case is enough to make the head-bound classification of (D,k) throughout
+      that eligibility horizon. After the identity leaves the normal retry/reconnect eligibility boundary,
+      this proposition requires neither classification evidence nor immediate physical cleanup."
+    verification:
+      verifiers:
+        - intent: 'Explore every durable retention transition and every completed recovery/restart transition
+            for a pending identity (D,k) that remains a normal_retry_eligible_identity, in both cases
+            - a canonical acceptance(D,k) committed at revision r, and no acceptance(D,k) at all; require
+            the post-transition state to preserve the same classification evidence: the accepted_identity_frontier_evidence
+            binding (D,k)->r with exact included-through-H iff r<=H semantics in the first case, and the
+            same frontier-bounded absence determination for (D,k) in the second.'
+          kind: state_machine
+        - intent: Inspect retained/replacement metadata and cleanup guards so physical accepted-row
+            removal, snapshot replacement, or compaction cannot erase or alter the logical
+            classification evidence for an identity - its accepted binding or its frontier-bounded
+            absence determination - while the identity remains normal-retry eligible.
+          kind: schema_constraint
+        - intent: Crash/restart at points after classification evidence exists for a pending
+            identity in either case (accepted binding present, or absence determined by the
+            frontier); require completed recovery to expose the same logical evidence and identical
+            head-bound classification behaviour for all tested heads H.
+          kind: fault_injection
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -6300,7 +6347,7 @@ id_allocator:
     A: 7
     G: 13
     C: 48
-    L: 214
+    L: 215
     D: 15
     T: 3
 assurance:
@@ -6415,7 +6462,11 @@ assurance:
         individually necessary.
       signature: 42f16a7613df895b3321365f7974b0bc348cc87fdaa64fbccb0c6567c240e181
     G6_accepted_change_preserves_ot_semantics:
-      status: unaudited
+      status: machine_checked
+      rationale: 'symbolic-compose ENTAILED (solver unsat) over TRUSTED premise translations. Premise-ablation
+        diagnostics (not a soundness gate): A2, L98, L99, L123, L182 individually load-bearing; L113 and
+        C38 not individually load-bearing - redundancy recorded, edges retained.'
+      signature: 4e644930b4172094a46328ca5ec2e83f87d48cd0d690c1386e658df1c7916678
     G7_reconnect_does_not_double_render_accepted_optimistic_edit:
       status: unaudited
     G8_user_visible_state_does_not_double_render_accepted_optimistic_edit:
@@ -6438,7 +6489,10 @@ assurance:
         runtime reconstruction).'
       signature: 8147bf6d0b77395e91292fa90bbc1a91b9443acdae1e6302f3e7795636f36965
     C36_reconnect_starts_from_canonical_client_frontier:
-      status: unaudited
+      status: machine_checked
+      rationale: 'symbolic-compose ENTAILED (solver unsat) over TRUSTED premise translations. Premise-ablation
+        diagnostics: L130, L136, L157 all individually load-bearing.'
+      signature: d2c28f90f038292c50131bb9c210c0ae98d4bee1446d22cb1ecb600367fde26e
     C37_pending_identity_resolution_is_bound_to_response_head:
       status: unaudited
     G10_user_visible_client_state_matches_document:
@@ -6767,6 +6821,8 @@ assurance:
       status: planned
     L213_terminal_result_store_records_have_single_acceptance_creation_provenance:
       status: planned
+    L214_pending_identity_classification_evidence_survives_lifecycle:
+      status: planned
 formalization:
   claims:
     G0_acked_edit_survives_failover:
@@ -7082,6 +7138,8 @@ formalization:
     L212_accepted_terminal_lifecycle_categories_are_exhaustive:
       mode: symbolic
     L213_terminal_result_store_records_have_single_acceptance_creation_provenance:
+      mode: symbolic
+    L214_pending_identity_classification_evidence_survives_lifecycle:
       mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:
