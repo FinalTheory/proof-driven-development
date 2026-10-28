@@ -11090,3 +11090,314 @@ records:
           for recovered logical state and service frontier at H, and the resumed-acceptance runtime-state equivalence to clean
           reconstruction through H, without adding or omitting a requirement.
         differences: []
+  claim:C40_terminal_outcome_is_single_valued_per_idempotency_key:
+    kind: claim
+    subject_id: C40_terminal_outcome_is_single_valued_per_idempotency_key
+    subject_signature: 1c7ff9d388e456134ea25e8096f2df023d5bbc0c626ee1a7494543b745d8fe2e
+    roundtrip:
+      subject_signature: 1c7ff9d388e456134ea25e8096f2df023d5bbc0c626ee1a7494543b745d8fe2e
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following six statements holds. (1) For every authoritative state s and every
+        idempotency key k, if s is reachable under the canonical server protocol and failure model and the full composite
+        identity k = (document_id, client_change_id) is within the configured normal retry eligibility horizon in s, then
+        both: it is not the case that the terminal outcome contained in s for k is both ACCEPTED (canonical result) and REJECTED
+        (definitive rejection reason), and the terminal outcome for k in s is immutable in the following sense: once a terminal
+        outcome for k has linearized, every later acceptance or definitive-rejection transition for that same identity whose
+        resulting authoritative state remains within the configured normal retry eligibility horizon for k preserves the same
+        single-valued outcome, with post-horizon transitions or re-submissions outside this predicate and with no progress
+        requirement added. (2) For every authoritative state s and every idempotency key k, if s is reachable, k is within
+        the configured normal retry eligibility horizon in s, and s contains a terminal_result for the exact full identity
+        k in its idempotency_terminal_outcomes store (presence only, without asserting its value or provenance), then s contains
+        at most one durable terminal result for the exact full composite identity k, where equal client_change_id values in
+        different document namespaces are distinct identities. (3) For every protocol transition x, authoritative state s,
+        and idempotency key k, if x is an authoritative terminal-state transition applied at s (a transition that linearizes,
+        attempts to linearize, or is arbitrated against the per-key terminal outcome state in s, namely the acceptance and
+        definitive-rejection transitions of the terminal state machine, excluding non-terminal lifecycle, recovery, and representation-migration
+        transitions), s is reachable, k is within the configured normal retry eligibility horizon in s, s contains a terminal
+        outcome for k, x is a transition/path that can create a canonical acceptance or an authoritative definitive rejection
+        for the exact full identity k, and the authoritative state resulting from x remains within the configured normal retry
+        eligibility horizon for k (this last condition asserting only that horizon position for k, and nothing about x''s
+        pre-state, about whether x preserves or creates any outcome, or about any other identity), then x, applied at s, preserves
+        the exact logical terminal outcome for k, i.e. the terminal_result for k after x is identical in value and identity
+        to the one in s. (4) For every protocol transition x, authoritative state s, and idempotency key k, if x is an authoritative
+        terminal-state transition applied at s as defined in (3), s is reachable, k is within the configured normal retry
+        eligibility horizon in s, and the terminal outcome contained in s for k is REJECTED (definitive rejection reason),
+        then x does not create a canonical acceptance for the exact full identity k. (5) For every protocol transition x,
+        authoritative state s, and idempotency key k, if x is a transition/path that can create a canonical acceptance or
+        an authoritative definitive rejection for the exact full identity k, k is an eligible idempotency key (the logical
+        edit identity it denotes is a normal-retry-eligible identity within the protocol''s eligibility boundary), x is an
+        authoritative terminal-state transition applied at s as defined in (3), s is reachable, and k is within the configured
+        normal retry eligibility horizon in s, then path x passes through the same single per-key terminal-outcome arbitration
+        gate used by every acceptance and definitive-rejection path for the exact full identity k, before its terminal decision
+        can become authoritative, with no bypass around that gate for x. (6) For every terminal result record t, authoritative
+        state s, and idempotency key k, if t is the authoritative creation of an ACCEPTED terminal_result for one eligible
+        full idempotency identity (this classifier naming the qualifying creation event only, without constraining which implementation
+        path produced it, which acceptance execution supplied its payload, or which transaction mechanism commits the matching
+        canonical accepted change), t is the terminal_result contained in the terminal outcome store in s for the exact full
+        identity k, s is reachable, and k is within the configured normal retry eligibility horizon in s, then there exists
+        a canonical acceptance a such that all three hold: t and a are the ACCEPTED terminal-result creation and its matching
+        canonical accepted-change creation for one logical acceptance (this relation identifying the matching creation pair
+        only); t and a carry the same full idempotency identity, concretely the same (document_id, client_change_id) (this
+        relation asserting same-key identity only); and the matching creations t and a share one authoritative transaction
+        boundary and therefore commit or roll back together, with no reachable authoritative post-boundary state for that
+        pair containing exactly one side (this relation asserting atomicity only, and not asserting producer provenance or
+        requiring a particular named transaction implementation).'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 1c7ff9d388e456134ea25e8096f2df023d5bbc0c626ee1a7494543b745d8fe2e
+        verdict: EQUIVALENT
+        reason: The formula captures at most one terminal outcome, ACCEPTED/REJECTED mutual exclusion and immutability within
+          the retry horizon, identity-matched atomic co-commit of ACCEPTED with its canonical acceptance, a bar on acceptance-creating
+          transitions applied while REJECTED is in force within the horizon regardless of the resulting state's horizon position
+          (with post-horizon first submissions excluded by the pre-state horizon guard), and the shared per-key arbitration
+          gate for all eligible acceptance and definitive-rejection paths, without collapsing the full (document_id, client_change_id)
+          identity or adding extra requirements.
+        differences: []
+      strengthening:
+        subject_signature: 1c7ff9d388e456134ea25e8096f2df023d5bbc0c626ee1a7494543b745d8fe2e
+        verdict: EQUIVALENT
+        reason: The formula captures at-most-one and mutual exclusion, immutability/preservation within the retry horizon,
+          the REJECTED ban on acceptance for transitions applied while REJECTED is in force within the horizon regardless
+          of the resulting state's horizon position while excluding submissions first applied after the horizon, atomic co-commitment
+          of ACCEPTED with its same-identity matching canonical change, and shared per-key arbitration for acceptance and
+          definitive-rejection paths, with no material strengthening or weakening.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 1c7ff9d388e456134ea25e8096f2df023d5bbc0c626ee1a7494543b745d8fe2e
+        verdict: EQUIVALENT
+        reason: The rendering preserves single-valuedness, immutability, mutual exclusion, atomic ACCEPTED commitment, same-state
+          arbitration, and the REJECTED exclusion for transitions applied within the horizon regardless of the resulting state's
+          horizon position, with post-horizon re-submissions excluded and full (document_id, client_change_id) identity maintained
+          throughout.
+        differences: []
+  claim:L215_denotation_change_is_coordinate_change:
+    kind: claim
+    subject_id: L215_denotation_change_is_coordinate_change
+    subject_signature: 61ec36f6270d835768e7ec2ed3b79145ddcc40777d064b0069b93dd0b1f07431
+    roundtrip:
+      subject_signature: 61ec36f6270d835768e7ec2ed3b79145ddcc40777d064b0069b93dd0b1f07431
+      status: TRANSLATED
+      natural_language: The conjunction of the following three statements holds. (1) For every authoritative state before,
+        every authoritative state after, and every document d, if after is the immediate successor of before under one committed
+        authoritative protocol transition (authoritative_state_step(before, after), with no intermediate authoritative state
+        between them), and the truth value of canonical_history_gap_free_for_document for d changes across that step — that
+        is, either canonical_history_gap_free_for_document(before, d) holds and canonical_history_gap_free_for_document(after,
+        d) does not hold, or canonical_history_gap_free_for_document(before, d) does not hold and canonical_history_gap_free_for_document(after,
+        d) holds, where canonical_history_gap_free_for_document(s, d) means that in authoritative state s the accepted canonical
+        history for document d is one gap-free revision sequence — then state_step_creates_or_changes_document_coordinates(before,
+        after, d) holds, meaning the step from before to after creates, destroys, or changes document d's accepted_change_log
+        or document_latest_revision coordinates in their logical denotation. (2) For every authoritative state before, every
+        authoritative state after, and every document d, if authoritative_state_step(before, after) holds, and the truth value
+        of accepted_history_ends_exactly_at_frontier for d changes across that step — that is, either accepted_history_ends_exactly_at_frontier(before,
+        d) holds and accepted_history_ends_exactly_at_frontier(after, d) does not hold, or accepted_history_ends_exactly_at_frontier(before,
+        d) does not hold and accepted_history_ends_exactly_at_frontier(after, d) holds, where accepted_history_ends_exactly_at_frontier(s,
+        d) means that the logical canonical accepted history denoted for document d in authoritative state s starts at the
+        document's canonical beginning and ends exactly at s's document_latest_revision for d, with no logically represented
+        accepted revision above that frontier, an empty accepted history ends at the document's initial frontier, the history
+        is its logical denotation across authoritative representations not the set of physically retained accepted rows, and
+        missing or undefined authoritative coordinates do not satisfy this predicate — then state_step_creates_or_changes_document_coordinates(before,
+        after, d) holds. (3) For every authoritative state before, every authoritative state after, and every document d,
+        if authoritative_state_step(before, after) holds, and the truth value of state_denotes_accepted_history_for_document
+        for d changes across that step — that is, either state_denotes_accepted_history_for_document(before, d) holds and
+        state_denotes_accepted_history_for_document(after, d) does not hold, or state_denotes_accepted_history_for_document(before,
+        d) does not hold and state_denotes_accepted_history_for_document(after, d) holds, where state_denotes_accepted_history_for_document(s,
+        d) means that authoritative state s denotes an accepted_change_log for document d, i.e. s includes d's authoritative
+        accepted-history coordinate and the logical accepted history it denotes for d is the history under observation, as
+        a scope predicate only asserting nothing about d's document_latest_revision coordinate and nothing about whether the
+        denoted history is gap-free or ends at any frontier, and a state with no authoritative accepted-history coordinate
+        for d does not satisfy this predicate — then state_step_creates_or_changes_document_coordinates(before, after, d)
+        holds.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 61ec36f6270d835768e7ec2ed3b79145ddcc40777d064b0069b93dd0b1f07431
+        verdict: EQUIVALENT
+        reason: 'The three conjoined implications are together logically equivalent to the source''s single disjunctive antecedent
+          implying the coordinate-change consequent: each uses XOR of the corresponding predicate across the step''s endpoints
+          (gap-free status, starts-at-canonical-beginning-and-ends-exactly-at-frontier status, and existence of a denoted
+          accepted history), guarded by authoritative_state_step and universally quantified over before, after, and document,
+          with the consequent predicate matching creation or change of accepted_change_log or document_latest_revision in
+          logical denotation.'
+        differences: []
+      strengthening:
+        subject_signature: 61ec36f6270d835768e7ec2ed3b79145ddcc40777d064b0069b93dd0b1f07431
+        verdict: EQUIVALENT
+        reason: 'The conjunction of three universally quantified implications is logically equivalent to the source''s single
+          disjunctive antecedent: each encodes a truth-value change (XOR) across an authoritative_state_step for gap-freeness,
+          for starting at the canonical beginning and ending exactly at the frontier, and for denoting an accepted history
+          at all, with the same consequent of creating or changing the accepted_change_log or document_latest_revision coordinates
+          in logical denotation.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 61ec36f6270d835768e7ec2ed3b79145ddcc40777d064b0069b93dd0b1f07431
+        verdict: EQUIVALENT
+        reason: 'The round-trip conjunction of three implications is logically equivalent to the original disjunctive antecedent
+          implying the same consequent: a change in gap-free status, a change in the combined starts-at-canonical-beginning
+          and ends-exactly-at-the-frontier status (with the frontier read per-state as document_latest_revision), or a change
+          in whether an accepted history is denoted at all, each triggers creation or change of the accepted_change_log or
+          document_latest_revision coordinates in logical denotation, with the same universal quantification over authoritative
+          steps and documents and no added or omitted condition.'
+        differences: []
+  claim:L217_append_step_commits_acceptance_at_previous_frontier:
+    kind: claim
+    subject_id: L217_append_step_commits_acceptance_at_previous_frontier
+    subject_signature: f43e7bcd321a445711a9f8c7dcf51088400db4c4a70bcd611ed31346ab642613
+    roundtrip:
+      subject_signature: f43e7bcd321a445711a9f8c7dcf51088400db4c4a70bcd611ed31346ab642613
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following two universally quantified statements. (1) For every authoritative
+        state before, authoritative state after, document d, and revision r, if after is the immediate successor of before
+        under one committed authoritative protocol transition (so that the transition''s full authoritative effect separates
+        the two states and no intermediate authoritative state exists between them, and aborted, rolled-back, or never-committed
+        work creates no such step) and that step from before to after is a committed canonical accepted-change append for
+        document d whose one new canonical accepted change is at revision r (the step''s transition commits exactly that one
+        canonical accepted change for d and no other accepted-history change for d), then there exists a canonical acceptance
+        acc such that all of the following hold: the step from before to after is the acceptance-commit step of acc, i.e.
+        the step''s transition is the authoritative acceptance transaction whose commit makes acc the canonical accepted change;
+        the document of acc is equal to d; acc is exactly the canonical accepted change that the candidate canonical change
+        carrying revision r became when it committed as a canonical accepted change; and the document_latest_revision of the
+        authoritative pre-state against which acc''s candidate change committed (the frontier value of acc''s document immediately
+        before acc''s acceptance transaction committed) is equal to the document_latest_revision frontier value of document
+        d in authoritative state before, i.e. the revision coordinate at which before''s logical accepted history for d ends.
+        (2) For every authoritative state before, authoritative state after, document d, and revision r, if after is the immediate
+        successor of before under one committed authoritative protocol transition as described above and that step from before
+        to after is a committed canonical accepted-change append for document d whose one new canonical accepted change is
+        at revision r as described above, then that step is a committed append step for document d at revision r whose pre-state
+        frontier is exactly the immediate predecessor of r, i.e. document d''s document_latest_revision in before is the revision
+        position immediately before r in the canonical revision numbering, so the append''s new change occupies the next position
+        after the pre-state frontier.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: f43e7bcd321a445711a9f8c7dcf51088400db4c4a70bcd611ed31346ab642613
+        verdict: EQUIVALENT
+        reason: The formula's first conjunct requires, for every authoritative append step for d at r, an acceptance committed
+          by that step for d that is exactly the candidate_canonical_change at r and whose pre-state latest_revision equals
+          d's document_latest_revision in the pre-state; the second conjunct requires that same step to satisfy append-follows-previous-frontier,
+          whose meaning is exactly the pre-state frontier being the immediate predecessor of r. No requirement is omitted,
+          added, or collapsed.
+        differences: []
+      strengthening:
+        subject_signature: f43e7bcd321a445711a9f8c7dcf51088400db4c4a70bcd611ed31346ab642613
+        verdict: EQUIVALENT
+        reason: 'The formula''s two conjuncts jointly capture the claim: an append step at r yields an acceptance of that
+          document that is exactly the candidate change at r, whose pre-state latest revision equals the document''s frontier
+          in the step''s pre-state, and the step is separately required to follow the previous frontier as the immediate predecessor
+          of r. No requirement is omitted or added beyond the supplied predicate meanings.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: f43e7bcd321a445711a9f8c7dcf51088400db4c4a70bcd611ed31346ab642613
+        verdict: EQUIVALENT
+        reason: The round-trip preserves the quantifier scope, the exactly-one committed candidate at revision r becoming
+          the canonical acceptance for d, its identity/provenance, and the pre-state document_latest_revision frontier being
+          the immediate predecessor of r so the append occupies the next position; neither side weakens nor strengthens the
+          other.
+        differences: []
+  claim:L219_lifecycle_completion_frontier_matches_after_appends_head:
+    kind: claim
+    subject_id: L219_lifecycle_completion_frontier_matches_after_appends_head
+    subject_signature: 1272aacafb5c6e3f13d5e31f5aab45ba8d103b07c0a054d6f13ff507154aa69b
+    roundtrip:
+      subject_signature: 1272aacafb5c6e3f13d5e31f5aab45ba8d103b07c0a054d6f13ff507154aa69b
+      status: TRANSLATED
+      natural_language: 'For all protocol transitions t, documents d, and revisions h: if (1) t represents an execution, including
+        an execution prefix, of a non-append authoritative snapshotting, checkpoint-replacement, cleanup, or compaction lifecycle
+        procedure targeting document d — where d is the procedure''s intended target independently of the documents owning
+        t''s actual inputs or outputs, classification does not require correct provenance, successful completion, output publication,
+        or eventual progress, stalled, crashed, and aborted executions remain included, and ordinary canonical appends and
+        recovery procedures as such are outside this classification — and (2) that authoritative history lifecycle transition
+        t completes, meaning its snapshotting, checkpoint-replacement, cleanup, or compaction procedure runs to completion
+        rather than stalling or aborting, so t has a completed post-state, then the following two statements are equivalent
+        for h: (a) t completes at frontier h, meaning h is the authoritative frontier, namely the document_latest_revision
+        of t''s target document, at the completion of t, read at the transition level at t''s completion whether or not t''s
+        resulting representation correctly records that frontier as its own latest_revision; and (b) h is the document_latest_revision
+        of lifecycle procedure t''s target document after all canonical appends for that document that committed before t
+        completes, meaning h counts every canonical append committed during t''s overlap and no append that commits only after
+        t completes.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 1272aacafb5c6e3f13d5e31f5aab45ba8d103b07c0a054d6f13ff507154aa69b
+        verdict: EQUIVALENT
+        reason: The formula quantifies over all t, d, and h, guards on the non-append authoritative lifecycle predicate for
+          t targeting d together with completion of t, and encodes the claimed equivalence as two implications between frontier-at-completion
+          and being document_latest_revision after all canonical appends committed before t completes, matching the source
+          scope, identity, and temporal boundary.
+        differences: []
+      strengthening:
+        subject_signature: 1272aacafb5c6e3f13d5e31f5aab45ba8d103b07c0a054d6f13ff507154aa69b
+        verdict: EQUIVALENT
+        reason: The formula scopes t, d, and h to non-append authoritative lifecycle transitions targeting d that complete,
+          and asserts exactly the canonical biconditional between h being the authoritative frontier at t's completion and
+          h being the document_latest_revision after all canonical appends for that document committed before t completes,
+          with no added or omitted conditions.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 1272aacafb5c6e3f13d5e31f5aab45ba8d103b07c0a054d6f13ff507154aa69b
+        verdict: EQUIVALENT
+        reason: The rendering preserves the completed-only scope over authoritative non-append snapshotting, checkpoint-replacement,
+          cleanup, or compaction transitions targeting D, the target and revision identity coordinates, and the exact biconditional
+          between H being the authoritative frontier (document_latest_revision) at completion and H being document_latest_revision
+          after all canonical appends for D committed before completion; its added glosses only unpack classification, completion,
+          and the transition-level frontier reading without broadening or narrowing the applicable cases or strengthening
+          either side.
+        differences: []
+  claim:L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier:
+    kind: claim
+    subject_id: L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier
+    subject_signature: dda358105907ca0d5fb349f44d9cfa71733bd13de6cd336e4fc3c6a53191afd7
+    roundtrip:
+      subject_signature: dda358105907ca0d5fb349f44d9cfa71733bd13de6cd336e4fc3c6a53191afd7
+      status: TRANSLATED
+      natural_language: 'For every protocol transition t, every document d, and every revision h, if all of the following
+        hold: (1) t represents an execution, including an execution prefix, of a non-append authoritative snapshotting, checkpoint-replacement,
+        cleanup, or compaction lifecycle procedure targeting document d, where the target is the procedure''s intended document
+        independently of the documents owning its actual inputs or outputs, and where this classification does not require
+        correct provenance, successful completion, output publication, or eventual progress, with stalled, crashed, and aborted
+        executions remaining included and with ordinary canonical appends and recovery procedures as such being outside this
+        condition; (2) t completes, i.e., t''s snapshotting, checkpoint-replacement, cleanup, or compaction procedure runs
+        to completion rather than stalling or aborting, so t has a completed post-state; (3) t completes without accepting
+        a new edit, i.e., t''s snapshotting, checkpoint-replacement, cleanup, or compaction execution itself accepts no new
+        canonical edit and no canonical accepted change is created by t, where appends performed by other, concurrent transitions
+        are not t accepting an edit; (4) t does not overlap appends for d, i.e., it is not the case that one or more canonical
+        accepted-change appends for d are concurrent with t in that an append''s execution overlaps t''s execution, whether
+        such an append would commit while t is in progress or commit only after t completes; and (5) t completes at frontier
+        h, i.e., h is the authoritative frontier, which is the document_latest_revision of t''s target document, at the completion
+        of t, read at the transition level at t''s completion whether or not t''s resulting representation correctly records
+        that frontier as its own latest_revision; then there exists an authoritative state pre such that: (a) pre is the pre-state
+        of t, i.e., the authoritative representation immediately before t executes; (b) pre exposes the document frontier
+        for d, i.e., pre includes an authoritative state instance for document d so that d''s document_latest_revision frontier
+        coordinate is defined in pre; and (c) pre''s authoritative latest_revision is exactly equal to the frontier h.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: dda358105907ca0d5fb349f44d9cfa71733bd13de6cd336e4fc3c6a53191afd7
+        verdict: EQUIVALENT
+        reason: The formula preserves all guards (non-append lifecycle targeting d, completion, no new edit accepted by t,
+          no overlapping append for d) and requires an existential authoritative pre-state of t that exposes d's frontier
+          and whose latest_revision equals h, where h is bound by completes_at_frontier to the authoritative frontier of t's
+          target document at t's completion, matching the source claim without added or omitted requirements.
+        differences: []
+      strengthening:
+        subject_signature: dda358105907ca0d5fb349f44d9cfa71733bd13de6cd336e4fc3c6a53191afd7
+        verdict: EQUIVALENT
+        reason: The formula quantifies over the same non-append lifecycle transitions targeting D, guarded by completion,
+          no new edit accepted by the transition, and no overlapping canonical append for D, with h bound as the frontier
+          at completion. Its consequent asserts exactly an authoritative pre-state for t that exposes D's frontier and whose
+          latest_revision equals that completion frontier h, with no added scope, equality, or post-state recording requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: dda358105907ca0d5fb349f44d9cfa71733bd13de6cd336e4fc3c6a53191afd7
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the same applicability (authoritative non-append lifecycle transition targeting d,
+          completing, accepting no new edit, and overlapping no canonical append for d) and the same consequent: an authoritative
+          pre-state of t exists, exposes d''s document_latest_revision frontier, and that value equals the authoritative frontier
+          at t''s completion. Its elaborations on intended targeting, completion, overlap by execution, and reading the authoritative
+          frontier independently of t''s own recorded representation clarify but neither broaden nor narrow the original guarantee.'
+        differences: []
