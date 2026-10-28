@@ -533,8 +533,9 @@ refinement:
       blocked_by: []
       signature: 756969a644ed94a2bd790a3ad3eb283b30763ae7143792daa859b92de9f5c57e
     L137_authoritative_history_mutators_are_exhaustively_classified:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: fb5f939ee60b23bc11c4d9c5193e1a9ba36376969e0b8890e1d5fa41eaa83b62
     C39_authoritative_history_state_is_gap_free:
       status: stable
       blocked_by: []
@@ -804,8 +805,9 @@ refinement:
       blocked_by: []
       signature: c06fb00080d76cd33991ac139849c4335e2a0ac323d62259ae882e48bd118c1d
     L214_pending_identity_classification_evidence_survives_lifecycle:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 36a37b51adbb72ea6bd8033f9390b7071c0b173c18dd9dbd277cafc76958fcb3
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with

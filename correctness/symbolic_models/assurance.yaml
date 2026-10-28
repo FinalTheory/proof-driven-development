@@ -10634,3 +10634,47 @@ records:
           full identity produced by that execution, with no other write path originating such a record; the enumerated forbidden
           paths and the lifecycle re-materialization clarification do not add or remove any requirement.'
         differences: []
+  claim:L140_initial_authoritative_history_is_gap_free:
+    kind: claim
+    subject_id: L140_initial_authoritative_history_is_gap_free
+    subject_signature: c56257ed4f8f17f5c08ad7dcbf77be580253050e3bc21f87318c10f5a9ae86db
+    roundtrip:
+      subject_signature: c56257ed4f8f17f5c08ad7dcbf77be580253050e3bc21f87318c10f5a9ae86db
+      status: TRANSLATED
+      natural_language: 'For every authoritative state s and every document d, if s is a document initialization state for
+        d — that is, s is document d''s authoritative state as produced by document-state initialization: the first authoritative
+        state of document d, in which d''s accepted_change_log and document_latest_revision coordinates are created with their
+        initialized values, and initialization is the only transition class that creates a document''s authoritative history/frontier
+        coordinates — then both of the following hold: (1) in authoritative state s, the accepted canonical history for document
+        d is one gap-free revision sequence; and (2) s denotes an accepted history for document d, meaning s includes d''s
+        authoritative accepted-history coordinate (accepted_change_log), and the logical accepted history it denotes for d
+        is the history under observation, this being a scope predicate only that asserts nothing about d''s document_latest_revision
+        coordinate and nothing about whether the denoted history is gap-free or ends at any frontier.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: c56257ed4f8f17f5c08ad7dcbf77be580253050e3bc21f87318c10f5a9ae86db
+        verdict: EQUIVALENT
+        reason: For all states s and documents d, the initialization predicate exactly scopes the claim to document-state
+          initialization, and the conjunction requires both that s denotes d's accepted_change_log and that the accepted canonical
+          history in s is one gap-free revision sequence, preserving scope, cardinality, and relation with no added or omitted
+          requirement.
+        differences: []
+      strengthening:
+        subject_signature: c56257ed4f8f17f5c08ad7dcbf77be580253050e3bc21f87318c10f5a9ae86db
+        verdict: EQUIVALENT
+        reason: The formula scopes to exactly document-state initialization states for a document and asserts exactly that
+          the authoritative accepted history denoted there is one gap-free revision sequence; the denoting conjunct restates
+          the source's 'denotes' relation and adds no property beyond it, and no quantifier, cardinality, or boundary is widened
+          or narrowed.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: c56257ed4f8f17f5c08ad7dcbf77be580253050e3bc21f87318c10f5a9ae86db
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original scope and guarantee: at document-state initialization, for the document
+          in question, its authoritative accepted_change_log denotes exactly one gap-free revision sequence. The added scope
+          clause only identifies the history under observation via that coordinate and expressly asserts nothing about document_latest_revision,
+          frontier endpoints, or an additional gap-free condition, so it neither weakens nor strengthens the contract, and
+          no distinct coordinates are collapsed.'
+        differences: []
