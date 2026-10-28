@@ -312,9 +312,8 @@ refinement:
       blocked_by: []
       signature: 4710b1edb87279f44a794970dc54ad1d4afc2e6cdcc95b66fd4e9feade6516f2
     L35_losing_retry_resolves_through_canonical_acceptance:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 218298a564b119950db2e6278de594774e0e7d32eecb77599ea4e3b3676580a0
     C17_snapshot_mode_selects_checkpoint_not_after_head:
       status: stable
       blocked_by: []
@@ -1734,9 +1733,11 @@ claims:
   L35_losing_retry_resolves_through_canonical_acceptance:
     statement: 'When a reprocessing attempt reaches absent-key arbitration and loses to an overlapping
       contender, it may remain pending or terminate by timeout or cancellation. If it produces an acceptance-resolution
-      outcome, it either becomes the sole acceptance producer or returns exactly the canonical accepted
-      result for that key; it never exposes arbitration conflict as a successful resolution or creates
-      another acceptance.'
+      outcome — a successful, non-timeout, non-cancellation outcome whose returned result is an acceptance
+      for that key — then that returned acceptance is the canonical accepted result for that key, and
+      either the attempt produced it, in which case the attempt is the sole acceptance producer for that
+      key, or it is exactly the canonical accepted result produced by another attempt; it never exposes
+      arbitration conflict as a successful resolution or creates another acceptance.'
     verification:
       verifiers:
         - kind: state_machine
