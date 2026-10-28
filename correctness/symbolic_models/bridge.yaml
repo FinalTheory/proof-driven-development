@@ -12726,17 +12726,11 @@ claims:
             d: Document
           body:
             implies:
-            - and:
-              - call:
-                  fn: canonical_append_attempt_for_document
-                  args:
-                  - var: t
-                  - var: d
-              - call:
-                  fn: canonical_append_for_document
-                  args:
-                  - var: t
-                  - var: d
+            - call:
+                fn: canonical_append_attempt_for_document
+                args:
+                - var: t
+                - var: d
             - call:
                 fn: append_tuple_bound_to_executing_document_generation
                 args:
