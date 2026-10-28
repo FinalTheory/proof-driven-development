@@ -5691,6 +5691,7 @@ functions:
     - claim:L180_non_append_lifecycle_preserves_logical_state_at_frontier
     - claim:C16_non_append_lifecycle_preserves_logical_revision_prefix
     - claim:L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier
+    - claim:L181_non_append_lifecycle_preserves_authoritative_frontier
   authoritative_history_lifecycle_transition_completes_at_frontier:
     args:
     - ProtocolTransition
@@ -17385,6 +17386,10 @@ claims:
                 - var: d
             - call:
                 fn: authoritative_history_lifecycle_transition_completes
+                args:
+                - var: t
+            - call:
+                fn: authoritative_history_lifecycle_completes_without_accepting_new_edit
                 args:
                 - var: t
             - call:
