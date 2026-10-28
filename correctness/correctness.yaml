@@ -382,8 +382,9 @@ refinement:
       blocked_by: []
       signature: 3dfa805647fdf5dda0ec45d007f54897f5b62242ead0cd9caf131df097b4a14c
     L97_client_adopts_snapshot_before_tail:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 8e95a46f6c1c65ba415b48cad2baf618ee0dbff2ce0556b0261c86fb34e875f0
     G6_accepted_change_preserves_ot_semantics:
       status: stable
       blocked_by: []
@@ -803,8 +804,9 @@ refinement:
       blocked_by: []
       signature: c06fb00080d76cd33991ac139849c4335e2a0ac323d62259ae882e48bd118c1d
     L214_pending_identity_classification_evidence_survives_lifecycle:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 58ed209733c23788db4ac68c0eda67354b8a0907396e3a22608b5b669bf19058
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -3194,17 +3196,17 @@ claims:
     statement: 'Every authoritative write that can create or change accepted_change_log or document_latest_revision
       belongs to at least one of the three covered transition classes: document-state initialization,
       a committed canonical accepted-change append, or an authoritative non-append representation/lifecycle
-      transition that accepts no new edit. No authoritative mutation path may change either symbol without
-      belonging to one of these covered classes. Document-state initialization is the only transition
-      class that creates a document''s accepted_change_log and document_latest_revision coordinates, and
-      a committed canonical accepted-change append step commits exactly one canonical accepted change
-      for the document. Creating or changing a symbol means creating or changing the logical coordinate
-      it denotes - the accepted history denoted for the document, or the document_latest_revision value;
-      a step that only rewrites the physical representation of the history while preserving its logical
-      denotation and frontier value does not create or change either symbol. Whether a document has an
-      authoritative document-state instance is judged by the presence of that instance, independently
-      of whether its coordinates are coherent. On an authoritative step, accepting a new edit for a document
-      and committing a canonical accepted change for that document are the same event.'
+      transition that accepts no new edit for the document (that is, commits no canonical accepted change
+      for the document). No authoritative mutation path may change either symbol without belonging to
+      one of these covered classes. A document''s accepted_change_log and document_latest_revision coordinates
+      come into existence when its authoritative document-state instance is created, and the transition
+      that creates the instance is the document''s initialization; a committed canonical accepted-change
+      append step commits exactly one canonical accepted change for the document. Creating or changing
+      a symbol means creating or changing the logical coordinate it denotes - the accepted history denoted
+      for the document, or the document_latest_revision value; a step that only rewrites the physical
+      representation of the history while preserving its logical denotation and frontier value does not
+      create or change either symbol. Whether a document has an authoritative document-state instance
+      is judged by the presence of that instance, independently of whether its coordinates are coherent.'
     source_refs:
       - authoritative_truth
       - final_architecture
