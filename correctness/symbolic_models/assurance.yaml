@@ -8591,59 +8591,86 @@ records:
   claim:L123_acceptance_payload_and_identity_share_submitted_request:
     kind: claim
     subject_id: L123_acceptance_payload_and_identity_share_submitted_request
-    subject_signature: 0b06f6da09d9332d80a23e6edfdba9745ca8c30b72a4e360f2f63a7ef2b99848
+    subject_signature: e64db6b5b4af16f4e8d4b37b01e421324bdd9ce385ae37109dbbcb7f3cc68d92
     roundtrip:
-      subject_signature: 0b06f6da09d9332d80a23e6edfdba9745ca8c30b72a4e360f2f63a7ef2b99848
+      subject_signature: e64db6b5b4af16f4e8d4b37b01e421324bdd9ce385ae37109dbbcb7f3cc68d92
       status: TRANSLATED
-      natural_language: 'The conjunction of the following four statements holds. (1) For every canonical acceptance a, if
+      natural_language: 'The conjunction of the following eight conditions holds. (1) For every canonical acceptance a, if
         a is a canonical_acceptance_payload_record — that is, a is a canonical_accepted_change in authoritative accepted history,
-        for which successful OT provenance for its accepted payload is required — then there exist a request rq, an OT invocation
-        i, and an OT success result sr such that all of the following hold together: a was produced from submitted request
-        rq; i is the OT-engine invocation performed for submitted request rq (this pairing by itself asserting nothing about
-        what input the engine actually received); the success of i is eligible for canonical acceptance, meaning i is performed
-        on a canonical-acceptance path for its submitted request so that a successful OT result of i may be committed as a
-        canonical acceptance, and not a speculative or dry-run evaluation or a path eligible only for an authoritative definitive-REJECTED
-        terminal decision; i consumes submitted request rq, meaning the transform input the engine receives for i is exactly
-        rq''s submitted raw_edit and rq''s submitted client base_revision, not a substituted edit, a substituted base, or
-        another request''s input; sr is the successful OT result returned by i, meaning i completed with a successful transformed
-        change and sr is that exact output result; the successful output of i is committed as canonical acceptance a, meaning
-        a is the canonical_accepted_change created by committing i''s OT result and not a synthesized or separately produced
-        change; the OT success result sr bound to acceptance a matches the submitted input, meaning sr was produced for the
-        corresponding submitted raw_edit and base_revision; the document identity preserved on a equals the document identity
-        carried by rq; and the client_change_id preserved on a equals the client-supplied logical edit identity carried by
-        rq. (2) For every canonical acceptance a, OT invocation i, and request rq, if i consumes submitted request rq and
-        the successful output of i is committed as canonical acceptance a, then a was produced from submitted request rq.
-        (3) For every canonical acceptance a and requests rq1 and rq2, if a was produced from rq1 and a was also produced
-        from rq2, then rq1 and rq2 are the same request. (4) For every canonical acceptance a and request rq, if a was produced
-        from submitted request rq, then both the document identity preserved on a equals the document identity carried by
-        rq, and the client_change_id preserved on a equals the client-supplied logical edit identity carried by rq.'
+        and every such canonical acceptance requires successful OT provenance for its accepted payload — then there exist
+        a request rq, an OT invocation i, and an OT success result sr such that: a was produced from submitted request rq;
+        i is the OT-engine invocation performed for rq, where this pairing by itself asserts nothing about the input the engine
+        received; the success of i is eligible for canonical acceptance, meaning i is performed on a canonical-acceptance
+        path for its submitted request so a successful OT result of i may be committed as a canonical acceptance, and a speculative
+        or dry-run evaluation, or a path eligible only for an authoritative definitive-REJECTED terminal decision, does not
+        satisfy this eligibility; i consumes rq in that the transform input the engine receives for i is exactly rq''s submitted
+        raw_edit and rq''s submitted client base_revision, not a substituted edit, a substituted base, or another request''s
+        input; sr is the successful OT result returned by i, meaning i completed with a successful transformed change and
+        sr is that exact output result; the successful output of i is the accepted payload committed as a, meaning a is the
+        canonical_accepted_change created by committing i''s OT result, not a synthesized or separately produced change; the
+        OT success result sr bound to a was produced for the corresponding submitted raw_edit and base_revision; the document
+        identity preserved on a equals the document identity carried by rq; and the client_change_id preserved on a equals
+        the client-supplied logical edit identity carried by rq. (2) For every canonical acceptance a, OT invocation i, and
+        request rq, if i consumes rq as in (1) and the successful output of i is committed as a, then a was produced from
+        rq. (3) For every canonical acceptance a and requests rq1 and rq2, if a was produced from rq1 and a was produced from
+        rq2, then the document identity carried by rq1 equals the document identity carried by rq2, the client_change_id carried
+        by rq1 equals the client_change_id carried by rq2, the base revision carried by rq1 equals the base revision carried
+        by rq2, and rq1 and rq2 share the same submitted raw_edit, meaning the raw edit submitted with rq1 and the raw edit
+        submitted with rq2 are one and the same edit content; this sharing compares only the two requests'' submitted payloads
+        and by itself asserts nothing about their document identity, client_change_id, or base revision. (4) For every canonical
+        acceptance a and request rq, if a was produced from rq, then the document identity preserved on a equals the document
+        identity carried by rq and the client_change_id preserved on a equals the client_change_id carried by rq. (5) For
+        every canonical acceptance a, if a is a canonical_acceptance_payload_record as in (1), then a excludes non-success
+        OT producers: for a, every in-scope path whose effect creates or commits a has successful OT-result provenance for
+        a''s corresponding submitted raw_edit and base_revision; no path lacking that successful OT-result provenance may
+        create or commit a; in particular, an OT outcome that is invalid or rebase-required cannot create or commit a; a path
+        that only reads, returns, retry-resolves, delivers, restores, or otherwise observes an already-committed canonical
+        acceptance is not an acceptance producer for this condition; and this condition imposes no idempotency arbitration,
+        acceptance-frontier, owner-generation/fencing, liveness, or unrelated rejection/terminal-outcome semantics. (6) For
+        every canonical acceptance a and request rq, if a was produced from rq, then rq is a submitted_request eligible for
+        server-side OT or an authoritative terminal decision, including initial submissions and normal retries, where eligibility
+        identifies the processing scope independently of whether rq actually preserves its logical-edit identity, payload,
+        or authoring-frontier binding, and actual OT invocation, successful acceptance, or completion of a terminal decision
+        is not required. (7) For every canonical acceptance a, request rq, and OT invocation i, if a was produced from rq,
+        i consumes rq as in (1), the successful output of i is committed as a, and i satisfies the OT algorithmic contract
+        — meaning the OT engine returns a canonical transformed change for i and that success satisfies the declared algorithmic
+        convergence contract for the invocation raw edit, submitted base, and canonical prefix — then the successful OT result
+        bound to a satisfies the OT engine algorithmic convergence contract for the submitted raw edit, base revision, and
+        preceding canonical prefix. (8) For every OT invocation i and OT success result sr, if sr is the successful OT result
+        returned by i, then it is not the case that the OT engine rejects i as invalid or rebase-required rather than returning
+        a successful transformed change.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 0b06f6da09d9332d80a23e6edfdba9745ca8c30b72a4e360f2f63a7ef2b99848
+        subject_signature: e64db6b5b4af16f4e8d4b37b01e421324bdd9ce385ae37109dbbcb7f3cc68d92
         verdict: EQUIVALENT
-        reason: The formula requires, for every canonical acceptance, a single submitted request whose raw_edit and base_revision
-          are consumed by the successful OT invocation committed as that acceptance, and whose document_id and client_change_id
-          exactly match the acceptance's persisted identity; the additional clauses enforce that same-request provenance and
-          forbid mixing payload and identity provenance across requests, matching the source.
+        reason: 'The formula preserves the single coordinating request witness: the same rq is bound to the acceptance by
+          production, to the OT invocation by performed-for and exact consumption of rq''s raw_edit and base_revision, to
+          the committed successful result, and to the acceptance''s document_id and client_change_id. Co-producer coordinate
+          equality blocks cross-request mixing, the excludes predicate and success/reject exclusion block non-success creation,
+          and the eligibility, request-eligibility, and conditional algorithmic-convergence clauses match the source guards
+          without added or dropped requirements.'
         differences: []
       strengthening:
-        subject_signature: 0b06f6da09d9332d80a23e6edfdba9745ca8c30b72a4e360f2f63a7ef2b99848
+        subject_signature: e64db6b5b4af16f4e8d4b37b01e421324bdd9ce385ae37109dbbcb7f3cc68d92
         verdict: EQUIVALENT
-        reason: The formula requires, for every canonical acceptance, a unique request rq such that an eligible successful
-          OT invocation performed for and consuming exactly rq's raw_edit and base_revision has its output committed as that
-          acceptance, with acceptance document and client_change_id equal to rq's; auxiliary conjuncts enforce that any consuming-and-committed
-          invocation yields that same rq and that identity matches any produced-from request, exactly encoding the single-request
-          and no-mixed-provenance requirements without extending scope or adding distinct obligations.
+        reason: 'The formula preserves the claim''s scope and provenance chain: each canonical acceptance has a producing
+          submitted request whose raw_edit and base_revision are exactly consumed by the successful, acceptance-eligible OT
+          invocation committed as that acceptance, with document_id and client_change_id equal to that same request''s; auxiliary
+          clauses close cross-request mixing, require eligible source requests and non-success exclusion, and transfer algorithmic
+          convergence only conditionally, without adding or omitting requirements.'
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 0b06f6da09d9332d80a23e6edfdba9745ca8c30b72a4e360f2f63a7ef2b99848
+        subject_signature: e64db6b5b4af16f4e8d4b37b01e421324bdd9ce385ae37109dbbcb7f3cc68d92
         verdict: EQUIVALENT
-        reason: 'The rendering preserves the original guarantee: for each canonical acceptance there is a single submitted
-          request whose raw_edit and base_revision are consumed by the successful OT invocation committed as that acceptance,
-          and whose document_id and client_change_id are exactly those persisted for that acceptance; the auxiliary clauses
-          enforce the same single-source provenance and prohibit cross-request mixing without adding or omitting a requirement.'
+        reason: The rendering preserves the single-source binding of each acceptance to one submitted request's raw_edit and
+          base_revision with exactly that request's document_id and client_change_id, the prohibition on mixing provenance
+          across requests, creation only from a successful OT result and never from a reject or rebase-required outcome, the
+          conditional transfer of the OT algorithmic convergence guarantee to the committed acceptance, the eligible-request
+          scope, and the exclusion of dry-run, speculative-only, and rejection-only invocations from the canonical-acceptance
+          path; multiple produced-from references are constrained to identical identity, payload, and base coordinates, so
+          no requirement is weakened or added.
         differences: []
   claim:L206_terminal_speculative_lifecycle_is_absorbing:
     kind: claim
@@ -8707,62 +8734,62 @@ records:
   claim:L130_reconnect_start_is_bound_to_visible_client_tuple:
     kind: claim
     subject_id: L130_reconnect_start_is_bound_to_visible_client_tuple
-    subject_signature: 87414cc43f7df201492d95a93b3b7231825b7a56f2c5fc268ec56a08f83284dc
+    subject_signature: 0219d7444c0dc8f7a63fc44e30f0aefe835b29dcfe5fa14f2520b500fe3f2a19
     roundtrip:
-      subject_signature: 87414cc43f7df201492d95a93b3b7231825b7a56f2c5fc268ec56a08f83284dc
+      subject_signature: 0219d7444c0dc8f7a63fc44e30f0aefe835b29dcfe5fa14f2520b500fe3f2a19
       status: TRANSLATED
-      natural_language: 'For every catch-up attempt c and every client state s, if c is a normal foreground reconnect/catch-up
-        attempt — an attempt by a normally participating client that proceeds on the foreground, user-visible-document-bound
-        path for one document, which background or non-visible per-document synchronization attempts do not satisfy — and
-        c was initiated from user-visible client state s, meaning s was the current user-visible client state at the moment
-        of c''s initiation, then all of the following hold: (1) the semantic document represented by s, as an independent
-        contract reference coordinate not derived from client_document_id, client_local_document, last_applied_revision, or
-        satisfaction of client_canonical_frontier_coherence, equals the document that c is for, namely the document whose
-        user-visible canonical tuple c starts from and whose canonical state c seeks to bring the client to; (2) c''s reconnect-start
-        base was captured from the user-visible canonical tuple of s, or from one exact private copy of that tuple, where
-        that base consists of its document identity, canonical client document, and last_applied_revision, and no start coordinate
-        was independently reread, substituted, synthesized, or cross-bound across a visible-state transition, and no private
-        resync-candidate or request-construction scratch state replaced that visible tuple as c''s starting base; (3) the
-        last_applied_revision coordinate captured in c''s reconnect-start base, the frontier from which c''s catch-up proceeds,
-        equals the visible frontier of s, namely the last canonical revision applied by s, where last_applied_revision means
-        the highest contiguous canonical revision already applied by a client; and (4) s is a user-visible canonical state,
-        meaning s is currently user-visible at the canonical client observation boundary and represents one document through
-        its visible canonical tuple, regardless of whether it became visible by explicit publication, initialization, restoration,
-        view activation, or an in-place visible tuple replacement, a predicate that excludes user-visible states representing
-        no document and private or intermediate resynchronization candidates that have not become user-visible, but does not
-        exclude a user-visible historical-version or rollback mode. In addition, for every catch-up attempt c, if c is a normal
-        foreground reconnect/catch-up attempt as defined above, then there exists a client state s such that c was initiated
-        from s in the sense that s was the current user-visible client state at the moment of c''s initiation.'
+      natural_language: 'All of the following three conditions hold conjunctively. (1) For every catch-up attempt c and every
+        client state s, if c is a normal foreground reconnect/catch-up attempt and c was initiated from user-visible client
+        state s, then all of the following hold: the semantic document represented by s (an independent contract reference
+        coordinate, not derived from client_document_id, client_local_document, last_applied_revision, or satisfaction of
+        client_canonical_frontier_coherence) equals the document that c is for, namely the document whose user-visible canonical
+        tuple c starts from and whose canonical state c seeks to bring the client to; c''s reconnect-start base — its document
+        identity, canonical client document, and last_applied_revision — was captured from the user-visible canonical tuple
+        of s, or from one exact private copy of that tuple, with no start coordinate independently reread, substituted, synthesized,
+        or cross-bound across a visible-state transition, and with no private resync-candidate or request-construction scratch
+        state replacing that visible tuple as c''s starting base; the last_applied_revision coordinate captured in c''s reconnect-start
+        base equals the visible frontier of s, namely the last canonical revision applied by client state s; s is a user-visible
+        canonical state, that is, s is currently user-visible at the canonical client observation boundary and represents
+        one document through its visible canonical tuple, regardless of whether it became visible by explicit publication,
+        initialization, restoration, view activation, or an in-place visible tuple replacement, and not excluding a user-visible
+        historical-version or rollback mode; and normal foreground reconnect/catch-up initiation is enabled from user-visible
+        client state s. (2) For every catch-up attempt c and every client state s, if c is a normal foreground reconnect/catch-up
+        attempt and c was initiated from user-visible client state s, then the exact client_document_id coordinate stored
+        in s equals the document that c is for. (3) For every catch-up attempt c, if c is a normal foreground reconnect/catch-up
+        attempt, then there exists at least one client state s such that c was initiated from user-visible client state s,
+        where initiated from means s was the current user-visible client state at the moment of c''s initiation. Throughout,
+        a normal foreground reconnect/catch-up attempt is an attempt by a normally participating client that proceeds on the
+        foreground, user-visible-document-bound path for one document; background or non-visible per-document synchronization
+        attempts do not satisfy that predicate.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 87414cc43f7df201492d95a93b3b7231825b7a56f2c5fc268ec56a08f83284dc
+        subject_signature: 0219d7444c0dc8f7a63fc44e30f0aefe835b29dcfe5fa14f2520b500fe3f2a19
         verdict: EQUIVALENT
-        reason: The formula requires every normal foreground attempt to have an initiation state, and for any such state requires
-          it to be user-visible canonical, equates its represented document and visible frontier with the attempt's document
-          and captured last_applied_revision, and requires capture of all three start coordinates from that same visible tuple
-          or one exact private copy with no rereading, substitution, synthesis, or cross-binding; background/non-visible attempts
-          are excluded by the attempt predicate, matching the source scope.
+        reason: 'The formula preserves all source requirements: every normal foreground attempt has an initiation state that
+          is user-visible, initiation-enabled, and represents the attempt''s document; its document identity equals that state''s
+          client_document_id; its start last_applied_revision equals that state''s visible frontier; and the base-capture
+          predicate requires all three start coordinates, including the canonical client document, to come from that same
+          visible tuple or an exact private copy without independent rereading, substitution, synthesis, or cross-binding.
+          Background and non-visible synchronization remain excluded by the normal-foreground predicate.'
         differences: []
       strengthening:
-        subject_signature: 87414cc43f7df201492d95a93b3b7231825b7a56f2c5fc268ec56a08f83284dc
+        subject_signature: 0219d7444c0dc8f7a63fc44e30f0aefe835b29dcfe5fa14f2520b500fe3f2a19
         verdict: EQUIVALENT
-        reason: The formula scopes both conjuncts to normal foreground reconnect attempts, requires an initiating user-visible
-          state, binds that state's represented document and visible frontier to the attempt document and captured last_applied_revision,
-          and via the captured-from predicate covers capture from that tuple or an exact private copy with no independent
-          reread, substitution, synthesis, or cross-binding, matching the source boundary and exclusions without added or
-          omitted requirements.
+        reason: The formula conditions every normal foreground attempt and its actual initiation state on represented-document
+          equality, capture of identity/canonical document/last_applied_revision from that same visible tuple or exact private
+          copy, visible-state status, and initiation enablement; it separately equates the tuple client_document_id with the
+          attempt document and requires existence of an initiation state, matching the source scope and exclusions without
+          added or omitted requirements.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 87414cc43f7df201492d95a93b3b7231825b7a56f2c5fc268ec56a08f83284dc
+        subject_signature: 0219d7444c0dc8f7a63fc44e30f0aefe835b29dcfe5fa14f2520b500fe3f2a19
         verdict: EQUIVALENT
-        reason: The rendering preserves the original scope, initiation-time visibility condition, the three captured coordinates
-          and their provenance from the same visible tuple or one exact private copy, the prohibition on independent reread,
-          substitution, synthesis, or cross-binding across a visible-state transition, and the exclusion of background or
-          non-visible synchronization. Its additional clauses are logical unpackings of those requirements, including the
-          equality of the captured last_applied_revision with the visible frontier and the existence of the initiation state,
-          and add no material requirement or omission.
+        reason: The rendering preserves the original scope, initiation-enabled existing visible-state requirement, representation
+          of D, identity via that state's client_document_id, and capture of all three reconnect-start coordinates from that
+          same visible tuple or one exact private copy without rereading, substitution, synthesis, or cross-binding, while
+          keeping background/non-visible synchronization outside the obligation.
         differences: []
   claim:L133_visible_overlay_document_binding_preserved_by_local_transitions:
     kind: claim

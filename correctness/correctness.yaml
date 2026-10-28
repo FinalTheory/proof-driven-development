@@ -216,7 +216,7 @@ refinement:
     C10_catchup_represents_exact_missing_suffix:
       status: stable
       blocked_by: []
-      signature: b2f68cdc80e16fc176064a594fab849aadd5ca8acf972a5150075d56e56879c5
+      signature: cbaae39a579c64a7866dbc08441d39b46abde67ea205652b63105b3c45c5a70b
     L19_client_applies_only_contiguous_revisions:
       status: stable
       blocked_by: []
@@ -228,7 +228,7 @@ refinement:
     C13_idempotency_key_is_temporally_unique:
       status: stable
       blocked_by: []
-      signature: 4d83dfc12b890f96feeb57eebe3be0c919126a1cb88fcc2882fcd0a73c40ff61
+      signature: 8c2e4f5ab4f67f9bb1f5a6b22f3a0303f059a8e58754a06ee44fa88d082158b2
     L14_accepted_idempotency_identity_survives_lifecycle:
       status: stable
       blocked_by: []
@@ -456,7 +456,7 @@ refinement:
     C36_reconnect_starts_from_canonical_client_frontier:
       status: stable
       blocked_by: []
-      signature: 94d0bbed15c039185a9056dfc819f351237c86c5e0ee02bf035ee53cec4f5fb9
+      signature: ced6e70b18a5f96a98f54cee8b138def73ed526ad7069846a4df199a4eca142a
     L119_completed_resync_candidate_stays_at_response_head_until_publication:
       status: stable
       blocked_by: []
@@ -500,7 +500,7 @@ refinement:
     C38_client_frontier_matches_canonical_base:
       status: stable
       blocked_by: []
-      signature: 4120c94bbbe8edd3755e6fc28c3853961d59d624be5f8be40aa894f67337e15a
+      signature: d1441cf6cdcec973e8df0c8d2ac469e9614100a76c313a2e824eb4a5bfe86d88
     L130_reconnect_start_is_bound_to_visible_client_tuple:
       status: stable
       blocked_by: []
@@ -520,7 +520,7 @@ refinement:
     G11_visible_speculative_overlays_match_document:
       status: stable
       blocked_by: []
-      signature: 338149f4b0b23020ae2ed6741101744554d109ed443e522e25931cd204ba38e0
+      signature: 1e89d9b28b2377dccd9a1273c8be162bd9dec3d035c2084f6f0da3c5486ea8a3
     L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance:
       status: stable
       blocked_by: []
@@ -534,8 +534,9 @@ refinement:
       blocked_by: []
       signature: 756969a644ed94a2bd790a3ad3eb283b30763ae7143792daa859b92de9f5c57e
     L137_authoritative_history_mutators_are_exhaustively_classified:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 39a2bfe5eba13731daa8976c5bf22185510d2187e8d1ec7db53282d6f0e7bfd2
     C39_authoritative_history_state_is_gap_free:
       status: stable
       blocked_by: []
@@ -579,7 +580,7 @@ refinement:
     G12_client_pending_state_tracks_unresolved_edits:
       status: stable
       blocked_by: []
-      signature: 9f7352a38422d94d64b80e6c21d99049fd86cbcf90431ceaf133caa3fdd4078e
+      signature: 9f7c8300f2d24ad7697e7a812f9c81f2fc9f03cf3247630fa6a67051ba04cec0
     L156_owner_handoff_installs_fresh_epoch:
       status: stable
       blocked_by: []
@@ -722,8 +723,9 @@ refinement:
       blocked_by: []
       signature: dd0da788def95b29549c6b78b8c2d1f613440745e7077e54f5648c8ca0560ff7
     L192_terminal_publication_preserves_store_identity_provenance:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 6bb7398d5f2b201465c8142e0119bb50cec81ca724e5af43f5a5e27eaa550231
     L195_rejected_terminal_publication_excludes_canonical_acceptance:
       status: stable
       blocked_by: []
@@ -731,7 +733,7 @@ refinement:
     C46_accepted_terminal_result_preserves_acceptance_provenance:
       status: stable
       blocked_by: []
-      signature: 66e8c31a288c9ddd280b03164ba88dc843e6e453e888c5fed30f8327cfc73487
+      signature: ddeb8511c3586adc498396ab8697a5944e2cca8f309d30a040cfc9a2d538dba5
     L197_accepted_terminal_result_captures_same_acceptance_producer:
       status: stable
       blocked_by: []
@@ -797,8 +799,9 @@ refinement:
       blocked_by: []
       signature: 177e13adf27abfb1827ffbf4a343db8ef9082d3d232f9a73686db2207e452d2b
     L213_terminal_result_store_records_have_single_acceptance_creation_provenance:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: c06fb00080d76cd33991ac139849c4335e2a0ac323d62259ae882e48bd118c1d
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -4935,17 +4938,17 @@ claims:
       - accepted_change_log
       - storage_selection
       - final_architecture
-    statement: The authoritative terminal_result in durable_terminal_outcome_store for an identity
-      is present in the store only as the creation record created for its eligible full identity by
-      the single acceptance execution that produced it; no other write path creates an authoritative
-      terminal_result in the store.
+    statement: An authoritative ACCEPTED terminal_result in durable_terminal_outcome_store for an
+      identity is present in the store only as the creation record created for its eligible full
+      identity by the single acceptance execution that produced it; no other write path creates an
+      authoritative ACCEPTED terminal_result in the store.
     verification:
       verifiers:
-        - intent: Enumerate every write path capable of creating a terminal_result record in
-            durable_terminal_outcome_store, including acceptance, retry, repair, backfill, and
-            publication-side paths. Require every authoritative terminal_result to have been created
-            for its eligible full identity by the single acceptance execution that produced it, and
-            reject any other creation path.
+        - intent: Enumerate every write path capable of creating an ACCEPTED terminal_result record
+            in durable_terminal_outcome_store, including acceptance, retry, repair, backfill, and
+            publication-side paths. Require every authoritative ACCEPTED terminal_result to have
+            been created for its eligible full identity by the single acceptance execution that
+            produced it, and reject any other creation path.
           kind: control_flow
     kind: leaf
 catalog:

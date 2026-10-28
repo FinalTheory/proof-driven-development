@@ -5905,6 +5905,14 @@ functions:
     meaning: 'Submitted requests rq1 and rq2 carry the same submitted raw_edit: the raw edit submitted with rq1 and the raw edit submitted with rq2 are one and the same edit content, so OT payload provenance from either request is provenance from a single raw edit. This compares the two requests'' submitted payloads only; it asserts nothing about their document identity, client_change_id, or base revision, which are the separate request_document / request_change_id / request_base_revision coordinates.'
     semantic_anchors:
     - claim:L123_acceptance_payload_and_identity_share_submitted_request
+  stale_response_cannot_restore_removed_overlay_or_pending_resolution_state:
+    args:
+    - CatchupResponse
+    catalog_symbols: []
+    meaning: 'Stale response c restores no speculative overlay and no pending-resolution state that was removed by a newer published reconciliation: handling or publication of c leaves every such removed speculative overlay and removed pending-resolution state removed. This predicate asserts only that absence of restoration; it does not require c to be processed, published, retried, or resolved in any way.'
+    returns: Bool
+    semantic_anchors:
+    - claim:L109_resync_publication_is_atomic_and_monotonic
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -11733,6 +11741,34 @@ claims:
                 args:
                 - var: c
                 - var: e
+      - forall:
+          vars:
+            c: CatchupResponse
+            h: Revision
+            f: Revision
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: catchup_response_head_is
+                  args:
+                  - var: c
+                  - var: h
+              - call:
+                  fn: resync_visible_frontier_at_candidate_readiness
+                  args:
+                  - var: c
+                  - var: f
+              - not:
+                  call:
+                    fn: revision_at_or_before
+                    args:
+                    - var: f
+                    - var: h
+            - call:
+                fn: stale_response_cannot_restore_removed_overlay_or_pending_resolution_state
+                args:
+                - var: c
   L144_success_ack_follows_corresponding_canonical_commit:
     capability: relational
     contracts: []
