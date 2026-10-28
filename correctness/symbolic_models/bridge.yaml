@@ -226,6 +226,7 @@ functions:
     - claim:L108_acceptance_preserves_request_identity
     - claim:G6_accepted_change_preserves_ot_semantics
     - claim:L123_acceptance_payload_and_identity_share_submitted_request
+    - claim:L117_retry_existing_acceptance_matches_full_idempotency_key
   request_base_revision:
     args:
     - Request
@@ -1389,6 +1390,7 @@ functions:
     meaning: Request r is a retry/retransmission of the same logical client edit e rather than a new logical edit.
     semantic_anchors:
     - assumption:A3_client_change_id_identifies_logical_edit
+    - claim:L117_retry_existing_acceptance_matches_full_idempotency_key
   same_document_logical_edits:
     args:
     - LogicalEdit
@@ -2947,6 +2949,7 @@ functions:
     - claim:C43_terminal_outcome_entry_state_is_coherent
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
     - claim:L192_terminal_publication_preserves_store_identity_provenance
+    - claim:L117_retry_existing_acceptance_matches_full_idempotency_key
   accepted_terminal_matching_canonical_acceptance:
     args:
     - CanonicalAcceptance
@@ -3612,6 +3615,7 @@ functions:
     - claim:L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance
     - claim:L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance
     - claim:C35_accepted_key_classification_requires_committed_acceptance
+    - claim:L117_retry_existing_acceptance_matches_full_idempotency_key
   acceptance_client_change_id:
     args:
     - CanonicalAcceptance
@@ -3624,6 +3628,7 @@ functions:
     - claim:L134_durable_lifecycle_accepted_evidence_derives_from_committed_acceptance
     - claim:L135_runtime_reconstruction_accepted_evidence_derives_from_committed_acceptance
     - claim:C35_accepted_key_classification_requires_committed_acceptance
+    - claim:L117_retry_existing_acceptance_matches_full_idempotency_key
   evidence_acquired_on_normal_acceptance_path:
     args:
     - AcceptedEvidence
@@ -6052,6 +6057,146 @@ functions:
     meaning: Every document-history-dependent runtime state value on the recovered owner established by recovery attempt r that can influence server-side OT transformation or canonical acceptance is equivalent to a clean reconstruction from the authoritative canonical history of r's target document through revision h, so the canonical semantics resumed under r's recovered owner are unchanged. This predicate asserts the equivalence of those values to the clean reconstruction; it does not confine them to any particular component, container, or representation, and containment of a value in some component without that equivalence does not satisfy it.
     semantic_anchors:
     - claim:C9_recovery_reconstructs_committed_state
+  request_submits_logical_edit:
+    args:
+    - Request
+    - LogicalEdit
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L34_retries_of_logical_edit_reuse_identity
+    meaning: 'Request r is a submission of logical edit e: r is one of the requests by which logical edit e is submitted to the server, including e''s original first submission and every later retransmission
+      or retry submission of the same edit. A submission of a different logical edit does not satisfy this predicate for e.'
+  reprocessing_attempt_for_key:
+    args:
+    - ProtocolTransition
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L35_losing_retry_resolves_through_canonical_acceptance
+    - claim:L54_absent_key_winner_returns_its_canonical_acceptance
+    - claim:L55_successful_retry_resolution_paths_are_exhaustive
+    meaning: 'Protocol transition t is a reprocessing attempt for exact full idempotency key k: t is one execution that (re)processes the logical edit identified by k after its original submission - a retry,
+      reconnect, recovery, or fast-path reprocessing execution for that same edit - as opposed to the processing of the edit''s first submission. Every such reprocessing execution for k satisfies this predicate,
+      whichever internal path runs it.'
+  attempt_finds_key_absent:
+    args:
+    - ProtocolTransition
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L35_losing_retry_resolves_through_canonical_acceptance
+    - claim:L54_absent_key_winner_returns_its_canonical_acceptance
+    - claim:L55_successful_retry_resolution_paths_are_exhaustive
+    meaning: 'Reprocessing attempt t found its idempotency key k absent: at t''s idempotency lookup for k, no canonical acceptance and no authoritative terminal result for k was yet committed or observed,
+      so t proceeded onto the absent-key path as a contender for producing k''s first acceptance rather than onto the existing-key return path.'
+  attempt_loses_absent_key_arbitration:
+    args:
+    - ProtocolTransition
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L35_losing_retry_resolves_through_canonical_acceptance
+    - claim:L55_successful_retry_resolution_paths_are_exhaustive
+    meaning: 'Reprocessing attempt t lost the absent-key arbitration for key k to an overlapping contender: another attempt contending for the same absent key k prevailed as the attempt entitled to produce
+      k''s canonical acceptance, and t did not. Losing and winning the same arbitration for the same key are mutually exclusive outcomes for one attempt.'
+  attempt_wins_absent_key_arbitration:
+    args:
+    - ProtocolTransition
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L54_absent_key_winner_returns_its_canonical_acceptance
+    - claim:L55_successful_retry_resolution_paths_are_exhaustive
+    meaning: 'Reprocessing attempt t is the acceptance producer for key k on the absent-key path: either no overlapping contender for k existed, or t won the absent-key arbitration against every overlapping
+      contender, so t is the one attempt entitled to produce k''s canonical acceptance. Winning and losing the same arbitration for the same key are mutually exclusive outcomes for one attempt.'
+  attempt_is_sole_acceptance_producer_for_key:
+    args:
+    - ProtocolTransition
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L35_losing_retry_resolves_through_canonical_acceptance
+    meaning: 'Attempt t is the sole acceptance producer for key k: the canonical acceptance for k, if one is produced, is produced by t, and no other attempt produces a canonical acceptance for k.'
+  attempt_produces_canonical_acceptance_for_key:
+    args:
+    - ProtocolTransition
+    - IdempotencyKey
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L35_losing_retry_resolves_through_canonical_acceptance
+    - claim:L54_absent_key_winner_returns_its_canonical_acceptance
+    - claim:L55_successful_retry_resolution_paths_are_exhaustive
+    meaning: 'Canonical acceptance a is the canonical accepted change for key k produced by attempt t itself: t is a''s acceptance producer, and a is committed as t''s own acceptance production for k. An
+      acceptance produced by a different attempt, or merely returned by t, does not satisfy this predicate for t.'
+  attempt_resolution_returns_canonical_acceptance_for_key:
+    args:
+    - ProtocolTransition
+    - IdempotencyKey
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L35_losing_retry_resolves_through_canonical_acceptance
+    - claim:L54_absent_key_winner_returns_its_canonical_acceptance
+    - claim:L55_successful_retry_resolution_paths_are_exhaustive
+    meaning: Attempt t produced a successful acceptance-resolution outcome for key k - a non-timeout, non-cancellation success, not a pending, timed-out, or cancelled attempt - and the canonical accepted
+      result that outcome returns is exactly canonical acceptance a, the canonical accepted result for k. Attempts that remain pending, time out, or are cancelled produce no such outcome and do not satisfy
+      this predicate.
+  attempt_resolution_exposes_arbitration_conflict:
+    args:
+    - ProtocolTransition
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L35_losing_retry_resolves_through_canonical_acceptance
+    meaning: 'Attempt t produced an outcome that exposes an arbitration conflict as a successful resolution: what t presents as success is a conflict or race artifact of contending for its key rather than
+      a canonical accepted result.'
+  attempt_success_emitted_after_own_acceptance_commit:
+    args:
+    - ProtocolTransition
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L54_absent_key_winner_returns_its_canonical_acceptance
+    meaning: 'Attempt t''s successful acceptance-resolution outcome returning canonical acceptance a was emitted only after a itself committed: no successful outcome of t returning a precedes a''s commit
+      as a canonical accepted change.'
+  retry_within_normal_eligibility_horizon:
+    args:
+    - Request
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L117_retry_existing_acceptance_matches_full_idempotency_key
+    meaning: 'Request r is a normal retry whose full idempotency identity remains within the 30-day normal retry eligibility horizon: r was submitted as an ordinary protocol retry while its identity''s pending/retry
+      age did not exceed 30 days.'
+  retry_reaches_external_terminal_outcome:
+    args:
+    - Request
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L117_retry_existing_acceptance_matches_full_idempotency_key
+    meaning: 'Processing of request r became externally terminal: it produced an externally visible terminal outcome for r''s idempotency identity, whether an accepted result or a definitive negative result.
+      Processing that remains pending, times out, or is cancelled does not satisfy this predicate.'
+  retry_terminal_outcome_returns_acceptance:
+    args:
+    - Request
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L117_retry_existing_acceptance_matches_full_idempotency_key
+    meaning: 'The externally terminal outcome reached by processing request r returns exactly canonical acceptance a: the terminal result r''s processing exposes is the successful accepted result whose record
+      is a, not a definitive negative result and not a different acceptance record.'
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -18465,6 +18610,332 @@ claims:
                     args:
                     - var: pre
                     - var: h
+  L34_retries_of_logical_edit_reuse_identity:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          r: Request
+          e: LogicalEdit
+        body:
+          implies:
+          - call:
+              fn: request_submits_logical_edit
+              args:
+              - var: r
+              - var: e
+          - eq:
+            - call:
+                fn: request_change_id
+                args:
+                - var: r
+            - call:
+                fn: logical_edit_change_id
+                args:
+                - var: e
+  L35_losing_retry_resolves_through_canonical_acceptance:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          t: ProtocolTransition
+          k: IdempotencyKey
+        body:
+          implies:
+          - and:
+            - call:
+                fn: reprocessing_attempt_for_key
+                args:
+                - var: t
+                - var: k
+            - call:
+                fn: attempt_finds_key_absent
+                args:
+                - var: t
+                - var: k
+            - call:
+                fn: attempt_loses_absent_key_arbitration
+                args:
+                - var: t
+                - var: k
+          - and:
+            - not:
+                call:
+                  fn: attempt_resolution_exposes_arbitration_conflict
+                  args:
+                  - var: t
+            - forall:
+                vars:
+                  a: CanonicalAcceptance
+                body:
+                  implies:
+                  - call:
+                      fn: attempt_produces_canonical_acceptance_for_key
+                      args:
+                      - var: t
+                      - var: k
+                      - var: a
+                  - call:
+                      fn: attempt_is_sole_acceptance_producer_for_key
+                      args:
+                      - var: t
+                      - var: k
+            - forall:
+                vars:
+                  a: CanonicalAcceptance
+                body:
+                  implies:
+                  - call:
+                      fn: attempt_resolution_returns_canonical_acceptance_for_key
+                      args:
+                      - var: t
+                      - var: k
+                      - var: a
+                  - or:
+                    - and:
+                      - call:
+                          fn: attempt_produces_canonical_acceptance_for_key
+                          args:
+                          - var: t
+                          - var: k
+                          - var: a
+                      - call:
+                          fn: attempt_is_sole_acceptance_producer_for_key
+                          args:
+                          - var: t
+                          - var: k
+                    - exists:
+                        vars:
+                          t2: ProtocolTransition
+                        body:
+                          and:
+                          - neq:
+                            - var: t2
+                            - var: t
+                          - call:
+                              fn: attempt_produces_canonical_acceptance_for_key
+                              args:
+                              - var: t2
+                              - var: k
+                              - var: a
+  L54_absent_key_winner_returns_its_canonical_acceptance:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          t: ProtocolTransition
+          k: IdempotencyKey
+        body:
+          implies:
+          - and:
+            - call:
+                fn: reprocessing_attempt_for_key
+                args:
+                - var: t
+                - var: k
+            - call:
+                fn: attempt_finds_key_absent
+                args:
+                - var: t
+                - var: k
+            - call:
+                fn: attempt_wins_absent_key_arbitration
+                args:
+                - var: t
+                - var: k
+          - forall:
+              vars:
+                a: CanonicalAcceptance
+              body:
+                implies:
+                - call:
+                    fn: attempt_resolution_returns_canonical_acceptance_for_key
+                    args:
+                    - var: t
+                    - var: k
+                    - var: a
+                - and:
+                  - call:
+                      fn: attempt_produces_canonical_acceptance_for_key
+                      args:
+                      - var: t
+                      - var: k
+                      - var: a
+                  - call:
+                      fn: attempt_success_emitted_after_own_acceptance_commit
+                      args:
+                      - var: t
+                      - var: a
+  L55_successful_retry_resolution_paths_are_exhaustive:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          t: ProtocolTransition
+          k: IdempotencyKey
+          a: CanonicalAcceptance
+        body:
+          implies:
+          - and:
+            - call:
+                fn: reprocessing_attempt_for_key
+                args:
+                - var: t
+                - var: k
+            - call:
+                fn: attempt_resolution_returns_canonical_acceptance_for_key
+                args:
+                - var: t
+                - var: k
+                - var: a
+          - or:
+            - and:
+              - not:
+                  call:
+                    fn: attempt_finds_key_absent
+                    args:
+                    - var: t
+                    - var: k
+              - not:
+                  call:
+                    fn: attempt_produces_canonical_acceptance_for_key
+                    args:
+                    - var: t
+                    - var: k
+                    - var: a
+            - and:
+              - call:
+                  fn: attempt_finds_key_absent
+                  args:
+                  - var: t
+                  - var: k
+              - call:
+                  fn: attempt_wins_absent_key_arbitration
+                  args:
+                  - var: t
+                  - var: k
+              - call:
+                  fn: attempt_produces_canonical_acceptance_for_key
+                  args:
+                  - var: t
+                  - var: k
+                  - var: a
+            - and:
+              - call:
+                  fn: attempt_finds_key_absent
+                  args:
+                  - var: t
+                  - var: k
+              - call:
+                  fn: attempt_loses_absent_key_arbitration
+                  args:
+                  - var: t
+                  - var: k
+              - exists:
+                  vars:
+                    t2: ProtocolTransition
+                  body:
+                    and:
+                    - neq:
+                      - var: t2
+                      - var: t
+                    - call:
+                        fn: attempt_wins_absent_key_arbitration
+                        args:
+                        - var: t2
+                        - var: k
+                    - call:
+                        fn: attempt_produces_canonical_acceptance_for_key
+                        args:
+                        - var: t2
+                        - var: k
+                        - var: a
+  L117_retry_existing_acceptance_matches_full_idempotency_key:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          r: Request
+          e: LogicalEdit
+          a0: CanonicalAcceptance
+        body:
+          implies:
+          - and:
+            - call:
+                fn: retry_request_of_logical_edit
+                args:
+                - var: r
+                - var: e
+            - call:
+                fn: retry_within_normal_eligibility_horizon
+                args:
+                - var: r
+            - eq:
+              - call:
+                  fn: acceptance_document_id
+                  args:
+                  - var: a0
+              - call:
+                  fn: request_document
+                  args:
+                  - var: r
+            - eq:
+              - call:
+                  fn: acceptance_client_change_id
+                  args:
+                  - var: a0
+              - call:
+                  fn: request_change_id
+                  args:
+                  - var: r
+            - call:
+                fn: accepted_terminal_matching_acceptance_committed
+                args:
+                - var: a0
+          - and:
+            - implies:
+              - call:
+                  fn: retry_reaches_external_terminal_outcome
+                  args:
+                  - var: r
+              - call:
+                  fn: retry_terminal_outcome_returns_acceptance
+                  args:
+                  - var: r
+                  - var: a0
+            - forall:
+                vars:
+                  a: CanonicalAcceptance
+                body:
+                  implies:
+                  - call:
+                      fn: retry_terminal_outcome_returns_acceptance
+                      args:
+                      - var: r
+                      - var: a
+                  - eq:
+                    - var: a
+                    - var: a0
+  L161_definitive_retry_response_comes_from_terminal_outcome:
+    capability: relational
+    contracts:
+    - terminal_response_outcome_binding
+    formula_from_contracts: true
+  L183_definitive_rejection_preserves_request_provenance:
+    capability: relational
+    contracts:
+    - definitive_rejection_request_binding
+    formula_from_contracts: true
+  L204_state_dependent_rejection_uses_authoritative_context:
+    capability: relational
+    contracts:
+    - state_dependent_rejection_context_binding
+    formula_from_contracts: true
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
