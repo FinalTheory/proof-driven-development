@@ -211,7 +211,7 @@ refinement:
     C9_recovery_reconstructs_committed_state:
       status: stable
       blocked_by: []
-      signature: adc4cf7e33aca97e29ef2e23ef12969907ffb0f576a5ff81b4a7cb721ca8e8f1
+      signature: 0ae7dda3b49e15dc527ccd9c17763e691bbaef7eaf41b6c7cd383d36247d784a
     C10_catchup_represents_exact_missing_suffix:
       status: stable
       blocked_by: []
