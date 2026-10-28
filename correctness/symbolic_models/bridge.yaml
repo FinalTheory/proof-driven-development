@@ -11717,33 +11717,6 @@ claims:
       - forall:
           vars:
             c: CatchupResponse
-            e: LogicalEditIdentity
-          body:
-            implies:
-            - and:
-              - call:
-                  args:
-                  - var: c
-                  - var: e
-                  fn: pending_identity_at_resync_start
-              - call:
-                  args:
-                  - var: c
-                  - var: e
-                  fn: resync_identity_within_normal_horizon
-              - call:
-                  fn: resync_identity_matches_document
-                  args:
-                  - var: c
-                  - var: e
-            - call:
-                fn: stale_resync_cannot_restore_retired_overlay
-                args:
-                - var: c
-                - var: e
-      - forall:
-          vars:
-            c: CatchupResponse
             h: Revision
             f: Revision
           body:

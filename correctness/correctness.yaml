@@ -184,11 +184,11 @@ refinement:
     G1_retry_is_logically_exactly_once:
       status: stable
       blocked_by: []
-      signature: 1c2b281288d9fdf20b749a77fe2c69ce741956d71eb2c33657c84c26aa14fb0a
+      signature: 8b2c41c61f69621c1766843b518213272b59ae002a00e5fc5f622ed2e52cdef9
     G2_canonical_history_is_linear_and_fenced:
       status: stable
       blocked_by: []
-      signature: ccd8cb2cb2da2c219526c6dc4b8bf945940de9c09219aa17af3b7cafccd61291
+      signature: b87fd30f4faa779330d876d26f50a4ffc93af4f60fddda6237f5917b02419173
     G3_snapshot_and_recovery_preserve_state:
       status: stable
       blocked_by: []
@@ -196,7 +196,7 @@ refinement:
     G4_reconnect_converges_without_gap_or_duplicate:
       status: stable
       blocked_by: []
-      signature: c41d20f6e47b9103ffb1d97682292e306261c55220ba6c3731b861c0af32353a
+      signature: 79b81e505141ed79e2f018243e4cc398de8df2b0584c1464b962a07da4e8aabe
     G5_retry_resolves_idempotently:
       status: stable
       blocked_by: []
@@ -204,7 +204,7 @@ refinement:
     C7_revision_frontier_is_linear:
       status: stable
       blocked_by: []
-      signature: 6a7db52a102a61ae1f186a00f4b04a89b82afe9291103ab71bafc50fcc5e9d5a
+      signature: 3e1dfb04cfcc9ac9282b94d067cfa22a11a4e52dcddf5a23eff8530ba2d46de1
     C8_stale_owner_is_fenced:
       status: stable
       blocked_by: []
@@ -388,7 +388,7 @@ refinement:
     G6_accepted_change_preserves_ot_semantics:
       status: stable
       blocked_by: []
-      signature: c1511d294c4fbaf834a2e61673310e904f431ce6104ce66b62b993f7771ed4ed
+      signature: 90cb727c74ea8e34374005c59290798f0b3c9ca90727ec1ed993ccfcbf4bf3a5
     L98_ot_receives_exact_request_and_canonical_context:
       status: stable
       blocked_by: []
@@ -404,7 +404,7 @@ refinement:
     G7_reconnect_does_not_double_render_accepted_optimistic_edit:
       status: stable
       blocked_by: []
-      signature: a94c1e137be40ee990de390be276aaaf34c04e6b05007c3a462051377030826f
+      signature: 642874ccd68430adba1257c8fa484115503ad9baf2d81e5cc0dc7c1a1e50e83a
     L106_resync_request_covers_start_pending_set:
       status: stable
       blocked_by: []
@@ -432,7 +432,7 @@ refinement:
     G9_accepted_idempotency_evidence_matches_committed_acceptance:
       status: stable
       blocked_by: []
-      signature: 713a475b420fb50bc61c64da593619a21d6eea13cc2d6ffc48f835d6fd862daf
+      signature: 549d5838e1b917770976186887aeba5bf97655b05f6ac9d2dba39ebe1101ebaf
     L113_request_raw_edit_is_bound_to_authoring_frontier:
       status: stable
       blocked_by: []
@@ -476,7 +476,7 @@ refinement:
     C37_pending_identity_resolution_is_bound_to_response_head:
       status: stable
       blocked_by: []
-      signature: b3bdc31d01e1078c11066329ce4758830cb9cca688a7221d28a1ff379bba3072
+      signature: 910b5130b5c7681182cf073689514a1b2c5f2a20e36136754d28b96f234f664e
     L124_pending_identity_classifier_uses_same_identity_and_response_head:
       status: stable
       blocked_by: []
@@ -488,7 +488,7 @@ refinement:
     G10_user_visible_client_state_matches_document:
       status: stable
       blocked_by: []
-      signature: 1dcf66ef900edaba412a9cb9c8425a8de65def35a0e47bc1ff508b0a58b152ae
+      signature: c265555b9e54d4c1e3ba7a58cd51fa653b98f8d869eadb6a2adc2fad49b4fc4e
     L128_client_canonical_frontier_is_established_on_publication:
       status: stable
       blocked_by: []
@@ -540,7 +540,7 @@ refinement:
     C39_authoritative_history_state_is_gap_free:
       status: stable
       blocked_by: []
-      signature: fa4a9b306178e281800e9614e9e70537dc34f8016e80f106b85733e348be5e61
+      signature: 9a0414ce48f1e523c75d5c9adf8af4eb22716da31809726bb0f9732743a36f3a
     L138_committed_append_preserves_gap_free_state_shape:
       status: stable
       blocked_by: []
@@ -701,8 +701,9 @@ refinement:
       status: pending
       blocked_by: []
     C44_terminal_outcome_entry_matches_canonical_acceptance:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: b1b2289103b0ac6a48eae82bc0edf01c61b9277af67b4968a0cf0f9aff2b62a9
     L186_terminal_outcome_initialization_matches_canonical_acceptance:
       status: stable
       blocked_by: []
@@ -716,8 +717,9 @@ refinement:
       blocked_by: []
       signature: 94c4333db3e03bd6465ede395e73a1539cdefbb6c89ce3c56fdbce3a7c5b98e3
     C45_terminal_outcome_publication_matches_canonical_acceptance:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 49226577e5dfc7eab30962417f365795e3f23ddc029708a4a4c0da6acf2a1590
     L190_authoritative_terminal_publication_surfaces_are_exhaustive:
       status: stable
       blocked_by: []

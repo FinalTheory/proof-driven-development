@@ -10534,3 +10534,70 @@ records:
           and initialization-or-reachability of every document state through covered steps, with no requirement weakened or
           added.
         differences: []
+  claim:L109_resync_publication_is_atomic_and_monotonic:
+    kind: claim
+    subject_id: L109_resync_publication_is_atomic_and_monotonic
+    subject_signature: 7d0cafd658d47bb6e9cda59106aaed982d5cb3361b85aae4f9594b2d959efad5
+    roundtrip:
+      subject_signature: 7d0cafd658d47bb6e9cda59106aaed982d5cb3361b85aae4f9594b2d959efad5
+      status: TRANSLATED
+      natural_language: 'All of the following hold together. (1) For every catchup response c, revision h, and revision f,
+        if h is the authoritative response head captured for c, f is the user-visible canonical frontier (the client''s last_applied_revision
+        for the resync document) at the moment candidate response c is ready to publish, and f is not at or before h in the
+        canonical revision order (i.e., not f <= h), then candidate response c is discarded without mutating the visible canonical
+        base, last_applied_revision, pending-resolution state, or speculative overlays. (2) For every c, h, and f, if h is
+        the authoritative response head captured for c, f is the user-visible canonical frontier at the moment candidate c
+        is ready to publish, and f is at or before h (f <= h), then both: state from candidate c is exposed to the user only
+        by one atomic publication after c''s specified reconciliation work is complete, with no checkpoint, tail, or intermediate
+        candidate prefix from c user-visible; and publication of candidate c restores no previously removed speculative overlay
+        and no previously removed pending-resolution state. (3) For every c, revision f1, and revision f2, if f1 is the user-visible
+        canonical frontier at the moment candidate c is ready to publish and f2 is the user-visible canonical frontier after
+        response c has been handled (published or discarded), then f1 is at or before f2 (f1 <= f2). (4) For every c, h, and
+        f, if h is the authoritative response head captured for c, f is the user-visible canonical frontier at the moment
+        candidate c is ready to publish, and f <= h, then state from candidate c is exposed to the user only by one atomic
+        publication after c''s specified reconciliation work is complete, with no checkpoint, tail, or intermediate candidate
+        prefix from c user-visible. (5) For every c and logical edit identity e, if the exact logical edit identity e=(D,k)
+        is pending at the start of resync c for that same resync document D (a pending identity for another document does
+        not satisfy this condition), then no intermediate resync candidate for c may expose a candidate state whose canonical
+        prefix already contains acceptance for the exact identity e together with a speculative overlay for e; purely internal
+        unexposed candidate representation is not constrained by this, and this holds independently of whether c''s response
+        head itself is classified as containing that acceptance. (6) For every c and e, if e is pending at the start of resync
+        c for that same document as in (5) and canonical acceptance for the exact same full logical identity e is included
+        through c''s response head, then once canonical acceptance for e is included through c''s response head H_D, any user-visible
+        publication through H_D removes or suppresses the matching speculative overlay before or atomically with that publication,
+        so no published user-visible state exposes both representations. (7) For every c, h, and f, if h is the authoritative
+        response head captured for c, f is the user-visible canonical frontier at the moment candidate c is ready to publish,
+        and not f <= h, then stale response c restores no speculative overlay and no pending-resolution state that was removed
+        by a newer published reconciliation: handling or publication of c leaves every such removed speculative overlay and
+        removed pending-resolution state removed, and this asserts only that absence of restoration and does not require c
+        to be processed, published, retried, or resolved in any way.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 7d0cafd658d47bb6e9cda59106aaed982d5cb3361b85aae4f9594b2d959efad5
+        verdict: EQUIVALENT
+        reason: 'All source requirements are captured with the same guards and exact (D,k) identity: stale candidates (H<F)
+          are discarded without visible mutation and cannot restore removed state; for H>=F exposure is only by one atomic
+          publication after reconciliation with no restoration of previously removed overlay/pending state; the visible frontier
+          is monotonic from readiness to after handling; publication and intermediate candidates exclude the canonical-acceptance
+          plus speculative-overlay duplicate for pending identities whose acceptance is included through the response head.'
+        differences: []
+      strengthening:
+        subject_signature: 7d0cafd658d47bb6e9cda59106aaed982d5cb3361b85aae4f9594b2d959efad5
+        verdict: EQUIVALENT
+        reason: The formula preserves the H<F discard branch, the H>=F atomic-publication and no-restoration branch, frontier
+          monotonicity from readiness to after handling, pending-identity duplicate suppression at publication and in intermediate
+          candidates, and stale-response non-restoration, with identity and document scope intact and no added or omitted
+          requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 7d0cafd658d47bb6e9cda59106aaed982d5cb3361b85aae4f9594b2d959efad5
+        verdict: EQUIVALENT
+        reason: 'All original guarantees are preserved with the same boundaries: discard without mutation when H<F, single
+          atomic publication with no visible intermediate prefix and no restoration when H>=F, frontier monotonicity, removal/suppression
+          of the (D,k) overlay before or atomically with publication with no dual user-visible representation or intermediate
+          dual exposure, and no restoration by a stale response. The added clarifications (exact identity/document match,
+          pending at resync start, internal unexposed state not counting as exposure, and clause (7)''s scope note) do not
+          narrow or expand the original contract.'
+        differences: []
