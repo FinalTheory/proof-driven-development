@@ -11531,3 +11531,295 @@ records:
           coordinates excluded), yielding a post-state denoting one gap-free logical history ending exactly at its own frontier
           in the same sense. No quantifier, cardinality, identity, provenance, or scope requirement is added or omitted.'
         differences: []
+  claim:L34_retries_of_logical_edit_reuse_identity:
+    kind: claim
+    subject_id: L34_retries_of_logical_edit_reuse_identity
+    subject_signature: 96afba97b6073e0a4cc83baa2fb12500e5938f9943ef21f7805a11af87ace5d3
+    roundtrip:
+      subject_signature: 96afba97b6073e0a4cc83baa2fb12500e5938f9943ef21f7805a11af87ace5d3
+      status: TRANSLATED
+      natural_language: For every request r and every logical edit e, if r is a submission of logical edit e — that is, r
+        is one of the requests by which logical edit e is submitted to the server, including e's original first submission
+        and every later retransmission or retry submission of the same edit, and a submission of a different logical edit
+        does not satisfy this condition for e — then the client-supplied logical edit identity carried by request r is equal
+        to the client_change_id assigned to logical edit e.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 96afba97b6073e0a4cc83baa2fb12500e5938f9943ef21f7805a11af87ace5d3
+        verdict: EQUIVALENT
+        reason: For every request r and logical edit e, if r submits e — a predicate whose meaning explicitly includes the
+          original submission and every retry or retransmission of e — the formula requires request_change_id(r) to equal
+          logical_edit_change_id(e). Hence all submissions and retries of the same logical edit carry the same client_change_id,
+          with no requirement added or omitted.
+        differences: []
+      strengthening:
+        subject_signature: 96afba97b6073e0a4cc83baa2fb12500e5938f9943ef21f7805a11af87ace5d3
+        verdict: EQUIVALENT
+        reason: The formula restricts quantification to requests satisfying the submission predicate for a logical edit, whose
+          meaning covers the first submission and every retry, and requires each such request's carried client_change_id to
+          equal that edit's assigned client_change_id. This yields exactly pairwise sameness across submissions/retries of
+          one edit, with no added uniqueness across distinct edits or constraints on non-submissions.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 96afba97b6073e0a4cc83baa2fb12500e5938f9943ef21f7805a11af87ace5d3
+        verdict: EQUIVALENT
+        reason: The rendering quantifies over all requests and logical edits, defines submission to include the original submission
+          and every retry/retransmission of the same edit while excluding submissions of different edits, and requires each
+          such request's carried identity to equal that edit's client_change_id, which is exactly the original requirement
+          that all submissions and retries of one logical edit carry the same client_change_id, with no added or omitted condition.
+        differences: []
+  claim:L204_state_dependent_rejection_uses_authoritative_context:
+    kind: claim
+    subject_id: L204_state_dependent_rejection_uses_authoritative_context
+    subject_signature: 1ae289f327567ab177eca2e543adbb1b1814f4ca202a87fb4c073b9ea5e4409c
+    roundtrip:
+      subject_signature: 1ae289f327567ab177eca2e543adbb1b1814f4ca202a87fb4c073b9ea5e4409c
+      status: TRANSLATED
+      natural_language: 'For every terminal result record t, if t is an authoritative rejected terminal result that has a
+        definitive rejection reason whose truth depends on document/history state, then both of the following hold: (1) the
+        definitive rejection decision from which t derives is bound to authoritative same-document rejection context rather
+        than unvalidated stale owner-local state; and (2) the authoritative context/evidence for that same definitive rejection
+        decision remains sufficient when the terminal result t linearizes, either because it is current or because a reason-specific
+        guard, a monotonicity argument, or revalidation preserves the rejection truth.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 1ae289f327567ab177eca2e543adbb1b1814f4ca202a87fb4c073b9ea5e4409c
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over terminal results, restricts to state-dependent authoritative REJECTED
+          results, and requires both that the producing definitive rejection decision be bound to authoritative same-document
+          context rather than unvalidated stale state and that this context/evidence remain sufficient at terminalization,
+          preserving the request-intrinsic exclusion and allowing preserved validity via guard, monotonicity, or revalidation.
+        differences: []
+      strengthening:
+        subject_signature: 1ae289f327567ab177eca2e543adbb1b1814f4ca202a87fb4c073b9ea5e4409c
+        verdict: EQUIVALENT
+        reason: 'The formula universally quantifies over terminal results, restricts via the state-dependent predicate to
+          the claim''s scope (excluding request-intrinsic reasons), and requires exactly the two source conditions for the
+          producing decision: binding to an authoritative same-document rejection context and reason-specific sufficiency
+          at terminalization. No extra equality, cardinality, arbitration, or provenance requirement is added, and no source
+          condition is omitted.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 1ae289f327567ab177eca2e543adbb1b1814f4ca202a87fb4c073b9ea5e4409c
+        verdict: EQUIVALENT
+        reason: The rendering preserves the quantifier, state-dependent precondition, same-document binding, provenance direction,
+          sufficiency at terminalization (via current state or reason-specific guard/monotonicity/revalidation), and exclusion
+          of request-intrinsic reasons, without adding or omitting a requirement.
+        differences: []
+  claim:L183_definitive_rejection_preserves_request_provenance:
+    kind: claim
+    subject_id: L183_definitive_rejection_preserves_request_provenance
+    subject_signature: 62083b2e10147621c23f0eecc7d3f3114b726dc46bc35788ef2442ff65fb4ba4
+    roundtrip:
+      subject_signature: 62083b2e10147621c23f0eecc7d3f3114b726dc46bc35788ef2442ff65fb4ba4
+      status: TRANSLATED
+      natural_language: 'For every terminal result record t, if t is an authoritative REJECTED terminal result carrying a
+        definitive rejection reason, then, letting d be the definitive rejection decision from which t derives and letting
+        r be the exact submitted request for which d was produced, all of the following hold together: (1) t and r carry the
+        exact same full (document_id, client_change_id) identity; (2) when the definitive rejection reason depends on raw_edit
+        or base_revision, d uses those exact values from its bound submitted request r; and (3) for the processing path that
+        yields d from that exact submitted request r and carries the rejection that becomes the authoritative REJECTED terminal
+        result t, every applicable validation, OT/rebase evaluation, asynchronous routing, per-key arbitration, and terminal-commit
+        boundary preserves r as the producer binding, where revalidation, recomputation, or repackaging is permitted only
+        when the rejection that can feed t remains produced from that same exact request r, substituting another request instance
+        or logical edit and later repairing the endpoint does not satisfy this preservation even when the substitute is extensionally
+        equal, and the preserved binding carries r''s exact document_id/client_change_id and, when the definitive reason depends
+        on them, r''s raw_edit/base_revision semantics; this preservation predicate requires no listed stage to exist when
+        inapplicable and asserts no single-valued terminal arbitration, no replay of an already-linearized result, no current-owner-generation
+        authorization, and no liveness, retry, or delivery.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 62083b2e10147621c23f0eecc7d3f3114b726dc46bc35788ef2442ff65fb4ba4
+        verdict: EQUIVALENT
+        reason: The formula quantifies over every authoritative REJECTED terminal result, derives its definitive rejection
+          decision and that decision's exact submitted request, and requires full (document_id, client_change_id) identity
+          match, conditional raw_edit/base_revision match when the reason depends on them, and preservation of that exact
+          producer binding through the applicable routing, arbitration, and commit path, without adding excluded arbitration,
+          replay, owner-generation, or liveness requirements.
+        differences: []
+      strengthening:
+        subject_signature: 62083b2e10147621c23f0eecc7d3f3114b726dc46bc35788ef2442ff65fb4ba4
+        verdict: EQUIVALENT
+        reason: The formula quantifies over every authoritative REJECTED terminal result, derives its decision and that decision's
+          exact submitted request, requires identical (document_id, client_change_id), requires raw_edit/base_revision to
+          match that same request when rejection-relevant, and requires the producer binding to be preserved through routing,
+          arbitration and commit, without adding the contract's excluded arbitration, replay, or owner-generation guarantees.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 62083b2e10147621c23f0eecc7d3f3114b726dc46bc35788ef2442ff65fb4ba4
+        verdict: EQUIVALENT
+        reason: The round-trip preserves the same universal scope over authoritative REJECTED terminal results, the same (document_id,
+          client_change_id) identity, the conditional dependence on the bound request's raw_edit/base_revision, and instance-exact
+          producer provenance preserved through the processing, routing, arbitration, and commit path. Its anti-substitution
+          and stage-applicability wording clarifies exactness without adding a new guarantee, and it correctly asserts no
+          single-valued arbitration, replay, owner-generation authorization, or liveness beyond the source.
+        differences: []
+  claim:L117_retry_existing_acceptance_matches_full_idempotency_key:
+    kind: claim
+    subject_id: L117_retry_existing_acceptance_matches_full_idempotency_key
+    subject_signature: 8331dbcdb8d02d21b64b239e87e1fa2c41b26d591e74481bbb785ac82767965b
+    roundtrip:
+      subject_signature: 8331dbcdb8d02d21b64b239e87e1fa2c41b26d591e74481bbb785ac82767965b
+      status: TRANSLATED
+      natural_language: 'For all requests r, all logical edits e, and all canonical acceptances a0, if all of the following
+        hold: (1) r is a retry or retransmission of the same logical client edit e rather than a new logical edit; (2) r is
+        a normal retry whose full idempotency identity remains within the 30-day normal retry eligibility horizon, meaning
+        r was submitted as an ordinary protocol retry while its identity''s pending/retry age did not exceed 30 days; (3)
+        the document_id component of the full identity carried by a0 equals the document identity carried by r; (4) the client_change_id
+        component of the full identity carried by a0 equals the client-supplied logical edit identity carried by r; and (5)
+        a0 is committed as the matching canonical acceptance for the corresponding ACCEPTED terminal outcome, and the execution
+        that committed a0 is the acceptance execution that produced a0, then both of the following hold: (a) if processing
+        of r becomes externally terminal, meaning it produces an externally visible terminal outcome for r''s idempotency
+        identity, whether an accepted result or a definitive negative result, and not merely remaining pending, timing out,
+        or being cancelled, then the externally terminal outcome reached by processing r returns exactly a0, meaning the terminal
+        result exposed by r''s processing is the successful accepted result whose record is a0, not a definitive negative
+        result and not a different acceptance record; and (b) for every canonical acceptance a, if the externally terminal
+        outcome reached by processing r returns exactly a, then a is equal to a0.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 8331dbcdb8d02d21b64b239e87e1fa2c41b26d591e74481bbb785ac82767965b
+        verdict: EQUIVALENT
+        reason: 'The formula matches the source: it requires a retry of the logical edit within the normal 30-day horizon,
+          requires the committed canonical acceptance to match both components of the retry''s full identity (document_id
+          and client_change_id), allows non-terminal pending/timeout/cancelled processing, and requires any externally terminal
+          outcome to return that acceptance while the uniqueness clause forbids returning any different acceptance, thereby
+          also excluding definitive negative terminal outcomes and mismatched-key acceptances.'
+        differences: []
+      strengthening:
+        subject_signature: 8331dbcdb8d02d21b64b239e87e1fa2c41b26d591e74481bbb785ac82767965b
+        verdict: EQUIVALENT
+        reason: The formula's antecedent captures a normal retry within the 30-day horizon whose document_id and client_change_id
+          both match a committed canonical acceptance, and its consequent allows non-terminal pending/timeout/cancelled processing
+          while requiring any externally terminal outcome to return exactly that acceptance and no other, matching the source's
+          exclusion of definitive negative outcomes and other-key acceptances.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 8331dbcdb8d02d21b64b239e87e1fa2c41b26d591e74481bbb785ac82767965b
+        verdict: EQUIVALENT
+        reason: The rendering preserves the full (document_id, client_change_id) identity match, the normal-retry and 30-day
+          eligibility preconditions, the already-committed canonical acceptance, and the scope excluding pending, timeout,
+          and cancellation; any other externally terminal outcome must return exactly that same acceptance, excluding definitive
+          negative outcomes and acceptances for any other identity.
+        differences: []
+  claim:L54_absent_key_winner_returns_its_canonical_acceptance:
+    kind: claim
+    subject_id: L54_absent_key_winner_returns_its_canonical_acceptance
+    subject_signature: a6119269e798cf7ddbf26f5507027bd76db0c8a688de9bbaa325177975c6ee1f
+    roundtrip:
+      subject_signature: a6119269e798cf7ddbf26f5507027bd76db0c8a688de9bbaa325177975c6ee1f
+      status: TRANSLATED
+      natural_language: 'For every protocol transition t and every idempotency key k, if all of the following hold: (1) t
+        is a reprocessing attempt for the exact full idempotency key k, i.e. t is one execution that (re)processes the logical
+        edit identified by k after its original submission — a retry, reconnect, recovery, or fast-path reprocessing execution
+        for that same edit, as opposed to the processing of the edit''s first submission; (2) t finds its idempotency key
+        k absent, i.e. at t''s idempotency lookup for k, no canonical acceptance and no authoritative terminal result for
+        k was yet committed or observed, so t proceeded onto the absent-key path as a contender for producing k''s first acceptance
+        rather than onto the existing-key return path; and (3) t wins the absent-key arbitration for k, i.e. t is the acceptance
+        producer for key k on the absent-key path, meaning either no overlapping contender for k existed or t won the absent-key
+        arbitration against every overlapping contender, so t is the one attempt entitled to produce k''s canonical acceptance
+        — then for every canonical acceptance a, if t''s attempt resolution returns the canonical acceptance for key k that
+        is a, i.e. t produced a successful acceptance-resolution outcome for key k (a non-timeout, non-cancellation success,
+        not a pending, timed-out, or cancelled attempt) and the canonical accepted result that outcome returns is exactly
+        a, the canonical accepted result for k, then both of the following hold: (a) t produces the canonical acceptance for
+        key k that is a, i.e. a is the canonical accepted change for key k produced by attempt t itself, t is a''s acceptance
+        producer, and a is committed as t''s own acceptance production for k (an acceptance produced by a different attempt,
+        or merely returned by t, does not count); and (b) t''s success was emitted after its own acceptance commit, i.e. t''s
+        successful acceptance-resolution outcome returning a was emitted only after a itself committed, so no successful outcome
+        of t returning a precedes a''s commit as a canonical accepted change.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: a6119269e798cf7ddbf26f5507027bd76db0c8a688de9bbaa325177975c6ee1f
+        verdict: EQUIVALENT
+        reason: 'The formula preserves all source conditions and guarantees: for a reprocessing attempt t on key k that finds
+          k absent and wins/is uncontended in absent-key arbitration, any outcome captured by the non-timeout, non-cancellation
+          successful resolution predicate returning a must satisfy that a is t''s own produced canonical acceptance for k
+          and that the successful outcome was emitted only after a committed, matching the required identity, provenance,
+          and ordering.'
+        differences: []
+      strengthening:
+        subject_signature: a6119269e798cf7ddbf26f5507027bd76db0c8a688de9bbaa325177975c6ee1f
+        verdict: EQUIVALENT
+        reason: The formula's preconditions exactly capture a reprocessing attempt that finds its key absent and is the uncontended
+          or winning producer, and for any returned canonical acceptance it requires that acceptance to be produced by that
+          same attempt and the successful non-timeout, non-cancellation outcome to be emitted only after that acceptance commits,
+          matching identity, provenance, timing, and exclusion boundaries without added or omitted requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: a6119269e798cf7ddbf26f5507027bd76db0c8a688de9bbaa325177975c6ee1f
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the precondition (reprocessing attempt, absent key, uncontended/winning producer),
+          the non-timeout/non-cancellation success scope, and both guarantees: the returned record is exactly the canonical
+          acceptance produced by that same attempt, and the success is emitted only after that acceptance commits. No requirement
+          is omitted or added.'
+        differences: []
+  claim:L55_successful_retry_resolution_paths_are_exhaustive:
+    kind: claim
+    subject_id: L55_successful_retry_resolution_paths_are_exhaustive
+    subject_signature: 9af0255bb0838f587e15b52e5ce528aa521dd66c207c8d0add054704057d1a73
+    roundtrip:
+      subject_signature: 9af0255bb0838f587e15b52e5ce528aa521dd66c207c8d0add054704057d1a73
+      status: TRANSLATED
+      natural_language: 'For every protocol transition t, every idempotency key k, and every canonical acceptance a: if t
+        is a reprocessing attempt for the exact full idempotency key k — that is, t is one execution that (re)processes the
+        logical edit identified by k after its original submission, such as a retry, reconnect, recovery, or fast-path reprocessing
+        execution for that same edit, as opposed to the processing of the edit''s first submission — and t produced a successful
+        acceptance-resolution outcome for k, meaning a non-timeout, non-cancellation success and not a pending, timed-out,
+        or cancelled attempt, and the canonical accepted result that outcome returns is exactly canonical acceptance a, the
+        canonical accepted result for k, then at least one of the following three cases holds. First case: t did not find
+        its idempotency key k absent — that is, it is not the case that at t''s idempotency lookup for k, no canonical acceptance
+        and no authoritative terminal result for k was yet committed or observed so that t proceeded onto the absent-key path
+        as a contender for producing k''s first acceptance rather than onto the existing-key return path — and t did not produce
+        canonical acceptance a for key k itself, in the sense that a is not the canonical accepted change for k produced by
+        t itself with t as a''s acceptance producer committed as t''s own acceptance production for k. Second case: t did
+        find its idempotency key k absent in the sense just described, and t wins the absent-key arbitration for k, meaning
+        t is the acceptance producer for k on the absent-key path because either no overlapping contender for k existed or
+        t won the absent-key arbitration against every overlapping contender, so t is the one attempt entitled to produce
+        k''s canonical acceptance, and t did produce canonical acceptance a for key k itself in the sense just described.
+        Third case: t did find its idempotency key k absent in the sense just described, and t loses the absent-key arbitration
+        for key k, meaning another overlapping contender for the same absent key k prevailed as the attempt entitled to produce
+        k''s canonical acceptance and t did not, and there exists a protocol transition t2 distinct from t such that t2 wins
+        the absent-key arbitration for k in the sense just described and t2 produced canonical acceptance a for key k itself
+        in the sense that a is the canonical accepted change for k produced by t2 itself with t2 as a''s acceptance producer
+        committed as t2''s own acceptance production for k.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 9af0255bb0838f587e15b52e5ce528aa521dd66c207c8d0add054704057d1a73
+        verdict: EQUIVALENT
+        reason: 'The formula quantifies over every reprocessing attempt, key, and returned canonical acceptance, restricts
+          the antecedent to non-timeout, non-cancellation successful resolutions via the resolution predicate, and requires
+          one of the three source cases: non-absent key with the attempt not producing the returned acceptance (returning
+          an already accepted result), absent key with the attempt winning/uncontended and producing it, or absent key with
+          the attempt losing and a distinct winner producing the same returned acceptance. The cases are mutually exclusive
+          by the absent/present distinction and the stated win/lose exclusivity, preserving the exactly-one requirement and
+          the same key and acceptance identity throughout.'
+        differences: []
+      strengthening:
+        subject_signature: 9af0255bb0838f587e15b52e5ce528aa521dd66c207c8d0add054704057d1a73
+        verdict: EQUIVALENT
+        reason: The formula's precondition exactly captures reprocessing attempts with non-timeout, non-cancellation successful
+          resolutions returning canonical acceptance a, and its three disjuncts match returning an already accepted result
+          (not absent, not self-produced), absent-key winning/uncontended self-production, and absent-key losing with resolution
+          through a distinct winner t2 that produced the same a. The disjuncts are mutually exclusive via absent vs not-absent
+          and the stated win/lose exclusivity, preserving the exactly-one requirement without extra scope or cardinality.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 9af0255bb0838f587e15b52e5ce528aa521dd66c207c8d0add054704057d1a73
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the scope (reprocessing attempts with non-timeout, non-cancellation success returning
+          the canonical acceptance for the exact key) and the three authoritative cases: non-absent/non-producing return,
+          absent winning/uncontended self-production, and absent losing with the distinct winner producing the returned acceptance.
+          The cases are mutually exclusive by absent versus non-absent, win versus lose, and producer identity, so at least
+          one holding gives exactly one, with no added or omitted requirement.'
+        differences: []
