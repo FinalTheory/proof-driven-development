@@ -230,8 +230,9 @@ refinement:
       blocked_by: []
       signature: 4d83dfc12b890f96feeb57eebe3be0c919126a1cb88fcc2882fcd0a73c40ff61
     L14_accepted_idempotency_identity_survives_lifecycle:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: c7247122607eff42fad9e53867f7bc985ad09069218b821085ce7bef158d4b2d
     L4_append_requires_previous_frontier:
       status: stable
       blocked_by: []
@@ -285,8 +286,9 @@ refinement:
       blocked_by: []
       signature: 3183daf5cd6bff8d69574c1623e3bc16c7c9c94b66f10c0a0cf30ce8300973fc
     L27_concurrent_first_acceptance_is_atomically_arbitrated:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 616cc1579301cadbdd4e97d5adb674990827f8fb5853041296ed30ef73ccd4e7
     L28_authoritative_epoch_never_regresses_or_reuses:
       status: stable
       blocked_by: []
@@ -392,8 +394,9 @@ refinement:
       blocked_by: []
       signature: 92ce2cd3bbd4090798be6a9cd89b3b10bff1b56d1c808095cefec293902bdf06
     L99_ot_result_is_bound_to_acceptance_frontier:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 97c05fa7caa35394fd43d2e6c5155ed389a72c443e66f1e36d1759863aa6c04d
     L101_client_completes_catchup_through_response_head:
       status: stable
       blocked_by: []
@@ -403,18 +406,21 @@ refinement:
       blocked_by: []
       signature: a94c1e137be40ee990de390be276aaaf34c04e6b05007c3a462051377030826f
     L106_resync_request_covers_start_pending_set:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 7ab0c8c6b6516e7bc3ca1a2e78cfd047121e7d415a44097636f58dacc6399305
     L107_client_freezes_speculative_edits_during_resync:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 497f9d13e75fe741f1a72b26afa1a92d1c25b28b710afdb8341a89774a7bb344
     L108_acceptance_preserves_request_identity:
       status: stable
       blocked_by: []
       signature: 3feb1498840ff792b6e7e05e1726db4d4fe6045b45c26514fdf436f7b27ceffa
     L109_resync_publication_is_atomic_and_monotonic:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 57c9808c71543c2688f0f4162533e8784f4debe3f2e1e24ee48d6ccbc663cd3b
     L110_client_retires_matching_speculative_overlay_before_canonical_publication:
       status: stable
       blocked_by: []
@@ -464,8 +470,9 @@ refinement:
       blocked_by: []
       signature: 5db30c921aae5b2b1f2a841e8570b721f8b134fe551da3d4af33066139dcef5d
     L123_acceptance_payload_and_identity_share_submitted_request:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 8a929e32e046e771ea12c2539434fadba672108e215c0fed75188ed769a1b093
     C37_pending_identity_resolution_is_bound_to_response_head:
       status: stable
       blocked_by: []
@@ -483,18 +490,21 @@ refinement:
       blocked_by: []
       signature: 1dcf66ef900edaba412a9cb9c8425a8de65def35a0e47bc1ff508b0a58b152ae
     L128_client_canonical_frontier_is_established_on_publication:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: ca65117e301d4b00cf57497ed0e89662ed2d4d7168942849f08ce60aa0712739
     L129_client_canonical_frontier_is_preserved_by_visible_transitions:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: d866a30129f0c93894189edf7188b3509f7a450dd3d68180c56448ad7e19da8f
     C38_client_frontier_matches_canonical_base:
       status: stable
       blocked_by: []
       signature: 4120c94bbbe8edd3755e6fc28c3853961d59d624be5f8be40aa894f67337e15a
     L130_reconnect_start_is_bound_to_visible_client_tuple:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 1670d26ae66abd66788e184f714566591e975be29835ed7ba56895ca36485014
     L131_post_recovery_acceptance_state_is_exhaustive:
       status: stable
       blocked_by: []
@@ -504,8 +514,9 @@ refinement:
       blocked_by: []
       signature: 16081cd4a26207e1a939ee55530be34b0d4db229260cb51d53aa00c94e3f943a
     L133_visible_overlay_document_binding_preserved_by_local_transitions:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 4bf593b0e54452724d35f1472608fa293af734bba797e6336108ca77c08f56b8
     G11_visible_speculative_overlays_match_document:
       status: stable
       blocked_by: []
@@ -562,8 +573,9 @@ refinement:
       blocked_by: []
       signature: 680607daad4419ec89847a16f767a4295da89e4a36f8fb0e3f1b41d1d04b8a33
     L155_unresolved_speculative_edit_has_pending_entry:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 1fd95998c4eb288dc07badfb959a030fb025754d6f9bcbf077a37fcaeb3a58c0
     G12_client_pending_state_tracks_unresolved_edits:
       status: stable
       blocked_by: []
@@ -593,11 +605,13 @@ refinement:
       blocked_by: []
       signature: 7717bf770173bf217e3fd82cc84a91189d9d061e9ad44a3a3e0fe38ba28f1990
     L163_accepted_terminal_outcome_commits_with_canonical_acceptance:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: a479c38cf56291e0792415c5266d567c452dbfea4ada9d417e665796af47e203
     L164_terminal_paths_share_per_key_arbitration:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 183d55f76e78e8df36a87f8513cc12ab7f2f79a4b12a205296de044bac01ef9e
     C40_terminal_outcome_is_single_valued_per_idempotency_key:
       status: stable
       blocked_by: []
@@ -651,15 +665,17 @@ refinement:
       blocked_by: []
       signature: 2aa288f58b1d322400b6c836849a7fadc8488a46f47be37ee614225f6cd536cd
     L177_catchup_canonical_sources_preserve_document_provenance:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 33478dc41504b01f600cf0f4456b6e7fdb2682e64f1871e187bd98793804a2af
     L178_non_append_lifecycle_preserves_authoritative_document_provenance:
       status: stable
       blocked_by: []
       signature: 6128622216b25c956068d6370877b9761b864e12cc67d5a1c30ff7eaac65ee20
     L179_speculative_overlay_identity_provenance_is_preserved:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: a3d5f868523de4c45fcf73be42df2601575d07a3e86458c452466d3381dd27fe
     L180_non_append_lifecycle_preserves_logical_state_at_frontier:
       status: stable
       blocked_by: []
@@ -702,8 +718,9 @@ refinement:
       status: pending
       blocked_by: []
     L190_authoritative_terminal_publication_surfaces_are_exhaustive:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: dd0da788def95b29549c6b78b8c2d1f613440745e7077e54f5648c8ca0560ff7
     L192_terminal_publication_preserves_store_identity_provenance:
       status: pending
       blocked_by: []
@@ -740,8 +757,9 @@ refinement:
       blocked_by: []
       signature: 7ae7d43bc4b0edda7ee81c9ba4fc5c5175b95e54d933cc87c38a3ea24abbf2c9
     L203_non_acceptance_terminal_disposition_preserves_edit_provenance:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 1481738944d747325d39ef9c85516a847fc70a879f26e724834e97933492e630
     L204_state_dependent_rejection_uses_authoritative_context:
       status: stable
       blocked_by: []
@@ -751,8 +769,9 @@ refinement:
       blocked_by: []
       signature: 3afd4b775874e0f0fcc0c5261712cd91d783b80bdc7ba0cab2d715c03c85c0d7
     L206_terminal_speculative_lifecycle_is_absorbing:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: dc2f87c5eb70b37d310ec1646c380c69efd1fe0ca320f3b5cb103b91e23664ee
     L207_visible_canonical_frontier_never_regresses_per_session_document:
       status: stable
       blocked_by: []
@@ -777,6 +796,9 @@ refinement:
       status: stable
       blocked_by: []
       signature: 177e13adf27abfb1827ffbf4a343db8ef9082d3d232f9a73686db2207e452d2b
+    L213_terminal_result_store_records_have_single_acceptance_creation_provenance:
+      status: pending
+      blocked_by: []
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -2327,7 +2349,9 @@ claims:
       the candidate's response head, that publication removes or suppresses the speculative overlay
       for (D,k) before or atomically with publication, so no user-visible state exposes both
       representations; and no intermediate resync candidate exposes a canonical prefix that already
-      contains acceptance(D,k) together with its overlay.
+      contains acceptance(D,k) together with its overlay. A stale response — one whose head H is
+      behind the currently visible frontier F — may not restore a speculative overlay or
+      pending-resolution state removed by a newer published reconciliation.
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
@@ -2715,7 +2739,9 @@ claims:
       satisfies the OT engine algorithmic convergence contract for that input and prefix, the
       acceptance itself satisfies the algorithmic convergence contract. The submitted request from
       which a canonical acceptance is produced is a submitted_request eligible for server-side OT or
-      an authoritative terminal decision.
+      an authoritative terminal decision. An OT invocation whose successful output is actually
+      committed as a canonical acceptance is, by definition, on the canonical-acceptance-eligible
+      path; it is not a dry-run, speculative-only, or rejection-only invocation.
     source_refs:
       - ot_input_output
       - accepted_change_log
@@ -2943,7 +2969,10 @@ claims:
       only from a user-visible state at which reconnect initiation is enabled, so every state an attempt
       is initiated from is an initiation-enabled state. Reconnect-start construction may not independently
       reread, substitute, synthesize, or cross-bind any of those three coordinates across a visible-state
-      transition. Background or non-visible per-document synchronization is outside this obligation.'
+      transition. Background or non-visible per-document synchronization is outside this obligation. The
+      document identity of the attempt is the visible tuple''s own client_document_id, the canonical base
+      of the attempt is that same tuple''s canonical client document, and every attempt is initiated from
+      an existing initiation-enabled user-visible state representing D.'
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
@@ -3152,18 +3181,10 @@ claims:
     kind: leaf
   L137_authoritative_history_mutators_are_exhaustively_classified:
     statement: 'Every authoritative write that can create or change accepted_change_log or document_latest_revision
-      is covered by at least one correctness-relevant transition class whose preservation proof applies:
-      document-state initialization, a committed canonical accepted-change append, or an authoritative
-      non-append representation/lifecycle transition that accepts no new edit. In these covered classes,
-      the append class is the committed accepted-change append as the canonical-history guarantee states
-      it: each such append at revision r preserves the entire prior logical accepted prefix, adds exactly
-      revision r as the next position, and advances document_latest_revision to r. The covered classes
-      are exactly the transition classes across whose steps the frontier coherence of that guarantee is
-      preserved step by step: in every authoritative state for a document, accepted_change_log and document_latest_revision
-      denote exactly one gap-free canonical accepted prefix ending at document_latest_revision. No authoritative
-      mutation path may change either symbol without belonging to one of these covered classes. Consequently,
-      every authoritative state for a document is either produced by document-state initialization or
-      reachable from that document''s initialization state through transitions in these covered classes.'
+      belongs to at least one of the three covered transition classes: document-state initialization,
+      a committed canonical accepted-change append, or an authoritative non-append representation/lifecycle
+      transition that accepts no new edit. No authoritative mutation path may change either symbol without
+      belonging to one of these covered classes.'
     source_refs:
       - authoritative_truth
       - final_architecture
@@ -4350,6 +4371,7 @@ claims:
       - L192_terminal_publication_preserves_store_identity_provenance
       - L195_rejected_terminal_publication_excludes_canonical_acceptance
       - L163_accepted_terminal_outcome_commits_with_canonical_acceptance
+      - L213_terminal_result_store_records_have_single_acceptance_creation_provenance
   L190_authoritative_terminal_publication_surfaces_are_exhaustive:
     statement: Every path that can expose an ACCEPTED or REJECTED terminal result for a
       normal_retry_eligible_identity to a protocol consumer flows through
@@ -4375,12 +4397,7 @@ claims:
     statement: 'Every ACCEPTED or REJECTED terminal result exposed through terminal_outcome_publication_gate
       exactly reproduces the authoritative terminal_result read from durable_terminal_outcome_store for
       the same full (document_id, client_change_id) identity; publication cannot substitute another key,
-      another stored value, or an attempt-local result. The authoritative terminal_result in durable_terminal_outcome_store
-      for an identity is the creation record of the single acceptance execution that produced it: an authoritative
-      ACCEPTED terminal_result is present in the store only as the record created for its eligible full
-      identity by the same acceptance execution whose single transaction atomically commits both that
-      result and its matching canonical accepted change, so a published ACCEPTED result is that authoritative
-      creation record.'
+      another stored value, or an attempt-local result.'
     source_refs:
       - accepted_change_log
       - storage_selection
@@ -4909,6 +4926,27 @@ claims:
             already-linearized in-horizon ACCEPTED terminal_result and prove each path is classified
             into exactly one approved lifecycle category, with no bypass writer or unclassified
             transition.
+    kind: leaf
+  L213_terminal_result_store_records_have_single_acceptance_creation_provenance:
+    mechanisms:
+      - durable_terminal_outcome_store
+      - terminal_outcome_publication_gate
+    source_refs:
+      - accepted_change_log
+      - storage_selection
+      - final_architecture
+    statement: The authoritative terminal_result in durable_terminal_outcome_store for an identity
+      is present in the store only as the creation record created for its eligible full identity by
+      the single acceptance execution that produced it; no other write path creates an authoritative
+      terminal_result in the store.
+    verification:
+      verifiers:
+        - intent: Enumerate every write path capable of creating a terminal_result record in
+            durable_terminal_outcome_store, including acceptance, retry, repair, backfill, and
+            publication-side paths. Require every authoritative terminal_result to have been created
+            for its eligible full identity by the single acceptance execution that produced it, and
+            reject any other creation path.
+          kind: control_flow
     kind: leaf
 catalog:
   terms:
@@ -6256,7 +6294,7 @@ id_allocator:
     A: 7
     G: 13
     C: 48
-    L: 213
+    L: 214
     D: 15
     T: 3
 assurance:
@@ -6301,22 +6339,7 @@ assurance:
     G5_retry_resolves_idempotently:
       status: unaudited
     C7_revision_frontier_is_linear:
-      status: machine_checked
-      rationale: "Trusted symbolic translations exist for C7 and all six direct premises (L4, L6, L22,
-        L29, L33, L137) at their current signatures (L137 ea5fdc3c... under the D10/D11-A statement supplement
-        with the fixC bridge; L4 8d266477... retreated to its reviewer-blessed clause 1). The composition
-        check (finite_transitive_invariant_lift_then_smt) returns ENTAILED. Load-bearing mutation tests
-        (premise replaced by True) return COUNTEREXAMPLE for L29 and L137, so the composition is not vacuous.
-        Four premises are not individually load-bearing in the current encoding, each recorded here in
-        the manner of D9 rather than blocking registration: L4, because with L4 retreated to clause 1
-        per D11 the step-level append guard its dropped clauses used to supply is asserted by L137 itself
-        as the append class's definitional guard (the guard D11-A wrote into L137's statement from C7's
-        own words) -- D11 pre-registered exactly this outcome; and L6, L22 and L33, because the fixC-strengthened
-        L137 now asserts their former supply directly under its supplemented statement (the universal
-        frontier-coherence invariant and initialization base case absorb L22's and part of L6's supply;
-        the append-effect conclusion absorbs L33's and the rest of L6's). All four remain premises of
-        C7 and their translations are TRUSTED."
-      signature: 8ef8251ff6db91a4ce55baa90b2954c1324f390457f656bd5207b3971ea4db1c
+      status: unaudited
     C8_stale_owner_is_fenced:
       status: unaudited
     C9_recovery_reconstructs_committed_state:
@@ -6481,15 +6504,7 @@ assurance:
         is necessary to establish the target.
       signature: 83bd279ba07c71d027abb1348776da837aa995a59d6aea7862ab7eb1f8941697
     C45_terminal_outcome_publication_matches_canonical_acceptance:
-      status: machine_checked
-      rationale: "Trusted symbolic translations exist for C45 and all four direct premises L190, L192,
-        L195 and L163. The composition check (direct SMT) found the premises together with NOT(C45) UNSAT.
-        Independent mutation tests that replace L190, L192 or L195 with True each become SAT with a concrete
-        counterexample, demonstrating those three premises are necessary. Replacing L163 with True leaves
-        the target entailed: L163 is a declared premise but is not load-bearing for this composition,
-        because L192's certified store-identity package already supplies the same-transaction committedness
-        content for stored records."
-      signature: 25422d9fb6721206918823e4de977f5d56ddf7b68106ed8b70b67fbc39221928
+      status: unaudited
     C46_accepted_terminal_result_preserves_acceptance_provenance:
       status: machine_checked
       rationale: Trusted symbolic translations exist for C46 and all five direct premises L197, C47,
@@ -6743,6 +6758,8 @@ assurance:
     L211_accepted_terminal_result_origin_is_authoritative:
       status: planned
     L212_accepted_terminal_lifecycle_categories_are_exhaustive:
+      status: planned
+    L213_terminal_result_store_records_have_single_acceptance_creation_provenance:
       status: planned
 formalization:
   claims:
@@ -7057,6 +7074,8 @@ formalization:
     L211_accepted_terminal_result_origin_is_authoritative:
       mode: symbolic
     L212_accepted_terminal_lifecycle_categories_are_exhaustive:
+      mode: symbolic
+    L213_terminal_result_store_records_have_single_acceptance_creation_provenance:
       mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:
