@@ -6704,7 +6704,12 @@ assurance:
         demonstrating that both direct premises are necessary to establish the target.
       signature: 28b22e7e2a2fb006dd6a3a777e3c0d8688b9fe9cf28f5164173e52db4f81a135
     C16_non_append_lifecycle_preserves_logical_revision_prefix:
-      status: unaudited
+      status: machine_checked
+      rationale: 'symbolic-compose ENTAILED (solver unsat) over TRUSTED premise translations, after the
+        D43 premise package (L219/L220) and the L181 no-new-edit guard repair. Premise-ablation diagnostics
+        (not a soundness gate): all 6 premises (L172, L178, L180, L181, L219, L220) individually load-bearing;
+        no redundancy.'
+      signature: 8181bb74fc99bb96311d0a634842185eb70dcb69c6dbf06ca7ac1662c6cdd67b
     C17_snapshot_mode_selects_checkpoint_not_after_head:
       status: machine_checked
       rationale: Trusted symbolic translations exist for C17 and both direct premises L37 and L38.
@@ -6802,9 +6807,17 @@ assurance:
         demonstrating that all six premises are individually necessary.'
       signature: 2014c7230d44c75051a50c3cc7c04797986408a642771bc29b9f2dd44059cfb4
     C39_authoritative_history_state_is_gap_free:
-      status: unaudited
+      status: machine_checked
+      rationale: 'symbolic-compose ENTAILED (solver unsat) over TRUSTED premise translations. Premise-ablation
+        diagnostics (not a soundness gate): all 6 premises (L137, L138, L139, L140, L215, L216) individually
+        load-bearing; no redundancy.'
+      signature: 75a66df41079dea21773f0ae0ad3f088642f647786a4ce07b8ad0c87085492be
     G12_client_pending_state_tracks_unresolved_edits:
-      status: unaudited
+      status: machine_checked
+      rationale: 'symbolic-compose ENTAILED (solver unsat) over TRUSTED premise translations. Premise-ablation
+        diagnostics (not a soundness gate): all 8 premises (L154, L155, L158, L203, L206, L208, L209,
+        L221) individually load-bearing; no redundancy.'
+      signature: 500c4959498adbb7cf76a2b50f9321e4bbae185b7b1fa053bd36bdd92d13ab00
     C40_terminal_outcome_is_single_valued_per_idempotency_key:
       status: unaudited
     C41_pending_identity_revision_evidence_survives_lifecycle:
