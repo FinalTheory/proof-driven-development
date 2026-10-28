@@ -312,8 +312,9 @@ refinement:
       blocked_by: []
       signature: 4710b1edb87279f44a794970dc54ad1d4afc2e6cdcc95b66fd4e9feade6516f2
     L35_losing_retry_resolves_through_canonical_acceptance:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: f16d51628f99525af452ccae17aeb9feb0d7ee517693ea4f79e16adb9bcfe628
     C17_snapshot_mode_selects_checkpoint_not_after_head:
       status: stable
       blocked_by: []
@@ -609,8 +610,9 @@ refinement:
       blocked_by: []
       signature: 183d55f76e78e8df36a87f8513cc12ab7f2f79a4b12a205296de044bac01ef9e
     C40_terminal_outcome_is_single_valued_per_idempotency_key:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: d666de97a1609fbb9283f2bbe6c515c8846766c8215ead5d0b0d320b8b898ef1
     L165_pending_identity_revision_evidence_survives_retention:
       status: stable
       blocked_by: []
@@ -804,26 +806,33 @@ refinement:
       blocked_by: []
       signature: 58ed209733c23788db4ac68c0eda67354b8a0907396e3a22608b5b669bf19058
     L215_denotation_change_is_coordinate_change:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 0b00305ea9f65908520ea668499bd4245ecd4581307c486d2d0727e8542c9d5e
     L216_authoritative_state_descends_from_initialization:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 069b3145c8cce4aeef6959dff9600f7541675a9a4f877a68bd7b9dfe09019d61
     L217_append_step_commits_acceptance_at_previous_frontier:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 24431563159bbb05c25107c82ef1c2b600b9ee7c7a7261962e2b217adf76abf5
     L218_append_at_next_position_preserves_frontier_shape:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 2cb527621380b76ab103ae58e54396198a5ba8d242ef7a04fb95c92f835534e3
     L219_lifecycle_completion_frontier_matches_after_appends_head:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 7e756c299f5e77286783b48dae7000a846aef2333630941affa3a16fb70cec6d
     L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: bc565c7a9a1aa0232524a75a08241f6b08941b661bb182f3530e6777a9fe0ed6
     L221_bookkeeping_speculative_removal_does_not_resolve_lifecycle:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 7ead29336a212b11b6b0f6e63a1abb7985850b98156223b4fc83c17ab53ff518
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with

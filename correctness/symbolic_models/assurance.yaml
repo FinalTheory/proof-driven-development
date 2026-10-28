@@ -11917,3 +11917,62 @@ records:
           outcome per key, and the exclusion of pending, timeout, cancellation, transport loss, and crash-before-commit as
           non-terminal, with no material weakening or strengthening.
         differences: []
+  claim:L35_losing_retry_resolves_through_canonical_acceptance:
+    kind: claim
+    subject_id: L35_losing_retry_resolves_through_canonical_acceptance
+    subject_signature: fc6067254b5b57cc50af07d3205633b4d529dcfdf2df230bc800d45b87728696
+    roundtrip:
+      subject_signature: fc6067254b5b57cc50af07d3205633b4d529dcfdf2df230bc800d45b87728696
+      status: TRANSLATED
+      natural_language: 'For every protocol transition t and every idempotency key k, if all of the following hold: (1) t
+        is a reprocessing attempt for the exact full idempotency key k, meaning t is one execution that (re)processes the
+        logical edit identified by k after its original submission — a retry, reconnect, recovery, or fast-path reprocessing
+        execution for that same edit, as opposed to the processing of the edit''s first submission; (2) t found its idempotency
+        key k absent, meaning at t''s idempotency lookup for k, no canonical acceptance and no authoritative terminal result
+        for k was yet committed or observed, so t proceeded onto the absent-key path as a contender for producing k''s first
+        acceptance rather than onto the existing-key return path; and (3) t lost the absent-key arbitration for k, meaning
+        another attempt contending for the same absent key k prevailed as the attempt entitled to produce k''s canonical acceptance
+        and t did not, where losing and winning the same arbitration for the same key are mutually exclusive outcomes for
+        one attempt — then all of the following hold: (A) t does not produce an outcome that exposes an arbitration conflict
+        as a successful resolution, meaning what t presents as success is not a conflict or race artifact of contending for
+        its key rather than a canonical accepted result; (B) for every canonical acceptance a, if t produces canonical acceptance
+        a for k, meaning a is the canonical accepted change for k produced by t itself, t is a''s acceptance producer, and
+        a is committed as t''s own acceptance production for k, with an acceptance produced by a different attempt or merely
+        returned by t not satisfying this, then t is the sole acceptance producer for k, meaning the canonical acceptance
+        for k, if one is produced, is produced by t and no other attempt produces a canonical acceptance for k; (C) for every
+        canonical acceptance a, if t produced a successful acceptance-resolution outcome for k — a non-timeout, non-cancellation
+        success, not a pending, timed-out, or cancelled attempt — and the canonical accepted result that outcome returns is
+        exactly a, the canonical accepted result for k, then either (i) t produces a for k and t is the sole acceptance producer
+        for k, or (ii) there exists a protocol transition t2 distinct from t such that t2 produces a for k; (D) for every
+        canonical acceptance a, if t produced a successful acceptance-resolution outcome for k — a non-timeout, non-cancellation
+        success, not a pending, timed-out, or cancelled attempt — and the acceptance that outcome returns is a, where this
+        by itself does not assert that a is the canonical accepted result for k, then t produced a successful acceptance-resolution
+        outcome for k returning exactly a as the canonical accepted result for k; and (E) for every canonical acceptances
+        a and a2, if t produces a for k and t produces a2 for k, then a equals a2.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: fc6067254b5b57cc50af07d3205633b4d529dcfdf2df230bc800d45b87728696
+        verdict: EQUIVALENT
+        reason: The formula's antecedent matches the losing absent-key reprocessing scenario, and its conjuncts preserve sole-producer
+          status for any acceptance the attempt produces, canonical status and self-or-other provenance for any returned acceptance-resolution
+          outcome, the prohibition on exposing arbitration conflict as success, and uniqueness of the attempt's produced acceptance
+          (no another acceptance).
+        differences: []
+      strengthening:
+        subject_signature: fc6067254b5b57cc50af07d3205633b4d529dcfdf2df230bc800d45b87728696
+        verdict: EQUIVALENT
+        reason: The formula's precondition exactly captures a reprocessing attempt that finds the key absent and loses absent-key
+          arbitration. Its conjuncts faithfully encode sole-producer status for any self-produced canonical acceptance, canonical
+          status and self-or-other provenance for acceptance-resolution outcomes, no exposure of arbitration conflict as success,
+          and uniqueness of the canonical acceptance the attempt produces.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: fc6067254b5b57cc50af07d3205633b4d529dcfdf2df230bc800d45b87728696
+        verdict: EQUIVALENT
+        reason: 'The round-trip preserves the losing reprocessing attempt''s scope and all guarantees: no conflict-as-success
+          exposure, any acceptance it itself produces makes it the sole producer, any successful non-timeout non-cancellation
+          acceptance-resolution returns the canonical accepted result produced either by itself as sole producer or by another
+          attempt, and no distinct second acceptance is created. No requirement is omitted or added.'
+        differences: []
