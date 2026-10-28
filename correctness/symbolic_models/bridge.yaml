@@ -13066,6 +13066,27 @@ claims:
                 args:
                 - var: t
                 - var: e
+      - forall:
+          vars:
+            e: LogicalEditIdentity
+            t: ProtocolTransition
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_client_protocol_transition
+                  args:
+                  - var: t
+              - call:
+                  fn: bookkeeping_only_speculative_removal_transition
+                  args:
+                  - var: t
+                  - var: e
+            - call:
+                fn: bookkeeping_removal_does_not_resolve_lifecycle
+                args:
+                - var: t
+                - var: e
   L158_pending_retirement_requires_matching_acceptance_identity:
     capability: relational
     contracts:
