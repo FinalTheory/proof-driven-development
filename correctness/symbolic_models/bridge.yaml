@@ -6139,6 +6139,16 @@ functions:
     - claim:L55_successful_retry_resolution_paths_are_exhaustive
     meaning: 'Canonical acceptance a is the canonical accepted change for key k produced by attempt t itself: t is a''s acceptance producer, and a is committed as t''s own acceptance production for k. An
       acceptance produced by a different attempt, or merely returned by t, does not satisfy this predicate for t.'
+  attempt_resolution_outcome_returns_acceptance:
+    args:
+    - ProtocolTransition
+    - IdempotencyKey
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L35_losing_retry_resolves_through_canonical_acceptance
+    meaning: Attempt t produced a successful acceptance-resolution outcome for key k - a non-timeout, non-cancellation success, not a pending, timed-out, or cancelled attempt - and the acceptance that outcome returns is a. This predicate does not itself assert that a is the canonical accepted result for k.
   attempt_resolution_returns_canonical_acceptance_for_key:
     args:
     - ProtocolTransition
@@ -18702,6 +18712,45 @@ claims:
                               - var: t2
                               - var: k
                               - var: a
+            - forall:
+                vars:
+                  a: CanonicalAcceptance
+                body:
+                  implies:
+                  - call:
+                      fn: attempt_resolution_outcome_returns_acceptance
+                      args:
+                      - var: t
+                      - var: k
+                      - var: a
+                  - call:
+                      fn: attempt_resolution_returns_canonical_acceptance_for_key
+                      args:
+                      - var: t
+                      - var: k
+                      - var: a
+            - forall:
+                vars:
+                  a: CanonicalAcceptance
+                  a2: CanonicalAcceptance
+                body:
+                  implies:
+                  - and:
+                    - call:
+                        fn: attempt_produces_canonical_acceptance_for_key
+                        args:
+                        - var: t
+                        - var: k
+                        - var: a
+                    - call:
+                        fn: attempt_produces_canonical_acceptance_for_key
+                        args:
+                        - var: t
+                        - var: k
+                        - var: a2
+                  - eq:
+                    - var: a
+                    - var: a2
   L54_absent_key_winner_returns_its_canonical_acceptance:
     capability: relational
     contracts: []
