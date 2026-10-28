@@ -613,9 +613,8 @@ refinement:
       blocked_by: []
       signature: 183d55f76e78e8df36a87f8513cc12ab7f2f79a4b12a205296de044bac01ef9e
     C40_terminal_outcome_is_single_valued_per_idempotency_key:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: e844707b7f04e004d738b498f3710baa270a4e3091dbc5c50fb61bf2c58723a4
     L165_pending_identity_revision_evidence_survives_retention:
       status: stable
       blocked_by: []
@@ -3731,8 +3730,12 @@ claims:
     statement: 'idempotency_terminal_outcome_coherence holds for every eligible idempotency_key: idempotency_terminal_outcomes
       contains at most one immutable terminal_result; ACCEPTED is committed atomically with the matching
       canonical accepted change and excludes REJECTED, while REJECTED excludes any current or future canonical
-      acceptance for the same key. All acceptance and definitive-rejection paths arbitrate against this
-      same per-key terminal state.'
+      acceptance for the same key. The REJECTED exclusion applies to every acceptance-creating transition
+      applied while that REJECTED outcome is in force for the key within its eligibility horizon, whether
+      or not the transition''s resulting state remains within that horizon; a submission first applied
+      after the horizon has passed is a new submission outside this proposition, not an acceptance barred
+      by the exclusion. All acceptance and definitive-rejection paths arbitrate against this same per-key
+      terminal state.'
     source_refs:
       - accepted_change_log
       - owner_failover
