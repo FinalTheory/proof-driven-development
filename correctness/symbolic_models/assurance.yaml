@@ -10850,3 +10850,160 @@ records:
           that bookkeeping-only deletion or relabeling does not reconcile, resolve, or terminally dispose of the edit, with
           no added or omitted scope, identity, or cardinality requirement.
         differences: []
+  claim:C8_stale_owner_is_fenced:
+    kind: claim
+    subject_id: C8_stale_owner_is_fenced
+    subject_signature: 47895e4a7ac49e84f006e040a42cfbff134288d74301c8860a63d08570c48013
+    roundtrip:
+      subject_signature: 47895e4a7ac49e84f006e040a42cfbff134288d74301c8860a63d08570c48013
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following eight universally quantified statements holds. (1) For every protocol
+        transition t and every document d, if t is an authoritative ownership handoff for d, then both of the following hold:
+        t commits d''s document_current_epoch to a strictly greater value than the superseded generation''s epoch, with that
+        epoch advance occurring before or atomically with the new generation becoming authoritative and acceptance-eligible,
+        and the new generation does not reuse the superseded generation''s epoch; and t commits a fresh document_owner_generation_id
+        for d, different from the superseded generation''s identity, before or atomically with the new generation becoming
+        authoritative and acceptance-eligible, and the new generation is not published or enabled while the authoritative
+        generation identity still names the superseded tenure. (2) For every protocol transition t and every document d, if
+        t is an authoritative lifecycle transition for d (an authoritative recovery, restart, delayed metadata publication,
+        ownership handoff, or other authoritative transition in d''s lifecycle, as opposed to a client-side or speculative
+        action) and t executes after an authoritative epoch value for d has already been superseded by a strictly greater
+        epoch, so that t is in the post-supersession regime, then across t, d''s document_current_epoch never decreases and
+        no superseded epoch value for d is restored as current: t leaves the current epoch at or above its prior value and
+        never makes a previously superseded value authoritative again. (3) For every authoritative state before, every authoritative
+        state after, and every document d, if after is the immediate successor of before under one committed authoritative
+        protocol transition, with that transition''s full authoritative effect separating the two states and no intermediate
+        authoritative state between them (aborted, rolled-back, or never-committed work creating no such step), and that step
+        is the state-level effect of an authoritative lifecycle transition for d, and by the time of that step an authoritative
+        epoch value for d has already been superseded by a strictly greater epoch, then the following implication holds: if
+        in after, d''s current document_current_epoch is an epoch value that was superseded by a strictly greater epoch, regardless
+        of which owner generation is paired with it in after, then in before, d''s current document_current_epoch was also
+        an epoch value that was superseded by a strictly greater epoch, regardless of which owner generation was paired with
+        it in before. (4) For every authoritative state before, every authoritative state after, and every document d, if
+        the same three step conditions as in (3) hold, namely that before-to-after is an authoritative state step, that step
+        is the state-level effect of an authoritative lifecycle transition for d, and that step follows an epoch supersession
+        for d, then it is not the case that d''s document_current_epoch decreases across that step, i.e. it is not the case
+        that the authoritative current epoch of d in after is strictly less than the authoritative current epoch of d in before.
+        (5) For every protocol transition t and every document d, if t executes a canonical accepted-history append attempt
+        targeting d, including successful, rejected, aborted, delayed, and interrupted attempts independently of whether their
+        supplied fencing tuple is valid or any canonical acceptance commits, and including every transition that performs
+        a canonical accepted-history append for d (while a transition solely arbitrating or writing a per-key terminal outcome
+        does not qualify on that basis), then throughout that attempt, the supplied owner_epoch and append_owner_generation_id
+        originate from and remain bound to the immutable trusted server-side owner generation actually executing that attempt,
+        whose ownership document is d; neither coordinate nor the document namespace may be copied, substituted, refreshed,
+        or rebound to impersonate another generation, and equal scalar values from another document or generation do not establish
+        this provenance; this does not require the executing generation to remain authoritative current and does not require
+        the attempt to commit. (6) For every protocol transition t and every document d, if t performs a canonical accepted-history
+        append for d, then t is authorized by the exact current document-scoped generation identity for d, including epoch
+        and generation-bound server append identity, and copied scalar values or another document''s tuple do not authorize
+        it. (7) For every protocol transition t and every document d, if t performs a canonical accepted-history append for
+        d and that append is the commit of a candidate_canonical_change append for d, classified by its candidate provenance
+        rather than by its supplied fencing tuple, then t committed with its supplied owner_epoch equal to d''s authoritative
+        document_current_epoch at commit, so that the epoch fencing guard inside the acceptance transaction passed with equality
+        and no stale-owner append committed. (8) For every protocol transition t and every document d, if t performs a canonical
+        accepted-history append for d, then t committed with its supplied document-scoped generation tuple matching d''s authoritative
+        generation at commit: the supplied owner_epoch equaled d''s authoritative document_current_epoch at t''s commit point
+        and the supplied append_owner_generation_id equaled d''s authoritative document_owner_generation_id at t''s commit
+        point; a tuple whose generation was superseded between attempt and commit, or that was copied from or merely scalar-collides
+        with another document''s generation, does not satisfy this condition.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 47895e4a7ac49e84f006e040a42cfbff134288d74301c8860a63d08570c48013
+        verdict: EQUIVALENT
+        reason: The formula covers handoff installation of a strictly greater epoch and fresh generation id, post-supersession
+          non-decrease and non-restoration at both transition and state-step levels, attempt-wide provenance binding to the
+          executing document generation, and commit-time matching to the authoritative epoch and generation, without adding
+          or omitting a source requirement.
+        differences: []
+      strengthening:
+        subject_signature: 47895e4a7ac49e84f006e040a42cfbff134288d74301c8860a63d08570c48013
+        verdict: EQUIVALENT
+        reason: 'The formula preserves all source requirements without material addition or omission: handoffs require both
+          a strictly greater epoch and a fresh generation id before or atomically with authority; post-supersession lifecycle
+          transitions and state steps forbid epoch decrease and restoration of a superseded value; every canonical append
+          attempt is bound to the immutable server-side generation for the same document actually executing it; and every
+          canonical append must match that document''s authoritative epoch and generation id at commit, excluding superseded
+          or cross-document copied or colliding tuples. The additional candidate-append epoch clause is a redundant subset
+          of the all-append matching requirement.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 47895e4a7ac49e84f006e040a42cfbff134288d74301c8860a63d08570c48013
+        verdict: EQUIVALENT
+        reason: The rendering preserves the handoff requirements for a strictly greater epoch and fresh generation before
+          or atomically with authoritativeness, post-supersession non-decrease and non-restoration, provenance binding of
+          document scope, owner_epoch and append_owner_generation_id to the immutable server-side generation actually executing
+          every append attempt regardless of commit, and commit-time matching to D's authoritative epoch/generation excluding
+          superseded or cross-document copied/colliding tuples, without adding or omitting a material guarantee.
+        differences: []
+  claim:C16_non_append_lifecycle_preserves_logical_revision_prefix:
+    kind: claim
+    subject_id: C16_non_append_lifecycle_preserves_logical_revision_prefix
+    subject_signature: efd4f073ad543702fa661075d548a6d4850b6280ea6ef68c1c8cca20cf13c07f
+    roundtrip:
+      subject_signature: efd4f073ad543702fa661075d548a6d4850b6280ea6ef68c1c8cca20cf13c07f
+      status: TRANSLATED
+      natural_language: 'The conjunction of the following three statements holds. (1) For every protocol transition t and
+        every document d, if t is a non-append authoritative history lifecycle for d — i.e., t represents an execution, including
+        an execution prefix, of a non-append authoritative snapshotting, checkpoint-replacement, cleanup, or compaction lifecycle
+        procedure targeting d, where the target is the procedure''s intended document independently of the documents owning
+        its actual inputs or outputs, classification requiring neither correct provenance, successful completion, output publication,
+        nor eventual progress, and including stalled, crashed, and aborted executions, while ordinary canonical appends and
+        recovery procedures as such are outside this predicate — and t completes, i.e., its snapshotting, checkpoint-replacement,
+        cleanup, or compaction procedure runs to completion rather than stalling or aborting so t has a completed post-state,
+        and t completes without accepting a new edit, i.e., t''s snapshotting, checkpoint-replacement, cleanup, or compaction
+        execution itself accepts no new canonical edit and creates no canonical accepted change, appends performed by other,
+        concurrent transitions not counting as t accepting an edit, and there exist an authoritative state pre and an authoritative
+        state post such that pre is the pre-state of t, i.e., the authoritative representation immediately before t executes,
+        and post is the resulting post-state of t, i.e., the authoritative representation t installs or publishes on completion,
+        then t preserves document scope for d: every authoritative accepted-history or checkpoint input that actually semantically
+        supplies the transformation remains bound to d throughout its participation, and every durable authoritative history
+        lifecycle output actually installed or published by t remains bound to d; these are document-scoped semantic ownership/reference
+        bindings, so relabeling an authoritative history or checkpoint belonging to another document does not satisfy the
+        relation even when revision, payload, frontier, and replay-result values coincide, physical content-addressed blobs,
+        immutable pages, or other bytes may be shared when the authoritative references remain bound to d, merely inspecting
+        and rejecting an unrelated candidate does not make that candidate a semantic input, and the relation requires no input
+        or output stage to occur and imposes no completion, replay-equivalence, frontier, recovery-correctness, physical-retention,
+        or physical-object-identity requirement. (2) For every protocol transition t, every document d, every authoritative
+        state post, and every revision h, if t is a non-append authoritative history lifecycle for d as above, and t completes
+        as above, and t completes without accepting a new edit as above, and t completes at frontier h, i.e., h is the authoritative
+        frontier — the document_latest_revision of t''s target document — at the completion of t, read at the transition level
+        at t''s completion whether or not t''s resulting representation correctly records that frontier as its own latest_revision,
+        and post is the resulting post-state of t, then both of the following hold: post exposes the document frontier for
+        d, i.e., post includes an authoritative state instance for d so d''s document_latest_revision frontier coordinate
+        is defined in post, and the authoritative representation post preserves latest_revision exactly equal to frontier
+        h. (3) For every protocol transition t, every document d, every authoritative state s, and every revision h, if t
+        is a non-append authoritative history lifecycle for d as above, and t completes as above, and t completes without
+        accepting a new edit as above, and t completes at frontier h as above, and s is the resulting post-state of t, then
+        the logical document state denoted by authoritative representation s equals deterministic canonical replay of accepted
+        revisions through frontier h.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: efd4f073ad543702fa661075d548a6d4850b6280ea6ef68c1c8cca20cf13c07f
+        verdict: EQUIVALENT
+        reason: 'The three conjuncts cover exactly the claim''s guarantees for a completing non-append lifecycle transition
+          that accepts no new edit: document-scoped provenance for semantically supplying history/checkpoint inputs and installed
+          outputs, preservation of the completion frontier H as the post-state''s document_latest_revision, and equality of
+          the post-state''s logical state with canonical replay through H, while allowing physical retention and storage changes.'
+        differences: []
+      strengthening:
+        subject_signature: efd4f073ad543702fa661075d548a6d4850b6280ea6ef68c1c8cca20cf13c07f
+        verdict: EQUIVALENT
+        reason: 'The formula''s three conjuncts exactly cover the claim under the same completed, non-append, no-new-edit
+          scope for document D: provenance inputs and installed output remain document-bound despite extensional equality,
+          the result state exposes D''s frontier and records it as H read at completion, and its logical state matches canonical
+          replay through H, with no added retention, identity, or layout requirement.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: efd4f073ad543702fa661075d548a6d4850b6280ea6ef68c1c8cca20cf13c07f
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves all three guarantees under the same preconditions (non-append lifecycle targeting
+          D, completion, and no new edit accepted by the transition): provenance binding of semantically supplying history/checkpoint
+          inputs and installed/published output to D, excluding relabelled foreign objects despite value collisions while
+          allowing physical sharing; preservation of document_latest_revision exactly equal to the transition-level frontier
+          H at completion; and equality of the denoted logical state to deterministic canonical replay through H. No requirement
+          is omitted, added, or materially altered.'
+        differences: []
