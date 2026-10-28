@@ -6514,7 +6514,16 @@ assurance:
         diagnostics: L130, L136, L157 all individually load-bearing.'
       signature: d2c28f90f038292c50131bb9c210c0ae98d4bee1446d22cb1ecb600367fde26e
     C37_pending_identity_resolution_is_bound_to_response_head:
-      status: unaudited
+      status: machine_checked
+      rationale: "Trusted symbolic translations exist for C37 and all five direct premises (C13, L124,
+        C41, A6, L214); L214 was certified under its D45/D49-era clarified statement (signature 3a0bdd30)
+        after the C37-driven repair. The composition check (require_trusted) returns ENTAILED. Load-bearing
+        mutation tests (premise replaced by True) return COUNTEREXAMPLE for L124 and L214. C13, C41 and
+        A6 are required premises but not individually load-bearing for C37's mapped formula; per author
+        ruling D23 a non-load-bearing premise is a diagnostic, not a soundness gate: the edges are retained
+        and the redundancy is recorded here. Soundness rests on all trusted direct premises jointly implying
+        the target (premises AND NOT target is UNSAT)."
+      signature: ceb7986e8633159301ff97649698c60645fa475fa556f9499582a2abd512697a
     G10_user_visible_client_state_matches_document:
       status: machine_checked
       rationale: Trusted symbolic translations exist for G10 and both direct premises C38 and L207;
