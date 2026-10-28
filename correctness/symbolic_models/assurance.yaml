@@ -8659,61 +8659,74 @@ records:
   claim:L206_terminal_speculative_lifecycle_is_absorbing:
     kind: claim
     subject_id: L206_terminal_speculative_lifecycle_is_absorbing
-    subject_signature: 044b97fbdadb57a7bd70f5cdad1f584886fd10556ad991cac9eca235486d5341
+    subject_signature: 6092a65e5966bc3c24cfb3dd54b712822304693d9cf9d5dea40243efe7d94038
     roundtrip:
-      subject_signature: 044b97fbdadb57a7bd70f5cdad1f584886fd10556ad991cac9eca235486d5341
+      subject_signature: 6092a65e5966bc3c24cfb3dd54b712822304693d9cf9d5dea40243efe7d94038
       status: TRANSLATED
-      natural_language: The conjunction of the following holds. First, (a) for every client state s and every logical edit
-        identity e, if s is reachable under the normal client protocol and e is classified in s as a terminalized normal speculative
-        lifecycle, then in s e is not active in client_pending_edits, e has no retained normal-lifecycle speculative representation
-        in client_speculative_overlays, e has no visible normal-lifecycle speculative representation in client_visible_speculative_overlays,
-        and for e in s, every later user operation that actually occurs for the same document as e in the continuing normal
-        client history is a genuinely new logical edit rather than a continuation, retry, restore, or reactivation of e, using
-        a client_change_id different from the client_change_id of e, this freshness condition being vacuously true if no such
-        later user operation for that document occurs and imposing no cross-document change-id restriction, no physical-deletion
-        or tombstone requirement, and no liveness or eventual-operation obligation; and (b) for every client states earlier
-        and later and every logical edit identity e, if earlier is reachable under the normal client protocol, later is reachable
-        under the normal client protocol, later is reachable after earlier by one or more client-protocol transitions for
-        the continuing client lifecycle/history, including restore/reactivation, view switching, bookkeeping, reconnect/resync,
-        or publication transitions, and e is classified in earlier as a terminalized normal speculative lifecycle, then in
-        later e is not active in client_pending_edits, e has no retained normal-lifecycle speculative representation in client_speculative_overlays,
-        and e has no visible normal-lifecycle speculative representation in client_visible_speculative_overlays. Second, for
-        every client state s and every logical edit identity e, if s results from authoritative same-full-identity reconciliation
-        that actually ends e's normal speculative lifecycle, regardless of whether a foreground publication occurred, then
-        e is classified in s as a terminalized normal speculative lifecycle; this does not assert that reconciliation, terminalization,
-        publication, or delivery eventually occurs. Third, for every protocol transition t and every logical edit identity
-        e, if t occurs on a reachable execution of the normal client speculative lifecycle and t uses an explicit terminal
-        disposition, at the full generality of explicit terminal dispositions including a non_acceptance_terminal_disposition
-        and any other explicit terminal disposition and not restricted to one disposition kind, to terminally retire the normal
-        speculative lifecycle of e, then that transition establishes that e's normal speculative lifecycle is terminalized
-        in the resulting reachable client state and no longer active in pending, retained speculative, or visible speculative
-        state.
+      natural_language: 'The conjunction of all of the following holds. (1a) For every client state s and every logical edit
+        identity e: if s is a reachable client state under the normal client protocol (including states reached through restore,
+        view switching, bookkeeping, reconnect/resync, publication, and explicit terminal disposition, and excluding impossible
+        client states), and e is classified in s as a terminalized normal speculative lifecycle, then all of the following
+        hold in s: e is not active in client_pending_edits; e has no retained normal-lifecycle speculative representation
+        in client_speculative_overlays; e has no visible normal-lifecycle speculative representation in client_visible_speculative_overlays;
+        and, writing e=(D,k), every later user operation that actually occurs for that same document D in the continuing normal
+        client history is a genuinely new logical edit rather than a continuation, retry, restore, or reactivation of e, and
+        that later logical edit uses a client_change_id different from k, this freshness condition being vacuously true if
+        no later user operation for D occurs, imposing no cross-document change-id restriction, no physical-deletion or tombstone
+        requirement, and no liveness or eventual-operation obligation. (1b) For every client state earlier, every client state
+        later, and every logical edit identity e: if earlier is reachable, later is reachable, later is reachable after earlier
+        by one or more client-protocol transitions for the continuing client lifecycle/history (including restore/reactivation,
+        view switching, bookkeeping, reconnect/resync, or publication transitions), and e is classified as terminalized in
+        earlier, then in later all of the following hold: e is classified as terminalized; e is not active in client_pending_edits;
+        e has no retained normal-lifecycle speculative representation; and e has no visible normal-lifecycle speculative representation.
+        (2) For every client state s and every logical edit identity e: if s results from an authoritative same-full-identity
+        reconciliation that actually ends e''s normal speculative lifecycle, regardless of whether a foreground publication
+        occurred (this antecedent classifying an already-occurring authoritative reconciliation boundary and not asserting
+        that reconciliation, terminalization, publication, or delivery eventually occurs), then e is classified as terminalized
+        in s. (3) For every protocol transition t and every logical edit identity e: if t occurs on a reachable execution
+        of the normal client speculative lifecycle (impossible transitions and transitions outside that lifecycle being excluded),
+        and t uses an explicit terminal disposition to terminally retire e''s normal speculative lifecycle, at the full generality
+        of an explicit terminal disposition, covering every explicit terminal disposition that ends the lifecycle, including
+        a non_acceptance_terminal_disposition and any other explicit terminal disposition, and not restricted to one disposition
+        kind, then t establishes that e''s normal speculative lifecycle is terminalized in the resulting reachable client
+        state and is no longer active in pending, retained speculative, or visible speculative state. (4) For every logical
+        edit identity e and every protocol transition t: if t occurs on a reachable execution of the normal client speculative
+        lifecycle (impossible transitions and transitions outside that lifecycle being excluded), and t uses a non_acceptance_terminal_disposition
+        to terminally retire e''s normal speculative lifecycle, then t establishes, before or atomically with the destructive
+        retirement, that e''s normal speculative lifecycle is terminalized in the resulting reachable client state and is
+        no longer active in pending, retained speculative, or visible speculative state, so that terminal_speculative_lifecycle_closure
+        applies to every later reachable state.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 044b97fbdadb57a7bd70f5cdad1f584886fd10556ad991cac9eca235486d5341
+        subject_signature: 6092a65e5966bc3c24cfb3dd54b712822304693d9cf9d5dea40243efe7d94038
         verdict: EQUIVALENT
-        reason: The formula covers entry into the terminalized classification via both authoritative reconciliation and explicit
-          terminal disposition, excludes the exact (D,k) identity from pending, retained, and visible speculative sets in
-          the terminalized state and in every later reachable state, and requires later user operations for D to be fresh
-          edits with a new change id, while allowing archival representation outside the normal speculative sets.
+        reason: The formula covers both terminalization triggers (authoritative reconciliation and explicit terminal disposition,
+          including its non-acceptance subcase), requires terminalized exact identities to be absent from pending, retained
+          speculative, and visible speculative sets in the terminalizing and every later reachable state, preserves the terminalized
+          classification across all later transitions, and requires later user operations for the same document to be fresh
+          edits with a different client_change_id, without forbidding archival representation outside the normal speculative
+          sets.
         differences: []
       strengthening:
-        subject_signature: 044b97fbdadb57a7bd70f5cdad1f584886fd10556ad991cac9eca235486d5341
+        subject_signature: 6092a65e5966bc3c24cfb3dd54b712822304693d9cf9d5dea40243efe7d94038
         verdict: EQUIVALENT
-        reason: The formula covers both terminalization causes, requires a terminalized exact identity to be absent from pending,
-          retained, and visible speculative sets in its own and every later reachable state, and requires later user operations
-          for the same document to be fresh edits with a new change id, without imposing deletion, tombstone, liveness, or
-          cross-document restrictions beyond the source.
+        reason: The formula covers both entry triggers (authoritative reconciliation and explicit terminal disposition, including
+          its non-acceptance subcase), requires a terminalized identity to be absent from pending, retained, and visible speculative
+          sets in the terminalized state and in every later reachable state while remaining terminalized, and requires later
+          user operations for the same document to be fresh edits with a different client change id. The helper predicates
+          preserve exact full identity, reachable-state scope, and the archival/no-liveness/no-materialized-tombstone exclusions,
+          adding no requirement outside the source.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 044b97fbdadb57a7bd70f5cdad1f584886fd10556ad991cac9eca235486d5341
+        subject_signature: 6092a65e5966bc3c24cfb3dd54b712822304693d9cf9d5dea40243efe7d94038
         verdict: EQUIVALENT
-        reason: The rendering preserves the absorbing terminalization invariant over all reachable states, both trigger routes
-          (authoritative reconciliation and any explicit terminal disposition), full (D,k) identity, exclusion from all three
-          speculative sets across all later transitions, and the new-change-id freshness for later operations on D, with the
-          same archival, non-deletion, and non-liveness exclusions and no added cross-document or other restriction.
+        reason: The round-trip rendering preserves the absorbing terminalization invariant across all reachable states and
+          transitions, covers both authoritative reconciliation and explicit terminal dispositions at full generality, prohibits
+          re-entry into pending, retained, and visible speculative sets for the same (D,k) identity, and requires later operations
+          for D to be new edits with a fresh change id, without adding physical-deletion, tombstone, liveness, or cross-document
+          requirements.
         differences: []
   claim:L130_reconnect_start_is_bound_to_visible_client_tuple:
     kind: claim
@@ -11400,4 +11413,121 @@ records:
           pre-state of t exists, exposes d''s document_latest_revision frontier, and that value equals the authoritative frontier
           at t''s completion. Its elaborations on intended targeting, completion, overlap by execution, and reading the authoritative
           frontier independently of t''s own recorded representation clarify but neither broaden nor narrow the original guarantee.'
+        differences: []
+  claim:L216_authoritative_state_descends_from_initialization:
+    kind: claim
+    subject_id: L216_authoritative_state_descends_from_initialization
+    subject_signature: 2d3f4005fe04e0661e38b5caee2bf428b0b60b0623cb3ce2838a4ad2058f4b27
+    roundtrip:
+      subject_signature: 2d3f4005fe04e0661e38b5caee2bf428b0b60b0623cb3ce2838a4ad2058f4b27
+      status: TRANSLATED
+      natural_language: 'The proposition is a conjunction of two statements. In both statements, a document-initialization
+        state for a document d means the first authoritative state of d as produced by document-state initialization, in which
+        d''s accepted_change_log and document_latest_revision coordinates are created with their initialized values; and the
+        authoritative_state_step relation is the single-transition edge relation of the authoritative state graph, holding
+        between a before state and an after state exactly when the after state is the immediate successor of the before state
+        under one committed authoritative protocol transition, the transition''s full authoritative effect separates the two
+        states, no intermediate authoritative state exists between them, and aborted, rolled-back, or never-committed work
+        creates no step and no successor authoritative state. First: for every authoritative state s and every document d,
+        if s denotes an accepted history for d — that is, s includes d''s authoritative accepted-history coordinate (its accepted_change_log)
+        and the logical accepted history it denotes for d is the history under observation, this being a scope predicate only
+        that asserts nothing about d''s document_latest_revision coordinate and nothing about whether the denoted history
+        is gap-free or ends at any frontier, and a state with no authoritative accepted-history coordinate for d does not
+        satisfy it — then either s is a document-initialization state for d, or there exists an authoritative state b such
+        that b is a document-initialization state for d and s is reachable from b via the transitive closure of the authoritative_state_step
+        relation. Second: for every authoritative state s and every document d, if s has an authoritative state for d — that
+        is, s includes an authoritative document-state instance for d whose accepted_change_log and document_latest_revision
+        are the coordinates being observed, this being a scope predicate and not a coherence assertion, including initialized
+        documents with an empty accepted history, and not excluding an instance because either coordinate is malformed, missing,
+        inconsistent, or being authoritatively published — then either s is a document-initialization state for d, or there
+        exists an authoritative state b such that b is a document-initialization state for d and s is reachable from b via
+        the transitive closure of the authoritative_state_step relation.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 2d3f4005fe04e0661e38b5caee2bf428b0b60b0623cb3ce2838a4ad2058f4b27
+        verdict: EQUIVALENT
+        reason: 'Both scope conditions are covered separately: states denoting an accepted_change_log and states including
+          a document-state instance for D, each is required to be either D''s initialization state or reachable from some
+          initialization state for the same D via the transitive closure of authoritative_state_step, exactly encoding the
+          reflexive-transitive descent and excluding any independent root. The scope predicate meanings preserve the malformed/missing/inconsistent/publishing
+          cases, and no requirement is added or dropped.'
+        differences: []
+      strengthening:
+        subject_signature: 2d3f4005fe04e0661e38b5caee2bf428b0b60b0623cb3ce2838a4ad2058f4b27
+        verdict: EQUIVALENT
+        reason: 'The formula conjoins exactly the two universal scope implications from the claim: states denoting an accepted_change_log
+          for D, and states including an authoritative document-state instance for D regardless of coordinate well-formedness,
+          must each be D''s initialization state or reachable from an initialization state for the same D via the transitive
+          closure of authoritative_state_step. Direction, document identity, quantifiers, and the no-independent-root closure
+          match the statement and formal intent, with no added or omitted conditions.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 2d3f4005fe04e0661e38b5caee2bf428b0b60b0623cb3ce2838a4ad2058f4b27
+        verdict: EQUIVALENT
+        reason: 'Both renderings quantify over the same two scopes (denoting an accepted_change_log, and including a document-state
+          instance regardless of either coordinate being malformed, missing, inconsistent, or being published) and require
+          exactly the same conclusion: the state is the initialization state for that document or is reachable from such a
+          state through finitely many authoritative steps, which entails no independent authoritative root introduced by any
+          mechanism.'
+        differences: []
+  claim:L218_append_at_next_position_preserves_frontier_shape:
+    kind: claim
+    subject_id: L218_append_at_next_position_preserves_frontier_shape
+    subject_signature: c0d222e0a01d828d875f83d8df849bab21af73c3bf4cceea9cbdef496b1bf191
+    roundtrip:
+      subject_signature: c0d222e0a01d828d875f83d8df849bab21af73c3bf4cceea9cbdef496b1bf191
+      status: TRANSLATED
+      natural_language: 'For all authoritative states before and after, for every document d, and for every revision r, if
+        all of the following hold: (1) after is the immediate successor of before under one committed authoritative protocol
+        transition, meaning the transition''s full authoritative effect separates the two states and no intermediate authoritative
+        state exists between them, with aborted, rolled-back, or never-committed work creating no such step; (2) the authoritative
+        step from before to after is a committed canonical accepted-change append for document d whose one new canonical accepted
+        change is at revision r, meaning the step''s transition commits exactly that one canonical accepted change for d and
+        no other accepted-history change for d; (3) that step''s append follows the previous frontier for d at r, meaning
+        document d''s document_latest_revision in before is the revision position immediately before r in the canonical revision
+        numbering, so the append''s new change occupies the next position after the pre-state frontier; (4) in authoritative
+        state before, the accepted canonical history for document d is one gap-free revision sequence; and (5) in authoritative
+        state before, the logical canonical accepted history denoted for document d starts at the document''s canonical beginning
+        and ends exactly at before''s document_latest_revision for d, with no logically represented accepted revision above
+        that frontier, where an empty accepted history ends at the document''s initial frontier, where this history is its
+        logical denotation across authoritative representations and not the set of physically retained accepted rows, and
+        where missing or undefined authoritative coordinates do not satisfy this condition; then both of the following hold:
+        (a) in authoritative state after, the accepted canonical history for document d is one gap-free revision sequence;
+        and (b) in authoritative state after, the logical canonical accepted history denoted for document d starts at the
+        document''s canonical beginning and ends exactly at after''s document_latest_revision for d, with no logically represented
+        accepted revision above that frontier, where an empty accepted history ends at the document''s initial frontier, where
+        this history is its logical denotation across authoritative representations and not the set of physically retained
+        accepted rows, and where missing or undefined authoritative coordinates do not satisfy this condition.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: c0d222e0a01d828d875f83d8df849bab21af73c3bf4cceea9cbdef496b1bf191
+        verdict: EQUIVALENT
+        reason: 'The formula preserves all source requirements: the pre-state gap-free and ends-exactly-at-frontier predicates
+          capture the logical (not physical) history, canonical beginning, frontier, empty-history, and missing-coordinates
+          conditions; the committed immediate-step, exactly-one-append-at-r, and previous-frontier predicates capture the
+          transition cardinality and position; and the same two predicates applied to the post-state give the stated conclusion
+          with no added or dropped conditions.'
+        differences: []
+      strengthening:
+        subject_signature: c0d222e0a01d828d875f83d8df849bab21af73c3bf4cceea9cbdef496b1bf191
+        verdict: EQUIVALENT
+        reason: The formula's antecedent exactly conjoins the immediate committed step, the single append at r with no other
+          accepted-history change, the previous-frontier predecessor condition, and the pre-state gap-free and ends-exactly-at-frontier
+          predicates with their stated logical-denotation, empty-history, and missing-coordinate semantics; its consequent
+          is precisely the same gap-free and ends-exactly predicates for the post-state, with no added or omitted scope, cardinality,
+          or boundary condition.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: c0d222e0a01d828d875f83d8df849bab21af73c3bf4cceea9cbdef496b1bf191
+        verdict: EQUIVALENT
+        reason: 'The round-trip decomposes but jointly preserves the original preconditions and conclusion: a committed immediate-successor
+          append of exactly one canonical change at the revision immediately after the pre-state frontier, applied to a pre-state
+          denoting one gap-free logical accepted history starting at the canonical beginning and ending exactly at its frontier
+          (empty history at the initial frontier, logical denotation rather than physically retained rows, missing/undefined
+          coordinates excluded), yielding a post-state denoting one gap-free logical history ending exactly at its own frontier
+          in the same sense. No quantifier, cardinality, identity, provenance, or scope requirement is added or omitted.'
         differences: []
