@@ -5232,12 +5232,16 @@ claims:
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
-    statement: "For every reachable client protocol transition and every logical edit identity, a transition
+    statement: "For every reachable client protocol transition — a transition occurring on a reachable
+      execution of the normal client speculative lifecycle — and every logical edit identity, a transition
       that performs bookkeeping deletion, relabeling, or loss of the identity's pending or retained speculative
       representation — its client_pending_edits or client_speculative_overlays bookkeeping — without authoritative
       reconciliation and without an explicit or equivalent terminal disposition that ends the identity's
-      normal speculative lifecycle does not resolve that lifecycle: the edit remains unresolved in protocol
-      semantics even if the physical bookkeeping representations were dropped."
+      normal speculative lifecycle does not resolve that lifecycle, whether or not the transition also
+      performs other actions that neither reconcile the identity authoritatively nor terminally dispose
+      of it: the transition does not classify, justify, or semantically treat the edit as resolved or
+      terminalized, and the edit remains unresolved in protocol semantics even if the physical bookkeeping
+      representations were dropped, including where that drop is itself erroneous."
     verification:
       verifiers:
         - intent: Enumerate every bookkeeping path that deletes, relabels, or loses a pending or
