@@ -8028,51 +8028,55 @@ records:
   claim:L181_non_append_lifecycle_preserves_authoritative_frontier:
     kind: claim
     subject_id: L181_non_append_lifecycle_preserves_authoritative_frontier
-    subject_signature: 312b202ed5e919834a57e0e16544867dba15b2f344bc340d7a345ff2c43e5eb4
+    subject_signature: e1f67f06d272b8d8aab558b3daf4c0c578e1481ffc2099aaa94d36c3a3bf6275
     roundtrip:
-      subject_signature: 312b202ed5e919834a57e0e16544867dba15b2f344bc340d7a345ff2c43e5eb4
+      subject_signature: e1f67f06d272b8d8aab558b3daf4c0c578e1481ffc2099aaa94d36c3a3bf6275
       status: TRANSLATED
-      natural_language: 'For all protocol transitions t, documents d, authoritative states pre and post, and revisions h,
-        if all of the following hold: t represents an execution, including an execution prefix, of a non-append authoritative
-        snapshotting, checkpoint-replacement, cleanup, or compaction lifecycle procedure targeting document d, where the target
-        is the procedure''s intended document independently of the documents owning its actual inputs or outputs, and where
-        ordinary canonical appends and recovery procedures as such are outside this classification; t completes, meaning its
-        snapshotting, checkpoint-replacement, cleanup, or compaction procedure runs to completion rather than stalling or
-        aborting, so t has a completed post-state; pre is the pre-state of t, namely the authoritative representation immediately
-        before t executes; post is the resulting post-state of t, namely the authoritative representation t installs or publishes
-        on completion; pre exposes the document frontier for d, meaning pre includes an authoritative state instance for document
-        d so that d''s document_latest_revision frontier coordinate, the authoritative persisted canonical revision frontier
-        for a document, is defined in pre; and in pre the authoritative representation preserves latest_revision exactly equal
-        to frontier h; then both of the following hold: post exposes the document frontier for d, meaning post includes an
-        authoritative state instance for document d so that d''s document_latest_revision frontier coordinate is defined in
-        post; and in post the authoritative representation preserves latest_revision exactly equal to the same frontier h.'
+      natural_language: 'For every protocol transition t, every document d, every authoritative state pre, every authoritative
+        state post, and every revision h, if all of the following hold: (1) t represents an execution, including an execution
+        prefix, of a non-append authoritative snapshotting, checkpoint-replacement, cleanup, or compaction lifecycle procedure
+        targeting document d, where the target is the procedure''s intended document independently of the documents owning
+        its actual inputs or outputs, classification does not require correct provenance, successful completion, output publication,
+        or eventual progress, stalled, crashed, and aborted executions remain included, and ordinary canonical appends and
+        recovery procedures as such are outside this classification; (2) t completes, meaning its snapshotting, checkpoint-replacement,
+        cleanup, or compaction procedure runs to completion rather than stalling or aborting, so t has a completed post-state;
+        (3) t completes without accepting a new edit, meaning t''s own snapshotting, checkpoint-replacement, cleanup, or compaction
+        execution accepts no new canonical edit and no canonical accepted change is created by t, while appends performed
+        by other concurrent transitions are not t accepting an edit; (4) pre is the source state of t, meaning pre is the
+        authoritative representation immediately before t executes; (5) post is the result state of t, meaning post is the
+        authoritative representation t installs or publishes on completion; (6) pre exposes the document frontier for d, meaning
+        pre includes an authoritative state instance for document d, so d''s document_latest_revision frontier coordinate
+        is defined in pre; and (7) pre''s authoritative representation preserves latest_revision exactly equal to frontier
+        h; then both of the following hold: post exposes the document frontier for d, meaning post includes an authoritative
+        state instance for document d, so d''s document_latest_revision frontier coordinate is defined in post, and post''s
+        authoritative representation preserves latest_revision exactly equal to the same frontier h.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 312b202ed5e919834a57e0e16544867dba15b2f344bc340d7a345ff2c43e5eb4
+        subject_signature: e1f67f06d272b8d8aab558b3daf4c0c578e1481ffc2099aaa94d36c3a3bf6275
         verdict: EQUIVALENT
-        reason: The formula scopes to non-append authoritative lifecycle transitions for document d that complete, binds pre/post
-          via the source/result predicates, requires the pre-state to expose d with frontier exactly h, and concludes the
-          post-state exposes d with frontier exactly h, matching the canonical preservation guarantee with no added or omitted
-          condition.
+        reason: The formula universally quantifies the same transition, document, pre-state, post-state, and frontier H; it
+          requires a non-append authoritative lifecycle transition for d that completes without itself accepting a new edit,
+          with d exposed and frontier H in the source state, and concludes d is exposed with the same frontier H in the result
+          state, matching the source preservation guarantee without added or omitted conditions.
         differences: []
       strengthening:
-        subject_signature: 312b202ed5e919834a57e0e16544867dba15b2f344bc340d7a345ff2c43e5eb4
+        subject_signature: e1f67f06d272b8d8aab558b3daf4c0c578e1481ffc2099aaa94d36c3a3bf6275
         verdict: EQUIVALENT
-        reason: The formula applies exactly to non-append snapshotting, checkpoint-replacement, cleanup, or compaction transitions
-          for document d that complete, with identified pre- and post-states and the pre-state exposing d with frontier equal
-          to H, and concludes exactly that the post-state exposes d with frontier still equal to the same H, adding no extra
-          scope or guarantee and omitting none.
+        reason: 'The formula exactly encodes the claim: for any non-append authoritative snapshotting, checkpoint-replacement,
+          cleanup, or compaction transition for a document that completes without itself accepting a new edit, any pre-state
+          whose document frontier equals H forces any resulting post-state to expose that same document frontier equal to
+          H. The added exposes predicates merely unpack that the frontier coordinate is defined where equality is asserted,
+          with no scope, provenance, or cardinality change.'
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 312b202ed5e919834a57e0e16544867dba15b2f344bc340d7a345ff2c43e5eb4
+        subject_signature: e1f67f06d272b8d8aab558b3daf4c0c578e1481ffc2099aaa94d36c3a3bf6275
         verdict: EQUIVALENT
-        reason: The rendering preserves the original scope (completed authoritative non-append snapshotting, checkpoint-replacement,
-          cleanup, or compaction transitions), the precondition that the pre-state document_latest_revision equals H, and
-          the conclusion that the completed post-state has document_latest_revision equal to the same H for the same document;
-          the added definedness clauses for the frontier in pre and post are entailed by equality to H on each side, and no
-          requirement is omitted or added.
+        reason: Both quantify over completed authoritative non-append snapshotting, checkpoint-replacement, cleanup, or compaction
+          transitions accepting no new edit from the transition itself, require the pre-state document_latest_revision frontier
+          to equal H, and guarantee the completed post-state frontier for the same document equals the same H, with no added
+          or omitted scope, identity, or exclusion change.
         differences: []
   claim:L38_selected_checkpoint_does_not_exceed_response_head:
     kind: claim
