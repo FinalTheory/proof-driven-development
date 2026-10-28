@@ -5052,9 +5052,9 @@ claims:
       - final_architecture
     statement: "For every authoritative state step and every document D: if the step changes whether the
       accepted history denoted for D is one gap-free revision sequence, or changes whether that denoted
-      history ends exactly at D's frontier, or changes whether an accepted history is denoted for D at
-      all between the step's two endpoint states, then the step creates or changes D's accepted_change_log
-      or document_latest_revision coordinates in their logical denotation."
+      history starts at D's canonical beginning and ends exactly at D's frontier, or changes whether an
+      accepted history is denoted for D at all between the step's two endpoint states, then the step creates
+      or changes D's accepted_change_log or document_latest_revision coordinates in their logical denotation."
     verification:
       verifiers:
         - intent: "Enumerate every authoritative transition path (canonical acceptance, document-state
