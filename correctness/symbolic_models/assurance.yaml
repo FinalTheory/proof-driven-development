@@ -1405,120 +1405,109 @@ records:
   claim:G12_client_pending_state_tracks_unresolved_edits:
     kind: claim
     subject_id: G12_client_pending_state_tracks_unresolved_edits
-    subject_signature: f884dce95c34db936cc647ee9df4bc3300680a8ab33145e8974d9eb2e97c8811
+    subject_signature: 01f10b3aec40af65b949a24d7b761d985e51691299d8246576f502fcd7e30ae4
     roundtrip:
-      subject_signature: f884dce95c34db936cc647ee9df4bc3300680a8ab33145e8974d9eb2e97c8811
+      subject_signature: 01f10b3aec40af65b949a24d7b761d985e51691299d8246576f502fcd7e30ae4
       status: TRANSLATED
-      natural_language: 'All of the following conditions hold simultaneously. (1) For every client state s and every exact
-        logical-edit identity e, if s is reachable under the normal client protocol, e is active in client_pending_edits in
-        s, and e is still within that same logical edit''s normal speculative lifecycle in s, then the active pending representation
-        for e in s remains bound to e''s creation identity, preserving both its document_id and client_change_id rather than
-        being relabeled or cross-bound. The lifecycle-active guard is semantic rather than merely physical: the normal speculative
-        lifecycle ends when the protocol explicitly expires, conflict/manual-resolves, abandons, authoritatively reconciles,
-        or otherwise terminally disposes that edit, and a stale pending entry left after such a boundary does not reactivate
-        it. (2) For every reachable client state s and overlay token o, if o is retained in s as an unresolved, acceptance-eligible
-        logical edit still within the normal retry/reconnect horizon, then the logical edit represented by o is active in
-        client_pending_edits in that same state s. (3) For every reachable client state s and overlay token o, if s reflects
-        an acceptance-based retirement of pending edit o with authoritative accepted/reconciled semantics, then that retirement
-        is actually derived from canonical acceptance or equivalent authoritative accepted evidence for the exact same full
-        logical-edit identity, including both document_id and client_change_id; merely having matching evidence co-present
-        is insufficient when an unrelated acceptance source caused the retirement. (4) For every reachable client state s
-        and exact logical-edit identity e, if s results from a retirement boundary that has already occurred for e''s normal
-        speculative lifecycle with authoritative accepted/reconciled semantics, then that retirement is actually derived from
-        canonical acceptance or equivalent authoritative accepted evidence for that same full document_id plus client_change_id
-        identity; mere co-presence of matching evidence is insufficient if some unrelated acceptance source caused the retirement.
-        This premise classifies an already-occurred accepted-semantics retirement and does not assert that retirement, reconciliation,
-        publication, or delivery will eventually occur. (5) For every client state s and exact logical-edit identity e, if
-        s is exactly the user-visible state atomically exposed by a normal foreground reconnect/reconciliation publication
-        through response head H after the authoritative reconciliation result classified e as ACCEPTED at canonical revision
-        r with r <= H, then, at that publication boundary itself, e is not active in client_pending_edits, no normal-lifecycle
-        speculative representation for e remains retained in client_speculative_overlays, no normal-lifecycle speculative
-        representation for e remains visible in client_visible_speculative_overlays, and e is classified as a terminalized
-        normal speculative lifecycle. This publication predicate locates the state and accepted classification boundary only;
-        it does not by itself assert that the published canonical state correctly contains the accepted change or is provenance-bound
-        to that acceptance. (6) For every protocol transition t and exact logical-edit identity e, if t occurs on a reachable
-        execution of the normal client speculative lifecycle and t uses a non-acceptance terminal disposition to terminally
-        retire e''s normal speculative lifecycle, then the consumed disposition is for that same logical edit e and preserves
-        e''s full document_id plus client_change_id identity through routing, bookkeeping, and the destructive retirement
-        sink. (7) Two terminal-lifecycle closure requirements both hold. First, for every reachable client state s and exact
-        logical-edit identity e, if e is classified as terminalized in s, then e is not active in client_pending_edits, has
-        no retained normal-lifecycle speculative representation, has no visible normal-lifecycle speculative representation,
-        and every later user operation that actually occurs for that same document D in the continuing normal client history
-        is a genuinely new logical edit rather than a continuation, retry, restore, or reactivation of e=(D,k), and uses a
-        client_change_id different from k. If no later user operation for D occurs, that freshness condition is vacuously
-        true; it imposes no cross-document change-id restriction, no physical-deletion or tombstone requirement, and no liveness
-        or eventual-operation requirement. Second, for every earlier client state, later client state, and exact logical-edit
-        identity e, if both states are reachable, the later state is reachable after the earlier state by one or more client-protocol
-        transitions in the continuing client lifecycle/history, and e is terminalized in the earlier state, then e is also
-        terminalized in the later state and is absent there from pending, retained speculative, and visible speculative active
-        state. The allowed intervening transitions include restore/reactivation, view switching, bookkeeping, reconnect/resync,
-        and publication transitions. (8) For every client state s and exact logical-edit identity e, if s is exactly the resulting
-        user-visible state published at, or atomically with, the authoritative terminal-result publication boundary through
-        which the normally participating client observes an authoritative externally terminal definitive REJECTED result carrying
-        a definitive rejection reason for e, with that terminal result already linearized before exposure, then that rejection
-        observation causes or atomically applies a same-identity non-acceptance terminal disposition or equivalent terminal
-        lifecycle transition for e and that terminalizing effect is already effective before or atomically with s; additionally,
-        e is not pending, has no retained speculative representation, has no visible speculative representation, and is terminalized
-        in s. This premise applies only to that resulting publication-boundary state, not later states that merely remember
-        or follow an earlier rejection observation and not authoritative knowledge obtained through another path; a terminalization
-        merely scheduled after s, or an unrelated earlier terminalization, does not satisfy the same-identity terminalization
-        requirement. (9) For every reachable client state s and exact logical-edit identity e, if s results from authoritative
-        reconciliation for that same full identity that actually ends e''s normal speculative lifecycle, regardless of whether
-        a foreground publication occurred, then e is not pending, has no retained speculative representation, has no visible
-        speculative representation, and is terminalized in s. This premise classifies an already-occurring reconciliation
-        boundary and does not assert eventual reconciliation, terminalization, publication, or delivery. (10) For every protocol
-        transition t and exact logical-edit identity e, if t occurs on a reachable normal speculative-lifecycle execution
-        and performs only bookkeeping deletion, relabeling, or loss of pending/retained speculative representation for e without
-        authoritative reconciliation and without an explicit or equivalent terminal disposition ending e''s normal speculative
-        lifecycle, then t does not classify, justify, or semantically treat e as resolved or terminalized; e remains unresolved
-        in protocol semantics even if buggy physical bookkeeping representations were dropped. (11) For every protocol transition
-        t and exact logical-edit identity e, if t occurs on a reachable execution of the normal client speculative lifecycle
-        and uses a non-acceptance terminal disposition to terminally retire e''s normal speculative lifecycle, then, before
-        or atomically with the destructive retirement, that transition establishes in the resulting reachable client state
-        that e''s normal speculative lifecycle is terminalized and no longer active in pending, retained speculative, or visible
-        speculative state, so the terminal-lifecycle closure described above applies to every later reachable state.'
+      natural_language: 'The proposition is the conjunction of all of the following clauses, with the referenced semantic
+        contracts supplying only canonical vocabulary and relations and their entire formulas not implicitly conjoined. (1)
+        For every client state s and logical edit identity e, if s is reachable under the normal client protocol, e remains
+        active in client_pending_edits in s, and e is still within the same logical edit''s normal speculative lifecycle in
+        s, where that lifecycle scope ends when the protocol boundary explicitly expires, conflict/manual-resolves, abandons,
+        authoritatively reconciles, or otherwise terminally disposes that logical edit and a stale physical pending entry
+        left behind after such a boundary does not make the lifecycle active again, then the pending representation active
+        for e in s remains bound to that logical edit''s creation identity, preserving both document_id and client_change_id
+        rather than being relabeled or cross-bound. (2) For every reachable client state s and overlay o, if in s o represents
+        an unresolved acceptance-eligible logical edit within the normal retry/reconnect horizon that remains retained, then
+        the logical edit identity represented by o remains active in client_pending_edits in s. (3) For every reachable client
+        state s and overlay o, if s reflects retirement of pending edit o with authoritative accepted/reconciled semantics,
+        then that acceptance-based retirement is derived from canonical acceptance or equivalent authoritative accepted evidence
+        for the exact same full identity, and mere co-presence of matching evidence is insufficient if some unrelated source
+        actually caused the retirement. (4) For every reachable client state s and logical edit identity e, if s results from
+        retirement of e''s normal speculative lifecycle with authoritative accepted/reconciled semantics, classifying an accepted-semantics
+        retirement boundary that has already occurred and not asserting that such retirement, reconciliation, publication,
+        or delivery eventually occurs, then the authoritative accepted/reconciled-semantics retirement of e in s is actually
+        derived from canonical acceptance or equivalent authoritative accepted evidence for that same full document_id plus
+        client_change_id identity, and mere co-presence of matching evidence is insufficient if some unrelated acceptance
+        source caused the retirement. (5) For every client state s and logical edit identity e, if s is exactly the user-visible
+        state atomically exposed by a normal foreground reconnect/reconciliation publication through response head H after
+        the authoritative reconciliation result classified e as ACCEPTED at canonical revision r with r <= H, so predicates
+        over s hold at that publication boundary and not only after a later cleanup transition, and this condition by itself
+        does not require that the published canonical state correctly contains or is provenance-bound to that acceptance,
+        then in s e is not active in client_pending_edits, s retains no normal-lifecycle speculative representation for e,
+        s exposes no normal-lifecycle speculative representation for e, and e is classified as a terminalized normal speculative
+        lifecycle. (6) For every protocol transition t and logical edit identity e, if t occurs on a reachable execution of
+        the normal client speculative lifecycle and t uses a non_acceptance_terminal_disposition to terminally retire the
+        normal speculative lifecycle of e, then the non-acceptance terminal disposition consumed by t was produced for the
+        same logical edit e and preserves e''s full document_id plus client_change_id identity through routing, bookkeeping,
+        and the destructive retirement sink. (7) Both of the following hold: (7a) for every reachable client state s and logical
+        edit identity e, if e is classified as terminalized normal speculative lifecycle in s, then in s e is not active in
+        client_pending_edits, is not retained as a normal-lifecycle speculative representation, and is not visible as a normal-lifecycle
+        speculative representation, and for e = (D, k) every later user operation that actually occurs for that same document
+        D in the continuing normal client history is a genuinely new logical edit rather than a continuation, retry, restore,
+        or reactivation of e and uses a client_change_id different from k, vacuously true if no such later operation for D
+        occurs, with no cross-document change-id restriction, no physical-deletion or tombstone requirement, and no liveness
+        or eventual-operation obligation; and (7b) for every earlier client state, later client state, and logical edit identity
+        e, if both states are reachable, the later state is reachable after the earlier state by one or more client-protocol
+        transitions for the continuing client lifecycle/history including restore/reactivation, view switching, bookkeeping,
+        reconnect/resync, or publication transitions, and e is terminalized in the earlier state, then e is terminalized in
+        the later state and in the later state e is not active in client_pending_edits, is not retained as a normal-lifecycle
+        speculative representation, and is not visible as a normal-lifecycle speculative representation. (8) For every client
+        state s and logical edit identity e, if s is exactly the resulting user-visible state published at, or atomically
+        with, the authoritative terminal-result publication boundary through which the normally participating client observes
+        an authoritative externally terminal definitive REJECTED result carrying a definitive rejection reason for e, where
+        the published terminal result has already linearized before exposure through that boundary, classifying only that
+        resulting publication-boundary state, false for later states that merely remember or follow an earlier rejection observation,
+        and not covering knowledge of an authoritative result obtained through some other path, then the definitive REJECTED
+        observation represented by s causes or atomically applies a same-identity non_acceptance_terminal_disposition, or
+        an equivalent terminal lifecycle transition, for e, with that terminalizing effect already taken effect before or
+        atomically with s, a transition merely scheduled to occur after s not satisfying this and a lifecycle terminalized
+        earlier for an unrelated reason not satisfying this, and in s e is not active in client_pending_edits, is not retained
+        as a normal-lifecycle speculative representation, is not visible as a normal-lifecycle speculative representation,
+        and is classified as terminalized. (9) For every reachable client state s and logical edit identity e, if s results
+        from authoritative same-full-identity reconciliation that actually ends e''s normal speculative lifecycle, regardless
+        of whether a foreground publication occurred, classifying an already-occurring authoritative reconciliation boundary
+        and not asserting that reconciliation, terminalization, publication, or delivery eventually occurs, then in s e is
+        not active in client_pending_edits, is not retained as a normal-lifecycle speculative representation, is not visible
+        as a normal-lifecycle speculative representation, and is classified as terminalized. (10) For every protocol transition
+        t and logical edit identity e, if t occurs on a reachable execution of the normal client speculative lifecycle and
+        t performs bookkeeping deletion, relabeling, or loss of pending/retained speculative representation for e without
+        authoritative reconciliation and without an explicit/equivalent terminal disposition that ends e''s normal speculative
+        lifecycle, being bookkeeping-only with respect to e, not requiring t to do nothing else and allowing t to perform
+        other actions provided none of them authoritatively reconciles e or terminally disposes of e''s lifecycle, then t
+        does not classify, justify, or semantically treat e as resolved or terminalized and e remains unresolved in protocol
+        semantics even if the physical bookkeeping representations were dropped. (11) For every protocol transition t and
+        logical edit identity e, if t occurs on a reachable execution of the normal client speculative lifecycle and t uses
+        a non_acceptance_terminal_disposition to terminally retire the normal speculative lifecycle of e, then t establishes,
+        before or atomically with the destructive retirement, that e''s normal speculative lifecycle is terminalized in the
+        resulting reachable client state and no longer active in pending, retained speculative, or visible speculative state,
+        so terminal speculative lifecycle closure applies to every later reachable state.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: f884dce95c34db936cc647ee9df4bc3300680a8ab33145e8974d9eb2e97c8811
+        subject_signature: 01f10b3aec40af65b949a24d7b761d985e51691299d8246576f502fcd7e30ae4
         verdict: EQUIVALENT
-        reason: No canonical safety obligation C1-C11 is omitted or materially weakened. F1-F11 preserve the corresponding
-          reachable-state/transition guards, exact full-identity requirements, causal accepted-evidence derivation for acceptance-semantic
-          retirement, exact foreground acceptance-publication boundary semantics, full-identity preservation on non-acceptance
-          retirement, absorbing terminalized/inactive closure with genuinely new later same-document edits, exact definitive-rejection
-          publication-boundary causal terminalization, same-identity authoritative reconciliation retirement, the prohibition
-          on bookkeeping-only removal resolving the lifecycle, and terminalized+inactive establishment before or atomically
-          with non-acceptance destructive retirement. The stated helper meanings also retain the canonical non-liveness interpretation
-          and the boundary/causality qualifications that prevent foreign acceptance, mere co-presence, prior unrelated terminalization,
-          or scheduled-later cleanup from satisfying the clauses.
+        reason: The formula preserves the identity binding, lifecycle coverage, acceptance and non-acceptance provenance,
+          publication-boundary retirement for ACCEPTED and REJECTED, bookkeeping non-resolution, and absorbing terminal closure
+          with fresh later edits, under the same reachable-state and applicability guards.
         differences: []
       strengthening:
-        subject_signature: f884dce95c34db936cc647ee9df4bc3300680a8ab33145e8974d9eb2e97c8811
+        subject_signature: 01f10b3aec40af65b949a24d7b761d985e51691299d8246576f502fcd7e30ae4
         verdict: EQUIVALENT
-        reason: F1-F11 and the stated helper meanings do not add any requirement beyond C1-C11. Their reachability guards,
-          exact full-identity matching, causal acceptance/rejection linkage, publication-boundary scope, lifecycle-retirement
-          conditions, inactivity/terminalization effects, and explicit no-liveness/no-progress exclusions all track the canonical
-          obligations. In particular, F4's matching-acceptance-source causality is already entailed by C4's authoritative
-          accepted/reconciled retirement semantics plus its prohibition on foreign acceptance retiring e, and F8's causal
-          same-identity terminalization is stated explicitly in C8.
+        reason: 'All conjuncts preserve the claim''s boundaries: provenance and coverage are guarded by reachable, unresolved,
+          acceptance-eligible, retained edits within the normal lifecycle; acceptance-based and non-acceptance retirements
+          require exact full (D,k) provenance; accepted and rejected terminalization are evaluated at their publication boundaries
+          with removal from pending, retained, and visible speculative state; closure is absorbing over later reachable states
+          with later edits treated as fresh; and bookkeeping-only removal does not resolve the lifecycle. The helper predicates
+          add no containing, provenance, cardinality, or cross-boundary obligation beyond the source.'
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: f884dce95c34db936cc647ee9df4bc3300680a8ab33145e8974d9eb2e97c8811
+        subject_signature: 01f10b3aec40af65b949a24d7b761d985e51691299d8246576f502fcd7e30ae4
         verdict: EQUIVALENT
-        reason: B is a clause-expanded rendering of A's seven normal-lifecycle contracts with the same effective applicability
-          and safety semantics. Its pending/overlay clauses preserve exact (document_id, client_change_id) provenance and
-          retained-speculative-to-pending coverage; its accepted-retirement clauses require same-identity authoritative acceptance
-          causation and place cleanup/terminalization at the same normal foreground reconnect/reconciliation publication boundary
-          without adding a canonical-content/provenance obligation; its rejection and other non-acceptance clauses require
-          same-identity terminal disposition at the same destructive/publication boundary. B's separate reconciliation, bookkeeping-loss,
-          and terminal-closure clauses make explicit A's rules that bookkeeping cannot resolve an edit, any authoritative
-          reconciliation or explicit/equivalent terminal disposition that actually ends the lifecycle leaves no active speculative
-          state, and terminalization is absorbing across later protocol transitions. Neither proposition adds liveness, physical-deletion/tombstone
-          requirements, cross-document change-id uniqueness, or a requirement to remove archival non-reactivatable state,
-          and both require a genuinely new same-document edit to use a different client_change_id. The apparent extra qualifications
-          in B (reachability/execution guards, linearized observed rejection, and foreground-publication scoping) merely spell
-          out A's declared normal-lifecycle applicability boundaries rather than changing them.
+        reason: The round-trip rendering preserves the original's quantifiers, exact (D,k) identity and provenance direction,
+          applicability and publication boundaries, causal derivation requirements, and absorbing terminal closure, without
+          adding or omitting any material guarantee.
         differences: []
   obligation:speculative_representation_preserves_creation_identity_and_operation:
     kind: obligation
@@ -11822,4 +11811,55 @@ records:
           absent winning/uncontended self-production, and absent losing with the distinct winner producing the returned acceptance.
           The cases are mutually exclusive by absent versus non-absent, win versus lose, and producer identity, so at least
           one holding gives exactly one, with no added or omitted requirement.'
+        differences: []
+  claim:L221_bookkeeping_speculative_removal_does_not_resolve_lifecycle:
+    kind: claim
+    subject_id: L221_bookkeeping_speculative_removal_does_not_resolve_lifecycle
+    subject_signature: 049516bd8a6c168f7642d7aa78421d28035e3e0bf7fdcd5c6c028f01959fa61b
+    roundtrip:
+      subject_signature: 049516bd8a6c168f7642d7aa78421d28035e3e0bf7fdcd5c6c028f01959fa61b
+      status: TRANSLATED
+      natural_language: 'For every logical edit identity e and every protocol transition t, if both of the following hold:
+        (1) t is a reachable client protocol transition, meaning t occurs on a reachable execution of the normal client speculative
+        lifecycle, with impossible transitions and transitions outside that lifecycle excluded; and (2) t is a bookkeeping-only
+        speculative removal transition for e, meaning t performs bookkeeping deletion, relabeling, or loss of pending or retained
+        speculative representation for the exact logical edit identity e — where the pending representations include client_pending_edits,
+        i.e. unresolved logical client edits retained by client_change_id while their canonical acceptance outcome or conflict
+        disposition is not yet known, and client_speculative_overlays, i.e. locally retained optimistic representations of
+        unresolved logical edits partitioned by document identity, which need not all be exposed in the current user-visible
+        document — without authoritative reconciliation of e and without an explicit or equivalent terminal disposition that
+        ends e''s normal speculative lifecycle, where the removal is bookkeeping-only with respect to e, this condition does
+        not require t to do nothing else, and t may also perform other actions provided none of them authoritatively reconciles
+        e or terminally disposes of e''s lifecycle; then t is a bookkeeping removal that does not resolve e''s lifecycle,
+        meaning t does not classify, justify, or semantically treat the exact logical edit identity e as resolved or terminalized,
+        and e remains unresolved in protocol semantics even if the physical bookkeeping representations were dropped.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 049516bd8a6c168f7642d7aa78421d28035e3e0bf7fdcd5c6c028f01959fa61b
+        verdict: EQUIVALENT
+        reason: 'The universal implication over reachable transitions and logical edit identities preserves the source: the
+          antecedent predicate captures bookkeeping deletion, relabeling, or loss of the pending/retained speculative representation
+          without authoritative reconciliation or terminal disposition, while allowing other non-reconciling, non-disposing
+          actions, and the consequent captures not classifying, justifying, or treating the edit as resolved or terminalized
+          and its remaining unresolved even if the physical bookkeeping was dropped.'
+        differences: []
+      strengthening:
+        subject_signature: 049516bd8a6c168f7642d7aa78421d28035e3e0bf7fdcd5c6c028f01959fa61b
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over the same transitions and edit identities, guards with the same reachable
+          normal-lifecycle condition, encodes bookkeeping deletion/relabeling/loss of pending or overlay representation without
+          authoritative reconciliation or terminal disposition (allowing other non-reconciling, non-disposing actions) in
+          the antecedent predicate, and asserts exactly the source consequence that the edit is not classified, justified,
+          or treated as resolved/terminalized and remains unresolved despite the physical drop.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 049516bd8a6c168f7642d7aa78421d28035e3e0bf7fdcd5c6c028f01959fa61b
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal quantification over reachable transitions and logical edit identities,
+          the bookkeeping deletion/relabeling/loss precondition over client_pending_edits or client_speculative_overlays without
+          authoritative reconciliation or terminal disposition, the allowance for other non-reconciling non-disposing actions,
+          and the consequence that the edit is not classified, justified, or treated as resolved/terminalized and remains
+          unresolved despite dropped representations.
         differences: []
