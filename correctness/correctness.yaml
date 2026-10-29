@@ -5535,14 +5535,17 @@ claims:
     source_refs:
       - final_architecture
       - ot_input_output
-    statement: "Every normal submitted_request representing an in-horizon logical_client_edit is within
-      the submitted-request scope eligible for OT or an authoritative terminal decision, whether or not
-      processing succeeds or completes. Its document_id, client_change_id, raw_edit operation semantics,
-      and base_revision derive from that same logical_client_edit and its canonical authoring state D@F,
-      where base_revision equals F. Request construction, serialization, dispatch, and normal retry do
-      not substitute another logical operation while retaining that identity and frontier tuple. Such
-      a request therefore preserves the same request identity, raw_edit semantics, and canonical authoring
-      frontier, so those values cannot be cross-bound to a different logical operation."
+    statement: "Every normal submitted_request representing a logical_client_edit within the 30-day normal
+      retry eligibility horizon is within the submitted-request scope eligible for OT or an authoritative
+      terminal decision, whether or not processing succeeds or completes. This scope includes initial
+      normal submissions as well as normal retries; no prior submission or retransmission is required.
+      Every such request, including an initial normal submission, satisfies all of the following guarantees.
+      Its document_id, client_change_id, raw_edit operation semantics, and base_revision derive from that
+      same logical_client_edit and its canonical authoring state D@F, where base_revision equals F. Request
+      construction, serialization, dispatch, and normal retry do not substitute another logical operation
+      while retaining that identity and frontier tuple. Such a request therefore preserves the same request
+      identity, raw_edit semantics, and canonical authoring frontier, so those values cannot be cross-bound
+      to a different logical operation."
     verification:
       verifiers:
         - intent: Submit normal retry requests for an in-horizon logical edit and check the request
