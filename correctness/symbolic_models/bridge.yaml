@@ -64,6 +64,8 @@ functions:
     - claim:L14_accepted_idempotency_identity_survives_lifecycle
     - claim:L162_terminal_state_transition_preserves_single_outcome
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
+    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
+    - claim:L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
   reachable_client_state:
     args:
     - ClientState
@@ -415,6 +417,7 @@ functions:
     - claim:L224_committed_acceptance_history_matches_acceptance_events
     - claim:L226_counted_accepted_evidence_supplies_non_reusable_classification
     - claim:L227_accepted_classification_is_retained_through_eligibility_horizon
+    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
   accepted_evidence_for_key:
     args:
     - AuthoritativeState
@@ -476,6 +479,7 @@ functions:
     - contract:ot_result_frontier_binding
     - claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance
     - claim:L99_ot_result_is_bound_to_acceptance_frontier
+    - claim:L231_accepted_terminal_result_producer_binding_and_identity
   acceptance_key:
     args:
     - CanonicalAcceptance
@@ -483,6 +487,11 @@ functions:
     catalog_symbols:
     - canonical_accepted_change
     meaning: The authoritative idempotency identity carried by canonical acceptance a.
+    semantic_anchors:
+    - contract:accepted_evidence_provenance
+    - contract:accepted_terminal_result_binding
+    - claim:G5_retry_resolves_idempotently
+    - claim:L231_accepted_terminal_result_producer_binding_and_identity
   evidence_derived_from_acceptance:
     args:
     - AcceptedEvidence
@@ -1640,6 +1649,11 @@ functions:
     catalog_symbols:
     - idempotency_key
     meaning: The full idempotency_key carried by authoritative terminal result t.
+    semantic_anchors:
+    - contract:accepted_terminal_result_binding
+    - claim:G5_retry_resolves_idempotently
+    - claim:L171_terminal_outcome_representation_migration_preserves_mapping
+    - claim:L231_accepted_terminal_result_producer_binding_and_identity
   accepted_terminal_result_within_retry_horizon:
     args:
     - TerminalResultRecord
@@ -1692,6 +1706,7 @@ functions:
     - claim:C45_terminal_outcome_publication_matches_canonical_acceptance
     - claim:C44_terminal_outcome_entry_matches_canonical_acceptance
     - claim:C43_terminal_outcome_entry_state_is_coherent
+    - claim:L231_accepted_terminal_result_producer_binding_and_identity
   accepted_terminal_lifecycle_rewrite:
     args:
     - ProtocolTransition
@@ -1705,6 +1720,7 @@ functions:
     semantic_anchors:
     - contract:accepted_terminal_result_binding
     - claim:G5_retry_resolves_idempotently
+    - claim:L231_accepted_terminal_result_producer_binding_and_identity
   rejected_terminal_result_record:
     args:
     - TerminalResultRecord
@@ -1784,6 +1800,8 @@ functions:
     - claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance
     - claim:L162_terminal_state_transition_preserves_single_outcome
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
+    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
+    - claim:L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
   at_most_one_terminal_outcome_for_key:
     args:
     - AuthoritativeState
@@ -1797,6 +1815,7 @@ functions:
     - claim:L162_terminal_state_transition_preserves_single_outcome
     - claim:L184_terminal_outcome_entry_has_single_authoritative_value
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
+    - claim:L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
   accepted_terminal_outcome_matches_canonical_acceptance:
     args:
     - AuthoritativeState
@@ -1808,6 +1827,7 @@ functions:
     meaning: If exact full composite identity k = (document_id, client_change_id) has an ACCEPTED terminal outcome in s, canonical accepted history for that same document contains the matching canonical acceptance for that exact identity and no incompatible REJECTED outcome exists for that same identity.
     semantic_anchors:
     - contract:idempotency_terminal_outcome_coherence
+    - claim:L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
   rejected_terminal_outcome_excludes_canonical_acceptance:
     args:
     - AuthoritativeState
@@ -1819,6 +1839,7 @@ functions:
     meaning: If exact full composite identity k = (document_id, client_change_id) has a REJECTED terminal outcome in s, canonical accepted history for that same document contains no canonical acceptance for that exact identity.
     semantic_anchors:
     - contract:idempotency_terminal_outcome_coherence
+    - claim:L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
   terminal_outcome_is_immutable:
     args:
     - AuthoritativeState
@@ -1842,6 +1863,7 @@ functions:
     meaning: Transition t is any acceptance attempt or definitive-rejection attempt for exact full idempotency key k while that logical identity remains within the 30-day normal retry eligibility horizon; no acceptance or definitive-rejection path is excluded by being classified outside some narrower terminal-result subprotocol, while post-expiry re-submission is outside this predicate.
     semantic_anchors:
     - claim:G5_retry_resolves_idempotently
+    - claim:L229_terminal_attempt_arbitration_classification_and_gate
   terminal_attempt_uses_shared_key_arbitration:
     args:
     - ProtocolTransition
@@ -1852,6 +1874,7 @@ functions:
     meaning: Acceptance or definitive-rejection attempt t for exact key k arbitrates through the same single authoritative per-key terminal state used by every competing acceptance and definitive-rejection attempt for k; no independent arbitration domain may decide a second terminal outcome.
     semantic_anchors:
     - claim:G5_retry_resolves_idempotently
+    - claim:L229_terminal_attempt_arbitration_classification_and_gate
   authoritative_terminal_lifecycle_rewrite:
     args:
     - ProtocolTransition
@@ -1864,6 +1887,7 @@ functions:
     meaning: Transition t is an authoritative lifecycle representation rewrite, within the 30-day normal retry eligibility horizon, from terminal-result representation before to representation after for the same already-linearized logical terminal outcome and the same full idempotency key; the durable physical representation may change.
     semantic_anchors:
     - claim:G5_retry_resolves_idempotently
+    - claim:L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
   terminal_lifecycle_rewrite_preserves_exact_outcome:
     args:
     - ProtocolTransition
@@ -1875,6 +1899,7 @@ functions:
     meaning: 'Lifecycle rewrite t preserves the same already-linearized logical terminal outcome from before to after: an ACCEPTED outcome preserves the exact canonical result, and a REJECTED outcome preserves the same definitive rejection reason. Physical representation may change; for REJECTED this predicate does not require preserving the same rejection-decision object or producer when the exact request binding and required authoritative-context justification remain valid.'
     semantic_anchors:
     - claim:G5_retry_resolves_idempotently
+    - claim:L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
   canonical_acceptance_payload_record:
     args:
     - CanonicalAcceptance
@@ -1997,6 +2022,7 @@ functions:
     meaning: Request r is a normal submitted_request representing one logical edit within the 30-day normal retry eligibility horizon.
     semantic_anchors:
     - claim:G5_retry_resolves_idempotently
+    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
   retry_request_identity_payload_frontier_coherent:
     args:
     - Request
@@ -2009,6 +2035,7 @@ functions:
     meaning: Normal retry request r preserves the same full request identity, raw_edit semantics, and canonical authoring frontier for its logical operation; those coordinates are not cross-bound from another operation.
     semantic_anchors:
     - claim:G5_retry_resolves_idempotently
+    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
   request_represents_logical_edit:
     args:
     - Request
@@ -2026,6 +2053,7 @@ functions:
     - claim:G6_accepted_change_preserves_ot_semantics
     - contract:logical_edit_request_payload_binding
     - claim:L182_logical_edit_request_payload_binding_is_preserved
+    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
   accepted_ot_context_is_preceding_canonical_prefix:
     args:
     - CanonicalAcceptance
@@ -2579,6 +2607,7 @@ functions:
     - source:ot_input_output
     - source:final_architecture
     - claim:L123_acceptance_payload_and_identity_share_submitted_request
+    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
   request_ot_acceptance_eligible:
     args:
     - Request
@@ -2792,6 +2821,7 @@ functions:
     meaning: Accepted terminal result t carries a canonical result produced by the same acceptance execution that produced and committed canonical acceptance a for the same full identity. The producer provenance must be correct at authoritative terminalization and remain the same in any later lifecycle representation on which this relation is asserted, but this claim-level relation does not require the binding metadata to have been materialized during acceptance-transaction assembly and does not treat a transient intermediate metadata substitution that is discarded before authoritative terminalization as a violation.
     semantic_anchors:
     - claim:G5_retry_resolves_idempotently
+    - claim:L231_accepted_terminal_result_producer_binding_and_identity
   accepted_terminal_durable_representation:
     args:
     - TerminalResultRecord
@@ -2928,6 +2958,7 @@ functions:
     - claim:L211_accepted_terminal_result_origin_is_authoritative
     - claim:C46_accepted_terminal_result_preserves_acceptance_provenance
     - claim:L192_terminal_publication_preserves_store_identity_provenance
+    - claim:L231_accepted_terminal_result_producer_binding_and_identity
   accepted_terminal_compaction_retention_edge:
     args:
     - TerminalResultRecord
@@ -2980,6 +3011,7 @@ functions:
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
     - claim:L192_terminal_publication_preserves_store_identity_provenance
     - claim:L117_retry_existing_acceptance_matches_full_idempotency_key
+    - claim:L231_accepted_terminal_result_producer_binding_and_identity
   accepted_terminal_matching_canonical_acceptance:
     args:
     - CanonicalAcceptance
@@ -3151,6 +3183,7 @@ functions:
     - claim:L162_terminal_state_transition_preserves_single_outcome
     - claim:L184_terminal_outcome_entry_has_single_authoritative_value
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
+    - claim:L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
   state_has_rejected_terminal_outcome:
     args:
     - AuthoritativeState
@@ -3164,6 +3197,7 @@ functions:
     - claim:L162_terminal_state_transition_preserves_single_outcome
     - claim:L184_terminal_outcome_entry_has_single_authoritative_value
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
+    - claim:L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
   transition_preserves_terminal_outcome:
     args:
     - ProtocolTransition
@@ -3290,6 +3324,7 @@ functions:
     semantic_anchors:
     - claim:L164_terminal_paths_share_per_key_arbitration
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
+    - claim:L229_terminal_attempt_arbitration_classification_and_gate
   terminal_path_passes_shared_arbitration_gate:
     args:
     - ProtocolTransition
@@ -3301,6 +3336,7 @@ functions:
     semantic_anchors:
     - claim:L164_terminal_paths_share_per_key_arbitration
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
+    - claim:L229_terminal_attempt_arbitration_classification_and_gate
   terminal_key_is_normal_retry_eligible:
     args:
     - AuthoritativeState
@@ -3543,6 +3579,7 @@ functions:
     semantic_anchors:
     - claim:L164_terminal_paths_share_per_key_arbitration
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
+    - claim:L229_terminal_attempt_arbitration_classification_and_gate
   terminal_decision_publish_or_commit_path:
     args:
     - ProtocolTransition
@@ -5709,6 +5746,7 @@ functions:
     meaning: 'Submitted request r''s complete submitted tuple is bound to logical edit e at the submitted-request endpoint: r''s document_id, client_change_id, and base_revision are e''s identity (document_id = D, client_change_id = k) and authoring frontier F from e''s canonical authoring state D@F, and the logical operation encoded by r''s submitted raw_edit is e''s own operation against that same captured D@F authoring state. Equivalently, the request construction, serialization, dispatch, and normal retry that produced the submitted request r did not preserve e''s (D, k, F) while substituting a semantically different logical operation into r''s submitted raw_edit. This predicate speaks only about the submitted request r itself, as submitted: it asserts nothing about any intermediate request-lineage representation, imposes no condition on a stage that does not survive into the submitted request, and is not falsified by a transient substitution that was undone before submission. It does not by itself assert that r represents no other logical edit, and it requires no dispatch, retry, OT invocation, acceptance, or terminal-decision progress beyond r being the submitted request.'
     semantic_anchors:
     - claim:L182_logical_edit_request_payload_binding_is_preserved
+    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
   ot_success_computed_against_frontier:
     args:
     - OTSuccessResult
@@ -5885,6 +5923,7 @@ functions:
     meaning: 'For submitted request r whose semantic source is logical edit e: no step of the request construction, serialization, dispatch, or normal retry that produced r preserves e''s identity and authoring frontier (document_id = D, client_change_id = k, base_revision = F, from e''s canonical authoring state D@F) while substituting a semantically different logical operation for e''s own operation into the raw_edit being carried. Those processes may change the request''s physical representation only in semantics-preserving ways. A substitution of a different logical operation under e''s (D, k, F) falsifies this predicate even if a later step of those processes restores e''s operation before submission. This predicate constrains the behavior of the four named processes themselves: it asserts nothing about any intermediate representation as an object -- in particular it does not assert that any intermediate representation is a submitted request, remains bound to e''s complete tuple, or carries (D, k, F) at all -- and it requires no byte-identical serialization and no dispatch, retry, OT invocation, acceptance, or terminal-decision progress beyond the processes that produced r. It does not by itself assert that r represents no other logical edit.'
     semantic_anchors:
     - claim:L182_logical_edit_request_payload_binding_is_preserved
+    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
   acceptance_linearization_prestate_latest_revision:
     args:
     - CanonicalAcceptance
@@ -20409,6 +20448,386 @@ claims:
                     - var: e
                     - var: s
                     - var: k
+  L228_normal_retry_request_coherence_and_horizon_alignment:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            r: Request
+          body:
+            implies:
+            - call:
+                fn: normal_retry_submitted_request
+                args:
+                - var: r
+            - call:
+                fn: submitted_request_eligible_for_ot_or_terminal_decision
+                args:
+                - var: r
+      - forall:
+          vars:
+            r: Request
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: submitted_request_eligible_for_ot_or_terminal_decision
+                  args:
+                  - var: r
+              - exists:
+                  vars:
+                    e: LogicalEdit
+                  body:
+                    and:
+                    - call:
+                        fn: request_represents_logical_edit
+                        args:
+                        - var: r
+                        - var: e
+                    - call:
+                        fn: submitted_request_tuple_bound_to_logical_edit
+                        args:
+                        - var: r
+                        - var: e
+                    - call:
+                        fn: request_processes_do_not_substitute_logical_operation
+                        args:
+                        - var: r
+                        - var: e
+            - call:
+                fn: retry_request_identity_payload_frontier_coherent
+                args:
+                - var: r
+      - forall:
+          vars:
+            s: AuthoritativeState
+            k: IdempotencyKey
+          body:
+            implies:
+            - call:
+                fn: reachable_authoritative_state
+                args:
+                - var: s
+            - implies:
+              - call:
+                  fn: within_retry_reconnect_eligibility
+                  args:
+                  - var: s
+                  - var: k
+              - call:
+                  fn: terminal_key_within_retry_horizon
+                  args:
+                  - var: s
+                  - var: k
+  L229_terminal_attempt_arbitration_classification_and_gate:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            x: ProtocolTransition
+            k: IdempotencyKey
+          body:
+            implies:
+            - call:
+                fn: terminal_attempt_for_key
+                args:
+                - var: x
+                - var: k
+            - and:
+              - call:
+                  fn: acceptance_or_rejection_path_for_key
+                  args:
+                  - var: x
+                  - var: k
+              - call:
+                  fn: idempotency_key_is_eligible
+                  args:
+                  - var: k
+      - forall:
+          vars:
+            x: ProtocolTransition
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: acceptance_or_rejection_path_for_key
+                  args:
+                  - var: x
+                  - var: k
+              - call:
+                  fn: idempotency_key_is_eligible
+                  args:
+                  - var: k
+            - and:
+              - implies:
+                - call:
+                    fn: terminal_path_passes_shared_arbitration_gate
+                    args:
+                    - var: x
+                    - var: k
+                - call:
+                    fn: terminal_attempt_uses_shared_key_arbitration
+                    args:
+                    - var: x
+                    - var: k
+              - implies:
+                - call:
+                    fn: terminal_attempt_uses_shared_key_arbitration
+                    args:
+                    - var: x
+                    - var: k
+                - call:
+                    fn: terminal_path_passes_shared_arbitration_gate
+                    args:
+                    - var: x
+                    - var: k
+  L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            s: AuthoritativeState
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_authoritative_state
+                  args:
+                  - var: s
+              - call:
+                  fn: terminal_key_within_retry_horizon
+                  args:
+                  - var: s
+                  - var: k
+            - call:
+                fn: at_most_one_terminal_outcome_for_key
+                args:
+                - var: s
+                - var: k
+      - forall:
+          vars:
+            s: AuthoritativeState
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_authoritative_state
+                  args:
+                  - var: s
+              - call:
+                  fn: terminal_key_within_retry_horizon
+                  args:
+                  - var: s
+                  - var: k
+              - call:
+                  fn: state_has_accepted_terminal_outcome
+                  args:
+                  - var: s
+                  - var: k
+            - call:
+                fn: accepted_terminal_outcome_matches_canonical_acceptance
+                args:
+                - var: s
+                - var: k
+      - forall:
+          vars:
+            s: AuthoritativeState
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_authoritative_state
+                  args:
+                  - var: s
+              - call:
+                  fn: terminal_key_within_retry_horizon
+                  args:
+                  - var: s
+                  - var: k
+              - call:
+                  fn: state_has_accepted_terminal_outcome
+                  args:
+                  - var: s
+                  - var: k
+            - not:
+                call:
+                  fn: state_has_rejected_terminal_outcome
+                  args:
+                  - var: s
+                  - var: k
+      - forall:
+          vars:
+            s: AuthoritativeState
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: reachable_authoritative_state
+                  args:
+                  - var: s
+              - call:
+                  fn: terminal_key_within_retry_horizon
+                  args:
+                  - var: s
+                  - var: k
+              - call:
+                  fn: state_has_rejected_terminal_outcome
+                  args:
+                  - var: s
+                  - var: k
+            - call:
+                fn: rejected_terminal_outcome_excludes_canonical_acceptance
+                args:
+                - var: s
+                - var: k
+      - forall:
+          vars:
+            x: ProtocolTransition
+            r1: TerminalResultRecord
+            r2: TerminalResultRecord
+          body:
+            implies:
+            - call:
+                fn: authoritative_terminal_lifecycle_rewrite
+                args:
+                - var: x
+                - var: r1
+                - var: r2
+            - call:
+                fn: terminal_lifecycle_rewrite_preserves_exact_outcome
+                args:
+                - var: x
+                - var: r1
+                - var: r2
+  L231_accepted_terminal_result_producer_binding_and_identity:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            t: TerminalResultRecord
+            a: CanonicalAcceptance
+          body:
+            and:
+            - implies:
+              - call:
+                  fn: claim_accepted_terminal_result_producer_matches
+                  args:
+                  - var: t
+                  - var: a
+              - and:
+                - call:
+                    fn: terminal_result_bound_to_acceptance_execution
+                    args:
+                    - var: t
+                    - var: a
+                - call:
+                    fn: accepted_terminal_matching_acceptance_committed
+                    args:
+                    - var: a
+                - call:
+                    fn: accepted_terminal_binding_identity_matches
+                    args:
+                    - var: t
+                    - var: a
+            - implies:
+              - and:
+                - call:
+                    fn: terminal_result_bound_to_acceptance_execution
+                    args:
+                    - var: t
+                    - var: a
+                - call:
+                    fn: accepted_terminal_matching_acceptance_committed
+                    args:
+                    - var: a
+                - call:
+                    fn: accepted_terminal_binding_identity_matches
+                    args:
+                    - var: t
+                    - var: a
+              - call:
+                  fn: claim_accepted_terminal_result_producer_matches
+                  args:
+                  - var: t
+                  - var: a
+      - forall:
+          vars:
+            a: CanonicalAcceptance
+          body:
+            implies:
+            - call:
+                fn: accepted_terminal_matching_acceptance_committed
+                args:
+                - var: a
+            - call:
+                fn: committed_canonical_acceptance
+                args:
+                - var: a
+      - forall:
+          vars:
+            t: TerminalResultRecord
+            a: CanonicalAcceptance
+          body:
+            implies:
+            - call:
+                fn: accepted_terminal_binding_identity_matches
+                args:
+                - var: t
+                - var: a
+            - eq:
+              - call:
+                  fn: terminal_result_idempotency_key
+                  args:
+                  - var: t
+              - call:
+                  fn: acceptance_key
+                  args:
+                  - var: a
+      - forall:
+          vars:
+            p: ProtocolTransition
+            r1: TerminalResultRecord
+            r2: TerminalResultRecord
+          body:
+            implies:
+            - call:
+                fn: accepted_terminal_lifecycle_rewrite
+                args:
+                - var: p
+                - var: r1
+                - var: r2
+            - exists:
+                vars:
+                  a: CanonicalAcceptance
+                body:
+                  and:
+                  - call:
+                      fn: committed_canonical_acceptance
+                      args:
+                      - var: a
+                  - call:
+                      fn: claim_accepted_terminal_result_producer_matches
+                      args:
+                      - var: r1
+                      - var: a
+                  - call:
+                      fn: claim_accepted_terminal_result_producer_matches
+                      args:
+                      - var: r2
+                      - var: a
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant

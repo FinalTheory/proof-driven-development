@@ -198,9 +198,8 @@ refinement:
       blocked_by: []
       signature: 822da72529c09346d859ceee8bc20a1a4173368c4d07979e1ad7dd9b32938e03
     G5_retry_resolves_idempotently:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 942d10194b772193216b4cf5f9c2cf032ba312ae415586c46087fe596f87c3f1
     C7_revision_frontier_is_linear:
       status: stable
       blocked_by: []
@@ -861,6 +860,18 @@ refinement:
       status: stable
       blocked_by: []
       signature: a09876460ada8526dc9503e4d42955399491192d23b34ea6ff92fef356097dbf
+    L228_normal_retry_request_coherence_and_horizon_alignment:
+      status: pending
+      blocked_by: []
+    L229_terminal_attempt_arbitration_classification_and_gate:
+      status: pending
+      blocked_by: []
+    L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation:
+      status: pending
+      blocked_by: []
+    L231_accepted_terminal_result_producer_binding_and_identity:
+      status: pending
+      blocked_by: []
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -1095,6 +1106,13 @@ claims:
       - L183_definitive_rejection_preserves_request_provenance
       - C46_accepted_terminal_result_preserves_acceptance_provenance
       - L204_state_dependent_rejection_uses_authoritative_context
+      - L228_normal_retry_request_coherence_and_horizon_alignment
+      - L229_terminal_attempt_arbitration_classification_and_gate
+      - L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
+      - L231_accepted_terminal_result_producer_binding_and_identity
+      - L164_terminal_paths_share_per_key_arbitration
+      - C42_nonterminal_lifecycle_preserves_terminal_outcomes
+      - C43_terminal_outcome_entry_state_is_coherent
     source_refs:
       - ot_input_output
       - accepted_change_log
@@ -5504,6 +5522,100 @@ claims:
             representations without requiring physical-row retention.
           kind: state_machine
     kind: leaf
+  L228_normal_retry_request_coherence_and_horizon_alignment:
+    mechanisms:
+      - idempotency_gate
+    source_refs:
+      - final_architecture
+      - ot_input_output
+    statement: "Every normal submitted_request representing an in-horizon logical_client_edit is within
+      the submitted-request scope eligible for OT or an authoritative terminal decision, whether or not
+      processing succeeds or completes. Its document_id, client_change_id, raw_edit operation semantics,
+      and base_revision derive from that same logical_client_edit and its canonical authoring state D@F,
+      where base_revision equals F. Request construction, serialization, dispatch, and normal retry do
+      not substitute another logical operation while retaining that identity and frontier tuple. Such
+      a request therefore preserves the same request identity, raw_edit semantics, and canonical authoring
+      frontier, so those values cannot be cross-bound to a different logical operation. The protocol's
+      30-day normal retry and reconnect eligibility lies within its configured normal retry eligibility
+      boundary: in every reachable authoritative state, a key within retry and reconnect eligibility is
+      within the retry horizon for that key."
+    verification:
+      verifiers:
+        - intent: Submit normal retry requests for an in-horizon logical edit and check the request
+            stays eligible for OT or a terminal decision, its document, change, raw-edit and
+            base-revision tuple still names the same edit, and no processing step substitutes
+            another operation.
+          kind: state_machine
+    kind: leaf
+  L229_terminal_attempt_arbitration_classification_and_gate:
+    mechanisms:
+      - idempotency_gate
+    source_refs:
+      - final_architecture
+    statement: Every in-horizon acceptance or definitive-rejection attempt for exact full
+      idempotency_key k, producing a terminal_result, is an eligible acceptance-or-rejection path
+      for k, and k is an eligible idempotency_key. Before any terminal decision becomes
+      authoritative, that path passes through the single shared per-key terminal-outcome arbitration
+      gate over the idempotency_terminal_outcomes for k. For these classified attempts, passing
+      through that gate is the shared-key arbitration asserted for terminal attempts for k.
+    verification:
+      verifiers:
+        - intent: Enumerate in-horizon acceptance and definitive-rejection attempts for a key and
+            check each passes through the single shared per-key arbitration gate before becoming
+            authoritative, with no bypass path.
+          kind: state_machine
+    kind: leaf
+  L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation:
+    mechanisms:
+      - idempotency_gate
+      - accepted_history_log
+    source_refs:
+      - final_architecture
+      - accepted_change_log
+      - authoritative_truth
+    statement: 'In every reachable authoritative state within the normal retry horizon, there is at most
+      one terminal outcome for each idempotency_key in the idempotency_terminal_outcomes for that key,
+      counting absence of a terminal outcome as zero outcomes. An ACCEPTED outcome has its matching same-key
+      committed canonical acceptance recorded in the accepted_change_log and excludes REJECTED; a REJECTED
+      outcome has no same-key canonical acceptance in the accepted_change_log, so the current canonical
+      accepted history contains no acceptance for that key. Any authoritative lifecycle representation
+      rewrite of an already-linearized terminal_result preserves the same full idempotency_key and exact
+      logical value: the same canonical result for ACCEPTED or the same definitive reason for REJECTED.
+      These record-level observations describe the corresponding authoritative store transition; a physical
+      rewrite does not create a new terminal decision.'
+    verification:
+      verifiers:
+        - intent: In reachable in-horizon states, check at most one terminal outcome per key
+            including the zero-outcome case, ACCEPTED outcomes match a committed canonical
+            acceptance, REJECTED outcomes match no acceptance in history, and lifecycle rewrites
+            preserve key and exact value.
+          kind: state_machine
+    kind: leaf
+  L231_accepted_terminal_result_producer_binding_and_identity:
+    mechanisms:
+      - acceptance_transaction
+      - idempotency_gate
+    source_refs:
+      - accepted_change_log
+      - authoritative_truth
+      - final_architecture
+    statement: An authoritative ACCEPTED terminal_result has the claim-level matching-producer
+      relation to canonical_accepted_change a exactly when its canonical result comes from a's
+      acceptance execution, a is the committed matching acceptance for that terminal_result, and the
+      terminal_result and a carry the same complete document_id and client_change_id identity. A
+      committed matching acceptance is a committed canonical_accepted_change recorded in the
+      accepted_change_log, and a matching binding identity for a terminal_result and a
+      canonical_accepted_change means the terminal_result's idempotency_key equals the acceptance's
+      idempotency_key. An in-horizon ACCEPTED lifecycle rewrite relates two representations of the
+      same logical outcome and full idempotency_key identity; both representations retain that same
+      committed acceptance producer.
+    verification:
+      verifiers:
+        - intent: For accepted terminal results, check the producer relation holds exactly when
+            execution binding, committed matching acceptance, and full identity match coincide, and
+            that lifecycle rewrites keep the same committed producer for both representations.
+          kind: state_machine
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -6850,7 +6962,7 @@ id_allocator:
     A: 7
     G: 13
     C: 48
-    L: 228
+    L: 232
     D: 15
     T: 3
 assurance:
@@ -7415,6 +7527,14 @@ assurance:
       status: planned
     L227_accepted_classification_is_retained_through_eligibility_horizon:
       status: planned
+    L228_normal_retry_request_coherence_and_horizon_alignment:
+      status: planned
+    L229_terminal_attempt_arbitration_classification_and_gate:
+      status: planned
+    L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation:
+      status: planned
+    L231_accepted_terminal_result_producer_binding_and_identity:
+      status: planned
 formalization:
   claims:
     G0_acked_edit_survives_failover:
@@ -7758,6 +7878,14 @@ formalization:
     L226_counted_accepted_evidence_supplies_non_reusable_classification:
       mode: symbolic
     L227_accepted_classification_is_retained_through_eligibility_horizon:
+      mode: symbolic
+    L228_normal_retry_request_coherence_and_horizon_alignment:
+      mode: symbolic
+    L229_terminal_attempt_arbitration_classification_and_gate:
+      mode: symbolic
+    L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation:
+      mode: symbolic
+    L231_accepted_terminal_result_producer_binding_and_identity:
       mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:
