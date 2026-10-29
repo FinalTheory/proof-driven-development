@@ -6328,6 +6328,16 @@ functions:
     - claim:L225_counted_accepted_evidence_requires_committed_mechanism
     - claim:L226_counted_accepted_evidence_supplies_non_reusable_classification
     meaning: Evidence representation e is counted by authoritative state s as already-accepted evidence for the exact full identity k. This relation identifies the state/key occurrence; it does not itself assert valid provenance, retention, or a committed acceptance.
+  counted_durable_accepted_evidence_representation_for_key:
+    args:
+    - AcceptedEvidence
+    - AuthoritativeState
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L223_authoritative_accepted_evidence_counts_durable_representation
+    meaning: Evidence representation e is a durable representation of accepted_idempotency_evidence counted by authoritative state s for the exact full identity k = (document_id, client_change_id). Counting here means that s counts e as such a representation for k; whether s also counts e as already-accepted evidence is a separate condition. Durability concerns the represented evidence's persistence in authoritative durable state, including through equivalent representations; it does not require retention of the same physical row or runtime object. This relation concerns representations of that accepted_idempotency_evidence, not arbitrary durable records for k. It does not itself assert already-accepted classification, valid provenance, retention throughout the retry/reconnect horizon, or a committed acceptance.
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -19556,7 +19566,7 @@ claims:
                       e: AcceptedEvidence
                     body:
                       call:
-                        fn: accepted_evidence_in_state_for_key
+                        fn: counted_durable_accepted_evidence_representation_for_key
                         args:
                         - var: e
                         - var: s
@@ -19567,7 +19577,7 @@ claims:
                       e: AcceptedEvidence
                     body:
                       call:
-                        fn: accepted_evidence_in_state_for_key
+                        fn: counted_durable_accepted_evidence_representation_for_key
                         args:
                         - var: e
                         - var: s
@@ -19591,7 +19601,7 @@ claims:
                   - var: s
                   - var: k
               - call:
-                  fn: accepted_evidence_in_state_for_key
+                  fn: counted_durable_accepted_evidence_representation_for_key
                   args:
                   - var: e
                   - var: s
