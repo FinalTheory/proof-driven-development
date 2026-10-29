@@ -837,8 +837,9 @@ refinement:
       blocked_by: []
       signature: 7ead29336a212b11b6b0f6e63a1abb7985850b98156223b4fc83c17ab53ff518
     L222_superseded_document_ownership_authority_never_returns:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 0aa741945ca43d870bc0f2278c171d096027c5ac7807fd786440ca021f43697c
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
