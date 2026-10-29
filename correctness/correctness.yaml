@@ -5555,10 +5555,10 @@ claims:
     statement: Every in-horizon acceptance or definitive-rejection attempt for exact full
       idempotency_key k is an eligible acceptance-or-rejection path for k, and k is an eligible
       idempotency_key. A terminal_result for k is the authoritative terminal outcome for that key.
-      Before any terminal decision becomes authoritative, that path passes through the single shared
-      per-key terminal-outcome arbitration gate over the idempotency_terminal_outcomes for k. For
-      these classified attempts, passing through that gate is the shared-key arbitration asserted
-      for terminal attempts for k.
+      That path passes through the single shared per-key terminal-outcome arbitration gate over the
+      idempotency_terminal_outcomes for k, and no terminal decision becomes authoritative except
+      through that gate. For these classified attempts, passing through that gate is the shared-key
+      arbitration asserted for terminal attempts for k.
     verification:
       verifiers:
         - intent: Enumerate in-horizon acceptance and definitive-rejection attempts for a key and
