@@ -875,6 +875,9 @@ refinement:
       status: stable
       blocked_by: []
       signature: 60124b0484eaf715f3157ff5087c2c047e463d9a8844e48a301f77b2ec42c9bf
+    L232_retry_reconnect_eligibility_implies_retry_horizon:
+      status: pending
+      blocked_by: []
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -1116,6 +1119,7 @@ claims:
       - L164_terminal_paths_share_per_key_arbitration
       - C42_nonterminal_lifecycle_preserves_terminal_outcomes
       - C43_terminal_outcome_entry_state_is_coherent
+      - L232_retry_reconnect_eligibility_implies_retry_horizon
     source_refs:
       - ot_input_output
       - accepted_change_log
@@ -5538,10 +5542,7 @@ claims:
       where base_revision equals F. Request construction, serialization, dispatch, and normal retry do
       not substitute another logical operation while retaining that identity and frontier tuple. Such
       a request therefore preserves the same request identity, raw_edit semantics, and canonical authoring
-      frontier, so those values cannot be cross-bound to a different logical operation. The protocol's
-      30-day normal retry and reconnect eligibility lies within its configured normal retry eligibility
-      boundary: in every reachable authoritative state, a key within retry and reconnect eligibility is
-      within the retry horizon for that key."
+      frontier, so those values cannot be cross-bound to a different logical operation."
     verification:
       verifiers:
         - intent: Submit normal retry requests for an in-horizon logical edit and check the request
@@ -5618,6 +5619,22 @@ claims:
         - intent: For accepted terminal results, check the producer relation holds exactly when
             execution binding, committed matching acceptance, and full identity match coincide, and
             that lifecycle rewrites keep the same committed producer for both representations.
+          kind: state_machine
+    kind: leaf
+  L232_retry_reconnect_eligibility_implies_retry_horizon:
+    mechanisms:
+      - idempotency_gate
+    source_refs:
+      - final_architecture
+    statement: For every reachable authoritative state s and every idempotency key k, if k lies
+      within the 30-day normal retry and reconnect eligibility horizon in s, then k lies within the
+      configured normal retry eligibility horizon in s. The configured horizon need not have a fixed
+      duration.
+    verification:
+      verifiers:
+        - intent: In every reachable authoritative state, check that a key within 30-day
+            retry/reconnect eligibility is within the configured normal retry eligibility horizon,
+            including across snapshot, compaction, and lifecycle cleanup transitions.
           kind: state_machine
     kind: leaf
 catalog:
@@ -6966,7 +6983,7 @@ id_allocator:
     A: 7
     G: 13
     C: 48
-    L: 232
+    L: 233
     D: 15
     T: 3
 assurance:
@@ -7539,6 +7556,8 @@ assurance:
       status: planned
     L231_accepted_terminal_result_producer_binding_and_identity:
       status: planned
+    L232_retry_reconnect_eligibility_implies_retry_horizon:
+      status: planned
 formalization:
   claims:
     G0_acked_edit_survives_failover:
@@ -7890,6 +7909,8 @@ formalization:
     L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation:
       mode: symbolic
     L231_accepted_terminal_result_producer_binding_and_identity:
+      mode: symbolic
+    L232_retry_reconnect_eligibility_implies_retry_horizon:
       mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:

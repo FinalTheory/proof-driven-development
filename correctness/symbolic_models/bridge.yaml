@@ -64,7 +64,7 @@ functions:
     - claim:L14_accepted_idempotency_identity_survives_lifecycle
     - claim:L162_terminal_state_transition_preserves_single_outcome
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
-    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
+    - claim:L232_retry_reconnect_eligibility_implies_retry_horizon
     - claim:L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
   reachable_client_state:
     args:
@@ -417,7 +417,7 @@ functions:
     - claim:L224_committed_acceptance_history_matches_acceptance_events
     - claim:L226_counted_accepted_evidence_supplies_non_reusable_classification
     - claim:L227_accepted_classification_is_retained_through_eligibility_horizon
-    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
+    - claim:L232_retry_reconnect_eligibility_implies_retry_horizon
   accepted_evidence_for_key:
     args:
     - AuthoritativeState
@@ -1801,7 +1801,7 @@ functions:
     - claim:L163_accepted_terminal_outcome_commits_with_canonical_acceptance
     - claim:L162_terminal_state_transition_preserves_single_outcome
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
-    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
+    - claim:L232_retry_reconnect_eligibility_implies_retry_horizon
     - claim:L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
   at_most_one_terminal_outcome_for_key:
     args:
@@ -20534,6 +20534,10 @@ claims:
                 fn: retry_request_identity_payload_frontier_coherent
                 args:
                 - var: r
+  L232_retry_reconnect_eligibility_implies_retry_horizon:
+    contracts: []
+    formula:
+      and:
       - forall:
           vars:
             s: AuthoritativeState
