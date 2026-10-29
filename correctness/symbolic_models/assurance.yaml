@@ -12156,82 +12156,91 @@ records:
   claim:L225_counted_accepted_evidence_requires_committed_mechanism:
     kind: claim
     subject_id: L225_counted_accepted_evidence_requires_committed_mechanism
-    subject_signature: 5396a89d97d5148da7fcc40a99b56348d5c90b14d628adf2aa65f4cf3c4b7d8c
+    subject_signature: 45649e61a3a9d14acb3f0a4ea7d6b49a453029ebfcdba62cf61e716937cf2447
     roundtrip:
-      subject_signature: 5396a89d97d5148da7fcc40a99b56348d5c90b14d628adf2aa65f4cf3c4b7d8c
+      subject_signature: 45649e61a3a9d14acb3f0a4ea7d6b49a453029ebfcdba62cf61e716937cf2447
       status: TRANSLATED
-      natural_language: 'For every accepted-evidence representation e, every authoritative state s, and every idempotency
-        key k, if e is counted by s as already-accepted evidence for the exact full identity k, then both of the following
-        hold. The counted relation itself only identifies this state and key occurrence; it does not by itself assert valid
-        provenance, retention, or a committed acceptance. First, e is authoritative accepted-idempotency evidence, meaning
-        authoritative durable state counts e as establishing that the full identity carried by e is already accepted. Second,
-        at least one of the following four cases holds, where e has only committed establishing provenance means every source
-        that establishes the already-accepted classification of e is a committed canonical acceptance for the full identity
-        carried by e, or an intermediate accepted-evidence representation whose establishing provenance terminates at such
-        an acceptance, with no reservation, in-progress arbitration, pre-commit ownership, aborted, timed-out, cancelled,
-        or never-committed attempt, failed-owner residue, cache-only state, or other provisional or non-authoritative state
-        establishing that classification, and with incidental metadata and inputs that do not establish the classification
-        outside this provenance relation. Case 1: e was acquired on the normal acceptance path, meaning the acceptance flow
-        by which authoritative durable state first gains already-accepted evidence for an identity, as opposed to a lifecycle
-        transformation or a runtime reconstruction; e has only committed establishing provenance; and there exists a canonical
-        acceptance a such that a is a committed canonical accepted-change record in authoritative accepted history, the document_id
-        carried by e equals the document_id carried by a, the client_change_id carried by e equals the client_change_id carried
-        by a, e is derived from and corresponds to a in that a is the acceptance from which the already-accepted evidence
-        of e is established, and e is the committed accepted row or authoritative unique identity of a itself, used directly
-        as the already-accepted evidence and not a separate hot-path accepted-key record or index derived from a. Case 2:
-        e was acquired on the normal acceptance path; a separate hot-path accepted-key record or index, distinct from the
-        committed accepted row or unique identity itself, is the accepted-evidence mechanism for the identity of e; there
-        exists a canonical acceptance a such that a is committed, the document_id carried by e equals the document_id carried
-        by a, the client_change_id carried by e equals the client_change_id carried by a, e is derived from and corresponds
-        to a, and the separate hot-path accepted-key record for e and a commit or abort together in the same acceptance transaction;
-        and e has only committed establishing provenance. Case 3: e was created, replaced, or preserved by a durable accepted-history
-        lifecycle transformation outside the normal acceptance transaction, such as compaction, cleanup, or snapshot replacement;
-        e has only committed establishing provenance; and there exists a canonical acceptance a such that a is committed,
-        the document_id carried by e equals the document_id carried by a, the client_change_id carried by e equals the client_change_id
-        carried by a, and e is derived from and corresponds to a and a was committed before the lifecycle transformation or
-        runtime reconstruction that created or preserved e. Case 4: e was created or preserved by a non-hot-path runtime reconstruction
-        or materialization, such as recovery, owner restart, restore, index rebuild, or cache rebuild; e has only committed
-        establishing provenance; and there exists a canonical acceptance a such that a is committed, the document_id carried
-        by e equals the document_id carried by a, the client_change_id carried by e equals the client_change_id carried by
-        a, and e is derived from and corresponds to a and a was committed before the lifecycle transformation or runtime reconstruction
-        that created or preserved e. In addition, for every authoritative state s and every idempotency key k, if for every
-        accepted-evidence representation e, e being counted by s as already-accepted evidence for k implies the authoritative
-        accepted-evidence condition and at least one of the four cases above, then the accepted-evidence mechanism is valid
-        for s and k, meaning any authoritative accepted evidence counted for composite key k in state s is established only
-        by a valid committed-acceptance mechanism for that same full identity: the committed accepted row or unique identity
-        itself; a separate hot-path accepted-key success record that commits and aborts atomically with the same canonical
-        acceptance in the same acceptance transaction; or equivalent lifecycle replacement evidence, including compaction
-        and runtime reconstruction or materialization, derived from a previously committed canonical acceptance recorded in
-        the accepted_change_log; and a reservation, in-progress arbitration, timeout, cancellation, or another non-committed
-        attempt is not classified as accepted evidence.'
+      natural_language: 'The proposition is the conjunction of the following two claims. (1) For every accepted-evidence representation
+        e, every authoritative state s, and every idempotency key k: if e is counted by s as already-accepted evidence for
+        the exact full identity k — where this counting relation identifies the state/key occurrence and does not by itself
+        assert valid provenance, retention, or a committed acceptance — then both of the following hold: (a) e is already-accepted
+        evidence, meaning authoritative durable state counts e as establishing that the full identity e carries is already
+        accepted; and (b) at least one of the following four cases holds. Case 1, committed row or identity on the normal
+        acceptance path: e is acquired on the normal acceptance path, meaning the acceptance flow by which authoritative durable
+        state first gains already-accepted evidence for an identity, as opposed to a lifecycle transformation or a runtime
+        reconstruction; e has only committed establishing provenance, meaning every source that establishes e''s already-accepted
+        classification is a committed canonical acceptance for the full identity carried by e, or an intermediate accepted-evidence
+        representation whose establishing provenance terminates at such an acceptance, with no reservation, in-progress arbitration,
+        pre-commit ownership, aborted, timed-out, cancelled, or never-committed attempt, failed-owner residue, cache-only
+        state, or other provisional or non-authoritative state establishing that classification, while incidental metadata
+        and inputs that do not establish the classification are outside this provenance relation; and there exists a canonical
+        acceptance a such that a is committed, meaning a is a committed canonical accepted-change record in authoritative
+        accepted history, the document_id carried by e equals the document_id carried by a, the client_change_id carried by
+        e equals the client_change_id carried by a, e is derived from and corresponds to a in the sense that a is the acceptance
+        from which e''s already-accepted evidence is established, e is a''s committed accepted row or authoritative unique
+        identity itself used directly as the already-accepted evidence and not a separate hot-path accepted-key record or
+        index derived from a, and a belongs to the logical committed accepted history denoted by s for the exact full identity
+        k, where this membership concerns logical history across authoritative representations rather than physical retention
+        of an original row and asserts neither uniqueness nor the presence of accepted-key evidence. Case 2, separate hot-path
+        record on the normal acceptance path: e is acquired on the normal acceptance path; a separate hot-path accepted-key
+        record or index, distinct from the committed accepted row or unique identity itself, is the accepted-evidence mechanism
+        for e''s identity; there exists a canonical acceptance a such that a is committed, the document_id carried by e equals
+        the document_id carried by a, the client_change_id carried by e equals the client_change_id carried by a, e is derived
+        from and corresponds to a, and the separate hot-path accepted-key record for e and a commit or abort together in the
+        same acceptance transaction, and a belongs to the logical committed accepted history denoted by s for the exact full
+        identity k as described above; and e has only committed establishing provenance as described above. Case 3, durable
+        lifecycle transformation: e is created, replaced, or preserved by a durable accepted-history lifecycle transformation
+        outside the normal acceptance transaction, such as compaction, cleanup, or snapshot replacement; e has only committed
+        establishing provenance as described above; and there exists a canonical acceptance a such that a is committed, the
+        document_id carried by e equals the document_id carried by a, the client_change_id carried by e equals the client_change_id
+        carried by a, e is derived from and corresponds to a and a was committed before the lifecycle transformation or runtime
+        reconstruction that created or preserved e, and a belongs to the logical committed accepted history denoted by s for
+        the exact full identity k as described above. Case 4, runtime reconstruction: e is created or preserved by a non-hot-path
+        runtime reconstruction or materialization, such as recovery, owner restart, restore, index rebuild, or cache rebuild;
+        e has only committed establishing provenance as described above; and there exists a canonical acceptance a satisfying
+        exactly the same conditions as in Case 3, namely a is committed, the document_id and client_change_id carried by e
+        equal those carried by a, e is derived from and corresponds to a and a was committed before the lifecycle transformation
+        or runtime reconstruction that created or preserved e, and a belongs to the logical committed accepted history denoted
+        by s for the exact full identity k as described above. (2) For every authoritative state s and every idempotency key
+        k: if, for every accepted-evidence representation e, e being counted by s as already-accepted evidence for the exact
+        full identity k implies that e is already-accepted evidence and that at least one of the same four cases above holds
+        for e, s, and k, then accepted-evidence mechanism validity holds for s and k, meaning any authoritative accepted evidence
+        counted for composite key k in state s is established only by a valid committed-acceptance mechanism for that same
+        full identity: the committed accepted row or unique identity itself; a separate hot-path accepted-key success record
+        that commits and aborts atomically with the same canonical acceptance in the same acceptance transaction; or equivalent
+        lifecycle replacement evidence, including compaction and runtime reconstruction or materialization, derived from a
+        previously committed canonical acceptance recorded in the accepted_change_log, where reservation, in-progress arbitration,
+        timeout, cancellation, or another non-committed attempt is not classified as accepted evidence.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 5396a89d97d5148da7fcc40a99b56348d5c90b14d628adf2aa65f4cf3c4b7d8c
+        subject_signature: 45649e61a3a9d14acb3f0a4ea7d6b49a453029ebfcdba62cf61e716937cf2447
         verdict: EQUIVALENT
-        reason: The formula preserves the universal counted-evidence condition and the conditional validity conclusion, with
-          the four-way disjunction matching the committed row/identity, the same-transaction co-committing hot-path record,
-          and lifecycle/runtime replacement derived from a prior committed acceptance; it keeps both document_id and client_change_id
-          identity equalities, the committed witness, correct derivation direction and prior timing, and only-committed establishing
-          provenance excluding provisional and incidental sources, without adding or dropping a guard.
+        reason: The formula encodes the same universal counted-item requirement over the same state and full composite identity,
+          with the same four permitted mechanisms (committed row/identity on the normal path, co-committing separate hot-path
+          record, durable-lifecycle derivation from a prior committed acceptance, and runtime reconstruction from a prior
+          committed acceptance), each witnessed by a committed acceptance in the same state's logical history for the same
+          key with only committed establishing provenance, and the same sufficiency implication for mechanism validity.
         differences: []
       strengthening:
-        subject_signature: 5396a89d97d5148da7fcc40a99b56348d5c90b14d628adf2aa65f4cf3c4b7d8c
+        subject_signature: 45649e61a3a9d14acb3f0a4ea7d6b49a453029ebfcdba62cf61e716937cf2447
         verdict: EQUIVALENT
-        reason: The formula's four branches exactly partition the source's permitted mechanisms — committed row/identity,
-          separate hot-path record co-committing with the same committed same-identity acceptance, and durable-lifecycle or
-          runtime replacement derived from a prior committed same-identity acceptance — with only-committed establishing provenance
-          and the matching normal-path, lifecycle, and runtime flags, and the second conjunct mirrors the source's conditional
-          validity conclusion without adding scope, identity, cardinality, or provenance requirements.
+        reason: The formula reproduces the canonical necessity for every counted item via the four permitted mechanisms (committed
+          row/identity on the normal path, co-committing separate hot-path record on the normal path, durable-lifecycle derivation
+          from a prior committed acceptance, and runtime reconstruction from a prior committed acceptance), each tied to the
+          same state and full document/client identity through a committed acceptance in that state's logical history, with
+          only-committed establishing provenance excluding incidental metadata, and reproduces sufficiency for mechanism validity
+          as a one-way implication without strengthening it to a biconditional.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 5396a89d97d5148da7fcc40a99b56348d5c90b14d628adf2aa65f4cf3c4b7d8c
+        subject_signature: 45649e61a3a9d14acb3f0a4ea7d6b49a453029ebfcdba62cf61e716937cf2447
         verdict: EQUIVALENT
-        reason: The rendering preserves the universal quantification over states and composite keys, the same-identity requirement,
-          the only-committed-provenance condition with incidental metadata excluded, and the exhaustive partition into the
-          committed row/identity itself, an atomically co-committing hot-path record, and lifecycle or runtime replacement
-          derived from a previously committed canonical acceptance, together with the corresponding validity converse.
+        reason: The rendering preserves the universal quantification over states and full composite keys, the identity matching
+          between evidence and canonical acceptance, the committed-only establishing-provenance exclusion, the same-transaction
+          atomicity for the separate hot-path record, the previously-committed temporal condition for lifecycle/runtime replacements,
+          and logical-history membership without requiring physical row retention. Splitting the original lifecycle-or-runtime
+          mechanism into two cases does not change the disjunction, and the converse restates validity in the same terms.
         differences: []
   claim:L224_committed_acceptance_history_matches_acceptance_events:
     kind: claim
