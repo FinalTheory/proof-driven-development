@@ -12519,3 +12519,53 @@ records:
           distinct document namespaces, absence as zero, and non-identity of rejection-decision objects/producers do not omit
           or add a material requirement beyond the source.
         differences: []
+  claim:L229_terminal_attempt_arbitration_classification_and_gate:
+    kind: claim
+    subject_id: L229_terminal_attempt_arbitration_classification_and_gate
+    subject_signature: accb2306707321e9c44893e8d98d637da1c88e34bfafd0a7654422815cfd7068
+    roundtrip:
+      subject_signature: accb2306707321e9c44893e8d98d637da1c88e34bfafd0a7654422815cfd7068
+      status: TRANSLATED
+      natural_language: 'For every protocol transition x and every idempotency key k (the authoritative deduplication identity
+        for a logical edit, concretely document_id plus client_change_id): (1) if x is a terminal attempt for k — that is,
+        an acceptance attempt or definitive-rejection attempt for the exact full idempotency identity k while that logical
+        identity remains within the 30-day normal retry eligibility horizon, with no acceptance or definitive-rejection path
+        excluded by being classified outside some narrower terminal-result subprotocol, and with post-expiry re-submission
+        outside this predicate — then x is an acceptance-or-rejection path that can create a canonical acceptance or an authoritative
+        definitive rejection for the exact full idempotency identity k, and k is an eligible idempotency key, meaning the
+        logical edit identity it denotes is a normal-retry-eligible identity within the protocol''s eligibility boundary;
+        (2) if x is a terminal attempt for k, then x passes through the shared arbitration gate if and only if x uses shared
+        key arbitration — where passing the gate means x passes through the same single per-key terminal-outcome arbitration
+        gate used by every acceptance and definitive-rejection path for the exact full idempotency identity k, before its
+        terminal decision can become authoritative, with no bypass around that gate for x, and using shared key arbitration
+        means x arbitrates through the same single authoritative per-key terminal state used by every competing acceptance
+        and definitive-rejection attempt for k, with no independent arbitration domain permitted to decide a second terminal
+        outcome; and (3) if x is a terminal attempt for k, then x passes through that same single per-key terminal-outcome
+        arbitration gate for k.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: accb2306707321e9c44893e8d98d637da1c88e34bfafd0a7654422815cfd7068
+        verdict: EQUIVALENT
+        reason: 'The formula preserves every source requirement for in-horizon, exact-full-key attempts: eligible path and
+          key eligibility, universal gate passage with no bypass before authoritativeness, and the stated identification of
+          gate passage with shared-key arbitration over the authoritative per-key terminal state.'
+        differences: []
+      strengthening:
+        subject_signature: accb2306707321e9c44893e8d98d637da1c88e34bfafd0a7654422815cfd7068
+        verdict: EQUIVALENT
+        reason: 'The three conjuncts exactly encode the source: in-horizon terminal attempts for the exact full key are eligible
+          paths with eligible keys, each passes the single shared per-key gate with no bypass before authoritativeness, and
+          for classified attempts gate passage is equivalent to shared-key arbitration over the authoritative terminal state,
+          with no added scope, cardinality, or temporal condition.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: accb2306707321e9c44893e8d98d637da1c88e34bfafd0a7654422815cfd7068
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal quantification over in-horizon acceptance or definitive-rejection attempts
+          for the exact full key, their eligibility and the key's eligibility, passage through the single shared per-key terminal-outcome
+          arbitration gate with no bypass before a terminal decision can become authoritative, and the identity of that gate
+          passage with shared-key arbitration; the 30-day and document_id plus client_change_id phrasings are definitional
+          spellings of the in-horizon and key-identity terms, not added or omitted requirements.
+        differences: []
