@@ -432,7 +432,7 @@ refinement:
     G9_accepted_idempotency_evidence_matches_committed_acceptance:
       status: stable
       blocked_by: []
-      signature: c6e5b2cc46861bae940e7df610a38e91de3e50c07e83402ead9bb21fe129b884
+      signature: a8ace4f13480d8eb870600fac7b54c9d2b64c1d456da6186c8ddbfbd7ed092d2
     L113_request_raw_edit_is_bound_to_authoring_frontier:
       status: stable
       blocked_by: []
