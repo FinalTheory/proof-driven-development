@@ -12236,56 +12236,64 @@ records:
   claim:L224_committed_acceptance_history_matches_acceptance_events:
     kind: claim
     subject_id: L224_committed_acceptance_history_matches_acceptance_events
-    subject_signature: 9c4cbd65b7896b943067aa634219f5fb8a54cc9813cced92f8ebc4cdc8db16bf
+    subject_signature: 231377e861b1ac48e1ebbefb1c1fcbfa134d0bc118cc1ba83e72dab424764b6c
     roundtrip:
-      subject_signature: 9c4cbd65b7896b943067aa634219f5fb8a54cc9813cced92f8ebc4cdc8db16bf
+      subject_signature: 231377e861b1ac48e1ebbefb1c1fcbfa134d0bc118cc1ba83e72dab424764b6c
       status: TRANSLATED
-      natural_language: For every authoritative state s and every idempotency key k, where k is the composite authoritative
-        identity (document_id, client_change_id), if k is within the 30-day normal retry/reconnect eligibility horizon in
-        s, then all of the following hold. First, an acceptance event creating a canonical accepted change for k has occurred
-        at or before s if and only if there exists a canonical acceptance a that belongs to the logical committed accepted
-        history denoted by s for the exact full identity k; this occurrence condition records only that the acceptance lies
-        in s's past and does not assert that evidence of it is present in s, and this committed-history membership concerns
-        logical history across authoritative representations, not physical retention of an original row, and by itself asserts
-        neither uniqueness nor the presence of accepted-key evidence. Second, for every canonical acceptance a and every protocol
-        transition t, if a belongs to the logical committed accepted history denoted by s for k and t is the acceptance-creation
-        event that produced a, then t is an acceptance-capable protocol transition whose attempted or created acceptance is
-        for k and t creates a new acceptance event for its idempotency key; this does not assert that t creates only one acceptance,
-        that no other transition creates an acceptance for the same key, or the converse implication. Third, the predicate
-        that the accepted_change_log in s contains exactly one committed canonical acceptance whose authoritative idempotency_key
-        is the same composite identity k holds if and only if there exists a canonical acceptance a belonging to the logical
-        committed accepted history denoted by s for k such that every canonical acceptance b belonging to that history for
-        s and k is equal to a. Fourth, for every canonical acceptance a, if k is within the 30-day normal retry/reconnect
-        eligibility horizon in s and a belongs to the logical committed accepted history denoted by s for k, then there exists
-        a protocol transition t such that t is the acceptance-creation event that produced a; this asserts existence of such
-        a creating transition, not its uniqueness.
+      natural_language: 'The conjunction of the following holds. (1) For every authoritative state s and every idempotency
+        key k, if k is within the 30-day normal retry/reconnect eligibility horizon in s, then: an acceptance event creating
+        a canonical accepted change for k has occurred at or before s if and only if there exists a canonical acceptance a
+        that belongs to the logical committed accepted history denoted by s for the exact full identity k. (2) For every canonical
+        acceptance a, authoritative state s, idempotency key k, and protocol transition t, if k is within the 30-day normal
+        retry/reconnect eligibility horizon in s, then: if a belongs to the logical committed accepted history denoted by
+        s for k and t is the acceptance-creation event that produced a, then t is an acceptance-capable protocol transition
+        whose attempted or created acceptance is for k and t creates a new acceptance event for its idempotency key. (3) For
+        every authoritative state s and idempotency key k, if k is within the 30-day normal retry/reconnect eligibility horizon
+        in s, then: there exists a canonical acceptance a belonging to the logical committed accepted history denoted by s
+        for k and such that every canonical acceptance b belonging to that history for s and k equals a, if and only if the
+        accepted_change_log in s contains exactly one committed canonical acceptance whose authoritative idempotency_key is
+        the same composite identity k = (document_id, client_change_id). (4) For every canonical acceptance a, authoritative
+        state s, and idempotency key k, if k is within the 30-day normal retry/reconnect eligibility horizon in s and a belongs
+        to the logical committed accepted history denoted by s for k, then there exists a protocol transition t that is the
+        acceptance-creation event that produced a. (5) For every authoritative state s, idempotency key k, canonical acceptance
+        a, and protocol transition t, if k is within the 30-day normal retry/reconnect eligibility horizon in s, a belongs
+        to the logical committed accepted history denoted by s for k, and t is the acceptance-creation event that produced
+        a, then t is a normal submission, retry, delayed execution, owner-recovery, resumed-owner, or other protocol transition
+        capable of creating a canonical accepted change, t''s accepted-key gate decision occurs while t''s idempotency key
+        remains within the 30-day normal retry/reconnect eligibility horizon, and the authoritative idempotency key of the
+        acceptance that t attempts to create or creates equals k. (6) For every authoritative state s, idempotency key k,
+        canonical acceptances a and b, and protocol transition t, if k is within the 30-day normal retry/reconnect eligibility
+        horizon in s, a and b both belong to the logical committed accepted history denoted by s for k, t is the acceptance-creation
+        event that produced a, t is the acceptance-creation event that produced b, and a is not equal to b, then t creates
+        more than one acceptance event, that is more than one canonical accepted change, for k within the transition itself.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 9c4cbd65b7896b943067aa634219f5fb8a54cc9813cced92f8ebc4cdc8db16bf
+        subject_signature: 231377e861b1ac48e1ebbefb1c1fcbfa134d0bc118cc1ba83e72dab424764b6c
         verdict: EQUIVALENT
-        reason: The formula preserves the horizon-guarded occurrence/log-membership biconditional, the composite-key identity
-          in the committed-history predicates, the logical-history scope, and the exactly-one equivalence; creator existence
-          together with the created-by implication yields a creating transition for the same key that creates an acceptance,
-          with no added or omitted requirement.
+        reason: The formula preserves the horizon-guarded event/log existence biconditional, the existence of a creating transition
+          for each committed member, the creator's same-key association, acceptance-capability, gate-timing and transition-key
+          equality, the exactly-one unfolding, and the two-distinct-members-implies-multiple-acceptances rule, with full composite-key
+          identity throughout and no added physical-retention or extra uniqueness requirement.
         differences: []
       strengthening:
-        subject_signature: 9c4cbd65b7896b943067aa634219f5fb8a54cc9813cced92f8ebc4cdc8db16bf
+        subject_signature: 231377e861b1ac48e1ebbefb1c1fcbfa134d0bc118cc1ba83e72dab424764b6c
         verdict: EQUIVALENT
-        reason: The formula reproduces the within-horizon event/log existence biconditional, the existence of a creating transition
-          for each committed acceptance with that transition required to be for the same composite key and to create an acceptance,
-          and the exactly-one biconditional, using exact full composite identity and logical-history membership throughout;
-          no scope, cardinality, or provenance requirement is added or omitted.
+        reason: The formula reproduces the horizon-guarded occurrence/containment biconditional, the exactly-one biconditional,
+          existence of a creating transition for each committed member, and the creating transition's capability, in-horizon
+          gate decision, and key equality to k; the distinct-members case likewise yields the multiple-acceptances conclusion.
+          No conjunct extends scope beyond the horizon, adds a coordinate, cardinality, or provenance requirement, or drops
+          a source condition, with composite-key equality and the logical-history predicate meanings preserving both identity
+          coordinates and compaction independence.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 9c4cbd65b7896b943067aa634219f5fb8a54cc9813cced92f8ebc4cdc8db16bf
+        subject_signature: 231377e861b1ac48e1ebbefb1c1fcbfa134d0bc118cc1ba83e72dab424764b6c
         verdict: EQUIVALENT
-        reason: The rendering preserves the horizon-scoped biconditional between an acceptance event at or before s and membership
-          in the logical committed history for the full composite identity (document_id, client_change_id), preserves the
-          logical-history rather than physical-retention scope, preserves existence (without uniqueness or converse) of a
-          creating protocol transition for the same identity, and formalizes exactly-one as existence plus all members equal,
-          without adding or omitting a substantive guarantee.
+        reason: 'The rendering preserves all source requirements: the at-or-before biconditional, creator existence and capability,
+          gate timing within the same 30-day horizon, transition/acceptance key equality to the full composite k, exactly-one
+          membership/uniqueness, logical (non-physical) history scope, and the multiple-acceptances consequence of one transition
+          creating two distinct members, with no added or omitted guarantee.'
         differences: []
   claim:L226_counted_accepted_evidence_supplies_non_reusable_classification:
     kind: claim
@@ -12332,45 +12340,51 @@ records:
   claim:L227_accepted_classification_is_retained_through_eligibility_horizon:
     kind: claim
     subject_id: L227_accepted_classification_is_retained_through_eligibility_horizon
-    subject_signature: 487dd9132e3368ea477acff6565395ca5094ef7a7a31fd300518d52da25ee986
+    subject_signature: 150be79ba782ecfa361ab2e5fa92934b20a0e7081af7287dfdf5e02532469cd8
     roundtrip:
-      subject_signature: 487dd9132e3368ea477acff6565395ca5094ef7a7a31fd300518d52da25ee986
+      subject_signature: 150be79ba782ecfa361ab2e5fa92934b20a0e7081af7287dfdf5e02532469cd8
       status: TRANSLATED
-      natural_language: For every authoritative state s and every idempotency key k, if both (a) the composite authoritative
-        idempotency identity k, namely (document_id, client_change_id), is within the 30-day normal retry/reconnect eligibility
-        horizon in authoritative state s, and (b) an acceptance event creating a canonical accepted change for idempotency
-        key k has occurred at or before authoritative state s, then authoritative state s contains sufficient non-reusable
-        evidence that idempotency key k has already been accepted, so that while that evidence stands the key is distinguished
-        as already accepted and cannot be reused for a new acceptance. The antecedent's acceptance condition records only
-        that the acceptance lies in s's past and does not by itself assert that evidence of it is present in s; the consequent
-        asserts only the presence of that classification evidence in s, and does not assert which mechanism wrote or preserved
-        it.
+      natural_language: For every authoritative state s and every idempotency key k, the following two requirements both hold.
+        First, if, in s, k — understood as the composite authoritative idempotency identity (document_id, client_change_id)
+        — is within the 30-day normal retry/reconnect eligibility horizon, and an acceptance event creating a canonical accepted
+        change for k has occurred at or before s, then s contains sufficient non-reusable evidence that k has already been
+        accepted, so that while that evidence stands k is distinguished as already accepted and cannot be reused for a new
+        acceptance. Second, if the same two conditions hold in s for the same k, then there exists at least one accepted-evidence
+        representation e such that s counts e as a durable representation of accepted_idempotency_evidence for exactly that
+        full identity k, where durability means persistence in authoritative durable state, including through equivalent representations,
+        and does not require retention of the same physical row or runtime object. The second requirement does not by itself
+        assert that s counts e as already-accepted evidence, that e has valid provenance, that e is retained throughout the
+        retry/reconnect horizon, or that a committed acceptance holds; the first requirement asserts only the presence of
+        that classification evidence in s, not which mechanism wrote or preserved it; and the acceptance-event condition asserts
+        only that the acceptance lies in s's past, not by itself that evidence of it is present in s. No requirement is made
+        for states or keys outside the stated eligibility horizon, and no converse is asserted.
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 487dd9132e3368ea477acff6565395ca5094ef7a7a31fd300518d52da25ee986
+        subject_signature: 150be79ba782ecfa361ab2e5fa92934b20a0e7081af7287dfdf5e02532469cd8
         verdict: EQUIVALENT
-        reason: The formula universally quantifies over authoritative states and keys, requires evidence exactly when the
-          key is within the 30-day retry/reconnect horizon and a canonical acceptance event has occurred at or before that
-          state, and imposes no requirement outside the horizon; this matches the claim's precondition, direction, identity,
-          non-reusable evidence, and all-state retention scope, including states reached by recovery, snapshot, compaction,
-          or cleanup.
+        reason: 'Both conjuncts reproduce the source exactly: for every authoritative state within the 30-day horizon after
+          a canonical acceptance event, the state must contain sufficient non-reusable already-accepted classification evidence
+          and must count at least one durable representation for the same full composite identity, with durability over equivalent
+          representations rather than an unchanged physical row; the horizon restriction also correctly imposes no requirement
+          after expiry.'
         differences: []
       strengthening:
-        subject_signature: 487dd9132e3368ea477acff6565395ca5094ef7a7a31fd300518d52da25ee986
+        subject_signature: 150be79ba782ecfa361ab2e5fa92934b20a0e7081af7287dfdf5e02532469cd8
         verdict: EQUIVALENT
-        reason: The formula universally quantifies over authoritative states and keys, applies only when the key is within
-          the 30-day retry/reconnect horizon and a canonical acceptance event has occurred at or before that state, and then
-          requires sufficient non-reusable already-accepted classification evidence in that state; this matches the claim's
-          precondition, retention scope, and post-horizon non-guarantee without adding or omitting a requirement.
+        reason: Both conjuncts preserve the guarded universal scope, the within-horizon and prior-acceptance preconditions,
+          the non-reusable already-accepted classification evidence, and the at-least-one durable representation for the exact
+          full identity, with durability over equivalent representations rather than an unchanged physical row; no requirement
+          is added after horizon expiry.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 487dd9132e3368ea477acff6565395ca5094ef7a7a31fd300518d52da25ee986
+        subject_signature: 150be79ba782ecfa361ab2e5fa92934b20a0e7081af7287dfdf5e02532469cd8
         verdict: EQUIVALENT
-        reason: Both quantify over every authoritative state and key, require the same horizon precondition and an acceptance
-          event at or before that state, require sufficient non-reusable already-accepted classification evidence in that
-          state, cover retention across all in-horizon states including transition outcomes through universal quantification,
-          and impose no ordinary retry/reconnect guarantee after horizon expiry; the rendering adds no mechanism, provenance,
-          or stronger reuse prohibition beyond unpacking non-reusable already-accepted classification.
+        reason: Both quantify over every authoritative state and the same full composite key within the 30-day horizon, with
+          acceptance at or before s. The first requirement preserves sufficient non-reusable already-accepted classification
+          evidence, and the second preserves at least one durable representation for exactly that full identity, with durability
+          across equivalent authoritative representations rather than an unchanged physical row or runtime object. The stated
+          non-assertions concern each requirement by itself and do not remove the combined per-state guarantee, and neither
+          side adds an outside-horizon, converse, provenance, or mechanism requirement.
         differences: []
