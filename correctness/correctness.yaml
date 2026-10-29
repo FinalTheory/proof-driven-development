@@ -5388,7 +5388,12 @@ claims:
       acceptance for k if and only if it contains exactly one such acceptance and no other. Here k
       is the authoritative deduplication identity of a logical edit, namely the ordered pair of its
       document identifier and its client change identifier. Every reference to an acceptance or its
-      creating protocol transition for k requires both identity coordinates to match k.
+      creating protocol transition for k requires both identity coordinates to match k. Throughout
+      this statement, the accepted_change_log denoted by s is the logical committed accepted history
+      for k's document denoted by that same authoritative state s. Containment and 'exactly one'
+      refer to membership and cardinality for k in that history across authoritative
+      representations; they do not require physical retention of the original accepted rows after
+      semantics-preserving compaction.
     verification:
       verifiers:
         - intent: Enumerate creating protocol transitions for a key and check the event-to-member
