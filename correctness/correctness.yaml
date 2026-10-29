@@ -5399,7 +5399,12 @@ claims:
       for k's document denoted by that same authoritative state s. Containment and 'exactly one'
       refer to membership and cardinality for k in that history across authoritative
       representations; they do not require physical retention of the original accepted rows after
-      semantics-preserving compaction.
+      semantics-preserving compaction. For each such committed history member a and each transition
+      t that created it, t is acceptance-capable, its gate decision occurred within the same key's
+      retry/reconnect eligibility horizon, and its transition key equals k. The acceptance_events
+      identity of t is that same composite idempotency_key = (document_id, client_change_id). If one
+      transition creates two distinct committed members for k in that history, it creates multiple
+      acceptances for k within that transition.
     verification:
       verifiers:
         - intent: Enumerate creating protocol transitions for a key and check the event-to-member
@@ -5431,7 +5436,11 @@ claims:
       classification; incidental metadata and inputs that do not establish that classification are not
       establishing provenance. The normal acceptance path is the flow that first establishes already-accepted
       evidence. Durable lifecycle replacement is a transformation outside that acceptance transaction,
-      and runtime replacement is non-hot-path reconstruction or materialization.'
+      and runtime replacement is non-hot-path reconstruction or materialization. In each permitted mechanism
+      for an item counted by s for k, the committed canonical acceptance serving as the mechanism''s source
+      belongs to the logical committed accepted history denoted by that same s for that same full identity
+      k; membership persists across equivalent authoritative representations and does not require retention
+      of its original physical row.'
     verification:
       verifiers:
         - intent: Inspect the normal acceptance transaction and prove that any separate hot-path
@@ -5482,7 +5491,11 @@ claims:
       before s, s contains sufficient non-reusable already-accepted classification evidence for k.
       This classification is retained in every authoritative state within that horizon, including
       across recovery, snapshot, compaction, and cleanup transitions. No ordinary retry/reconnect
-      classification guarantee is required after the identity expires from that horizon.
+      classification guarantee is required after the identity expires from that horizon. In every
+      such state s after the acceptance event, s counts at least one durable representation of the
+      authoritative accepted evidence for that same full identity k. Durability is of the
+      represented evidence across equivalent authoritative representations, not of an unchanged
+      physical row or runtime object.
     verification:
       verifiers:
         - intent: Establish classification after acceptance and its preservation across recovery,

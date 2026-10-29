@@ -723,6 +723,7 @@ functions:
     - claim:C14_all_acceptance_paths_honor_idempotency_identity
     - claim:C13_idempotency_key_is_temporally_unique
     - claim:G1_retry_is_logically_exactly_once
+    - claim:L224_committed_acceptance_history_matches_acceptance_events
   transition_is_authoritatively_gate_mediated:
     args:
     - ProtocolTransition
@@ -772,6 +773,7 @@ functions:
     semantic_anchors:
     - claim:C13_idempotency_key_is_temporally_unique
     - claim:G1_retry_is_logically_exactly_once
+    - claim:L224_committed_acceptance_history_matches_acceptance_events
   acceptance_transition_for_key:
     args:
     - ProtocolTransition
@@ -805,6 +807,7 @@ functions:
     - claim:C13_idempotency_key_is_temporally_unique
     - claim:L14_accepted_idempotency_identity_survives_lifecycle
     - claim:G1_retry_is_logically_exactly_once
+    - claim:L224_committed_acceptance_history_matches_acceptance_events
   acceptance_event_occurred_for_key:
     args:
     - AuthoritativeState
@@ -838,6 +841,7 @@ functions:
     - claim:L27_concurrent_first_acceptance_is_atomically_arbitrated
     - claim:C13_idempotency_key_is_temporally_unique
     - claim:G1_retry_is_logically_exactly_once
+    - claim:L224_committed_acceptance_history_matches_acceptance_events
   pending_edit:
     args:
     - ClientState
@@ -6290,6 +6294,7 @@ functions:
     meaning: Canonical acceptance a belongs to the logical committed accepted history denoted by authoritative state s for exact full identity k. Membership concerns logical history across authoritative representations, not physical retention of an original row. It asserts neither uniqueness nor the presence of accepted-key evidence.
     semantic_anchors:
     - claim:L224_committed_acceptance_history_matches_acceptance_events
+    - claim:L225_counted_accepted_evidence_requires_committed_mechanism
   acceptance_created_by:
     args:
     - ProtocolTransition
@@ -6337,6 +6342,7 @@ functions:
     catalog_symbols: []
     semantic_anchors:
     - claim:L223_authoritative_accepted_evidence_counts_durable_representation
+    - claim:L227_accepted_classification_is_retained_through_eligibility_horizon
     meaning: Evidence representation e is a durable representation of accepted_idempotency_evidence counted by authoritative state s for the exact full identity k = (document_id, client_change_id). Counting here means that s counts e as such a representation for k; whether s also counts e as already-accepted evidence is a separate condition. Durability concerns the represented evidence's persistence in authoritative durable state, including through equivalent representations; it does not require retention of the same physical row or runtime object. This relation concerns representations of that accepted_idempotency_evidence, not arbitrary durable records for k. It does not itself assert already-accepted classification, valid provenance, retention throughout the retry/reconnect horizon, or a committed acceptance.
 assumptions:
   A2_ot_engine_is_correct:
@@ -19776,6 +19782,91 @@ claims:
                     args:
                     - var: t
                     - var: a
+      - forall:
+          vars:
+            s: AuthoritativeState
+            k: IdempotencyKey
+            a: CanonicalAcceptance
+            t: ProtocolTransition
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: within_retry_reconnect_eligibility
+                  args:
+                  - var: s
+                  - var: k
+              - call:
+                  fn: committed_acceptance_in_state_for_key
+                  args:
+                  - var: a
+                  - var: s
+                  - var: k
+              - call:
+                  fn: acceptance_created_by
+                  args:
+                  - var: t
+                  - var: a
+            - and:
+              - call:
+                  fn: acceptance_capable_transition
+                  args:
+                  - var: t
+              - call:
+                  fn: acceptance_transition_within_retry_horizon
+                  args:
+                  - var: t
+              - eq:
+                - call:
+                    fn: transition_idempotency_key
+                    args:
+                    - var: t
+                - var: k
+      - forall:
+          vars:
+            s: AuthoritativeState
+            k: IdempotencyKey
+            a: CanonicalAcceptance
+            b: CanonicalAcceptance
+            t: ProtocolTransition
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: within_retry_reconnect_eligibility
+                  args:
+                  - var: s
+                  - var: k
+              - call:
+                  fn: committed_acceptance_in_state_for_key
+                  args:
+                  - var: a
+                  - var: s
+                  - var: k
+              - call:
+                  fn: committed_acceptance_in_state_for_key
+                  args:
+                  - var: b
+                  - var: s
+                  - var: k
+              - call:
+                  fn: acceptance_created_by
+                  args:
+                  - var: t
+                  - var: a
+              - call:
+                  fn: acceptance_created_by
+                  args:
+                  - var: t
+                  - var: b
+              - neq:
+                - var: a
+                - var: b
+            - call:
+                fn: transition_creates_multiple_acceptances_for_key
+                args:
+                - var: t
+                - var: k
   L225_counted_accepted_evidence_requires_committed_mechanism:
     capability: relational
     contracts: []
@@ -19814,38 +19905,45 @@ claims:
                         a: CanonicalAcceptance
                       body:
                         and:
-                        - call:
-                            fn: canonical_acceptance_is_committed
-                            args:
-                            - var: a
-                        - eq:
+                        - and:
                           - call:
-                              fn: evidence_document_id
-                              args:
-                              - var: e
-                          - call:
-                              fn: acceptance_document_id
+                              fn: canonical_acceptance_is_committed
                               args:
                               - var: a
-                        - eq:
+                          - eq:
+                            - call:
+                                fn: evidence_document_id
+                                args:
+                                - var: e
+                            - call:
+                                fn: acceptance_document_id
+                                args:
+                                - var: a
+                          - eq:
+                            - call:
+                                fn: evidence_client_change_id
+                                args:
+                                - var: e
+                            - call:
+                                fn: acceptance_client_change_id
+                                args:
+                                - var: a
                           - call:
-                              fn: evidence_client_change_id
+                              fn: accepted_evidence_derives_from
                               args:
                               - var: e
+                              - var: a
                           - call:
-                              fn: acceptance_client_change_id
+                              fn: accepted_evidence_is_committed_row_or_identity
                               args:
+                              - var: e
                               - var: a
                         - call:
-                            fn: accepted_evidence_derives_from
+                            fn: committed_acceptance_in_state_for_key
                             args:
-                            - var: e
                             - var: a
-                        - call:
-                            fn: accepted_evidence_is_committed_row_or_identity
-                            args:
-                            - var: e
-                            - var: a
+                            - var: s
+                            - var: k
                 - and:
                   - call:
                       fn: evidence_acquired_on_normal_acceptance_path
@@ -19860,38 +19958,45 @@ claims:
                         a: CanonicalAcceptance
                       body:
                         and:
-                        - call:
-                            fn: canonical_acceptance_is_committed
-                            args:
-                            - var: a
-                        - eq:
+                        - and:
                           - call:
-                              fn: evidence_document_id
-                              args:
-                              - var: e
-                          - call:
-                              fn: acceptance_document_id
+                              fn: canonical_acceptance_is_committed
                               args:
                               - var: a
-                        - eq:
+                          - eq:
+                            - call:
+                                fn: evidence_document_id
+                                args:
+                                - var: e
+                            - call:
+                                fn: acceptance_document_id
+                                args:
+                                - var: a
+                          - eq:
+                            - call:
+                                fn: evidence_client_change_id
+                                args:
+                                - var: e
+                            - call:
+                                fn: acceptance_client_change_id
+                                args:
+                                - var: a
                           - call:
-                              fn: evidence_client_change_id
+                              fn: accepted_evidence_derives_from
                               args:
                               - var: e
+                              - var: a
                           - call:
-                              fn: acceptance_client_change_id
+                              fn: hot_path_record_co_commits_with_acceptance
                               args:
+                              - var: e
                               - var: a
                         - call:
-                            fn: accepted_evidence_derives_from
+                            fn: committed_acceptance_in_state_for_key
                             args:
-                            - var: e
                             - var: a
-                        - call:
-                            fn: hot_path_record_co_commits_with_acceptance
-                            args:
-                            - var: e
-                            - var: a
+                            - var: s
+                            - var: k
                   - call:
                       fn: accepted_evidence_has_only_committed_establishing_provenance
                       args:
@@ -19910,33 +20015,40 @@ claims:
                         a: CanonicalAcceptance
                       body:
                         and:
-                        - call:
-                            fn: canonical_acceptance_is_committed
-                            args:
-                            - var: a
-                        - eq:
+                        - and:
                           - call:
-                              fn: evidence_document_id
-                              args:
-                              - var: e
-                          - call:
-                              fn: acceptance_document_id
+                              fn: canonical_acceptance_is_committed
                               args:
                               - var: a
-                        - eq:
+                          - eq:
+                            - call:
+                                fn: evidence_document_id
+                                args:
+                                - var: e
+                            - call:
+                                fn: acceptance_document_id
+                                args:
+                                - var: a
+                          - eq:
+                            - call:
+                                fn: evidence_client_change_id
+                                args:
+                                - var: e
+                            - call:
+                                fn: acceptance_client_change_id
+                                args:
+                                - var: a
                           - call:
-                              fn: evidence_client_change_id
+                              fn: accepted_evidence_derives_from_prior_committed_acceptance
                               args:
                               - var: e
-                          - call:
-                              fn: acceptance_client_change_id
-                              args:
                               - var: a
                         - call:
-                            fn: accepted_evidence_derives_from_prior_committed_acceptance
+                            fn: committed_acceptance_in_state_for_key
                             args:
-                            - var: e
                             - var: a
+                            - var: s
+                            - var: k
                 - and:
                   - call:
                       fn: evidence_reconstructed_by_runtime
@@ -19951,33 +20063,40 @@ claims:
                         a: CanonicalAcceptance
                       body:
                         and:
-                        - call:
-                            fn: canonical_acceptance_is_committed
-                            args:
-                            - var: a
-                        - eq:
+                        - and:
                           - call:
-                              fn: evidence_document_id
-                              args:
-                              - var: e
-                          - call:
-                              fn: acceptance_document_id
+                              fn: canonical_acceptance_is_committed
                               args:
                               - var: a
-                        - eq:
+                          - eq:
+                            - call:
+                                fn: evidence_document_id
+                                args:
+                                - var: e
+                            - call:
+                                fn: acceptance_document_id
+                                args:
+                                - var: a
+                          - eq:
+                            - call:
+                                fn: evidence_client_change_id
+                                args:
+                                - var: e
+                            - call:
+                                fn: acceptance_client_change_id
+                                args:
+                                - var: a
                           - call:
-                              fn: evidence_client_change_id
+                              fn: accepted_evidence_derives_from_prior_committed_acceptance
                               args:
                               - var: e
-                          - call:
-                              fn: acceptance_client_change_id
-                              args:
                               - var: a
                         - call:
-                            fn: accepted_evidence_derives_from_prior_committed_acceptance
+                            fn: committed_acceptance_in_state_for_key
                             args:
-                            - var: e
                             - var: a
+                            - var: s
+                            - var: k
       - forall:
           vars:
             s: AuthoritativeState
@@ -20216,28 +20335,56 @@ claims:
     capability: relational
     contracts: []
     formula:
-      forall:
-        vars:
-          s: AuthoritativeState
-          k: IdempotencyKey
-        body:
-          implies:
-          - and:
+      and:
+      - forall:
+          vars:
+            s: AuthoritativeState
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: within_retry_reconnect_eligibility
+                  args:
+                  - var: s
+                  - var: k
+              - call:
+                  fn: acceptance_event_occurred_for_key
+                  args:
+                  - var: s
+                  - var: k
             - call:
-                fn: within_retry_reconnect_eligibility
+                fn: accepted_evidence_present_for_key
                 args:
                 - var: s
                 - var: k
-            - call:
-                fn: acceptance_event_occurred_for_key
-                args:
-                - var: s
-                - var: k
-          - call:
-              fn: accepted_evidence_present_for_key
-              args:
-              - var: s
-              - var: k
+      - forall:
+          vars:
+            s: AuthoritativeState
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: within_retry_reconnect_eligibility
+                  args:
+                  - var: s
+                  - var: k
+              - call:
+                  fn: acceptance_event_occurred_for_key
+                  args:
+                  - var: s
+                  - var: k
+            - exists:
+                vars:
+                  e: AcceptedEvidence
+                body:
+                  call:
+                    fn: counted_durable_accepted_evidence_representation_for_key
+                    args:
+                    - var: e
+                    - var: s
+                    - var: k
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
