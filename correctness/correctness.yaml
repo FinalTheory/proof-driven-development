@@ -852,11 +852,13 @@ refinement:
       blocked_by: []
       signature: 405dc7c3e2b0b20cb8f46c80770ab8ef19d72f0ba1b8f6ecc891850903890f2d
     L226_counted_accepted_evidence_supplies_non_reusable_classification:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: a9ef607e5ba323ba3623835257ac62d0d88e5dd0c1b34f809c36f4287bf4472d
     L227_accepted_classification_is_retained_through_eligibility_horizon:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 3d2aa32295ec425a8a27ac85e961bd461534242ad7642bae0c9ab0669935e5d1
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
