@@ -844,9 +844,17 @@ refinement:
       status: pending
       blocked_by: []
     L224_committed_acceptance_history_matches_acceptance_events:
+      status: stable
+      blocked_by: []
+      signature: d512835520ffd78c39d841db9775f4f6ec1b7baa8feba1957c61a50afa821f5b
+    L225_counted_accepted_evidence_requires_committed_mechanism:
+      status: stable
+      blocked_by: []
+      signature: 405dc7c3e2b0b20cb8f46c80770ab8ef19d72f0ba1b8f6ecc891850903890f2d
+    L226_counted_accepted_evidence_supplies_non_reusable_classification:
       status: pending
       blocked_by: []
-    L225_counted_accepted_evidence_requires_committed_mechanism:
+    L227_accepted_classification_is_retained_through_eligibility_horizon:
       status: pending
       blocked_by: []
 assumptions:
@@ -2555,6 +2563,8 @@ claims:
       - L223_authoritative_accepted_evidence_counts_durable_representation
       - L224_committed_acceptance_history_matches_acceptance_events
       - L225_counted_accepted_evidence_requires_committed_mechanism
+      - L226_counted_accepted_evidence_supplies_non_reusable_classification
+      - L227_accepted_classification_is_retained_through_eligibility_horizon
     formal_intent: accepted_evidence_correspondence
     semantic_contracts:
       - accepted_evidence_correspondence
@@ -5354,23 +5364,15 @@ claims:
     statement: For every authoritative state s and composite idempotency_key k within the 30-day
       normal retry/reconnect eligibility horizon, authoritative durable
       accepted_idempotency_evidence exists in s for k if and only if s counts a durable
-      representation of that evidence. For each such in-horizon state/key pair, any representation
-      counted by s as already-accepted evidence for k supplies sufficient non-reusable
-      already-accepted classification for k. Once a canonical acceptance event for k has occurred,
-      that classification is retained in every authoritative state within the horizon, including
-      across recovery, snapshot, compaction, and cleanup transitions.
+      representation of that evidence for that same full identity. Every such durable representation
+      counted by s for k is also counted by s as already-accepted evidence for k.
     verification:
       verifiers:
-        - intent: After accept(k), exercise recovery, snapshot, compaction, and cleanup transitions
-            while the logical edit remains within the 30-day normal retry/reconnect eligibility
-            horizon; authoritative state must continue to distinguish k as already accepted
-            throughout that horizon, and counted durable evidence must match the state-level
-            accepted evidence in both directions.
-          kind: state_machine
-        - intent: Crash and recover around idempotency-evidence publication and lifecycle
-            transitions within the 30-day eligibility horizon; no completed eligible acceptance may
-            become semantically reusable during that horizon.
-          kind: fault_injection
+        - intent: Independently inspect authoritative durable evidence and the state's counted
+            representations for the same full identity. Check existence correspondence in both
+            directions and inclusion of each counted durable representation in the broader counted
+            relation, across supported representation formats.
+          kind: differential_test
     kind: leaf
   L224_committed_acceptance_history_matches_acceptance_events:
     mechanisms:
@@ -5437,6 +5439,53 @@ claims:
             reconstruction; require each path to fall into one of the permitted mechanisms and no
             counted item to lack one.
           kind: control_flow
+    kind: leaf
+  L226_counted_accepted_evidence_supplies_non_reusable_classification:
+    mechanisms:
+      - accepted_history_log
+      - idempotency_gate
+      - acceptance_transaction
+    source_refs:
+      - accepted_change_log
+      - storage_selection
+      - final_architecture
+    statement: 'For every authoritative state s and composite key k within the 30-day normal retry/reconnect
+      eligibility horizon, every representation counted by s as already-accepted evidence for k supplies
+      sufficient non-reusable already-accepted classification for that same full identity: while that
+      classification evidence stands, the key is distinguished as already accepted and cannot be reused
+      for a new acceptance.'
+    verification:
+      verifiers:
+        - intent: Check the accepted-key gate's interpretation of every supported counted evidence
+            representation for the exact full identity. Establish that such evidence selects
+            already-accepted classification and excludes a new-acceptance outcome while that
+            evidence stands.
+          kind: control_flow
+    kind: leaf
+  L227_accepted_classification_is_retained_through_eligibility_horizon:
+    mechanisms:
+      - accepted_history_log
+      - recovery_replay
+      - snapshot_checkpoint
+    source_refs:
+      - accepted_change_log
+      - snapshot_frontier
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    statement: For every authoritative state s and composite key k within the 30-day normal
+      retry/reconnect eligibility horizon, if a canonical acceptance event for k has occurred at or
+      before s, s contains sufficient non-reusable already-accepted classification evidence for k.
+      This classification is retained in every authoritative state within that horizon, including
+      across recovery, snapshot, compaction, and cleanup transitions. No ordinary retry/reconnect
+      classification guarantee is required after the identity expires from that horizon.
+    verification:
+      verifiers:
+        - intent: Establish classification after acceptance and its preservation across recovery,
+            snapshot, compaction, and cleanup transitions throughout the eligibility horizon,
+            including crash/recovery outcomes and the inclusive 30-day boundary. Permit equivalent
+            representations without requiring physical-row retention.
+          kind: state_machine
     kind: leaf
 catalog:
   terms:
@@ -6784,7 +6833,7 @@ id_allocator:
     A: 7
     G: 13
     C: 48
-    L: 226
+    L: 228
     D: 15
     T: 3
 assurance:
@@ -7335,6 +7384,10 @@ assurance:
       status: planned
     L225_counted_accepted_evidence_requires_committed_mechanism:
       status: planned
+    L226_counted_accepted_evidence_supplies_non_reusable_classification:
+      status: planned
+    L227_accepted_classification_is_retained_through_eligibility_horizon:
+      status: planned
 formalization:
   claims:
     G0_acked_edit_survives_failover:
@@ -7674,6 +7727,10 @@ formalization:
     L224_committed_acceptance_history_matches_acceptance_events:
       mode: symbolic
     L225_counted_accepted_evidence_requires_committed_mechanism:
+      mode: symbolic
+    L226_counted_accepted_evidence_supplies_non_reusable_classification:
+      mode: symbolic
+    L227_accepted_classification_is_retained_through_eligibility_horizon:
       mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:

@@ -413,6 +413,8 @@ functions:
     - claim:L14_accepted_idempotency_identity_survives_lifecycle
     - claim:L223_authoritative_accepted_evidence_counts_durable_representation
     - claim:L224_committed_acceptance_history_matches_acceptance_events
+    - claim:L226_counted_accepted_evidence_supplies_non_reusable_classification
+    - claim:L227_accepted_classification_is_retained_through_eligibility_horizon
   accepted_evidence_for_key:
     args:
     - AuthoritativeState
@@ -812,8 +814,8 @@ functions:
     meaning: An acceptance event creating a canonical accepted change for idempotency key k has occurred at or before authoritative state s. This predicate records that the acceptance lies in s's past; it does not assert that evidence of it is present in s.
     semantic_anchors:
     - claim:L14_accepted_idempotency_identity_survives_lifecycle
-    - claim:L223_authoritative_accepted_evidence_counts_durable_representation
     - claim:L224_committed_acceptance_history_matches_acceptance_events
+    - claim:L227_accepted_classification_is_retained_through_eligibility_horizon
   accepted_evidence_present_for_key:
     args:
     - AuthoritativeState
@@ -823,7 +825,8 @@ functions:
     meaning: Authoritative state s contains sufficient non-reusable evidence that idempotency key k has already been accepted, so while that evidence stands the key is distinguished as already accepted and cannot be reused for a new acceptance. This predicate asserts the presence of that classification evidence in s only; it does not assert which mechanism wrote or preserved it.
     semantic_anchors:
     - claim:L14_accepted_idempotency_identity_survives_lifecycle
-    - claim:L223_authoritative_accepted_evidence_counts_durable_representation
+    - claim:L226_counted_accepted_evidence_supplies_non_reusable_classification
+    - claim:L227_accepted_classification_is_retained_through_eligibility_horizon
   transition_creates_multiple_acceptances_for_key:
     args:
     - ProtocolTransition
@@ -6323,6 +6326,7 @@ functions:
     semantic_anchors:
     - claim:L223_authoritative_accepted_evidence_counts_durable_representation
     - claim:L225_counted_accepted_evidence_requires_committed_mechanism
+    - claim:L226_counted_accepted_evidence_supplies_non_reusable_classification
     meaning: Evidence representation e is counted by authoritative state s as already-accepted evidence for the exact full identity k. This relation identifies the state/key occurrence; it does not itself assert valid provenance, retention, or a committed acceptance.
 assumptions:
   A2_ot_engine_is_correct:
@@ -19587,52 +19591,6 @@ claims:
                   - var: s
                   - var: k
               - call:
-                  fn: counted_accepted_evidence_in_state_for_key
-                  args:
-                  - var: e
-                  - var: s
-                  - var: k
-            - call:
-                fn: accepted_evidence_present_for_key
-                args:
-                - var: s
-                - var: k
-      - forall:
-          vars:
-            s: AuthoritativeState
-            k: IdempotencyKey
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: within_retry_reconnect_eligibility
-                  args:
-                  - var: s
-                  - var: k
-              - call:
-                  fn: acceptance_event_occurred_for_key
-                  args:
-                  - var: s
-                  - var: k
-            - call:
-                fn: accepted_evidence_present_for_key
-                args:
-                - var: s
-                - var: k
-      - forall:
-          vars:
-            e: AcceptedEvidence
-            s: AuthoritativeState
-            k: IdempotencyKey
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: within_retry_reconnect_eligibility
-                  args:
-                  - var: s
-                  - var: k
-              - call:
                   fn: accepted_evidence_in_state_for_key
                   args:
                   - var: e
@@ -20216,6 +20174,60 @@ claims:
                 args:
                 - var: s
                 - var: k
+  L226_counted_accepted_evidence_supplies_non_reusable_classification:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          e: AcceptedEvidence
+          s: AuthoritativeState
+          k: IdempotencyKey
+        body:
+          implies:
+          - and:
+            - call:
+                fn: within_retry_reconnect_eligibility
+                args:
+                - var: s
+                - var: k
+            - call:
+                fn: counted_accepted_evidence_in_state_for_key
+                args:
+                - var: e
+                - var: s
+                - var: k
+          - call:
+              fn: accepted_evidence_present_for_key
+              args:
+              - var: s
+              - var: k
+  L227_accepted_classification_is_retained_through_eligibility_horizon:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          s: AuthoritativeState
+          k: IdempotencyKey
+        body:
+          implies:
+          - and:
+            - call:
+                fn: within_retry_reconnect_eligibility
+                args:
+                - var: s
+                - var: k
+            - call:
+                fn: acceptance_event_occurred_for_key
+                args:
+                - var: s
+                - var: k
+          - call:
+              fn: accepted_evidence_present_for_key
+              args:
+              - var: s
+              - var: k
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
