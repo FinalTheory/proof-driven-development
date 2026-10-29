@@ -402,9 +402,8 @@ refinement:
       blocked_by: []
       signature: c4f81922770e1e994b49cbf1563f8f59fa9c5641ff21975a8f59e9c33f546f22
     G7_reconnect_does_not_double_render_accepted_optimistic_edit:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: fb015c2fa84993d15cef1873af2b6769bc2f7d7543b217f35c7a91c7f366d301
     L106_resync_request_covers_start_pending_set:
       status: stable
       blocked_by: []
@@ -418,9 +417,8 @@ refinement:
       blocked_by: []
       signature: 3feb1498840ff792b6e7e05e1726db4d4fe6045b45c26514fdf436f7b27ceffa
     L109_resync_publication_is_atomic_and_monotonic:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 57c9808c71543c2688f0f4162533e8784f4debe3f2e1e24ee48d6ccbc663cd3b
     L110_client_retires_matching_speculative_overlay_before_canonical_publication:
       status: stable
       blocked_by: []
@@ -2312,7 +2310,13 @@ claims:
       entry, the client remains non-normal-editable/read-only or in explicit conflict/reconciliation state
       and creates no new acceptance-eligible speculative edit until those unresolved edits are explicitly
       reconciled or removed. This claim makes no automatic local-rebase, conflict-resolution, or progress
-      guarantee.'
+      guarantee. Independently of the pending-identity reconciliation conditions above, for every reconnect/resync
+      attempt by a normally participating client and every logical edit identity e=(D′,k′), no intermediate
+      candidate may expose a user-visible canonical prefix containing acceptance for e together with a
+      speculative overlay for that same e. This intermediate-visibility prohibition applies regardless
+      of whether e belongs to the resync document, is pending at resync start, remains within the 30-day
+      normal reconnect eligibility horizon, or has acceptance included through the response head; it does
+      not constrain purely internal, unexposed candidate representations.'
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
@@ -2432,7 +2436,14 @@ claims:
       representations; and no intermediate resync candidate exposes a canonical prefix that already
       contains acceptance(D,k) together with its overlay. A stale response — one whose head H is
       behind the currently visible frontier F — may not restore a speculative overlay or
-      pending-resolution state removed by a newer published reconciliation.
+      pending-resolution state removed by a newer published reconciliation. Independently of the
+      pending-acceptance publication condition above, for every reconnect/resync candidate response
+      and every logical edit identity e=(D′,k′), no intermediate candidate may expose a user-visible
+      canonical prefix containing acceptance for e together with a speculative overlay for that same
+      e. This intermediate-visibility prohibition applies regardless of whether e belongs to the
+      resync document, is pending at resync start, remains within the 30-day normal reconnect
+      eligibility horizon, or has acceptance included through the response head; it does not
+      constrain purely internal, unexposed candidate representations.
     source_refs:
       - reconnect_revision_boundary
       - final_architecture
