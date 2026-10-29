@@ -12673,3 +12673,44 @@ records:
           The added wording only explicates reachability and the composite key identity without narrowing the domain, adding
           a precondition, reversing provenance, or imposing a fixed configured duration.'
         differences: []
+  claim:L233_normal_submitted_request_scope_eligibility:
+    kind: claim
+    subject_id: L233_normal_submitted_request_scope_eligibility
+    subject_signature: 1b7045b6e0d079b305e9c3b033ec697a3c45ca97435658bc17f8f7dd850028ca
+    roundtrip:
+      subject_signature: 1b7045b6e0d079b305e9c3b033ec697a3c45ca97435658bc17f8f7dd850028ca
+      status: TRANSLATED
+      natural_language: For every request r, if r is a normal submitted request — that is, a single client-to-server protocol
+        request instance carrying a document_id, client_change_id, raw_edit, and base_revision for one logical client edit,
+        representing that one logical edit within the 30-day normal retry eligibility horizon — then r is a submitted request
+        eligible for server-side operational transformation (OT) or an authoritative terminal decision, where such eligibility
+        includes initial submissions and normal retries. This eligibility identifies the processing scope for r independently
+        of whether r actually preserves its logical-edit identity, payload, or authoring-frontier binding, and it does not
+        require actual OT invocation, successful acceptance, or completion of a terminal decision.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 1b7045b6e0d079b305e9c3b033ec697a3c45ca97435658bc17f8f7dd850028ca
+        verdict: EQUIVALENT
+        reason: 'The universal implication matches the source: the antecedent captures a normal submitted_request for one
+          logical edit within the 30-day horizon, and the consequent captures scope eligibility for OT or a terminal decision,
+          including initial submissions and normal retries, with no prior submission required and without requiring coherence,
+          success, OT invocation, acceptance, or terminal completion.'
+        differences: []
+      strengthening:
+        subject_signature: 1b7045b6e0d079b305e9c3b033ec697a3c45ca97435658bc17f8f7dd850028ca
+        verdict: EQUIVALENT
+        reason: 'The universal implication exactly matches the source scope: the antecedent, read by its declared meaning
+          rather than its retry-connoting name, covers normal submitted_requests for one logical edit within the 30-day horizon,
+          and the consequent covers scope eligibility for OT or a terminal decision, including initial submissions and normal
+          retries, without requiring prior submission, coherence, OT invocation, acceptance, or terminal completion.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 1b7045b6e0d079b305e9c3b033ec697a3c45ca97435658bc17f8f7dd850028ca
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal scope, the 30-day pending/retry eligibility horizon, the inclusion of
+          initial submissions and normal retries, and independence from OT invocation, acceptance, and terminal-decision completion;
+          its identity/payload/binding independence is read inside the implication and does not delete the antecedent representation
+          condition.
+        differences: []
