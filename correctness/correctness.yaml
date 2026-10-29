@@ -196,7 +196,7 @@ refinement:
     G4_reconnect_converges_without_gap_or_duplicate:
       status: stable
       blocked_by: []
-      signature: a7d109a7f2035b110eaecdc52ce9b300e131fcb48a6057277625e2a872c297fe
+      signature: 822da72529c09346d859ceee8bc20a1a4173368c4d07979e1ad7dd9b32938e03
     G5_retry_resolves_idempotently:
       status: stable
       blocked_by: []
@@ -402,8 +402,9 @@ refinement:
       blocked_by: []
       signature: c4f81922770e1e994b49cbf1563f8f59fa9c5641ff21975a8f59e9c33f546f22
     G7_reconnect_does_not_double_render_accepted_optimistic_edit:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 04322e34f2ab35e6fd45b712f0968c2fe66d7708d00c136518205bb3d7341fbe
     L106_resync_request_covers_start_pending_set:
       status: stable
       blocked_by: []
@@ -417,8 +418,9 @@ refinement:
       blocked_by: []
       signature: 3feb1498840ff792b6e7e05e1726db4d4fe6045b45c26514fdf436f7b27ceffa
     L109_resync_publication_is_atomic_and_monotonic:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: cd8f556997186dbb6345f50c70535e31d2f1a17fd1c37beb269922915e48ae9e
     L110_client_retires_matching_speculative_overlay_before_canonical_publication:
       status: stable
       blocked_by: []
@@ -6819,7 +6821,13 @@ assurance:
         C38 not individually load-bearing - redundancy recorded, edges retained.'
       signature: 4e644930b4172094a46328ca5ec2e83f87d48cd0d690c1386e658df1c7916678
     G7_reconnect_does_not_double_render_accepted_optimistic_edit:
-      status: unaudited
+      status: machine_checked
+      rationale: 'SymbolicCompositionVerifier ENTAILED (unsat), composition signature a44c27a98c76044a04ef7e099cea55a41b29be333207861d4df395fbeeb26339.
+        Premises C37, L106, L107, L109, L110, A6 all TRUSTED; premise-removal ablation: removing L106,
+        L107, or L109 individually yields COUNTEREXAMPLE (sat), so those three are individually load-bearing;
+        removing C37, L110, or A6 individually still yields ENTAILED (unsat), so those three are individually
+        redundant, recorded per D23/D24.'
+      signature: a44c27a98c76044a04ef7e099cea55a41b29be333207861d4df395fbeeb26339
     G8_user_visible_state_does_not_double_render_accepted_optimistic_edit:
       status: machine_checked
       rationale: Trusted symbolic translations exist for G8 (formula derived from the trusted
