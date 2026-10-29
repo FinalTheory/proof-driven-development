@@ -20166,6 +20166,12 @@ claims:
                                   args:
                                   - var: e
                                   - var: a
+                              - call:
+                                  fn: committed_acceptance_in_state_for_key
+                                  args:
+                                  - var: a
+                                  - var: s
+                                  - var: k
                       - and:
                         - call:
                             fn: evidence_acquired_on_normal_acceptance_path
@@ -20212,6 +20218,12 @@ claims:
                                   args:
                                   - var: e
                                   - var: a
+                              - call:
+                                  fn: committed_acceptance_in_state_for_key
+                                  args:
+                                  - var: a
+                                  - var: s
+                                  - var: k
                         - call:
                             fn: accepted_evidence_has_only_committed_establishing_provenance
                             args:
@@ -20257,6 +20269,12 @@ claims:
                                   args:
                                   - var: e
                                   - var: a
+                              - call:
+                                  fn: committed_acceptance_in_state_for_key
+                                  args:
+                                  - var: a
+                                  - var: s
+                                  - var: k
                       - and:
                         - call:
                             fn: evidence_reconstructed_by_runtime
@@ -20298,6 +20316,12 @@ claims:
                                   args:
                                   - var: e
                                   - var: a
+                              - call:
+                                  fn: committed_acceptance_in_state_for_key
+                                  args:
+                                  - var: a
+                                  - var: s
+                                  - var: k
             - call:
                 fn: accepted_evidence_mechanism_valid
                 args:
