@@ -186,9 +186,8 @@ refinement:
       blocked_by: []
       signature: 41d9db6e87eacdbc1629e8534586e2fdac58634eb70b55c714fb673be8ab6040
     G2_canonical_history_is_linear_and_fenced:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 421aa923cf8a36febfe02629fffca152e8768155d4fa5128a22615d8a28cf013
     G3_snapshot_and_recovery_preserve_state:
       status: stable
       blocked_by: []
@@ -837,6 +836,9 @@ refinement:
       status: stable
       blocked_by: []
       signature: 7ead29336a212b11b6b0f6e63a1abb7985850b98156223b4fc83c17ab53ff518
+    L222_superseded_document_ownership_authority_never_returns:
+      status: pending
+      blocked_by: []
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -931,21 +933,25 @@ claims:
       before or atomically with the new generation becoming acceptance-eligible. An owner generation is
       one concrete immutable server-side ownership tenure for D, with document-scoped authority identity
       (D, its installed epoch, its owner-generation identity). Superseded epochs and superseded ownership
-      tenures never become authoritative again. Throughout every canonical append attempt targeting D,
-      including successful, rejected, aborted, delayed, and interrupted attempts whether or not they commit,
-      the supplied owner_epoch and append_owner_generation_id originate from and remain bound to the immutable
-      trusted server-side owner generation actually executing that attempt, whose ownership document is
-      D. Neither coordinate nor the document namespace may be copied, substituted, refreshed, or rebound
-      to impersonate another generation; equal scalar values from another document or generation do not
-      establish this provenance. This binding does not require the executing generation to remain authoritative
-      current or the attempt to commit. Every canonical append for D commits only when its document-scoped
-      generation authorization—D together with its epoch and generation-bound server-side append identity—matches
-      D's authoritative current ownership generation. Equality to copied/current scalar fencing values,
-      including an accidental collision with another document's ownership tuple, cannot authorize a different
-      or superseded owner generation to append to D.
+      tenures never become authoritative again. After an authoritative epoch value for D has been superseded
+      by a strictly greater epoch, D's authoritative current epoch never decreases across any authoritative
+      lifecycle transition, including recovery, restart, delayed metadata publication, ownership handoff,
+      or any corresponding authoritative state step. Throughout every canonical append attempt targeting
+      D, including successful, rejected, aborted, delayed, and interrupted attempts whether or not they
+      commit, the supplied owner_epoch and append_owner_generation_id originate from and remain bound
+      to the immutable trusted server-side owner generation actually executing that attempt, whose ownership
+      document is D. Neither coordinate nor the document namespace may be copied, substituted, refreshed,
+      or rebound to impersonate another generation; equal scalar values from another document or generation
+      do not establish this provenance. This binding does not require the executing generation to remain
+      authoritative current or the attempt to commit. Every canonical append for D commits only when its
+      document-scoped generation authorization—D together with its epoch and generation-bound server-side
+      append identity—matches D's authoritative current ownership generation. Equality to copied/current
+      scalar fencing values, including an accidental collision with another document's ownership tuple,
+      cannot authorize a different or superseded owner generation to append to D.
     depends_on:
       - C8_stale_owner_is_fenced
       - C39_authoritative_history_state_is_gap_free
+      - L222_superseded_document_ownership_authority_never_returns
     source_refs:
       - accepted_change_log
       - authoritative_truth
@@ -5288,6 +5294,26 @@ claims:
             unresolved in protocol semantics afterwards rather than resolved or terminalized.
           kind: state_machine
     kind: leaf
+  L222_superseded_document_ownership_authority_never_returns:
+    mechanisms:
+      - owner_epoch_fencing
+    source_refs:
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    statement: For every document D, no authoritative state makes a previously superseded epoch or a
+      previously superseded server-side ownership tenure authoritative again. This prohibition
+      applies across ownership handoff, recovery, restart, reacquisition, delayed ownership-metadata
+      publication, and every other authoritative lifecycle transition, whether or not a canonical
+      append is attempted.
+    verification:
+      verifiers:
+        - intent: Enumerate authority-establishing and ownership-metadata transitions; check
+            superseded epochs and tenure identities cannot return, including A-to-B-to-A with
+            increasing epochs, restart/reacquisition, delayed metadata, and executions with no
+            append.
+          kind: state_machine
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -6634,7 +6660,7 @@ id_allocator:
     A: 7
     G: 13
     C: 48
-    L: 222
+    L: 223
     D: 15
     T: 3
 assurance:
@@ -7167,6 +7193,8 @@ assurance:
       status: planned
     L221_bookkeeping_speculative_removal_does_not_resolve_lifecycle:
       status: planned
+    L222_superseded_document_ownership_authority_never_returns:
+      status: planned
 formalization:
   claims:
     G0_acked_edit_survives_failover:
@@ -7498,6 +7526,8 @@ formalization:
     L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier:
       mode: symbolic
     L221_bookkeeping_speculative_removal_does_not_resolve_lifecycle:
+      mode: symbolic
+    L222_superseded_document_ownership_authority_never_returns:
       mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:

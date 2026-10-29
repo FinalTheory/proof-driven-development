@@ -1573,6 +1573,7 @@ functions:
     meaning: In authoritative state s, a superseded epoch/generation for document d has become authoritative again.
     semantic_anchors:
     - claim:G2_canonical_history_is_linear_and_fenced
+    - claim:L222_superseded_document_ownership_authority_never_returns
   canonical_append_for_document:
     args:
     - ProtocolTransition
@@ -7370,6 +7371,17 @@ claims:
                 args:
                 - var: t
                 - var: d
+      - forall:
+          vars:
+            s: AuthoritativeState
+            d: Document
+          body:
+            not:
+              call:
+                args:
+                - var: s
+                - var: d
+                fn: superseded_generation_is_authoritative
   G3_snapshot_and_recovery_preserve_state:
     contracts:
     - logical_state_equivalence_at_frontier
@@ -7870,147 +7882,138 @@ claims:
     capability: relational
     contracts: []
     formula:
-      forall:
-        body:
-          implies:
-          - call:
-              args:
-              - var: c
-              fn: normal_client_resync_attempt
-          - and:
+      and:
+      - forall:
+          body:
+            implies:
             - call:
                 args:
                 - var: c
-                fn: resync_freezes_new_speculative_edits
-            - implies:
-              - and:
-                - call:
-                    args:
-                    - var: c
-                    - var: e
-                    fn: pending_identity_at_resync_start
-                - call:
-                    args:
-                    - var: c
-                    - var: e
-                    fn: resync_identity_within_normal_horizon
+                fn: normal_client_resync_attempt
+            - and:
               - call:
                   args:
                   - var: c
-                  - var: e
-                  fn: resync_request_reconciles_identity_through_head
-            - implies:
-              - and:
-                - call:
-                    args:
-                    - var: c
-                    - var: e
-                    fn: pending_identity_at_resync_start
-                - call:
-                    args:
-                    - var: c
-                    - var: e
-                    fn: resync_identity_within_normal_horizon
-                - call:
-                    args:
-                    - var: c
-                    - var: e
-                    fn: response_contains_same_identity_acceptance
-              - call:
-                  args:
-                  - var: c
-                  - var: e
-                  fn: resync_publication_excludes_canonical_speculative_duplicate
-            - implies:
-              - and:
-                - call:
-                    args:
-                    - var: c
-                    - var: e
-                    fn: pending_identity_at_resync_start
-                - call:
-                    args:
-                    - var: c
-                    - var: e
-                    fn: resync_identity_within_normal_horizon
-              - call:
-                  args:
-                  - var: c
-                  - var: e
-                  fn: resync_intermediate_candidate_excludes_canonical_speculative_duplicate
-            - forall:
-                vars:
-                  h: Revision
-                  f: Revision
-                body:
-                  implies:
-                  - and:
-                    - call:
-                        args:
-                        - var: c
-                        - var: e
-                        fn: pending_identity_at_resync_start
-                    - call:
-                        args:
-                        - var: c
-                        - var: e
-                        fn: resync_identity_within_normal_horizon
-                    - call:
-                        args:
-                        - var: c
-                        - var: e
-                        fn: resync_identity_matches_document
-                    - call:
-                        fn: catchup_response_head_is
-                        args:
-                        - var: c
-                        - var: h
-                    - call:
-                        fn: resync_visible_frontier_at_candidate_readiness
-                        args:
-                        - var: c
-                        - var: f
-                    - not:
-                        call:
-                          fn: revision_at_or_before
-                          args:
-                          - var: f
-                          - var: h
+                  fn: resync_freezes_new_speculative_edits
+              - implies:
+                - and:
                   - call:
                       args:
                       - var: c
-                      fn: stale_response_cannot_restore_removed_overlay_or_pending_resolution_state
-            - implies:
-              - and:
+                      - var: e
+                      fn: pending_identity_at_resync_start
+                  - call:
+                      args:
+                      - var: c
+                      - var: e
+                      fn: resync_identity_within_normal_horizon
                 - call:
                     args:
                     - var: c
                     - var: e
-                    fn: pending_identity_at_resync_start
+                    fn: resync_request_reconciles_identity_through_head
+              - implies:
+                - and:
+                  - call:
+                      args:
+                      - var: c
+                      - var: e
+                      fn: pending_identity_at_resync_start
+                  - call:
+                      args:
+                      - var: c
+                      - var: e
+                      fn: resync_identity_within_normal_horizon
+                  - call:
+                      args:
+                      - var: c
+                      - var: e
+                      fn: response_contains_same_identity_acceptance
                 - call:
                     args:
                     - var: c
                     - var: e
-                    fn: resync_identity_age_exceeds_normal_horizon
+                    fn: resync_publication_excludes_canonical_speculative_duplicate
+              - implies:
+                - and:
+                  - call:
+                      args:
+                      - var: c
+                      - var: e
+                      fn: pending_identity_at_resync_start
+                  - call:
+                      args:
+                      - var: c
+                      - var: e
+                      fn: resync_identity_within_normal_horizon
+                - call:
+                    args:
+                    - var: c
+                    - var: e
+                    fn: resync_intermediate_candidate_excludes_canonical_speculative_duplicate
+              - implies:
+                - and:
+                  - call:
+                      args:
+                      - var: c
+                      - var: e
+                      fn: pending_identity_at_resync_start
+                  - call:
+                      args:
+                      - var: c
+                      - var: e
+                      fn: resync_identity_age_exceeds_normal_horizon
+                - call:
+                    args:
+                    - var: c
+                    - var: e
+                    fn: expired_identity_uses_non_normal_resolution_path
+              - implies:
+                - call:
+                    args:
+                    - var: c
+                    - var: e
+                    fn: identity_unresolved_after_reconciled_publication
+                - call:
+                    args:
+                    - var: c
+                    - var: e
+                    fn: unresolved_identity_blocks_normal_editing
+          vars:
+            c: CatchupResponse
+            e: LogicalEditIdentity
+      - forall:
+          vars:
+            c: CatchupResponse
+            h: Revision
+            f: Revision
+          body:
+            implies:
+            - and:
               - call:
                   args:
                   - var: c
-                  - var: e
-                  fn: expired_identity_uses_non_normal_resolution_path
-            - implies:
+                  fn: normal_client_resync_attempt
               - call:
                   args:
                   - var: c
-                  - var: e
-                  fn: identity_unresolved_after_reconciled_publication
+                  - var: h
+                  fn: catchup_response_head_is
               - call:
                   args:
                   - var: c
-                  - var: e
-                  fn: unresolved_identity_blocks_normal_editing
-        vars:
-          c: CatchupResponse
-          e: LogicalEditIdentity
+                  - var: f
+                  fn: resync_visible_frontier_at_candidate_readiness
+              - not:
+                  call:
+                    args:
+                    - var: f
+                    - var: h
+                    fn: revision_at_or_before
+            - call:
+                args:
+                - var: c
+                fn: stale_response_cannot_restore_removed_overlay_or_pending_resolution_state
   G8_user_visible_state_does_not_double_render_accepted_optimistic_edit:
     contracts:
     - visible_canonical_speculative_exclusion
@@ -19432,6 +19435,21 @@ claims:
               args:
               - var: t
               - var: e
+  L222_superseded_document_ownership_authority_never_returns:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          s: AuthoritativeState
+          d: Document
+        body:
+          not:
+            call:
+              args:
+              - var: s
+              - var: d
+              fn: superseded_generation_is_authoritative
 contracts:
   client_canonical_frontier_coherence:
     class: state_invariant
