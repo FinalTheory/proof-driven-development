@@ -12460,3 +12460,62 @@ records:
           producer for both in-horizon representations, and the metadata-timing and transient-substitution clarifications
           neither add nor remove a source requirement.'
         differences: []
+  claim:L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation:
+    kind: claim
+    subject_id: L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
+    subject_signature: b633f28198325db0a2d168dce608c3cbb76f0c0d5811d14c07e89539a90f11d6
+    roundtrip:
+      subject_signature: b633f28198325db0a2d168dce608c3cbb76f0c0d5811d14c07e89539a90f11d6
+      status: TRANSLATED
+      natural_language: 'The following conjunction holds. (1) For every authoritative state s and every idempotency key k,
+        where k is the exact full composite identity (document_id, client_change_id), if s is reachable under the canonical
+        server protocol and failure model and k is within the configured normal retry eligibility horizon in s — this horizon
+        predicate does not by itself assume any fixed duration such as 30 days — then s contains at most one durable terminal
+        result for that exact k; equal client_change_id values in different document namespaces are distinct identities. (2)
+        For every such reachable s and every k within the retry horizon in s, if the terminal outcome contained in s for the
+        exact k is ACCEPTED(canonical result), then the accepted terminal outcome matches canonical acceptance: the canonical
+        accepted history for that same document contains the matching canonical acceptance for that exact identity, and no
+        incompatible REJECTED outcome exists for that same identity. (3) For every such reachable s and every k within the
+        retry horizon in s, if the terminal outcome contained in s for the exact k is ACCEPTED(canonical result), then the
+        terminal outcome contained in s for the exact k is not REJECTED(definitive rejection reason). (4) For every such reachable
+        s and every k within the retry horizon in s, if the terminal outcome contained in s for the exact k is REJECTED(definitive
+        rejection reason), then the rejected terminal outcome excludes canonical acceptance: the canonical accepted history
+        for that same document contains no canonical acceptance for that exact identity. (5) For every protocol transition
+        x and every pair of terminal result records r1 and r2, if x is an authoritative lifecycle representation rewrite,
+        within the 30-day normal retry eligibility horizon, from representation r1 to representation r2 for the same already-linearized
+        logical terminal outcome and the same full idempotency key, where the durable physical representation may change,
+        then x preserves the same already-linearized logical terminal outcome from r1 to r2: an ACCEPTED outcome preserves
+        the exact canonical result, and a REJECTED outcome preserves the same definitive rejection reason; for a REJECTED
+        outcome this does not require preserving the same rejection-decision object or producer when the exact request binding
+        and required authoritative-context justification remain valid. (6) For every protocol transition x and every pair
+        of terminal result records r1 and r2, if x is such an authoritative lifecycle representation rewrite from r1 to r2,
+        then the full idempotency key carried by r1 equals the full idempotency key carried by r2.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: b633f28198325db0a2d168dce608c3cbb76f0c0d5811d14c07e89539a90f11d6
+        verdict: EQUIVALENT
+        reason: 'The formula covers every source requirement with matching guards and identity: at-most-one (allowing zero)
+          in reachable states within the retry horizon, ACCEPTED matching canonical acceptance and excluding REJECTED, REJECTED
+          excluding canonical acceptance, and lifecycle rewrites within the 30-day horizon preserving the full composite key
+          and the exact canonical result or definitive reason, with no added requirement.'
+        differences: []
+      strengthening:
+        subject_signature: b633f28198325db0a2d168dce608c3cbb76f0c0d5811d14c07e89539a90f11d6
+        verdict: EQUIVALENT
+        reason: 'All source requirements are encoded with matching scope: reachable in-horizon at-most-one, ACCEPTED implies
+          matching canonical acceptance and no REJECTED, REJECTED implies no canonical acceptance, and authoritative 30-day
+          lifecycle rewrites preserve the full composite key and exact ACCEPTED result or REJECTED reason, with no added universal,
+          cardinality, or identity requirement.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: b633f28198325db0a2d168dce608c3cbb76f0c0d5811d14c07e89539a90f11d6
+        verdict: EQUIVALENT
+        reason: The rendering preserves the at-most-one terminal outcome per exact full composite key in reachable states
+          within the normal retry horizon, the ACCEPTED-to-canonical-acceptance and exclusion-of-REJECTED requirements, the
+          REJECTED-to-no-canonical-acceptance requirement, and the 30-day lifecycle-rewrite preservation of the full key and
+          exact logical value (canonical result for ACCEPTED, definitive reason for REJECTED); the added clarifications about
+          distinct document namespaces, absence as zero, and non-identity of rejection-decision objects/producers do not omit
+          or add a material requirement beyond the source.
+        differences: []
