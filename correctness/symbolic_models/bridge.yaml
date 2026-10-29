@@ -1570,7 +1570,7 @@ functions:
     - Document
     returns: Bool
     catalog_symbols: []
-    meaning: In authoritative state s, a superseded epoch/generation for document d has become authoritative again.
+    meaning: In authoritative state s, a previously superseded epoch for document d, or a previously superseded server-side ownership tenure (owner generation) for document d, has become authoritative again.
     semantic_anchors:
     - claim:G2_canonical_history_is_linear_and_fenced
     - claim:L222_superseded_document_ownership_authority_never_returns
@@ -7945,23 +7945,6 @@ claims:
                       args:
                       - var: c
                       - var: e
-                      fn: resync_identity_within_normal_horizon
-                - call:
-                    args:
-                    - var: c
-                    - var: e
-                    fn: resync_intermediate_candidate_excludes_canonical_speculative_duplicate
-              - implies:
-                - and:
-                  - call:
-                      args:
-                      - var: c
-                      - var: e
-                      fn: pending_identity_at_resync_start
-                  - call:
-                      args:
-                      - var: c
-                      - var: e
                       fn: resync_identity_age_exceeds_normal_horizon
                 - call:
                     args:
@@ -8014,6 +7997,21 @@ claims:
                 args:
                 - var: c
                 fn: stale_response_cannot_restore_removed_overlay_or_pending_resolution_state
+      - forall:
+          vars:
+            c: CatchupResponse
+            e: LogicalEditIdentity
+          body:
+            implies:
+            - call:
+                fn: normal_client_resync_attempt
+                args:
+                - var: c
+            - call:
+                fn: resync_intermediate_candidate_excludes_canonical_speculative_duplicate
+                args:
+                - var: c
+                - var: e
   G8_user_visible_state_does_not_double_render_accepted_optimistic_edit:
     contracts:
     - visible_canonical_speculative_exclusion
@@ -12345,17 +12343,11 @@ claims:
             c: CatchupResponse
             e: LogicalEditIdentity
           body:
-            implies:
-            - call:
-                args:
-                - var: c
-                - var: e
-                fn: pending_identity_at_resync_start
-            - call:
-                fn: resync_intermediate_candidate_excludes_canonical_speculative_duplicate
-                args:
-                - var: c
-                - var: e
+            call:
+              fn: resync_intermediate_candidate_excludes_canonical_speculative_duplicate
+              args:
+              - var: c
+              - var: e
       - forall:
           vars:
             c: CatchupResponse
