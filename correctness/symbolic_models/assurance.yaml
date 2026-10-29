@@ -12397,3 +12397,66 @@ records:
           non-assertions concern each requirement by itself and do not remove the combined per-state guarantee, and neither
           side adds an outside-horizon, converse, provenance, or mechanism requirement.
         differences: []
+  claim:L231_accepted_terminal_result_producer_binding_and_identity:
+    kind: claim
+    subject_id: L231_accepted_terminal_result_producer_binding_and_identity
+    subject_signature: 7589333035057610f3e6bccc860d33d79750dd8fbfa54e5cd7fe057319b60a3c
+    roundtrip:
+      subject_signature: 7589333035057610f3e6bccc860d33d79750dd8fbfa54e5cd7fe057319b60a3c
+      status: TRANSLATED
+      natural_language: 'For every terminal result record t and every canonical acceptance a, the claim-level relation that
+        accepted terminal result t carries a canonical result produced by the same acceptance execution that produced and
+        committed canonical acceptance a for the same full identity holds if and only if all three of the following hold:
+        (1) t, as a representation, carries a canonical result produced by the same acceptance execution that produced a,
+        where at an acceptance-origin boundary this means the result placed into t comes from that same execution rather than
+        another request, document, acceptance execution, or merely extensionally equal substitute, and where this bound relation
+        applied to any representation of the same logical terminal outcome classifies that representation by the same test;
+        (2) the matching canonical acceptance a is committed for the corresponding ACCEPTED terminal outcome, and the execution
+        that committed a is the acceptance execution that produced a; and (3) t and a carry the same full document_id and
+        client_change_id identity. The claim-level relation so defined requires that producer provenance be correct at authoritative
+        terminalization and remain the same in any later lifecycle representation on which the relation is asserted, but it
+        does not require that the binding metadata have been materialized during acceptance-transaction assembly, and it does
+        not treat a transient intermediate metadata substitution that is discarded before authoritative terminalization as
+        a violation. The bound relation by itself does not assert that a is committed, when binding metadata was materialized,
+        or that t is provenance-reachable from an acceptance origin, and the matching-acceptance-committed condition by itself
+        does not require one named implementation path and does not by itself assert producer provenance of a stored result.
+        For every canonical acceptance a, if the matching-acceptance-committed condition holds for a, then a is a committed
+        canonical accepted-change record in authoritative accepted history. For every terminal result record t and canonical
+        acceptance a, if t and a carry the same full document_id and client_change_id identity, then the full idempotency
+        key carried by authoritative terminal result t equals the authoritative idempotency identity carried by a. For every
+        protocol transition p and terminal result records r1 and r2, if p is an authoritative lifecycle representation change,
+        within the normal retry eligibility horizon, that preserves one already-linearized ACCEPTED logical terminal outcome
+        from representation r1 to representation r2 while possibly rewriting its durable physical representation, with r1
+        and r2 carrying the same full idempotency identity, then there exists a canonical acceptance a such that a is a committed
+        canonical accepted-change record in authoritative accepted history, the claim-level relation holds between r1 and
+        a, and the claim-level relation holds between r2 and a. The four statements above are conjoined, and no formula from
+        any referenced semantic contract is implicitly conjoined, as the referenced set is empty.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 7589333035057610f3e6bccc860d33d79750dd8fbfa54e5cd7fe057319b60a3c
+        verdict: EQUIVALENT
+        reason: 'The biconditional captures exactly the three source conditions: same-execution provenance, committed matching
+          acceptance, and full document_id plus client_change_id identity; the committed-acceptance and idempotency-key implications
+          capture the stated definitions, and the lifecycle clause requires one same committed producer for both representations.
+          Predicate meanings supply the authoritative ACCEPTED scope and full identity, with no added requirement.'
+        differences: []
+      strengthening:
+        subject_signature: 7589333035057610f3e6bccc860d33d79750dd8fbfa54e5cd7fe057319b60a3c
+        verdict: EQUIVALENT
+        reason: The first conjunct reproduces the source iff with the same three conditions (same-execution result, committed
+          matching acceptance, and same complete document_id/client_change_id identity); the committed-acceptance implication
+          and binding-to-key implication encode the source definitions; and the lifecycle conjunct requires one shared committed
+          acceptance for both representations, which transitively gives the same logical outcome and full idempotency identity.
+          No extra guard, scope, cardinality, or provenance requirement is added.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 7589333035057610f3e6bccc860d33d79750dd8fbfa54e5cd7fe057319b60a3c
+        verdict: EQUIVALENT
+        reason: 'The round-trip iff preserves the original three conditions: result provenance from the same acceptance execution,
+          a committed matching acceptance, and the same complete document_id and client_change_id identity. The accepted-history
+          and idempotency-key statements follow the supplied vocabulary, the lifecycle clause preserves the same committed
+          producer for both in-horizon representations, and the metadata-timing and transient-substitution clarifications
+          neither add nor remove a source requirement.'
+        differences: []
