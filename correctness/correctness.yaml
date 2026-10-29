@@ -841,8 +841,9 @@ refinement:
       blocked_by: []
       signature: 0aa741945ca43d870bc0f2278c171d096027c5ac7807fd786440ca021f43697c
     L223_authoritative_accepted_evidence_counts_durable_representation:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 68936a652217f82eb405d1e446c80498b9959ca1c60abfbec98cff499dda672c
     L224_committed_acceptance_history_matches_acceptance_events:
       status: stable
       blocked_by: []
