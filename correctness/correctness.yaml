@@ -5385,7 +5385,10 @@ claims:
       before s if and only if the accepted_change_log denoted by s contains a committed canonical
       acceptance for k. Each such acceptance is associated with a creating protocol transition for
       that same identity, and the accepted_change_log contains exactly one committed canonical
-      acceptance for k if and only if it contains exactly one such acceptance and no other.
+      acceptance for k if and only if it contains exactly one such acceptance and no other. Here k
+      is the authoritative deduplication identity of a logical edit, namely the ordered pair of its
+      document identifier and its client change identifier. Every reference to an acceptance or its
+      creating protocol transition for k requires both identity coordinates to match k.
     verification:
       verifiers:
         - intent: Enumerate creating protocol transitions for a key and check the event-to-member
