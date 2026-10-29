@@ -864,14 +864,17 @@ refinement:
       status: pending
       blocked_by: []
     L229_terminal_attempt_arbitration_classification_and_gate:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 8d9608af8fda85072ca358d7259954234a61c4b13458ac23af3e224469437923
     L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: a50f1d0c2e1d5e20901326e895d2190230eceaf713e084e81cfe8bce65d6170d
     L231_accepted_terminal_result_producer_binding_and_identity:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 60124b0484eaf715f3157ff5087c2c047e463d9a8844e48a301f77b2ec42c9bf
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
