@@ -1112,47 +1112,96 @@ records:
   claim:G2_canonical_history_is_linear_and_fenced:
     kind: claim
     subject_id: G2_canonical_history_is_linear_and_fenced
-    subject_signature: c3082e0c1f3dc1993c40c27e7517c934ce8a2ddfc03105b4e5bf607d76641ba6
+    subject_signature: d9de32942b90281065fd5ab4d0df729a1df8ff4e3743c308085b8e8dfa0c59e8
     roundtrip:
-      subject_signature: c3082e0c1f3dc1993c40c27e7517c934ce8a2ddfc03105b4e5bf607d76641ba6
+      subject_signature: d9de32942b90281065fd5ab4d0df729a1df8ff4e3743c308085b8e8dfa0c59e8
       status: TRANSLATED
-      natural_language: 'For every authoritative state s and every document d, the accepted canonical history for d in s is
-        one gap-free revision sequence, and no superseded epoch/generation for d has become authoritative again in s. Furthermore,
-        for every protocol transition t and every document d, both of the following hold: if t is an authoritative ownership
-        handoff for d, then t installs a strictly greater epoch and a fresh immutable generation identity before or atomically
-        with the new generation becoming acceptance-eligible; and if t performs a canonical accepted-history append for d,
-        then that append is authorized by the exact current document-scoped generation identity for d, including its epoch
-        and generation-bound server append identity, with neither copied scalar values nor another document tuple authorizing
-        the append.'
+      natural_language: 'The proposition is the conjunction of all of the following claims, and nothing else is conjoined
+        by it; in particular, no referenced semantic contract formula is implicitly added, and the referenced semantic contracts
+        list is empty. First, for every authoritative state s and every document d, if s denotes an accepted history for d
+        — that is, s includes d''s authoritative accepted-history coordinate, as a scope condition only, asserting nothing
+        about d''s document_latest_revision coordinate and nothing by itself about whether the denoted history is gap-free
+        or ends at any frontier — then the accepted canonical history for d in s is one gap-free revision sequence. Second,
+        for every pair of authoritative states before and after and every document d, if after is reachable from before by
+        the transitive closure of authoritative_state_step — where each such step is the immediate successor relation under
+        one committed authoritative protocol transition, with aborted, rolled-back, or never-committed work creating no step
+        and no successor authoritative state — and if the condition that after denotes an accepted history for d implies that
+        before''s accepted canonical history for d is gap-free, then the condition that after denotes an accepted history
+        for d implies that after''s accepted canonical history for d is gap-free. Third, for every protocol transition t and
+        every document d, if t is an authoritative ownership handoff for d, then both: t commits document_current_epoch to
+        a strictly greater value than the superseded generation''s epoch, with the epoch advance occurring before or atomically
+        with the new generation becoming authoritative and acceptance-eligible, so the new generation does not reuse the superseded
+        generation''s epoch; and t commits a fresh document_owner_generation_id, different from the superseded generation''s
+        identity, before or atomically with the new generation becoming authoritative and acceptance-eligible, so the new
+        generation is not published or enabled while the authoritative generation identity still names the superseded tenure.
+        Fourth, for every protocol transition t and every document d, if t is an authoritative lifecycle transition for d
+        — an authoritative recovery, restart, delayed metadata publication, ownership handoff, or other authoritative transition
+        in d''s lifecycle, as opposed to a client-side or speculative action — and t executes after an authoritative epoch
+        value for d has been superseded by a strictly greater epoch, so that d''s epoch history already contains a supersession
+        event when t occurs, then across t, d''s document_current_epoch never decreases and no superseded epoch value for
+        d is restored as current. Fifth, for every pair of authoritative states before and after and every document d, if
+        the step from before to after is an authoritative state step, and that step is the state-level effect of an authoritative
+        lifecycle transition for d, and by the time of that step an authoritative epoch value for d has already been superseded
+        by a strictly greater epoch, then if in after, d''s current document_current_epoch is an epoch value that was superseded
+        by a strictly greater epoch — regardless of which owner generation is paired with it in after — then in before, d''s
+        current document_current_epoch is likewise such a superseded epoch value. Sixth, under the same three step conditions
+        as the fifth claim, the authoritative current epoch of d in after is not strictly less than the authoritative current
+        epoch of d in before. Seventh, for every protocol transition t and every document d, if t executes a canonical accepted-history
+        append attempt targeting d — including successful, rejected, aborted, delayed, and interrupted attempts, independently
+        of whether their supplied fencing tuple is valid or any canonical acceptance commits, and where every transition performing
+        a canonical accepted-history append for d is such an attempt, while a transition solely arbitrating or writing a per-key
+        terminal outcome does not qualify on that basis — then throughout that attempt, the supplied owner_epoch and append_owner_generation_id
+        originate from and remain bound to the immutable trusted server-side owner generation actually executing that attempt,
+        whose ownership document is d; neither coordinate nor the document namespace may be copied, substituted, refreshed,
+        or rebound to impersonate another generation, and equal scalar values from another document or generation do not establish
+        this provenance; this claim does not require the executing generation to remain authoritative current, and does not
+        require the attempt to commit. Eighth, for every protocol transition t and every document d, if t performs a canonical
+        accepted-history append for d, then t is authorized by the exact current document-scoped generation identity for d,
+        including epoch and generation-bound server append identity, and copied scalar values or another document''s tuple
+        do not authorize it. Ninth, for every protocol transition t and every document d, if t performs a canonical accepted-history
+        append for d and t is the commit of a candidate_canonical_change append for d — the canonical accepted change that
+        t appends to d''s canonical history being the committed form of a candidate_canonical_change append for d, classified
+        by its candidate provenance, the provenance the candidate-append epoch guard governs, not by its supplied fencing
+        tuple — then t committed with its supplied owner_epoch equal to d''s authoritative document_current_epoch at commit,
+        in the sense that the epoch fencing guard inside the acceptance transaction passed with equality, so no stale-owner
+        append committed. Tenth, for every protocol transition t and every document d, if t performs a canonical accepted-history
+        append for d, then t committed with its supplied document-scoped generation tuple matching d''s authoritative generation
+        at commit: the supplied owner_epoch equaled d''s authoritative document_current_epoch at t''s commit point and the
+        supplied append_owner_generation_id equaled d''s authoritative document_owner_generation_id at t''s commit point;
+        a tuple whose generation was superseded between attempt and commit, or that was copied from or merely scalar-collides
+        with another document''s generation, does not satisfy this claim. Eleventh, for every authoritative state s and every
+        document d, it is not the case that in s a previously superseded epoch for d, or a previously superseded server-side
+        ownership tenure (owner generation) for d, has become authoritative again.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: c3082e0c1f3dc1993c40c27e7517c934ce8a2ddfc03105b4e5bf607d76641ba6
+        subject_signature: d9de32942b90281065fd5ab4d0df729a1df8ff4e3743c308085b8e8dfa0c59e8
         verdict: EQUIVALENT
-        reason: The universally quantified predicates preserve the single gap-free history for each document, prohibit superseded
-          authority, and require every authoritative handoff to install a strictly greater epoch and fresh immutable generation
-          before or atomically with acceptance eligibility. Every canonical append requires the exact current document-scoped
-          generation authorization, including epoch and generation-bound server append identity, explicitly excluding authorization
-          by copied scalars or another document's ownership tuple.
+        reason: The formula covers the gap-free accepted history, strictly-greater-epoch plus fresh-generation handoff installation,
+          post-supersession never-decrease/never-restore at both lifecycle-transition and state-step levels, unconditional
+          non-restoration of superseded generations, provenance binding for all append attempts without requiring current
+          status or commit, and commit authorization only by the exact document-scoped current epoch and generation tuple.
         differences: []
       strengthening:
-        subject_signature: c3082e0c1f3dc1993c40c27e7517c934ce8a2ddfc03105b4e5bf607d76641ba6
+        subject_signature: d9de32942b90281065fd5ab4d0df729a1df8ff4e3743c308085b8e8dfa0c59e8
         verdict: EQUIVALENT
-        reason: The formula preserves the per-document history invariant and prohibition on superseded authority. Its guarded
-          transition requirements exactly capture handoff epoch growth, fresh immutable generation identity, eligibility timing,
-          and append authorization by the current document-scoped generation. The supplied predicate meanings preserve server-side
-          append identity and exclude authorization through copied scalars or cross-document tuple collisions, without adding
-          scope or requirements beyond the source.
+        reason: The formula covers gap-free accepted history, strictly greater epoch plus fresh generation identity at handoff,
+          never-decrease and never-restore after supersession across lifecycle transitions and state steps, no superseded
+          generation becoming authoritative, provenance-bound append tuples for all attempts without requiring currency or
+          commit, and commit only on exact document-scoped current-generation match with copied or cross-document scalar collisions
+          excluded, with no added requirement outside the canonical statement.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: c3082e0c1f3dc1993c40c27e7517c934ce8a2ddfc03105b4e5bf607d76641ba6
+        subject_signature: d9de32942b90281065fd5ab4d0df729a1df8ff4e3743c308085b8e8dfa0c59e8
         verdict: EQUIVALENT
-        reason: The rendering preserves the per-document gap-free sequence, strictly increasing handoff epochs, fresh immutable
-          generation identities installed before acceptance eligibility, and permanent exclusion of superseded ownership.
-          Append authorization retains the exact current document, epoch, and generation-bound server identity, excluding
-          authorization based merely on copied scalars or another document's tuple. Explicit state and transition quantification
-          adds no substantive requirement.
+        reason: 'The eleven rendering claims jointly cover the original guarantees with no omission or addition: per-state
+          gap-free single history, strictly greater epoch and fresh generation identity installed before or atomically with
+          acceptance-eligibility, non-decreasing and non-restoring current epoch across lifecycle transitions and state steps,
+          superseded epochs and tenures never becoming authoritative again, provenance-bound fencing coordinates throughout
+          every append attempt without requiring current status or commit, and commit only on exact current document-scoped
+          generation authorization. The preservation and candidate-epoch claims are implied by the per-state gap-free and
+          tuple-match claims, and the scope and classification clarifications do not change the guarantees.'
         differences: []
   claim:G6_accepted_change_preserves_ot_semantics:
     kind: claim
@@ -12003,4 +12052,41 @@ records:
           exposure, any acceptance it itself produces makes it the sole producer, any successful non-timeout non-cancellation
           acceptance-resolution returns the canonical accepted result produced either by itself as sole producer or by another
           attempt, and no distinct second acceptance is created. No requirement is omitted or added.'
+        differences: []
+  claim:L222_superseded_document_ownership_authority_never_returns:
+    kind: claim
+    subject_id: L222_superseded_document_ownership_authority_never_returns
+    subject_signature: 7baf1fdf9e0014c1824269caade5b2c4f4b45ea242b299c80c86a7dddd7b7b16
+    roundtrip:
+      subject_signature: 7baf1fdf9e0014c1824269caade5b2c4f4b45ea242b299c80c86a7dddd7b7b16
+      status: TRANSLATED
+      natural_language: For every authoritative state s and every document d, it is not the case that, in authoritative state
+        s, a previously superseded epoch for document d, or a previously superseded server-side ownership tenure (owner generation)
+        for document d, has become authoritative again.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 7baf1fdf9e0014c1824269caade5b2c4f4b45ea242b299c80c86a7dddd7b7b16
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over all authoritative states and all documents and negates the predicate
+          that a previously superseded epoch or server-side ownership tenure for that document has become authoritative again,
+          matching the source's universal prohibition without conditioning on lifecycle transition type or on an attempted
+          canonical append.
+        differences: []
+      strengthening:
+        subject_signature: 7baf1fdf9e0014c1824269caade5b2c4f4b45ea242b299c80c86a7dddd7b7b16
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over all authoritative states and all documents and negates a predicate
+          covering both a previously superseded epoch and a previously superseded server-side ownership tenure becoming authoritative
+          again, unconditionally and without added guards, matching the canonical universal prohibition across all authoritative
+          lifecycle transitions whether or not an append is attempted.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 7baf1fdf9e0014c1824269caade5b2c4f4b45ea242b299c80c86a7dddd7b7b16
+        verdict: EQUIVALENT
+        reason: Both universally quantify over every document and every authoritative state and forbid any previously superseded
+          epoch or previously superseded server-side ownership tenure from becoming authoritative again; the round-trip's
+          universal quantification over authoritative states already covers all lifecycle transitions and both append-attempted
+          and non-attempted cases stated explicitly in the original, without adding or omitting a requirement.
         differences: []
