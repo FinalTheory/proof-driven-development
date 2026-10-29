@@ -12241,3 +12241,57 @@ records:
           committed row/identity itself, an atomically co-committing hot-path record, and lifecycle or runtime replacement
           derived from a previously committed canonical acceptance, together with the corresponding validity converse.
         differences: []
+  claim:L224_committed_acceptance_history_matches_acceptance_events:
+    kind: claim
+    subject_id: L224_committed_acceptance_history_matches_acceptance_events
+    subject_signature: 9c4cbd65b7896b943067aa634219f5fb8a54cc9813cced92f8ebc4cdc8db16bf
+    roundtrip:
+      subject_signature: 9c4cbd65b7896b943067aa634219f5fb8a54cc9813cced92f8ebc4cdc8db16bf
+      status: TRANSLATED
+      natural_language: For every authoritative state s and every idempotency key k, where k is the composite authoritative
+        identity (document_id, client_change_id), if k is within the 30-day normal retry/reconnect eligibility horizon in
+        s, then all of the following hold. First, an acceptance event creating a canonical accepted change for k has occurred
+        at or before s if and only if there exists a canonical acceptance a that belongs to the logical committed accepted
+        history denoted by s for the exact full identity k; this occurrence condition records only that the acceptance lies
+        in s's past and does not assert that evidence of it is present in s, and this committed-history membership concerns
+        logical history across authoritative representations, not physical retention of an original row, and by itself asserts
+        neither uniqueness nor the presence of accepted-key evidence. Second, for every canonical acceptance a and every protocol
+        transition t, if a belongs to the logical committed accepted history denoted by s for k and t is the acceptance-creation
+        event that produced a, then t is an acceptance-capable protocol transition whose attempted or created acceptance is
+        for k and t creates a new acceptance event for its idempotency key; this does not assert that t creates only one acceptance,
+        that no other transition creates an acceptance for the same key, or the converse implication. Third, the predicate
+        that the accepted_change_log in s contains exactly one committed canonical acceptance whose authoritative idempotency_key
+        is the same composite identity k holds if and only if there exists a canonical acceptance a belonging to the logical
+        committed accepted history denoted by s for k such that every canonical acceptance b belonging to that history for
+        s and k is equal to a. Fourth, for every canonical acceptance a, if k is within the 30-day normal retry/reconnect
+        eligibility horizon in s and a belongs to the logical committed accepted history denoted by s for k, then there exists
+        a protocol transition t such that t is the acceptance-creation event that produced a; this asserts existence of such
+        a creating transition, not its uniqueness.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 9c4cbd65b7896b943067aa634219f5fb8a54cc9813cced92f8ebc4cdc8db16bf
+        verdict: EQUIVALENT
+        reason: The formula preserves the horizon-guarded occurrence/log-membership biconditional, the composite-key identity
+          in the committed-history predicates, the logical-history scope, and the exactly-one equivalence; creator existence
+          together with the created-by implication yields a creating transition for the same key that creates an acceptance,
+          with no added or omitted requirement.
+        differences: []
+      strengthening:
+        subject_signature: 9c4cbd65b7896b943067aa634219f5fb8a54cc9813cced92f8ebc4cdc8db16bf
+        verdict: EQUIVALENT
+        reason: The formula reproduces the within-horizon event/log existence biconditional, the existence of a creating transition
+          for each committed acceptance with that transition required to be for the same composite key and to create an acceptance,
+          and the exactly-one biconditional, using exact full composite identity and logical-history membership throughout;
+          no scope, cardinality, or provenance requirement is added or omitted.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 9c4cbd65b7896b943067aa634219f5fb8a54cc9813cced92f8ebc4cdc8db16bf
+        verdict: EQUIVALENT
+        reason: The rendering preserves the horizon-scoped biconditional between an acceptance event at or before s and membership
+          in the logical committed history for the full composite identity (document_id, client_change_id), preserves the
+          logical-history rather than physical-retention scope, preserves existence (without uniqueness or converse) of a
+          creating protocol transition for the same identity, and formalizes exactly-one as existence plus all members equal,
+          without adding or omitting a substantive guarantee.
+        differences: []
