@@ -5354,10 +5354,11 @@ claims:
     statement: For every authoritative state s and composite idempotency_key k within the 30-day
       normal retry/reconnect eligibility horizon, authoritative durable
       accepted_idempotency_evidence exists in s for k if and only if s counts a durable
-      representation of that evidence. Any representation counted by s supplies sufficient
-      non-reusable already-accepted classification for k, and once a canonical acceptance event for
-      k has occurred, that classification is retained in every authoritative state within the
-      horizon, including across recovery, snapshot, compaction, and cleanup transitions.
+      representation of that evidence. For each such in-horizon state/key pair, any representation
+      counted by s as already-accepted evidence for k supplies sufficient non-reusable
+      already-accepted classification for k. Once a canonical acceptance event for k has occurred,
+      that classification is retained in every authoritative state within the horizon, including
+      across recovery, snapshot, compaction, and cleanup transitions.
     verification:
       verifiers:
         - intent: After accept(k), exercise recovery, snapshot, compaction, and cleanup transitions
@@ -5412,7 +5413,11 @@ claims:
       acceptance in the same acceptance transaction; or lifecycle or runtime replacement evidence derived
       from a previously committed canonical acceptance recorded in the accepted_change_log. If every item
       counted by s for k is established by such a mechanism, the accepted evidence mechanism for (s, k)
-      is valid.'
+      is valid. In this statement, provenance means the sources that establish the item''s already-accepted
+      classification; incidental metadata and inputs that do not establish that classification are not
+      establishing provenance. The normal acceptance path is the flow that first establishes already-accepted
+      evidence. Durable lifecycle replacement is a transformation outside that acceptance transaction,
+      and runtime replacement is non-hot-path reconstruction or materialization.'
     verification:
       verifiers:
         - intent: Inspect the normal acceptance transaction and prove that any separate hot-path

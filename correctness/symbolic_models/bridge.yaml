@@ -433,7 +433,7 @@ functions:
     - idempotency_key
     - document_id
     - client_change_id
-    meaning: 'Any authoritative accepted evidence counted for composite key k in state s is established only by a valid committed-acceptance mechanism: the committed accepted row or unique identity itself; a separate hot-path accepted-key success record that commits and aborts atomically with the same canonical acceptance in the same acceptance transaction; or lifecycle/compaction replacement evidence that is equivalent accepted evidence derived from a previously committed canonical acceptance. Reservation, in-progress arbitration, timeout, cancellation, or another non-committed attempt is not classified as accepted evidence.'
+    meaning: 'Any authoritative accepted evidence counted for composite key k in state s is established only by a valid committed-acceptance mechanism for that same full identity: the committed accepted row or unique identity itself; a separate hot-path accepted-key success record that commits and aborts atomically with the same canonical acceptance in the same acceptance transaction; or equivalent lifecycle replacement evidence, including compaction and runtime reconstruction or materialization, derived from a previously committed canonical acceptance recorded in the accepted_change_log. Reservation, in-progress arbitration, timeout, cancellation, or another non-committed attempt is not classified as accepted evidence.'
     semantic_anchors:
     - claim:G9_accepted_idempotency_evidence_matches_committed_acceptance
     - claim:L225_counted_accepted_evidence_requires_committed_mechanism
@@ -6273,7 +6273,7 @@ functions:
     - IdempotencyKey
     returns: Bool
     catalog_symbols: []
-    meaning: Evidence representation e is counted by authoritative state s as already-accepted evidence for the exact full identity k. This relation identifies the state/key occurrence; it does not itself assert valid provenance, retention, or a committed acceptance.
+    meaning: Evidence representation e is a durable representation of accepted_idempotency_evidence counted by authoritative state s as already-accepted evidence for the exact full identity k. Durability concerns the represented evidence's persistence in authoritative durable state, including through equivalent representations; it does not require retention of the same physical row or runtime object. This relation identifies the durable state/key occurrence; it does not itself assert valid provenance, retention throughout the retry/reconnect horizon, or a committed acceptance.
     semantic_anchors:
     - claim:L223_authoritative_accepted_evidence_counts_durable_representation
     - claim:L225_counted_accepted_evidence_requires_committed_mechanism
@@ -6296,6 +6296,34 @@ functions:
     meaning: Transition t is the acceptance-creation event that produced canonical acceptance a. This identifies the creating event and created acceptance; it does not assert that t creates only one acceptance or that no other transition creates an acceptance for the same key.
     semantic_anchors:
     - claim:L224_committed_acceptance_history_matches_acceptance_events
+  accepted_evidence_is_committed_row_or_identity:
+    args:
+    - AcceptedEvidence
+    - CanonicalAcceptance
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L225_counted_accepted_evidence_requires_committed_mechanism
+    meaning: Evidence e is canonical acceptance a's committed accepted row or authoritative unique identity itself, used directly as the already-accepted evidence. It is not a separate hot-path accepted-key record or index derived from a.
+  accepted_evidence_has_only_committed_establishing_provenance:
+    args:
+    - AcceptedEvidence
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L225_counted_accepted_evidence_requires_committed_mechanism
+    meaning: Every source that establishes e's already-accepted classification is a committed canonical acceptance for the full identity carried by e, or an intermediate accepted-evidence representation whose establishing provenance terminates at such an acceptance. No reservation, in-progress arbitration, pre-commit ownership, aborted, timed-out, cancelled, or never-committed attempt, failed-owner residue, cache-only state, or other provisional or non-authoritative state establishes that classification. Incidental metadata and inputs that do not establish the classification are outside this provenance relation.
+  counted_accepted_evidence_in_state_for_key:
+    args:
+    - AcceptedEvidence
+    - AuthoritativeState
+    - IdempotencyKey
+    returns: Bool
+    catalog_symbols: []
+    semantic_anchors:
+    - claim:L223_authoritative_accepted_evidence_counts_durable_representation
+    - claim:L225_counted_accepted_evidence_requires_committed_mechanism
+    meaning: Evidence representation e is counted by authoritative state s as already-accepted evidence for the exact full identity k. This relation identifies the state/key occurrence; it does not itself assert valid provenance, retention, or a committed acceptance.
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -19552,12 +19580,18 @@ claims:
             k: IdempotencyKey
           body:
             implies:
-            - call:
-                fn: accepted_evidence_in_state_for_key
-                args:
-                - var: e
-                - var: s
-                - var: k
+            - and:
+              - call:
+                  fn: within_retry_reconnect_eligibility
+                  args:
+                  - var: s
+                  - var: k
+              - call:
+                  fn: counted_accepted_evidence_in_state_for_key
+                  args:
+                  - var: e
+                  - var: s
+                  - var: k
             - call:
                 fn: accepted_evidence_present_for_key
                 args:
@@ -19583,6 +19617,31 @@ claims:
             - call:
                 fn: accepted_evidence_present_for_key
                 args:
+                - var: s
+                - var: k
+      - forall:
+          vars:
+            e: AcceptedEvidence
+            s: AuthoritativeState
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: within_retry_reconnect_eligibility
+                  args:
+                  - var: s
+                  - var: k
+              - call:
+                  fn: accepted_evidence_in_state_for_key
+                  args:
+                  - var: e
+                  - var: s
+                  - var: k
+            - call:
+                fn: counted_accepted_evidence_in_state_for_key
+                args:
+                - var: e
                 - var: s
                 - var: k
   L224_committed_acceptance_history_matches_acceptance_events:
@@ -19642,73 +19701,113 @@ claims:
             t: ProtocolTransition
           body:
             implies:
+            - call:
+                fn: within_retry_reconnect_eligibility
+                args:
+                - var: s
+                - var: k
+            - implies:
+              - and:
+                - call:
+                    fn: committed_acceptance_in_state_for_key
+                    args:
+                    - var: a
+                    - var: s
+                    - var: k
+                - call:
+                    fn: acceptance_created_by
+                    args:
+                    - var: t
+                    - var: a
+              - and:
+                - call:
+                    fn: acceptance_transition_for_key
+                    args:
+                    - var: t
+                    - var: k
+                - call:
+                    fn: transition_creates_acceptance
+                    args:
+                    - var: t
+      - forall:
+          vars:
+            s: AuthoritativeState
+            k: IdempotencyKey
+          body:
+            implies:
+            - call:
+                fn: within_retry_reconnect_eligibility
+                args:
+                - var: s
+                - var: k
             - and:
+              - implies:
+                - &id001
+                  exists:
+                    vars:
+                      a: CanonicalAcceptance
+                    body:
+                      and:
+                      - call:
+                          fn: committed_acceptance_in_state_for_key
+                          args:
+                          - var: a
+                          - var: s
+                          - var: k
+                      - forall:
+                          vars:
+                            b: CanonicalAcceptance
+                          body:
+                            implies:
+                            - call:
+                                fn: committed_acceptance_in_state_for_key
+                                args:
+                                - var: b
+                                - var: s
+                                - var: k
+                            - eq:
+                              - var: b
+                              - var: a
+                - call:
+                    fn: exactly_one_committed_acceptance_for_key
+                    args:
+                    - var: s
+                    - var: k
+              - implies:
+                - call:
+                    fn: exactly_one_committed_acceptance_for_key
+                    args:
+                    - var: s
+                    - var: k
+                - *id001
+      - forall:
+          vars:
+            a: CanonicalAcceptance
+            s: AuthoritativeState
+            k: IdempotencyKey
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: within_retry_reconnect_eligibility
+                  args:
+                  - var: s
+                  - var: k
               - call:
                   fn: committed_acceptance_in_state_for_key
                   args:
                   - var: a
                   - var: s
                   - var: k
-              - call:
-                  fn: acceptance_created_by
-                  args:
-                  - var: t
-                  - var: a
-            - and:
-              - call:
-                  fn: acceptance_transition_for_key
-                  args:
-                  - var: t
-                  - var: k
-              - call:
-                  fn: transition_creates_acceptance
-                  args:
-                  - var: t
-      - forall:
-          vars:
-            s: AuthoritativeState
-            k: IdempotencyKey
-          body:
-            and:
-            - implies:
-              - &id001
-                exists:
-                  vars:
-                    a: CanonicalAcceptance
-                  body:
-                    and:
-                    - call:
-                        fn: committed_acceptance_in_state_for_key
-                        args:
-                        - var: a
-                        - var: s
-                        - var: k
-                    - forall:
-                        vars:
-                          b: CanonicalAcceptance
-                        body:
-                          implies:
-                          - call:
-                              fn: committed_acceptance_in_state_for_key
-                              args:
-                              - var: b
-                              - var: s
-                              - var: k
-                          - eq:
-                            - var: b
-                            - var: a
-              - call:
-                  fn: exactly_one_committed_acceptance_for_key
-                  args:
-                  - var: s
-                  - var: k
-            - implies:
-              - call:
-                  fn: exactly_one_committed_acceptance_for_key
-                  args:
-                  - var: s
-                  - var: k
-              - *id001
+            - exists:
+                vars:
+                  t: ProtocolTransition
+                body:
+                  call:
+                    fn: acceptance_created_by
+                    args:
+                    - var: t
+                    - var: a
   L225_counted_accepted_evidence_requires_committed_mechanism:
     capability: relational
     contracts: []
@@ -19722,7 +19821,7 @@ claims:
           body:
             implies:
             - call:
-                fn: accepted_evidence_in_state_for_key
+                fn: counted_accepted_evidence_in_state_for_key
                 args:
                 - var: e
                 - var: s
@@ -19739,7 +19838,7 @@ claims:
                       args:
                       - var: e
                   - call:
-                      fn: accepted_evidence_has_no_provisional_provenance
+                      fn: accepted_evidence_has_only_committed_establishing_provenance
                       args:
                       - var: e
                   - exists:
@@ -19771,6 +19870,11 @@ claims:
                               - var: a
                         - call:
                             fn: accepted_evidence_derives_from
+                            args:
+                            - var: e
+                            - var: a
+                        - call:
+                            fn: accepted_evidence_is_committed_row_or_identity
                             args:
                             - var: e
                             - var: a
@@ -19820,13 +19924,17 @@ claims:
                             args:
                             - var: e
                             - var: a
+                  - call:
+                      fn: accepted_evidence_has_only_committed_establishing_provenance
+                      args:
+                      - var: e
                 - and:
                   - call:
                       fn: evidence_transformed_by_durable_lifecycle
                       args:
                       - var: e
                   - call:
-                      fn: lifecycle_evidence_has_only_committed_provenance
+                      fn: accepted_evidence_has_only_committed_establishing_provenance
                       args:
                       - var: e
                   - exists:
@@ -19867,7 +19975,7 @@ claims:
                       args:
                       - var: e
                   - call:
-                      fn: runtime_evidence_has_only_committed_provenance
+                      fn: accepted_evidence_has_only_committed_establishing_provenance
                       args:
                       - var: e
                   - exists:
@@ -19914,7 +20022,7 @@ claims:
                 body:
                   implies:
                   - call:
-                      fn: accepted_evidence_in_state_for_key
+                      fn: counted_accepted_evidence_in_state_for_key
                       args:
                       - var: e
                       - var: s
@@ -19931,7 +20039,7 @@ claims:
                             args:
                             - var: e
                         - call:
-                            fn: accepted_evidence_has_no_provisional_provenance
+                            fn: accepted_evidence_has_only_committed_establishing_provenance
                             args:
                             - var: e
                         - exists:
@@ -19963,6 +20071,11 @@ claims:
                                     - var: a
                               - call:
                                   fn: accepted_evidence_derives_from
+                                  args:
+                                  - var: e
+                                  - var: a
+                              - call:
+                                  fn: accepted_evidence_is_committed_row_or_identity
                                   args:
                                   - var: e
                                   - var: a
@@ -20012,13 +20125,17 @@ claims:
                                   args:
                                   - var: e
                                   - var: a
+                        - call:
+                            fn: accepted_evidence_has_only_committed_establishing_provenance
+                            args:
+                            - var: e
                       - and:
                         - call:
                             fn: evidence_transformed_by_durable_lifecycle
                             args:
                             - var: e
                         - call:
-                            fn: lifecycle_evidence_has_only_committed_provenance
+                            fn: accepted_evidence_has_only_committed_establishing_provenance
                             args:
                             - var: e
                         - exists:
@@ -20059,7 +20176,7 @@ claims:
                             args:
                             - var: e
                         - call:
-                            fn: runtime_evidence_has_only_committed_provenance
+                            fn: accepted_evidence_has_only_committed_establishing_provenance
                             args:
                             - var: e
                         - exists:
