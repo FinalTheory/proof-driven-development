@@ -5367,7 +5367,7 @@ claims:
       normal retry/reconnect eligibility horizon, authoritative durable
       accepted_idempotency_evidence exists in s for k if and only if s counts a durable
       representation of that evidence for that same full identity. Every such durable representation
-      counted by s for k is also counted by s as already-accepted evidence for k.
+      of that evidence counted by s for k is also counted by s as already-accepted evidence for k.
     verification:
       verifiers:
         - intent: Independently inspect authoritative durable evidence and the state's counted
