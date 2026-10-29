@@ -12106,60 +12106,52 @@ records:
   claim:L223_authoritative_accepted_evidence_counts_durable_representation:
     kind: claim
     subject_id: L223_authoritative_accepted_evidence_counts_durable_representation
-    subject_signature: 6d9174002bc95dd2f7312d4fdadd59c44e88a7fdce4796aea21826664789d690
+    subject_signature: f72be25b899453d401fc0ab8331df03f7317eb7287bd0b893f25ffaa6b947c4d
     roundtrip:
-      subject_signature: 6d9174002bc95dd2f7312d4fdadd59c44e88a7fdce4796aea21826664789d690
+      subject_signature: f72be25b899453d401fc0ab8331df03f7317eb7287bd0b893f25ffaa6b947c4d
       status: TRANSLATED
-      natural_language: 'Each of the four claims below is asserted only under its stated within-horizon guard. For every authoritative
-        state s and every idempotency key k, where k is the composite identity (document_id, client_change_id), if k is within
-        the 30-day normal retry/reconnect eligibility horizon in s, then both of the following hold: (1) if authoritative
-        durable accepted_idempotency_evidence exists in s for k, then there exists an evidence representation e such that
-        e is a durable representation of that accepted_idempotency_evidence counted by s as already-accepted evidence for
-        the exact full identity k, with durability understood as persistence of the represented evidence in authoritative
-        durable state, including through equivalent representations, and without requiring retention of the same physical
-        row or runtime object; and (2) conversely, if there exists such an e, then authoritative durable accepted_idempotency_evidence
-        exists in s for k. In addition, for every evidence representation e, authoritative state s, and idempotency key k,
-        if k is within that 30-day horizon in s and e is counted by s as already-accepted evidence for the exact full identity
-        k, then s contains sufficient non-reusable evidence that k has already been accepted, so that while that evidence
-        stands k is distinguished as already accepted and cannot be reused for a new acceptance; this consequent asserts only
-        the presence of that classification evidence in s and not which mechanism wrote or preserved it. Also, for every s
-        and k, if k is within that horizon in s and an acceptance event creating a canonical accepted change for k has occurred
-        at or before s, then s contains such sufficient non-reusable already-accepted evidence as just described; the acceptance-event
-        antecedent records only that the acceptance lies in s''s past and does not by itself assert that evidence of it is
-        present in s. Finally, for every e, s, and k, if k is within that horizon in s and e is a durable representation of
-        accepted_idempotency_evidence counted by s as already-accepted evidence for the exact full identity k, then e is counted
-        by s as already-accepted evidence for the exact full identity k. The durable-representation and counted-evidence relations,
-        as stated, do not by themselves assert valid provenance, retention throughout the retry/reconnect horizon, or a committed
-        acceptance.'
+      natural_language: 'For every authoritative state s and every idempotency key k, where k is the composite identity (document_id,
+        client_change_id), if k is within the 30-day normal retry/reconnect eligibility horizon in authoritative state s,
+        then both of the following hold: (1) if authoritative durable accepted_idempotency_evidence exists in s for k, then
+        there exists an accepted-evidence representation e such that s counts e as a durable representation of that accepted_idempotency_evidence
+        for the exact full identity k, where durability concerns the persistence of the represented evidence in authoritative
+        durable state, including through equivalent representations, and does not require retention of the same physical row
+        or runtime object; and (2) conversely, if there exists an accepted-evidence representation e such that s counts e
+        as a durable representation of that accepted_idempotency_evidence for the exact full identity k, then authoritative
+        durable accepted_idempotency_evidence exists in s for k. In addition, for every accepted-evidence representation e,
+        every authoritative state s, and every idempotency key k, if k is within the 30-day normal retry/reconnect eligibility
+        horizon in s and s counts e as a durable representation of accepted_idempotency_evidence for the exact full identity
+        k, then s counts e as already-accepted evidence for the exact full identity k. The durable-representation relation
+        by itself concerns representations of that accepted_idempotency_evidence, not arbitrary durable records for k, and
+        does not by itself assert already-accepted classification, valid provenance, retention throughout the retry/reconnect
+        horizon, or a committed acceptance; the counted-as-already-accepted relation by itself does not assert valid provenance,
+        retention, or a committed acceptance.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 6d9174002bc95dd2f7312d4fdadd59c44e88a7fdce4796aea21826664789d690
+        subject_signature: f72be25b899453d401fc0ab8331df03f7317eb7287bd0b893f25ffaa6b947c4d
         verdict: EQUIVALENT
-        reason: 'The formula reproduces all three canonical requirements with the same horizon guard, full composite key,
-          and quantifier structure: evidence existence is biconditional with a durable counted representation, every counted
-          representation yields sufficient non-reusable already-accepted classification, and a prior canonical acceptance
-          event yields that classification in every in-horizon state.'
+        reason: The formula preserves the horizon-scoped biconditional between existence of authoritative durable accepted
+          evidence for the full composite key and existence of a counted durable representation of that evidence for the same
+          key, and preserves the second sentence as the horizon-scoped implication from each counted durable representation
+          to counted already-accepted evidence, with no added provenance, retention, or identity requirement and no dropped
+          guard or witness.
         differences: []
       strengthening:
-        subject_signature: 6d9174002bc95dd2f7312d4fdadd59c44e88a7fdce4796aea21826664789d690
+        subject_signature: f72be25b899453d401fc0ab8331df03f7317eb7287bd0b893f25ffaa6b947c4d
         verdict: EQUIVALENT
-        reason: 'All four conjuncts map exactly to the source under the supplied predicate meanings, with every universal
-          claim guarded by the in-horizon condition: the first conjunct gives the evidence-exists iff counted-durable-representation
-          biconditional, the second gives counted-representation implies sufficient non-reusable already-accepted classification,
-          the third gives past acceptance event implies that classification in every in-horizon state, and the fourth is only
-          the definitional bridge from a durable representation already defined as counted to counted, adding no new requirement.'
+        reason: The formula reproduces the horizon-guarded biconditional between authoritative accepted evidence and an existentially
+          quantified counted durable representation for the same full composite key, and reproduces the second sentence as
+          a horizon-guarded universal implication from any counted durable representation to already-accepted counting, with
+          no added uniqueness, provenance, retention, or cross-claim bridge.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 6d9174002bc95dd2f7312d4fdadd59c44e88a7fdce4796aea21826664789d690
+        subject_signature: f72be25b899453d401fc0ab8331df03f7317eb7287bd0b893f25ffaa6b947c4d
         verdict: EQUIVALENT
-        reason: The rendering preserves the in-horizon biconditional between authoritative durable accepted evidence and a
-          durable representation counted for the exact composite key, the per-state sufficient non-reusable already-accepted
-          classification for counted representations, and retention of that classification in every in-horizon state after
-          a canonical acceptance event; universal quantification over in-horizon authoritative states subsumes the named recovery,
-          snapshot, compaction, and cleanup transitions, and equivalent-representation durability matches the canonical vocabulary
-          without adding provenance, mechanism, or extra retention requirements.
+        reason: The rendering preserves the horizon-scoped biconditional for the same full composite identity and the additional
+          implication from a counted durable representation to counted already-accepted evidence; its equivalent-representation
+          and 'by itself' clarifications match the vocabulary and add no independent requirement.
         differences: []
   claim:L225_counted_accepted_evidence_requires_committed_mechanism:
     kind: claim
