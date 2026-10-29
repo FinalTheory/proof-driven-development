@@ -430,9 +430,8 @@ refinement:
       blocked_by: []
       signature: 9e4d0e4fb8db95fcf63a09e34c87708eb84512813f2cd69594d5d0f597d38874
     G9_accepted_idempotency_evidence_matches_committed_acceptance:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 3074c02d1c43224a087ee6b2dc2be8b04a55a632aa5d37e08b70a748ba01c988
     L113_request_raw_edit_is_bound_to_authoring_frontier:
       status: stable
       blocked_by: []
@@ -841,6 +840,15 @@ refinement:
       status: stable
       blocked_by: []
       signature: 0aa741945ca43d870bc0f2278c171d096027c5ac7807fd786440ca021f43697c
+    L223_authoritative_accepted_evidence_counts_durable_representation:
+      status: pending
+      blocked_by: []
+    L224_committed_acceptance_history_matches_acceptance_events:
+      status: pending
+      blocked_by: []
+    L225_counted_accepted_evidence_requires_committed_mechanism:
+      status: pending
+      blocked_by: []
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -2544,6 +2552,9 @@ claims:
       - L14_accepted_idempotency_identity_survives_lifecycle
       - C35_accepted_key_classification_requires_committed_acceptance
       - C7_revision_frontier_is_linear
+      - L223_authoritative_accepted_evidence_counts_durable_representation
+      - L224_committed_acceptance_history_matches_acceptance_events
+      - L225_counted_accepted_evidence_requires_committed_mechanism
     formal_intent: accepted_evidence_correspondence
     semantic_contracts:
       - accepted_evidence_correspondence
@@ -5329,6 +5340,91 @@ claims:
             append.
           kind: state_machine
     kind: leaf
+  L223_authoritative_accepted_evidence_counts_durable_representation:
+    mechanisms:
+      - accepted_history_log
+      - recovery_replay
+      - snapshot_checkpoint
+    source_refs:
+      - accepted_change_log
+      - snapshot_frontier
+      - owner_failover
+      - storage_selection
+      - final_architecture
+    statement: For every authoritative state s and composite idempotency_key k within the 30-day
+      normal retry/reconnect eligibility horizon, authoritative durable
+      accepted_idempotency_evidence exists in s for k if and only if s counts a durable
+      representation of that evidence. Any representation counted by s supplies sufficient
+      non-reusable already-accepted classification for k, and once a canonical acceptance event for
+      k has occurred, that classification is retained in every authoritative state within the
+      horizon, including across recovery, snapshot, compaction, and cleanup transitions.
+    verification:
+      verifiers:
+        - intent: After accept(k), exercise recovery, snapshot, compaction, and cleanup transitions
+            while the logical edit remains within the 30-day normal retry/reconnect eligibility
+            horizon; authoritative state must continue to distinguish k as already accepted
+            throughout that horizon, and counted durable evidence must match the state-level
+            accepted evidence in both directions.
+          kind: state_machine
+        - intent: Crash and recover around idempotency-evidence publication and lifecycle
+            transitions within the 30-day eligibility horizon; no completed eligible acceptance may
+            become semantically reusable during that horizon.
+          kind: fault_injection
+    kind: leaf
+  L224_committed_acceptance_history_matches_acceptance_events:
+    mechanisms:
+      - accepted_history_log
+      - idempotency_gate
+    source_refs:
+      - accepted_change_log
+      - authoritative_truth
+      - final_architecture
+    statement: For every authoritative state s and composite key k within the 30-day normal
+      retry/reconnect eligibility horizon, a canonical acceptance event for k has occurred at or
+      before s if and only if the accepted_change_log denoted by s contains a committed canonical
+      acceptance for k. Each such acceptance is associated with a creating protocol transition for
+      that same identity, and the accepted_change_log contains exactly one committed canonical
+      acceptance for k if and only if it contains exactly one such acceptance and no other.
+    verification:
+      verifiers:
+        - intent: Enumerate creating protocol transitions for a key and check the event-to-member
+            correspondence in both directions, the one-creating-transition correspondence, and the
+            exactly-one counting definition against the accepted history.
+          kind: state_machine
+        - intent: Generate random protocol transition sequences with repeated, concurrent, and
+            retried acceptance attempts for the same key; require the accepted history to contain
+            exactly one committed canonical acceptance per accepted key.
+          kind: property_test
+    kind: leaf
+  L225_counted_accepted_evidence_requires_committed_mechanism:
+    mechanisms:
+      - acceptance_transaction
+      - idempotency_gate
+      - accepted_history_log
+    source_refs:
+      - accepted_change_log
+      - authoritative_truth
+      - final_architecture
+    statement: 'For every authoritative state s and composite idempotency_key k = (document_id, client_change_id),
+      every item of accepted_idempotency_evidence counted by s for k is established only by a permitted
+      committed-acceptance mechanism: the committed accepted row or unique identity itself; a separate
+      hot-path accepted-key success record that commits and aborts atomically with the same canonical
+      acceptance in the same acceptance transaction; or lifecycle or runtime replacement evidence derived
+      from a previously committed canonical acceptance recorded in the accepted_change_log. If every item
+      counted by s for k is established by such a mechanism, the accepted evidence mechanism for (s, k)
+      is valid.'
+    verification:
+      verifiers:
+        - intent: Inspect the normal acceptance transaction and prove that any separate hot-path
+            already-accepted success evidence for (D,k) commits or aborts atomically with canonical
+            acceptance(D,k); crash or rollback cannot leave one durable without the other.
+          kind: transaction_atomicity
+        - intent: Enumerate every path that can produce counted accepted evidence for (D,k),
+            including normal path, separate hot-path records, lifecycle transformation, and runtime
+            reconstruction; require each path to fall into one of the permitted mechanisms and no
+            counted item to lack one.
+          kind: control_flow
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -6675,7 +6771,7 @@ id_allocator:
     A: 7
     G: 13
     C: 48
-    L: 223
+    L: 226
     D: 15
     T: 3
 assurance:
@@ -7220,6 +7316,12 @@ assurance:
       status: planned
     L222_superseded_document_ownership_authority_never_returns:
       status: planned
+    L223_authoritative_accepted_evidence_counts_durable_representation:
+      status: planned
+    L224_committed_acceptance_history_matches_acceptance_events:
+      status: planned
+    L225_counted_accepted_evidence_requires_committed_mechanism:
+      status: planned
 formalization:
   claims:
     G0_acked_edit_survives_failover:
@@ -7553,6 +7655,12 @@ formalization:
     L221_bookkeeping_speculative_removal_does_not_resolve_lifecycle:
       mode: symbolic
     L222_superseded_document_ownership_authority_never_returns:
+      mode: symbolic
+    L223_authoritative_accepted_evidence_counts_durable_representation:
+      mode: symbolic
+    L224_committed_acceptance_history_matches_acceptance_events:
+      mode: symbolic
+    L225_counted_accepted_evidence_requires_committed_mechanism:
       mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:
