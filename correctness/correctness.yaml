@@ -7012,7 +7012,17 @@ assurance:
         establish the target.
       signature: 9e8051d69ec174a13c1a47901e1243cce33e75e30e60b990c89920e35c1949b2
     G9_accepted_idempotency_evidence_matches_committed_acceptance:
-      status: unaudited
+      status: machine_checked
+      rationale: 'SymbolicCompositionVerifier ENTAILED (solver unsat, direct_smt, require_trusted) over
+        TRUSTED premise translations, composition signature 7944059cbfb9fc1214bb168f6046236e12485b060e267d393001b6d708b060c4,
+        after the round-17 bridge-leaf strengthening (L224 transition classification + multiplicity, L225
+        same-state history binding, L227 durable-representation retention) and the round-19 L225 repair
+        binding history membership into conjunct 2 as well. Premise-ablation diagnostics (not a soundness
+        gate, per D23/D24): individually load-bearing (ablation yields UNKNOWN) are C13, L223, L224, L225,
+        L226, L227; individually non-load-bearing (still ENTAILED without) are L14, C35, C7, matching
+        the wave32 proof-audit dependency judgments (L14 redundant, C35/C7 useful_but_stronger); all nine
+        premises remain edges of G9 with TRUSTED translations.'
+      signature: 7944059cbfb9fc1214bb168f6046236e12485b060e267d393001b6d708b060c4
     C35_accepted_key_classification_requires_committed_acceptance:
       status: machine_checked
       rationale: 'Trusted symbolic translations exist for C35 and all three direct premises L114, L134
