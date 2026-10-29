@@ -508,6 +508,7 @@ Preserve every quantifier, implication guard, equality/inequality, existence req
 Preserve semantic coordinates carried by typed function arguments; do not collapse distinct entity, state, or observation dimensions into one timeless or unscoped value.
 Do not strengthen the formula. Do not add likely product requirements. Do not omit awkward conditions.
 Predicate/function meanings and declared dimensions above are authoritative for this task.
+Express each predicate through its declared meaning, not through its identifier name: an identifier's ordinary-language connotations must not add, narrow, or otherwise alter the predicate's declared meaning. When a rendering defines a phrase with a definitional appositive (a "that is" gloss), that gloss states the predicate's meaning; read the head phrase through the gloss, not against it. When expressing an independence clause (a conclusion holding independently of some property), keep the implication's antecedent in scope: independence from a property does not delete the antecedent conditions the implication already asserts.
 {assumption_boundary}
 Return exactly one YAML object:
 subject_signature: {subject_signature}
@@ -551,6 +552,7 @@ BLIND ROUND-TRIP RENDERING
 Your only question is whether the round-trip rendering preserves the original contract's semantics.
 Check quantifiers, applicability/precondition boundaries, identity coordinates, provenance direction, cardinality, observation scope, exclusions, and whether either side makes a stronger guarantee.
 Also check semantic-dimensionality preservation: distinct entity/state/observation coordinates must not be collapsed, and helper predicate/function meanings must not silently supply a cross-claim temporal, identity, or provenance bridge absent from the canonical source.
+Interpret each side through its own explicit definitions: when a rendering defines a phrase with a definitional appositive, read the phrase through that definition rather than through the phrase's ordinary-language connotations. When a rendering states that a conclusion holds independently of some property, read that independence inside the implication's scope: it qualifies the conclusion's dependence, it does not delete the implication's antecedent conditions.
 {focus_instruction}
 {obligation_instruction}
 
@@ -604,6 +606,7 @@ SYMBOLIC TRANSLATION
 Compare the original contract directly against the formula using the supplied typed predicate meanings and catalog definitions.
 Check quantifiers, applicability/precondition boundaries, identity coordinates, provenance direction, cardinality, observation scope, exclusions, and any silent strengthening or weakening.
 Also check semantic-dimensionality preservation: distinct entity/state/observation coordinates must not be collapsed, and helper predicate/function meanings must not silently supply a cross-claim temporal, identity, or provenance bridge absent from the canonical source.
+Interpret each predicate through its declared meaning, not through its identifier name: an identifier's ordinary-language connotations must not add, narrow, or otherwise alter the predicate's declared meaning. When a statement or formula expresses that a conclusion holds independently of some property, read that independence inside the implication's scope: it qualifies the conclusion's dependence, it does not delete the implication's antecedent conditions.
 {focus_instruction}
 {obligation_instruction}
 
