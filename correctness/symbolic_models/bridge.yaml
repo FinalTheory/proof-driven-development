@@ -1654,6 +1654,7 @@ functions:
     - claim:G5_retry_resolves_idempotently
     - claim:L171_terminal_outcome_representation_migration_preserves_mapping
     - claim:L231_accepted_terminal_result_producer_binding_and_identity
+    - claim:L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
   accepted_terminal_result_within_retry_horizon:
     args:
     - TerminalResultRecord
@@ -20471,6 +20472,35 @@ claims:
             r: Request
           body:
             implies:
+            - call:
+                fn: normal_retry_submitted_request
+                args:
+                - var: r
+            - exists:
+                vars:
+                  e: LogicalEdit
+                body:
+                  and:
+                  - call:
+                      fn: request_represents_logical_edit
+                      args:
+                      - var: r
+                      - var: e
+                  - call:
+                      fn: submitted_request_tuple_bound_to_logical_edit
+                      args:
+                      - var: r
+                      - var: e
+                  - call:
+                      fn: request_processes_do_not_substitute_logical_operation
+                      args:
+                      - var: r
+                      - var: e
+      - forall:
+          vars:
+            r: Request
+          body:
+            implies:
             - and:
               - call:
                   fn: submitted_request_eligible_for_ot_or_terminal_decision
@@ -20553,16 +20583,11 @@ claims:
             k: IdempotencyKey
           body:
             implies:
-            - and:
-              - call:
-                  fn: acceptance_or_rejection_path_for_key
-                  args:
-                  - var: x
-                  - var: k
-              - call:
-                  fn: idempotency_key_is_eligible
-                  args:
-                  - var: k
+            - call:
+                fn: terminal_attempt_for_key
+                args:
+                - var: x
+                - var: k
             - and:
               - implies:
                 - call:
@@ -20586,6 +20611,22 @@ claims:
                     args:
                     - var: x
                     - var: k
+      - forall:
+          vars:
+            x: ProtocolTransition
+            k: IdempotencyKey
+          body:
+            implies:
+            - call:
+                fn: terminal_attempt_for_key
+                args:
+                - var: x
+                - var: k
+            - call:
+                fn: terminal_path_passes_shared_arbitration_gate
+                args:
+                - var: x
+                - var: k
   L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation:
     capability: relational
     contracts: []
@@ -20710,6 +20751,28 @@ claims:
                 - var: x
                 - var: r1
                 - var: r2
+      - forall:
+          vars:
+            x: ProtocolTransition
+            r1: TerminalResultRecord
+            r2: TerminalResultRecord
+          body:
+            implies:
+            - call:
+                fn: authoritative_terminal_lifecycle_rewrite
+                args:
+                - var: x
+                - var: r1
+                - var: r2
+            - eq:
+              - call:
+                  fn: terminal_result_idempotency_key
+                  args:
+                  - var: r1
+              - call:
+                  fn: terminal_result_idempotency_key
+                  args:
+                  - var: r2
   L231_accepted_terminal_result_producer_binding_and_identity:
     capability: relational
     contracts: []

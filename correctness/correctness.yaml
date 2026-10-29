@@ -5579,10 +5579,10 @@ claims:
       committed canonical acceptance recorded in the accepted_change_log and excludes REJECTED; a REJECTED
       outcome has no same-key canonical acceptance in the accepted_change_log, so the current canonical
       accepted history contains no acceptance for that key. Any authoritative lifecycle representation
-      rewrite of an already-linearized terminal_result preserves the same full idempotency_key and exact
-      logical value: the same canonical result for ACCEPTED or the same definitive reason for REJECTED.
-      These record-level observations describe the corresponding authoritative store transition; a physical
-      rewrite does not create a new terminal decision.'
+      rewrite within the normal retry horizon of an already-linearized terminal_result preserves the same
+      full idempotency_key and exact logical value: the same canonical result for ACCEPTED or the same
+      definitive reason for REJECTED. These record-level observations describe the corresponding authoritative
+      store transition; a physical rewrite does not create a new terminal decision.'
     verification:
       verifiers:
         - intent: In reachable in-horizon states, check at most one terminal outcome per key
