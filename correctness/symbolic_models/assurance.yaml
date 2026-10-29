@@ -12295,3 +12295,90 @@ records:
           creating protocol transition for the same identity, and formalizes exactly-one as existence plus all members equal,
           without adding or omitting a substantive guarantee.
         differences: []
+  claim:L226_counted_accepted_evidence_supplies_non_reusable_classification:
+    kind: claim
+    subject_id: L226_counted_accepted_evidence_supplies_non_reusable_classification
+    subject_signature: f34ba3052a74c1f9a7eb42af72a73abda8d66b78c7b21d3bad92521de19291bb
+    roundtrip:
+      subject_signature: f34ba3052a74c1f9a7eb42af72a73abda8d66b78c7b21d3bad92521de19291bb
+      status: TRANSLATED
+      natural_language: For every accepted-evidence representation e, every authoritative state s, and every idempotency key
+        k, if both (1) the composite authoritative idempotency identity k, consisting of (document_id, client_change_id),
+        is within the 30-day normal retry/reconnect eligibility horizon in s, and (2) e is counted by s as already-accepted
+        evidence for the exact full identity k, then s contains sufficient non-reusable evidence that k has already been accepted,
+        so that while that evidence stands, k is distinguished as already accepted and cannot be reused for a new acceptance.
+        This consequent asserts only the presence of that classification evidence in s; it does not assert which mechanism
+        wrote or preserved it, and the counted-evidence antecedent does not by itself assert valid provenance, retention,
+        or a committed acceptance.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: f34ba3052a74c1f9a7eb42af72a73abda8d66b78c7b21d3bad92521de19291bb
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies the same state, key, and evidence representation, preserves the 30-day
+          eligibility precondition and the exact full key identity, and maps counted evidence to the consequent predicate
+          whose stated meaning is exactly sufficient non-reusable already-accepted classification for that key, with no added
+          provenance, mechanism, cardinality, or temporal requirement and no dropped guard.
+        differences: []
+      strengthening:
+        subject_signature: f34ba3052a74c1f9a7eb42af72a73abda8d66b78c7b21d3bad92521de19291bb
+        verdict: EQUIVALENT
+        reason: 'The formula universally quantifies over the same state, composite key, and evidence representation, guards
+          exactly on the 30-day retry/reconnect eligibility horizon and on the evidence being counted by that state for that
+          exact full key, and concludes exactly the supplied predicate meaning: sufficient non-reusable already-accepted classification
+          for the same key, distinguishing it as already accepted and non-reusable while the evidence stands. It adds no provenance,
+          retention, cardinality, mechanism, or cross-claim bridge requirement, and omits no part of the source guarantee.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: f34ba3052a74c1f9a7eb42af72a73abda8d66b78c7b21d3bad92521de19291bb
+        verdict: EQUIVALENT
+        reason: The rendering preserves the same quantifiers, horizon precondition, full-identity scope, counted-evidence
+          antecedent, and non-reusable already-accepted classification consequent, including the while-it-stands distinction
+          and bar on reuse; its provenance/mechanism disclaimer only prevents over-reading and adds no new guarantee.
+        differences: []
+  claim:L227_accepted_classification_is_retained_through_eligibility_horizon:
+    kind: claim
+    subject_id: L227_accepted_classification_is_retained_through_eligibility_horizon
+    subject_signature: 487dd9132e3368ea477acff6565395ca5094ef7a7a31fd300518d52da25ee986
+    roundtrip:
+      subject_signature: 487dd9132e3368ea477acff6565395ca5094ef7a7a31fd300518d52da25ee986
+      status: TRANSLATED
+      natural_language: For every authoritative state s and every idempotency key k, if both (a) the composite authoritative
+        idempotency identity k, namely (document_id, client_change_id), is within the 30-day normal retry/reconnect eligibility
+        horizon in authoritative state s, and (b) an acceptance event creating a canonical accepted change for idempotency
+        key k has occurred at or before authoritative state s, then authoritative state s contains sufficient non-reusable
+        evidence that idempotency key k has already been accepted, so that while that evidence stands the key is distinguished
+        as already accepted and cannot be reused for a new acceptance. The antecedent's acceptance condition records only
+        that the acceptance lies in s's past and does not by itself assert that evidence of it is present in s; the consequent
+        asserts only the presence of that classification evidence in s, and does not assert which mechanism wrote or preserved
+        it.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 487dd9132e3368ea477acff6565395ca5094ef7a7a31fd300518d52da25ee986
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over authoritative states and keys, requires evidence exactly when the
+          key is within the 30-day retry/reconnect horizon and a canonical acceptance event has occurred at or before that
+          state, and imposes no requirement outside the horizon; this matches the claim's precondition, direction, identity,
+          non-reusable evidence, and all-state retention scope, including states reached by recovery, snapshot, compaction,
+          or cleanup.
+        differences: []
+      strengthening:
+        subject_signature: 487dd9132e3368ea477acff6565395ca5094ef7a7a31fd300518d52da25ee986
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over authoritative states and keys, applies only when the key is within
+          the 30-day retry/reconnect horizon and a canonical acceptance event has occurred at or before that state, and then
+          requires sufficient non-reusable already-accepted classification evidence in that state; this matches the claim's
+          precondition, retention scope, and post-horizon non-guarantee without adding or omitting a requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 487dd9132e3368ea477acff6565395ca5094ef7a7a31fd300518d52da25ee986
+        verdict: EQUIVALENT
+        reason: Both quantify over every authoritative state and key, require the same horizon precondition and an acceptance
+          event at or before that state, require sufficient non-reusable already-accepted classification evidence in that
+          state, cover retention across all in-horizon states including transition outcomes through universal quantification,
+          and impose no ordinary retry/reconnect guarantee after horizon expiry; the rendering adds no mechanism, provenance,
+          or stronger reuse prohibition beyond unpacking non-reusable already-accepted classification.
+        differences: []
