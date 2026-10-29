@@ -878,6 +878,9 @@ refinement:
     L232_retry_reconnect_eligibility_implies_retry_horizon:
       status: pending
       blocked_by: []
+    L233_normal_submitted_request_scope_eligibility:
+      status: pending
+      blocked_by: []
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -1120,6 +1123,7 @@ claims:
       - C42_nonterminal_lifecycle_preserves_terminal_outcomes
       - C43_terminal_outcome_entry_state_is_coherent
       - L232_retry_reconnect_eligibility_implies_retry_horizon
+      - L233_normal_submitted_request_scope_eligibility
     source_refs:
       - ot_input_output
       - accepted_change_log
@@ -5536,22 +5540,22 @@ claims:
       - final_architecture
       - ot_input_output
     statement: "Every normal submitted_request representing a logical_client_edit within the 30-day normal
-      retry eligibility horizon is within the submitted-request scope eligible for OT or an authoritative
-      terminal decision, whether or not processing succeeds or completes. This scope includes initial
-      normal submissions as well as normal retries; no prior submission or retransmission is required.
-      Every such request, including an initial normal submission, satisfies all of the following guarantees.
-      Its document_id, client_change_id, raw_edit operation semantics, and base_revision derive from that
-      same logical_client_edit and its canonical authoring state D@F, where base_revision equals F. Request
-      construction, serialization, dispatch, and normal retry do not substitute another logical operation
-      while retaining that identity and frontier tuple. Such a request therefore preserves the same request
-      identity, raw_edit semantics, and canonical authoring frontier, so those values cannot be cross-bound
-      to a different logical operation."
+      retry eligibility horizon, including an initial normal submission with no prior submission or retransmission
+      required, represents a logical edit e whose document_id, client_change_id, raw_edit operation semantics,
+      and base_revision are bound to that same edit and its canonical authoring state D@F, with base_revision
+      equal to F. No step of the request construction, serialization, dispatch, or normal retry that produced
+      the submitted request substitutes another logical operation while retaining e's identity and authoring
+      frontier, even if a later step restores e's operation before submission. For every such request
+      eligible for OT or an authoritative terminal decision and satisfying those witness conditions, the
+      request preserves the same request identity, raw_edit semantics, and canonical authoring frontier
+      without cross-binding them to another logical operation."
     verification:
       verifiers:
-        - intent: Submit normal retry requests for an in-horizon logical edit and check the request
-            stays eligible for OT or a terminal decision, its document, change, raw-edit and
-            base-revision tuple still names the same edit, and no processing step substitutes
-            another operation.
+        - intent: Trace initial normal submissions and normal retries from their logical edit and
+            captured D@F through construction, serialization, dispatch, and retry. Check submitted
+            tuple binding, detect substitutions even when later undone, and establish the
+            coherent-request conclusion under the exact transfer-conjunct antecedent. Require no
+            successful processing or terminal observation.
           kind: state_machine
     kind: leaf
   L229_terminal_attempt_arbitration_classification_and_gate:
@@ -5638,6 +5642,26 @@ claims:
         - intent: In every reachable authoritative state, check that a key within 30-day
             retry/reconnect eligibility is within the configured normal retry eligibility horizon,
             including across snapshot, compaction, and lifecycle cleanup transitions.
+          kind: state_machine
+    kind: leaf
+  L233_normal_submitted_request_scope_eligibility:
+    mechanisms:
+      - idempotency_gate
+    source_refs:
+      - final_architecture
+      - ot_input_output
+    statement: Every normal submitted_request representing one logical edit whose identity has
+      pending/retry age no more than 30 days is within the submitted-request scope eligible for
+      server-side OT or an authoritative terminal decision. This includes initial normal submissions
+      and normal retries; no prior submission or retransmission is required. Eligibility is
+      independent of actual request coherence, processing success, OT invocation, acceptance, or
+      completion of a terminal decision.
+    verification:
+      verifiers:
+        - intent: Check the processing-scope classification of initial normal submissions and normal
+            retries within the existing eligibility boundary, including its ≤30-day endpoint.
+            Establish eligibility independently of payload coherence and processing outcome; do not
+            test eventual progress as this leaf's obligation.
           kind: state_machine
     kind: leaf
 catalog:
@@ -6986,7 +7010,7 @@ id_allocator:
     A: 7
     G: 13
     C: 48
-    L: 233
+    L: 234
     D: 15
     T: 3
 assurance:
@@ -7561,6 +7585,8 @@ assurance:
       status: planned
     L232_retry_reconnect_eligibility_implies_retry_horizon:
       status: planned
+    L233_normal_submitted_request_scope_eligibility:
+      status: planned
 formalization:
   claims:
     G0_acked_edit_survives_failover:
@@ -7914,6 +7940,8 @@ formalization:
     L231_accepted_terminal_result_producer_binding_and_identity:
       mode: symbolic
     L232_retry_reconnect_eligibility_implies_retry_horizon:
+      mode: symbolic
+    L233_normal_submitted_request_scope_eligibility:
       mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:

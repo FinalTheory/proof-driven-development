@@ -2024,6 +2024,7 @@ functions:
     semantic_anchors:
     - claim:G5_retry_resolves_idempotently
     - claim:L228_normal_retry_request_coherence_and_horizon_alignment
+    - claim:L233_normal_submitted_request_scope_eligibility
   retry_request_identity_payload_frontier_coherent:
     args:
     - Request
@@ -2609,6 +2610,7 @@ functions:
     - source:final_architecture
     - claim:L123_acceptance_payload_and_identity_share_submitted_request
     - claim:L228_normal_retry_request_coherence_and_horizon_alignment
+    - claim:L233_normal_submitted_request_scope_eligibility
   request_ot_acceptance_eligible:
     args:
     - Request
@@ -20463,19 +20465,6 @@ claims:
                 fn: normal_retry_submitted_request
                 args:
                 - var: r
-            - call:
-                fn: submitted_request_eligible_for_ot_or_terminal_decision
-                args:
-                - var: r
-      - forall:
-          vars:
-            r: Request
-          body:
-            implies:
-            - call:
-                fn: normal_retry_submitted_request
-                args:
-                - var: r
             - exists:
                 vars:
                   e: LogicalEdit
@@ -20532,6 +20521,23 @@ claims:
                         - var: e
             - call:
                 fn: retry_request_identity_payload_frontier_coherent
+                args:
+                - var: r
+  L233_normal_submitted_request_scope_eligibility:
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            r: Request
+          body:
+            implies:
+            - call:
+                fn: normal_retry_submitted_request
+                args:
+                - var: r
+            - call:
+                fn: submitted_request_eligible_for_ot_or_terminal_decision
                 args:
                 - var: r
   L232_retry_reconnect_eligibility_implies_retry_horizon:
