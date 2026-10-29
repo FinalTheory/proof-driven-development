@@ -12648,3 +12648,40 @@ records:
           serialization, no actual OT invocation or acceptance, no intermediate-object condition, and no fixed duration for
           the configured horizon — avoid adding requirements beyond the source.'
         differences: []
+  claim:L232_retry_reconnect_eligibility_implies_retry_horizon:
+    kind: claim
+    subject_id: L232_retry_reconnect_eligibility_implies_retry_horizon
+    subject_signature: 7e492a5004d2bb5daf1979c40ce441593417aebb53802c1839ff996c8c78c0e6
+    roundtrip:
+      subject_signature: 7e492a5004d2bb5daf1979c40ce441593417aebb53802c1839ff996c8c78c0e6
+      status: TRANSLATED
+      natural_language: For every authoritative state s and every idempotency key k, if s is reachable under the canonical
+        server protocol and failure model, then if the composite authoritative idempotency identity k = (document_id, client_change_id)
+        is within the 30-day normal retry/reconnect eligibility horizon in authoritative state s, then the full composite
+        idempotency identity k = (document_id, client_change_id) is within the configured normal retry eligibility horizon
+        in authoritative state s.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 7e492a5004d2bb5daf1979c40ce441593417aebb53802c1839ff996c8c78c0e6
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over all states and keys, conditions on reachability, and maps the 30-day
+          retry/reconnect eligibility antecedent to the configured, duration-unspecified retry eligibility consequent with
+          identical state and key coordinates, adding and omitting no requirement.
+        differences: []
+      strengthening:
+        subject_signature: 7e492a5004d2bb5daf1979c40ce441593417aebb53802c1839ff996c8c78c0e6
+        verdict: EQUIVALENT
+        reason: The formula preserves the universal quantification over states and keys, the reachability guard as antecedent,
+          and the exact implication from the 30-day retry/reconnect eligibility predicate to the configured normal retry eligibility
+          predicate, with no added duration, equality, cardinality, or scope requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 7e492a5004d2bb5daf1979c40ce441593417aebb53802c1839ff996c8c78c0e6
+        verdict: EQUIVALENT
+        reason: 'Quantifiers, implication direction, state scope, and both horizons are preserved: every reachable authoritative
+          state and every idempotency key, 30-day normal retry/reconnect eligibility implies configured normal retry eligibility.
+          The added wording only explicates reachability and the composite key identity without narrowing the domain, adding
+          a precondition, reversing provenance, or imposing a fixed configured duration.'
+        differences: []
