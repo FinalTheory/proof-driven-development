@@ -6706,7 +6706,11 @@ assurance:
         without either); they are retained as joint/alternative support.'
       signature: 766da9e0f960b0f4d98fb17de6ca4bfe00085dbc1e4527496e48b97b2910d5dd
     G2_canonical_history_is_linear_and_fenced:
-      status: unaudited
+      status: machine_checked
+      rationale: 'SymbolicCompositionVerifier ENTAILED (unsat), composition signature 578e3b46aed78ab5241a76a376afe12ca709b0fdee1d5c2ef606fde610cae145.
+        Premises C8, C39, L222 all TRUSTED; premise-removal ablation: removing any single premise yields
+        COUNTEREXAMPLE (sat), so all three are individually load-bearing, including new leaf L222.'
+      signature: 578e3b46aed78ab5241a76a376afe12ca709b0fdee1d5c2ef606fde610cae145
     G3_snapshot_and_recovery_preserve_state:
       status: unaudited
     G4_reconnect_converges_without_gap_or_duplicate:
