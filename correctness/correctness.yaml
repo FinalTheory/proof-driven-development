@@ -186,8 +186,9 @@ refinement:
       blocked_by: []
       signature: 41d9db6e87eacdbc1629e8534586e2fdac58634eb70b55c714fb673be8ab6040
     G2_canonical_history_is_linear_and_fenced:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: e63da0eaf540d9295946513c93e4fe80f6baf091bede4cf1b7dd0e9a7dccc567
     G3_snapshot_and_recovery_preserve_state:
       status: stable
       blocked_by: []
