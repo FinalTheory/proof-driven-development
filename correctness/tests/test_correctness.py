@@ -1546,6 +1546,43 @@ class CorrectnessToolTests(unittest.TestCase):
             correctness._apply_mutation_plan(copy.deepcopy(self.base), plan)
         self.assertIn("may not change semantic-contract associations while reclassifying", str(ctx.exception))
 
+    def test_reclassification_renames_formalization_registry_key(self):
+        plan = {
+            "mutation_version": 1,
+            "authority": "automation",
+            "preconditions": {
+                "semantic_signatures": {
+                    "L1_left_boundary": correctness._node_semantic_signature(
+                        self.graph(), "L1_left_boundary"
+                    )
+                }
+            },
+            "operations": [
+                {
+                    "op": "reclassify_claim",
+                    "node": "L1_left_boundary",
+                    "new_kind": "derived",
+                    "alias": "rc",
+                },
+                {
+                    "op": "add_dependency",
+                    "node": "@rc",
+                    "dependency": "L2_right_boundary",
+                },
+            ],
+        }
+        doc = copy.deepcopy(self.base)
+        correctness._apply_mutation_plan(doc, plan)
+        self.assertIn("C2_left_boundary", doc["claims"])
+        self.assertNotIn("L1_left_boundary", doc["claims"])
+        self.assertIn("C2_left_boundary", doc["formalization"]["claims"])
+        self.assertNotIn("L1_left_boundary", doc["formalization"]["claims"])
+        self.assertEqual(
+            doc["formalization"]["claims"]["C2_left_boundary"],
+            self.base["formalization"]["claims"]["L1_left_boundary"],
+        )
+        self.assertIn("C2_left_boundary", doc["claims"]["C1_composite_claim"]["depends_on"])
+
     def test_automation_cannot_introduce_human_only_semantic_contract(self):
         graph = self.graph()
         plan = {

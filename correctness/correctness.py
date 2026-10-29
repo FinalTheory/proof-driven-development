@@ -1548,6 +1548,8 @@ def _apply_mutation_plan(
                 )
             claims[new_id] = body
             _rewrite_claim_reference(doc, old_id, new_id)
+            if old_id in formalization_claims:
+                formalization_claims[new_id] = formalization_claims.pop(old_id)
             old_ref = refinement_nodes.pop(old_id, {})
             new_ref = _refinement_defaults(new_kind)
             if isinstance(old_ref, dict):
