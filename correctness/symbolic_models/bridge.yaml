@@ -20503,6 +20503,10 @@ claims:
             implies:
             - and:
               - call:
+                  fn: normal_retry_submitted_request
+                  args:
+                  - var: r
+              - call:
                   fn: submitted_request_eligible_for_ot_or_terminal_decision
                   args:
                   - var: r
