@@ -862,53 +862,57 @@ records:
   claim:G9_accepted_idempotency_evidence_matches_committed_acceptance:
     kind: claim
     subject_id: G9_accepted_idempotency_evidence_matches_committed_acceptance
-    subject_signature: ec4586c5e70cd419434f89de05c8f57526873c9ff18b8b480f99e419d0775405
+    subject_signature: 847e562e8e31bb416e7bcb4f41b1957874ccc8ebe4170fbf68d328ae1d2d22da
     roundtrip:
-      subject_signature: ec4586c5e70cd419434f89de05c8f57526873c9ff18b8b480f99e419d0775405
+      subject_signature: 847e562e8e31bb416e7bcb4f41b1957874ccc8ebe4170fbf68d328ae1d2d22da
       status: TRANSLATED
-      natural_language: 'For every authoritative state s and every composite idempotency key k = (document_id, client_change_id),
-        if k is within the 30-day normal retry/reconnect eligibility horizon in s, authoritative durable accepted idempotency
-        evidence exists in s for that exact composite key if and only if the authoritative accepted_change_log in s contains
-        exactly one committed canonical acceptance whose authoritative idempotency key is that same composite key. For every
-        such state and key, if k is within that horizon and authoritative durable accepted evidence exists for k, any authoritative
-        accepted evidence counted for k must be established only by a valid committed-acceptance mechanism: the committed
+      natural_language: 'For every authoritative state s and every idempotency key k, where k is the composite authoritative
+        identity (document_id, client_change_id), the following hold: (1) If k is within the 30-day normal retry/reconnect
+        eligibility horizon in authoritative state s, then authoritative durable accepted_idempotency_evidence exists in state
+        s for that same composite key k if and only if the accepted_change_log in authoritative state s contains exactly one
+        committed canonical acceptance whose authoritative idempotency_key is that same composite identity k; that is, under
+        that eligibility guard, accepted_evidence_for_key(s, k) implies exactly_one_committed_acceptance_for_key(s, k), and
+        exactly_one_committed_acceptance_for_key(s, k) implies accepted_evidence_for_key(s, k). (2) For every authoritative
+        state s and every idempotency key k, if k is within the 30-day normal retry/reconnect eligibility horizon in authoritative
+        state s and authoritative durable accepted_idempotency_evidence exists in state s for that same composite key k, then
+        accepted_evidence_mechanism_valid(s, k) holds, meaning any authoritative accepted evidence counted for composite key
+        k in state s is established only by a valid committed-acceptance mechanism for that same full identity: the committed
         accepted row or unique identity itself; a separate hot-path accepted-key success record that commits and aborts atomically
-        with the same canonical acceptance in the same acceptance transaction; or lifecycle or compaction replacement evidence
-        that is equivalent accepted evidence derived from a previously committed canonical acceptance. Reservation, in-progress
-        arbitration, timeout, cancellation, and other non-committed attempts do not qualify as accepted evidence under this
-        guarded requirement. No requirement is imposed for keys outside the 30-day eligibility horizon.'
+        with the same canonical acceptance in the same acceptance transaction; or equivalent lifecycle replacement evidence,
+        including compaction and runtime reconstruction or materialization, derived from a previously committed canonical
+        acceptance recorded in the accepted_change_log; and reservation, in-progress arbitration, timeout, cancellation, or
+        another non-committed attempt is not classified as accepted evidence.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: ec4586c5e70cd419434f89de05c8f57526873c9ff18b8b480f99e419d0775405
+        subject_signature: 847e562e8e31bb416e7bcb4f41b1957874ccc8ebe4170fbf68d328ae1d2d22da
         verdict: EQUIVALENT
-        reason: The translation preserves universal scope over authoritative states and exact composite keys within the 30-day
-          eligibility horizon, durable authoritative evidence, and the biconditional with exactly one committed canonical
-          acceptance of the same key. It preserves both permitted hot-path evidence mechanisms, same-transaction commit/abort
-          atomicity, and compaction replacement equivalence and provenance from a previously committed acceptance. It explicitly
-          excludes non-committed attempts as accepted evidence and imposes no obligation outside the eligibility horizon,
-          matching the source.
+        reason: The formula preserves the iff between authoritative durable accepted evidence and exactly one committed canonical
+          acceptance for the same composite (document_id, client_change_id) identity, in every authoritative state within
+          the 30-day eligibility horizon, with no requirement after expiry; it also preserves the provenance restriction that
+          evidence arise only from the accepted row/identity itself, an atomically co-committing/co-aborting hot-path success
+          record, or lifecycle evidence derived from a previously committed acceptance, excluding reservation, arbitration,
+          timeout, cancellation, and other non-committed attempts.
         differences: []
       strengthening:
-        subject_signature: ec4586c5e70cd419434f89de05c8f57526873c9ff18b8b480f99e419d0775405
+        subject_signature: 847e562e8e31bb416e7bcb4f41b1957874ccc8ebe4170fbf68d328ae1d2d22da
         verdict: EQUIVALENT
-        reason: The translation preserves the eligibility guard, quantification over every authoritative state and exact composite
-          identity, and the biconditional with exactly one committed canonical acceptance. Its permitted evidence mechanisms
-          restate the source's hot-path alternatives and equivalent lifecycle replacement derived from a previously committed
-          acceptance. Exclusion of non-committed attempts is explicit in the source. It adds no mechanism, provenance, cardinality,
-          or post-horizon obligation.
+        reason: The formula preserves the within-30-day authoritative-state guard, the biconditional between authoritative
+          accepted evidence and exactly one committed canonical acceptance for the same composite (document_id, client_change_id),
+          and the mechanism restriction to the accepted row itself, an atomically co-committing/co-aborting hot-path record,
+          or lifecycle-derived equivalent evidence from a previously committed acceptance, while imposing no requirement after
+          the horizon expires.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: ec4586c5e70cd419434f89de05c8f57526873c9ff18b8b480f99e419d0775405
+        subject_signature: 847e562e8e31bb416e7bcb4f41b1957874ccc8ebe4170fbf68d328ae1d2d22da
         verdict: EQUIVALENT
-        reason: Both propositions require authoritative durable accepted evidence for the exact composite key iff history
-          contains exactly one committed canonical acceptance for that key within the 30-day eligibility horizon. Both preserve
-          committed row/identity evidence, same-transaction atomic commitment and abortion of separate hot-path success records,
-          and equivalent lifecycle replacement evidence derived from a previously committed acceptance. Both exclude non-committed
-          attempts as accepted evidence. The explicit quantification over authoritative states adds no substantive constraint.
-          Read as instructed, the outside-horizon statement removes only this claim's normal retry/reconnect classification
-          requirement and does not withdraw unrelated guarantees.
+        reason: Both directions of the exactly-one correspondence are preserved under the same 30-day authoritative-state
+          guard and composite (document_id, client_change_id) identity, with the same hot-path atomic commit/abort mechanism,
+          lifecycle-derivation-only replacement provenance, and exclusion of reservation, arbitration, timeout, cancellation,
+          or other non-committed attempts, and no post-horizon requirement is added; runtime reconstruction/materialization
+          is allowed only as lifecycle replacement derived from a previously committed acceptance, not as an independent evidence
+          source.
         differences: []
   claim:G3_snapshot_and_recovery_preserve_state:
     kind: claim
@@ -12098,4 +12102,142 @@ records:
           epoch or previously superseded server-side ownership tenure from becoming authoritative again; the round-trip's
           universal quantification over authoritative states already covers all lifecycle transitions and both append-attempted
           and non-attempted cases stated explicitly in the original, without adding or omitting a requirement.
+        differences: []
+  claim:L223_authoritative_accepted_evidence_counts_durable_representation:
+    kind: claim
+    subject_id: L223_authoritative_accepted_evidence_counts_durable_representation
+    subject_signature: 6d9174002bc95dd2f7312d4fdadd59c44e88a7fdce4796aea21826664789d690
+    roundtrip:
+      subject_signature: 6d9174002bc95dd2f7312d4fdadd59c44e88a7fdce4796aea21826664789d690
+      status: TRANSLATED
+      natural_language: 'Each of the four claims below is asserted only under its stated within-horizon guard. For every authoritative
+        state s and every idempotency key k, where k is the composite identity (document_id, client_change_id), if k is within
+        the 30-day normal retry/reconnect eligibility horizon in s, then both of the following hold: (1) if authoritative
+        durable accepted_idempotency_evidence exists in s for k, then there exists an evidence representation e such that
+        e is a durable representation of that accepted_idempotency_evidence counted by s as already-accepted evidence for
+        the exact full identity k, with durability understood as persistence of the represented evidence in authoritative
+        durable state, including through equivalent representations, and without requiring retention of the same physical
+        row or runtime object; and (2) conversely, if there exists such an e, then authoritative durable accepted_idempotency_evidence
+        exists in s for k. In addition, for every evidence representation e, authoritative state s, and idempotency key k,
+        if k is within that 30-day horizon in s and e is counted by s as already-accepted evidence for the exact full identity
+        k, then s contains sufficient non-reusable evidence that k has already been accepted, so that while that evidence
+        stands k is distinguished as already accepted and cannot be reused for a new acceptance; this consequent asserts only
+        the presence of that classification evidence in s and not which mechanism wrote or preserved it. Also, for every s
+        and k, if k is within that horizon in s and an acceptance event creating a canonical accepted change for k has occurred
+        at or before s, then s contains such sufficient non-reusable already-accepted evidence as just described; the acceptance-event
+        antecedent records only that the acceptance lies in s''s past and does not by itself assert that evidence of it is
+        present in s. Finally, for every e, s, and k, if k is within that horizon in s and e is a durable representation of
+        accepted_idempotency_evidence counted by s as already-accepted evidence for the exact full identity k, then e is counted
+        by s as already-accepted evidence for the exact full identity k. The durable-representation and counted-evidence relations,
+        as stated, do not by themselves assert valid provenance, retention throughout the retry/reconnect horizon, or a committed
+        acceptance.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 6d9174002bc95dd2f7312d4fdadd59c44e88a7fdce4796aea21826664789d690
+        verdict: EQUIVALENT
+        reason: 'The formula reproduces all three canonical requirements with the same horizon guard, full composite key,
+          and quantifier structure: evidence existence is biconditional with a durable counted representation, every counted
+          representation yields sufficient non-reusable already-accepted classification, and a prior canonical acceptance
+          event yields that classification in every in-horizon state.'
+        differences: []
+      strengthening:
+        subject_signature: 6d9174002bc95dd2f7312d4fdadd59c44e88a7fdce4796aea21826664789d690
+        verdict: EQUIVALENT
+        reason: 'All four conjuncts map exactly to the source under the supplied predicate meanings, with every universal
+          claim guarded by the in-horizon condition: the first conjunct gives the evidence-exists iff counted-durable-representation
+          biconditional, the second gives counted-representation implies sufficient non-reusable already-accepted classification,
+          the third gives past acceptance event implies that classification in every in-horizon state, and the fourth is only
+          the definitional bridge from a durable representation already defined as counted to counted, adding no new requirement.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 6d9174002bc95dd2f7312d4fdadd59c44e88a7fdce4796aea21826664789d690
+        verdict: EQUIVALENT
+        reason: The rendering preserves the in-horizon biconditional between authoritative durable accepted evidence and a
+          durable representation counted for the exact composite key, the per-state sufficient non-reusable already-accepted
+          classification for counted representations, and retention of that classification in every in-horizon state after
+          a canonical acceptance event; universal quantification over in-horizon authoritative states subsumes the named recovery,
+          snapshot, compaction, and cleanup transitions, and equivalent-representation durability matches the canonical vocabulary
+          without adding provenance, mechanism, or extra retention requirements.
+        differences: []
+  claim:L225_counted_accepted_evidence_requires_committed_mechanism:
+    kind: claim
+    subject_id: L225_counted_accepted_evidence_requires_committed_mechanism
+    subject_signature: 5396a89d97d5148da7fcc40a99b56348d5c90b14d628adf2aa65f4cf3c4b7d8c
+    roundtrip:
+      subject_signature: 5396a89d97d5148da7fcc40a99b56348d5c90b14d628adf2aa65f4cf3c4b7d8c
+      status: TRANSLATED
+      natural_language: 'For every accepted-evidence representation e, every authoritative state s, and every idempotency
+        key k, if e is counted by s as already-accepted evidence for the exact full identity k, then both of the following
+        hold. The counted relation itself only identifies this state and key occurrence; it does not by itself assert valid
+        provenance, retention, or a committed acceptance. First, e is authoritative accepted-idempotency evidence, meaning
+        authoritative durable state counts e as establishing that the full identity carried by e is already accepted. Second,
+        at least one of the following four cases holds, where e has only committed establishing provenance means every source
+        that establishes the already-accepted classification of e is a committed canonical acceptance for the full identity
+        carried by e, or an intermediate accepted-evidence representation whose establishing provenance terminates at such
+        an acceptance, with no reservation, in-progress arbitration, pre-commit ownership, aborted, timed-out, cancelled,
+        or never-committed attempt, failed-owner residue, cache-only state, or other provisional or non-authoritative state
+        establishing that classification, and with incidental metadata and inputs that do not establish the classification
+        outside this provenance relation. Case 1: e was acquired on the normal acceptance path, meaning the acceptance flow
+        by which authoritative durable state first gains already-accepted evidence for an identity, as opposed to a lifecycle
+        transformation or a runtime reconstruction; e has only committed establishing provenance; and there exists a canonical
+        acceptance a such that a is a committed canonical accepted-change record in authoritative accepted history, the document_id
+        carried by e equals the document_id carried by a, the client_change_id carried by e equals the client_change_id carried
+        by a, e is derived from and corresponds to a in that a is the acceptance from which the already-accepted evidence
+        of e is established, and e is the committed accepted row or authoritative unique identity of a itself, used directly
+        as the already-accepted evidence and not a separate hot-path accepted-key record or index derived from a. Case 2:
+        e was acquired on the normal acceptance path; a separate hot-path accepted-key record or index, distinct from the
+        committed accepted row or unique identity itself, is the accepted-evidence mechanism for the identity of e; there
+        exists a canonical acceptance a such that a is committed, the document_id carried by e equals the document_id carried
+        by a, the client_change_id carried by e equals the client_change_id carried by a, e is derived from and corresponds
+        to a, and the separate hot-path accepted-key record for e and a commit or abort together in the same acceptance transaction;
+        and e has only committed establishing provenance. Case 3: e was created, replaced, or preserved by a durable accepted-history
+        lifecycle transformation outside the normal acceptance transaction, such as compaction, cleanup, or snapshot replacement;
+        e has only committed establishing provenance; and there exists a canonical acceptance a such that a is committed,
+        the document_id carried by e equals the document_id carried by a, the client_change_id carried by e equals the client_change_id
+        carried by a, and e is derived from and corresponds to a and a was committed before the lifecycle transformation or
+        runtime reconstruction that created or preserved e. Case 4: e was created or preserved by a non-hot-path runtime reconstruction
+        or materialization, such as recovery, owner restart, restore, index rebuild, or cache rebuild; e has only committed
+        establishing provenance; and there exists a canonical acceptance a such that a is committed, the document_id carried
+        by e equals the document_id carried by a, the client_change_id carried by e equals the client_change_id carried by
+        a, and e is derived from and corresponds to a and a was committed before the lifecycle transformation or runtime reconstruction
+        that created or preserved e. In addition, for every authoritative state s and every idempotency key k, if for every
+        accepted-evidence representation e, e being counted by s as already-accepted evidence for k implies the authoritative
+        accepted-evidence condition and at least one of the four cases above, then the accepted-evidence mechanism is valid
+        for s and k, meaning any authoritative accepted evidence counted for composite key k in state s is established only
+        by a valid committed-acceptance mechanism for that same full identity: the committed accepted row or unique identity
+        itself; a separate hot-path accepted-key success record that commits and aborts atomically with the same canonical
+        acceptance in the same acceptance transaction; or equivalent lifecycle replacement evidence, including compaction
+        and runtime reconstruction or materialization, derived from a previously committed canonical acceptance recorded in
+        the accepted_change_log; and a reservation, in-progress arbitration, timeout, cancellation, or another non-committed
+        attempt is not classified as accepted evidence.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 5396a89d97d5148da7fcc40a99b56348d5c90b14d628adf2aa65f4cf3c4b7d8c
+        verdict: EQUIVALENT
+        reason: The formula preserves the universal counted-evidence condition and the conditional validity conclusion, with
+          the four-way disjunction matching the committed row/identity, the same-transaction co-committing hot-path record,
+          and lifecycle/runtime replacement derived from a prior committed acceptance; it keeps both document_id and client_change_id
+          identity equalities, the committed witness, correct derivation direction and prior timing, and only-committed establishing
+          provenance excluding provisional and incidental sources, without adding or dropping a guard.
+        differences: []
+      strengthening:
+        subject_signature: 5396a89d97d5148da7fcc40a99b56348d5c90b14d628adf2aa65f4cf3c4b7d8c
+        verdict: EQUIVALENT
+        reason: The formula's four branches exactly partition the source's permitted mechanisms — committed row/identity,
+          separate hot-path record co-committing with the same committed same-identity acceptance, and durable-lifecycle or
+          runtime replacement derived from a prior committed same-identity acceptance — with only-committed establishing provenance
+          and the matching normal-path, lifecycle, and runtime flags, and the second conjunct mirrors the source's conditional
+          validity conclusion without adding scope, identity, cardinality, or provenance requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 5396a89d97d5148da7fcc40a99b56348d5c90b14d628adf2aa65f4cf3c4b7d8c
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal quantification over states and composite keys, the same-identity requirement,
+          the only-committed-provenance condition with incidental metadata excluded, and the exhaustive partition into the
+          committed row/identity itself, an atomically co-committing hot-path record, and lifecycle or runtime replacement
+          derived from a previously committed canonical acceptance, together with the corresponding validity converse.
         differences: []
