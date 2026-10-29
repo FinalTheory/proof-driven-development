@@ -848,11 +848,11 @@ refinement:
     L224_committed_acceptance_history_matches_acceptance_events:
       status: stable
       blocked_by: []
-      signature: d512835520ffd78c39d841db9775f4f6ec1b7baa8feba1957c61a50afa821f5b
+      signature: d4ba103e84a554fad5c3f9fbd793541a1111111de0c1e8fc7a8048f8f142860b
     L225_counted_accepted_evidence_requires_committed_mechanism:
       status: stable
       blocked_by: []
-      signature: 405dc7c3e2b0b20cb8f46c80770ab8ef19d72f0ba1b8f6ecc891850903890f2d
+      signature: f11dcbac3ae8be547415f17bfcc667512e4d2a6285c5aaa1984ea0deffe99a34
     L226_counted_accepted_evidence_supplies_non_reusable_classification:
       status: stable
       blocked_by: []
@@ -860,7 +860,7 @@ refinement:
     L227_accepted_classification_is_retained_through_eligibility_horizon:
       status: stable
       blocked_by: []
-      signature: 3d2aa32295ec425a8a27ac85e961bd461534242ad7642bae0c9ab0669935e5d1
+      signature: a09876460ada8526dc9503e4d42955399491192d23b34ea6ff92fef356097dbf
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
