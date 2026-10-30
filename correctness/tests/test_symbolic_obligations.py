@@ -15,6 +15,19 @@ from harness.symbolic import (
     TranslationAssuranceRegistry,
 )
 
+try:
+    from tests.witness_check import (
+        build_obligation_program,
+        check_program_under_witness,
+        load_witness,
+    )
+except ImportError:  # unittest discover loads tests/ as top-level modules
+    from witness_check import (
+        build_obligation_program,
+        check_program_under_witness,
+        load_witness,
+    )
+
 
 ROOT = Path(__file__).resolve().parents[1]
 BRIDGE = ROOT / "symbolic_models" / "bridge.yaml"
@@ -67,25 +80,41 @@ class SymbolicDesignObligationTests(unittest.TestCase):
         self.assertEqual(result.constrained.status, "unsat")
         self.assertEqual(result.verdict, "COVERED")
 
-        weakened = self.verifier.check_with_overrides(
+        # The weakened query is solver-undecidable (G2's universally
+        # quantified transitive-closure clause makes z3's model-finder
+        # return unknown), so the reopened gap is exhibited by a checked
+        # finite model instead of solver search.
+        weakened_program = build_obligation_program(
+            self.verifier,
+            self.bridge,
             obligation,
-            claim_formula_overrides={
+            claim_overrides={
                 "G12_client_pending_state_tracks_unresolved_edits": self.g12_without_clause(
                     "accepted_reconciliation_published"
                 )
             },
         )
-        self.assertEqual(weakened.constrained.status, "sat")
-        self.assertEqual(weakened.verdict, "GAP")
+        ok, failing = check_program_under_witness(
+            weakened_program, load_witness("accepted_reconciliation")
+        )
+        self.assertTrue(ok, f"witness does not satisfy the weakened gap query: {failing}")
 
     def test_stale_base_speculative_composition_gap_is_sat(self) -> None:
         result = self.check(
             "visible_speculative_representation_valid_on_current_base"
         )
         self.assertEqual(result.baseline.status, "sat")
-        self.assertEqual(result.constrained.status, "sat")
-        self.assertEqual(result.verdict, "GAP")
-        self.assertIsNotNone(result.constrained.model)
+        # The constrained query is solver-undecidable (G2's universally
+        # quantified transitive-closure clause makes z3's model-finder
+        # return unknown), so the gap is exhibited by a checked finite
+        # model: it satisfies the negated obligation together with every
+        # root and assumption, which is exactly the GAP claim.
+        obligation = self.spec.require(
+            "visible_speculative_representation_valid_on_current_base"
+        )
+        program = build_obligation_program(self.verifier, self.bridge, obligation)
+        ok, failing = check_program_under_witness(program, load_witness("stale_base"))
+        self.assertTrue(ok, f"witness does not satisfy the gap query: {failing}")
 
     def test_rejected_lifecycle_historical_gap_is_now_covered(self) -> None:
         obligation = self.spec.require(
@@ -96,16 +125,20 @@ class SymbolicDesignObligationTests(unittest.TestCase):
         self.assertEqual(result.constrained.status, "unsat")
         self.assertEqual(result.verdict, "COVERED")
 
-        weakened = self.verifier.check_with_overrides(
+        weakened_program = build_obligation_program(
+            self.verifier,
+            self.bridge,
             obligation,
-            claim_formula_overrides={
+            claim_overrides={
                 "G12_client_pending_state_tracks_unresolved_edits": self.g12_without_clause(
                     "definitive_rejection_published_into_state"
                 )
             },
         )
-        self.assertEqual(weakened.constrained.status, "sat")
-        self.assertEqual(weakened.verdict, "GAP")
+        ok, failing = check_program_under_witness(
+            weakened_program, load_witness("rejected_lifecycle")
+        )
+        self.assertTrue(ok, f"witness does not satisfy the weakened gap query: {failing}")
 
     def test_visible_frontier_historical_gap_is_now_covered(self) -> None:
         obligation = self.spec.require("visible_canonical_frontier_never_regresses")
@@ -114,14 +147,18 @@ class SymbolicDesignObligationTests(unittest.TestCase):
         self.assertEqual(result.constrained.status, "unsat")
         self.assertEqual(result.verdict, "COVERED")
 
-        weakened = self.verifier.check_with_overrides(
+        weakened_program = build_obligation_program(
+            self.verifier,
+            self.bridge,
             obligation,
-            contract_formula_overrides={
+            contract_overrides={
                 "visible_canonical_frontier_non_regression": {"bool": True}
             },
         )
-        self.assertEqual(weakened.constrained.status, "sat")
-        self.assertEqual(weakened.verdict, "GAP")
+        ok, failing = check_program_under_witness(
+            weakened_program, load_witness("visible_frontier")
+        )
+        self.assertTrue(ok, f"witness does not satisfy the weakened gap query: {failing}")
 
     def test_all_roots_uses_exact_root_and_assumption_boundary(self) -> None:
         obligation = self.spec.require(

@@ -1,0 +1,2030 @@
+{
+ "description": "Checked finite-model witness for the visible_frontier GAP query (full program incl. G2).",
+ "functions": {
+  "acceptance_based_pending_retirement": {
+   "args": [
+    "ClientState",
+    "Overlay"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "acceptance_capable_transition": {
+   "args": [
+    "ProtocolTransition"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "acceptance_change_id": {
+   "args": [
+    "CanonicalAcceptance"
+   ],
+   "else": {
+    "const": "ClientChangeId!val!2"
+   },
+   "entries": [],
+   "returns": "ClientChangeId"
+  },
+  "acceptance_document": {
+   "args": [
+    "CanonicalAcceptance"
+   ],
+   "else": {
+    "const": "Document!val!0"
+   },
+   "entries": [],
+   "returns": "Document"
+  },
+  "acceptance_exact_ot_success_result": {
+   "args": [
+    "CanonicalAcceptance",
+    "OTSuccessResult"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "acceptance_key": {
+   "args": [
+    "CanonicalAcceptance"
+   ],
+   "else": {
+    "const": "IdempotencyKey!val!0"
+   },
+   "entries": [],
+   "returns": "IdempotencyKey"
+  },
+  "acceptance_produced_from_request": {
+   "args": [
+    "CanonicalAcceptance",
+    "Request"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "acceptance_semantic_lifecycle_retirement": {
+   "args": [
+    "ClientState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "acceptance_state_reconstructed_at_frontier": {
+   "args": [
+    "AuthoritativeState",
+    "Revision"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "acceptance_transition_for_key": {
+   "args": [
+    "ProtocolTransition",
+    "IdempotencyKey"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "acceptance_transition_within_retry_horizon": {
+   "args": [
+    "ProtocolTransition"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "accepted_evidence_for_key": {
+   "args": [
+    "AuthoritativeState",
+    "IdempotencyKey"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "accepted_evidence_mechanism_valid": {
+   "args": [
+    "AuthoritativeState",
+    "IdempotencyKey"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "accepted_ot_context_is_preceding_canonical_prefix": {
+   "args": [
+    "CanonicalAcceptance",
+    "Request"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "accepted_ot_success_satisfies_algorithmic_contract": {
+   "args": [
+    "CanonicalAcceptance"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "accepted_reconciliation_published": {
+   "args": [
+    "ClientState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "accepted_retirement_has_matching_acceptance_source": {
+   "args": [
+    "ClientState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "accepted_sequence_application_result": {
+   "args": [
+    "DocumentState",
+    "AcceptedChangeSequence",
+    "DocumentState"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "accepted_terminal_lifecycle_rewrite": {
+   "args": [
+    "ProtocolTransition",
+    "TerminalResultRecord",
+    "TerminalResultRecord"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "accepted_terminal_outcome_matches_canonical_acceptance": {
+   "args": [
+    "AuthoritativeState",
+    "IdempotencyKey"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "accepted_terminal_result_record": {
+   "args": [
+    "TerminalResultRecord"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "accepted_terminal_result_within_retry_horizon": {
+   "args": [
+    "TerminalResultRecord"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "append_commit_supplied_epoch_matches_current": {
+   "args": [
+    "ProtocolTransition",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "append_tuple_bound_to_executing_document_generation": {
+   "args": [
+    "Document",
+    "ProtocolTransition"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "append_tuple_matches_current_generation_at_commit": {
+   "args": [
+    "ProtocolTransition",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "append_uses_exact_current_document_generation": {
+   "args": [
+    "ProtocolTransition",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "at_most_one_terminal_outcome_for_key": {
+   "args": [
+    "AuthoritativeState",
+    "IdempotencyKey"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "attempt_produces_canonical_acceptance_for_key": {
+   "args": [
+    "ProtocolTransition",
+    "IdempotencyKey",
+    "CanonicalAcceptance"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "authoritative_handoff_for_document": {
+   "args": [
+    "ProtocolTransition",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "authoritative_latest_revision_equals_frontier": {
+   "args": [
+    "AuthoritativeState",
+    "Revision"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "authoritative_lifecycle_transition_for_document": {
+   "args": [
+    "ProtocolTransition",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "authoritative_reconciliation_terminally_retires_identity": {
+   "args": [
+    "ClientState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "authoritative_state_step": {
+   "args": [
+    "AuthoritativeState",
+    "AuthoritativeState"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "authoritative_terminal_lifecycle_rewrite": {
+   "args": [
+    "ProtocolTransition",
+    "TerminalResultRecord",
+    "TerminalResultRecord"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "bookkeeping_only_speculative_removal_transition": {
+   "args": [
+    "ProtocolTransition",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "bookkeeping_removal_does_not_resolve_lifecycle": {
+   "args": [
+    "ProtocolTransition",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "canonical_acceptance_committed_before_success_ack": {
+   "args": [
+    "CanonicalAcceptance",
+    "SuccessAck"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "canonical_acceptance_excludes_non_success_ot_producers": {
+   "args": [
+    "CanonicalAcceptance"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "canonical_acceptance_payload_record": {
+   "args": [
+    "CanonicalAcceptance"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "canonical_append_attempt_for_document": {
+   "args": [
+    "ProtocolTransition",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "canonical_append_commits_candidate_change": {
+   "args": [
+    "ProtocolTransition",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "canonical_append_for_document": {
+   "args": [
+    "ProtocolTransition",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "canonical_contains_same_edit": {
+   "args": [
+    "ClientState",
+    "Overlay"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "canonical_content_matches": {
+   "args": [
+    "ClientState",
+    "Document",
+    "Revision"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "canonical_history_gap_free_for_document": {
+   "args": [
+    "AuthoritativeState",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "catchup_attempt_publishes": {
+   "args": [
+    "CatchupAttempt"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "catchup_binding_break_permanently_blocks_publication": {
+   "args": [
+    "CatchupAttempt"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "catchup_eligible_for_completion_or_publication": {
+   "args": [
+    "CatchupAttempt"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "catchup_excludes_acceptances_after_captured_head": {
+   "args": [
+    "CatchupAttempt"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "catchup_foreground_publication_eligible": {
+   "args": [
+    "CatchupAttempt"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "catchup_head_captured_from_authoritative_latest": {
+   "args": [
+    "CatchupAttempt"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "catchup_head_preserved_to_publication": {
+   "args": [
+    "CatchupAttempt"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "catchup_publication_is_atomic_and_non_regressing": {
+   "args": [
+    "CatchupAttempt"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "catchup_published_state_is_exact_replay_through_head": {
+   "args": [
+    "CatchupAttempt"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "catchup_response_head_is": {
+   "args": [
+    "CatchupResponse",
+    "Revision"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "catchup_visible_document_binding_uninterrupted": {
+   "args": [
+    "CatchupAttempt"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "claim_accepted_terminal_result_producer_matches": {
+   "args": [
+    "TerminalResultRecord",
+    "CanonicalAcceptance"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "client_document_id_value": {
+   "args": [
+    "ClientState"
+   ],
+   "else": {
+    "const": "Document!val!3"
+   },
+   "entries": [],
+   "returns": "Document"
+  },
+  "committed_canonical_acceptance": {
+   "args": [
+    "CanonicalAcceptance"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "committed_history_record": {
+   "args": [
+    "CanonicalAcceptance"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "completed_owner_recovery_at_frontier": {
+   "args": [
+    "AuthoritativeState",
+    "Revision"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "completed_recovery_covers_acceptance": {
+   "args": [
+    "RecoveryAttempt",
+    "CanonicalAcceptance"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "definitive_rejection_published_into_state": {
+   "args": [
+    "ClientState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "distinct_logical_edits_use_distinct_change_ids": {
+   "args": [
+    "LogicalEdit",
+    "LogicalEdit"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "exactly_one_committed_acceptance_for_key": {
+   "args": [
+    "AuthoritativeState",
+    "IdempotencyKey"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "expired_identity_uses_non_normal_resolution_path": {
+   "args": [
+    "CatchupResponse",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "external_result_reproduces_authoritative_outcome": {
+   "args": [
+    "ExternalTerminalResult",
+    "IdempotencyKey"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "external_terminal_result_key": {
+   "args": [
+    "ExternalTerminalResult"
+   ],
+   "else": {
+    "const": "IdempotencyKey!val!0"
+   },
+   "entries": [],
+   "returns": "IdempotencyKey"
+  },
+  "external_terminal_result_within_retry_horizon": {
+   "args": [
+    "ExternalTerminalResult"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "externally_terminal_result_record": {
+   "args": [
+    "ExternalTerminalResult"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "foreground_catchup_attempt": {
+   "args": [
+    "CatchupAttempt"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "g3_rebuilt_runtime_and_resumed_context_preserve_document_scope": {
+   "args": [
+    "Document",
+    "RecoveryAttempt"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "gate_observes_key_already_accepted": {
+   "args": [
+    "ProtocolTransition"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "handoff_installs_fresh_generation_id": {
+   "args": [
+    "ProtocolTransition",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "handoff_installs_strictly_greater_epoch": {
+   "args": [
+    "ProtocolTransition",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "identity_handled_outside_normal_retry_protocol": {
+   "args": [
+    "AuthoritativeState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "identity_pending_retry_age_at_most_30_days": {
+   "args": [
+    "AuthoritativeState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "identity_pending_retry_age_exceeds_30_days": {
+   "args": [
+    "AuthoritativeState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "identity_unresolved_after_reconciled_publication": {
+   "args": [
+    "CatchupResponse",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "later_reachable_client_state": {
+   "args": [
+    "ClientState",
+    "ClientState"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "later_user_operations_after_terminalized_lifecycle_are_fresh": {
+   "args": [
+    "ClientState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "lifecycle_transition_follows_epoch_supersession": {
+   "args": [
+    "ProtocolTransition",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "lifecycle_transition_never_decreases_or_restores_epoch": {
+   "args": [
+    "ProtocolTransition",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "live_delivery_originates_from": {
+   "args": [
+    "LiveDelivery",
+    "CanonicalAcceptance"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "live_delivery_preserves_document_scope": {
+   "args": [
+    "LiveDelivery",
+    "CanonicalAcceptance"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "live_delivery_preserves_payload_revision": {
+   "args": [
+    "LiveDelivery",
+    "CanonicalAcceptance"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "live_delivery_record": {
+   "args": [
+    "LiveDelivery"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "logical_edit_change_id": {
+   "args": [
+    "LogicalEdit"
+   ],
+   "else": {
+    "const": "ClientChangeId!val!1"
+   },
+   "entries": [],
+   "returns": "ClientChangeId"
+  },
+  "logical_state_equivalent_to_canonical_replay_at_frontier": {
+   "args": [
+    "AuthoritativeState",
+    "Revision"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "logical_state_matches_canonical_replay": {
+   "args": [
+    "AuthoritativeState",
+    "Revision"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "matching_retained_representation_for_visible_overlay": {
+   "args": [
+    "ClientState",
+    "Overlay"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "new_owner_recovery_attempt": {
+   "args": [
+    "RecoveryAttempt"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "non_acceptance_disposition_preserves_edit_identity": {
+   "args": [
+    "ProtocolTransition",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "non_acceptance_retirement_establishes_terminalized_lifecycle": {
+   "args": [
+    "ProtocolTransition",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "non_acceptance_retirement_transition": {
+   "args": [
+    "ProtocolTransition",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "normal_client_resync_attempt": {
+   "args": [
+    "CatchupResponse"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "normal_retry_or_reconnect_submission": {
+   "args": [
+    "AuthoritativeState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "normal_retry_reconnect_identity_in_scope": {
+   "args": [
+    "AuthoritativeState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "normal_retry_submitted_request": {
+   "args": [
+    "Request"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "optimized_authoritative_lifecycle_representation_at_frontier": {
+   "args": [
+    "AuthoritativeState",
+    "Revision"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "ot_engine_invocation": {
+   "args": [
+    "OTInvocation"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "ot_rejects_invalid_or_rebase_required": {
+   "args": [
+    "OTInvocation"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "ot_success_matches_submitted_input": {
+   "args": [
+    "CanonicalAcceptance",
+    "OTSuccessResult"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "ot_success_satisfies_algorithmic_contract": {
+   "args": [
+    "OTInvocation"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "owner_recovery_completion_and_resumption_after_success_ack": {
+   "args": [
+    "RecoveryAttempt",
+    "SuccessAck"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "pending_edit": {
+   "args": [
+    "ClientState",
+    "Overlay"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "pending_identity_active": {
+   "args": [
+    "ClientState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "pending_identity_at_resync_start": {
+   "args": [
+    "CatchupResponse",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "pending_identity_normal_speculative_lifecycle_active": {
+   "args": [
+    "ClientState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "pending_representation_bound_to_creation_identity": {
+   "args": [
+    "ClientState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "pending_retirement_has_matching_acceptance_source": {
+   "args": [
+    "ClientState",
+    "Overlay"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "reachable_authoritative_state": {
+   "args": [
+    "AuthoritativeState"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "reachable_client_protocol_transition": {
+   "args": [
+    "ProtocolTransition"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "reachable_client_state": {
+   "args": [
+    "ClientState"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "recovery_inputs_states_and_resumed_context_preserve_document_scope": {
+   "args": [
+    "Document",
+    "RecoveryAttempt"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "recovery_matches_replay_including_acceptance": {
+   "args": [
+    "RecoveryAttempt",
+    "CanonicalAcceptance"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "recovery_target_document": {
+   "args": [
+    "RecoveryAttempt"
+   ],
+   "else": {
+    "const": "Document!val!2"
+   },
+   "entries": [],
+   "returns": "Document"
+  },
+  "rejected_terminal_identity_matches_request": {
+   "args": [
+    "TerminalResultRecord",
+    "Request"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "rejected_terminal_outcome_excludes_canonical_acceptance": {
+   "args": [
+    "AuthoritativeState",
+    "IdempotencyKey"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "rejected_terminal_result_record": {
+   "args": [
+    "TerminalResultRecord"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "rejection_context_sufficient_at_terminalization": {
+   "args": [
+    "TerminalResultRecord",
+    "RejectionDecision"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "rejection_context_values_match_request": {
+   "args": [
+    "RejectionDecision",
+    "Request"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "rejection_decision_has_authoritative_context": {
+   "args": [
+    "RejectionDecision"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "rejection_decision_submitted_request": {
+   "args": [
+    "RejectionDecision"
+   ],
+   "else": {
+    "const": "Request!val!0"
+   },
+   "entries": [],
+   "returns": "Request"
+  },
+  "rejection_observation_terminalizes_same_identity": {
+   "args": [
+    "ClientState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "representation_resumes_owner_service": {
+   "args": [
+    "AuthoritativeState"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "represented_document": {
+   "args": [
+    "ClientState"
+   ],
+   "else": {
+    "const": "Document!val!1"
+   },
+   "entries": [],
+   "returns": "Document"
+  },
+  "request_change_id": {
+   "args": [
+    "Request"
+   ],
+   "else": {
+    "const": "ClientChangeId!val!0"
+   },
+   "entries": [],
+   "returns": "ClientChangeId"
+  },
+  "request_document": {
+   "args": [
+    "Request"
+   ],
+   "else": {
+    "const": "Document!val!2"
+   },
+   "entries": [],
+   "returns": "Document"
+  },
+  "request_represents_logical_edit": {
+   "args": [
+    "Request",
+    "LogicalEdit"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "request_submits_logical_edit": {
+   "args": [
+    "Request",
+    "LogicalEdit"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "response_contains_same_identity_acceptance": {
+   "args": [
+    "CatchupResponse",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "resync_freezes_new_speculative_edits": {
+   "args": [
+    "CatchupResponse"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "resync_identity_age_exceeds_normal_horizon": {
+   "args": [
+    "CatchupResponse",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "resync_identity_within_normal_horizon": {
+   "args": [
+    "CatchupResponse",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "resync_intermediate_candidate_excludes_canonical_speculative_duplicate": {
+   "args": [
+    "CatchupResponse",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "resync_publication_excludes_canonical_speculative_duplicate": {
+   "args": [
+    "CatchupResponse",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "resync_request_reconciles_identity_through_head": {
+   "args": [
+    "CatchupResponse",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "resync_visible_frontier_at_candidate_readiness": {
+   "args": [
+    "CatchupResponse",
+    "Revision"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "retained_overlay": {
+   "args": [
+    "ClientState",
+    "Overlay"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "retained_speculative_identity_active": {
+   "args": [
+    "ClientState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "retry_request_identity_payload_frontier_coherent": {
+   "args": [
+    "Request"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "retry_request_of_logical_edit": {
+   "args": [
+    "Request",
+    "LogicalEdit"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "revision_at_or_before": {
+   "args": [
+    "Revision",
+    "Revision"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "same_document_logical_edits": {
+   "args": [
+    "LogicalEdit",
+    "LogicalEdit"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "same_session_later_visible_continuous_same_document": {
+   "args": [
+    "ClientState",
+    "ClientState"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "same_session_later_visible_same_document": {
+   "args": [
+    "ClientState",
+    "ClientState"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "single_effective_speculative_contribution": {
+   "args": [
+    "ClientState",
+    "Overlay"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "speculative_identity_provenance_ok": {
+   "args": [
+    "ClientState",
+    "Overlay"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "speculative_operation_provenance_ok": {
+   "args": [
+    "ClientState",
+    "Overlay"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "stale_response_cannot_restore_removed_overlay_or_pending_resolution_state": {
+   "args": [
+    "CatchupResponse"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "state_denotes_accepted_history_for_document": {
+   "args": [
+    "AuthoritativeState",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "state_dependent_rejected_terminal_result": {
+   "args": [
+    "TerminalResultRecord"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "state_step_decreases_document_epoch": {
+   "args": [
+    "AuthoritativeState",
+    "AuthoritativeState",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "state_step_follows_epoch_supersession": {
+   "args": [
+    "AuthoritativeState",
+    "AuthoritativeState",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "state_step_is_lifecycle_transition": {
+   "args": [
+    "AuthoritativeState",
+    "AuthoritativeState",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "success_ack_exposed": {
+   "args": [
+    "SuccessAck"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "success_ack_for_acceptance": {
+   "args": [
+    "SuccessAck",
+    "CanonicalAcceptance"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "superseded_epoch_value_is_current": {
+   "args": [
+    "AuthoritativeState",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "superseded_generation_is_authoritative": {
+   "args": [
+    "AuthoritativeState",
+    "Document"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "terminal_attempt_for_key": {
+   "args": [
+    "ProtocolTransition",
+    "IdempotencyKey"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "terminal_attempt_uses_shared_key_arbitration": {
+   "args": [
+    "ProtocolTransition",
+    "IdempotencyKey"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "terminal_key_within_retry_horizon": {
+   "args": [
+    "AuthoritativeState",
+    "IdempotencyKey"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "terminal_lifecycle_rewrite_preserves_exact_outcome": {
+   "args": [
+    "ProtocolTransition",
+    "TerminalResultRecord",
+    "TerminalResultRecord"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "terminal_outcome_is_immutable": {
+   "args": [
+    "AuthoritativeState",
+    "IdempotencyKey"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "terminal_result_idempotency_key": {
+   "args": [
+    "TerminalResultRecord"
+   ],
+   "else": {
+    "const": "IdempotencyKey!val!0"
+   },
+   "entries": [],
+   "returns": "IdempotencyKey"
+  },
+  "terminal_result_rejection_decision": {
+   "args": [
+    "TerminalResultRecord"
+   ],
+   "else": {
+    "const": "RejectionDecision!val!0"
+   },
+   "entries": [],
+   "returns": "RejectionDecision"
+  },
+  "terminalized_speculative_identity": {
+   "args": [
+    "ClientState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "transition_creates_acceptance": {
+   "args": [
+    "ProtocolTransition"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "transition_creates_multiple_acceptances_for_key": {
+   "args": [
+    "ProtocolTransition",
+    "IdempotencyKey"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "transition_idempotency_key": {
+   "args": [
+    "ProtocolTransition"
+   ],
+   "else": {
+    "const": "IdempotencyKey!val!0"
+   },
+   "entries": [],
+   "returns": "IdempotencyKey"
+  },
+  "unresolved_eligible_retained_edit": {
+   "args": [
+    "ClientState",
+    "Overlay"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "unresolved_identity_blocks_normal_editing": {
+   "args": [
+    "CatchupResponse",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "user_visible_canonical_state": {
+   "args": [
+    "ClientState"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "visible_canonical_speculative_observation_state": {
+   "args": [
+    "ClientState"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "visible_frontier": {
+   "args": [
+    "ClientState"
+   ],
+   "else": {
+    "const": "Revision!val!0"
+   },
+   "entries": [],
+   "returns": "Revision"
+  },
+  "visible_frontier_regresses": {
+   "args": [
+    "ClientState",
+    "ClientState"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "visible_overlay": {
+   "args": [
+    "ClientState",
+    "Overlay"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "visible_overlay_matches_visible_document": {
+   "args": [
+    "ClientState",
+    "Overlay"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "visible_speculative_identity_active": {
+   "args": [
+    "ClientState",
+    "LogicalEditIdentity"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
+  "within_retry_reconnect_eligibility": {
+   "args": [
+    "AuthoritativeState",
+    "IdempotencyKey"
+   ],
+   "else": {
+    "const": false
+   },
+   "entries": [],
+   "returns": "Bool"
+  }
+ },
+ "obligation_id": "visible_canonical_frontier_never_regresses",
+ "universes": {
+  "AcceptedChangeSequence": [
+   "AcceptedChangeSequence!val!0"
+  ],
+  "AcceptedEvidence": [],
+  "AuthoritativeState": [
+   "AuthoritativeState!val!0"
+  ],
+  "CanonicalAcceptance": [
+   "CanonicalAcceptance!val!0"
+  ],
+  "CatchupAttempt": [
+   "CatchupAttempt!val!0"
+  ],
+  "CatchupResponse": [
+   "CatchupResponse!val!0"
+  ],
+  "ClientChangeId": [
+   "ClientChangeId!val!0",
+   "ClientChangeId!val!1",
+   "ClientChangeId!val!2"
+  ],
+  "ClientState": [
+   "ClientState!val!0",
+   "ClientState!val!1",
+   "ClientState!val!2"
+  ],
+  "Document": [
+   "Document!val!2",
+   "Document!val!0",
+   "Document!val!1",
+   "Document!val!3"
+  ],
+  "DocumentState": [
+   "DocumentState!val!0"
+  ],
+  "DurableIdempotencyEvidence": [],
+  "ExternalTerminalResult": [
+   "ExternalTerminalResult!val!0"
+  ],
+  "IdempotencyKey": [
+   "IdempotencyKey!val!0"
+  ],
+  "LiveDelivery": [
+   "LiveDelivery!val!0"
+  ],
+  "LogicalEdit": [
+   "LogicalEdit!val!0"
+  ],
+  "LogicalEditIdentity": [
+   "LogicalEditIdentity!val!0"
+  ],
+  "OTInvocation": [
+   "OTInvocation!val!0"
+  ],
+  "OTSuccessResult": [
+   "OTSuccessResult!val!0"
+  ],
+  "Overlay": [
+   "Overlay!val!0"
+  ],
+  "ProtocolTransition": [
+   "ProtocolTransition!val!0"
+  ],
+  "RecoveryAttempt": [
+   "RecoveryAttempt!val!0"
+  ],
+  "RejectionDecision": [
+   "RejectionDecision!val!0"
+  ],
+  "Request": [
+   "Request!val!0"
+  ],
+  "Revision": [
+   "Revision!val!0"
+  ],
+  "SuccessAck": [
+   "SuccessAck!val!0"
+  ],
+  "TerminalResultRecord": [
+   "TerminalResultRecord!val!0"
+  ]
+ }
+}
