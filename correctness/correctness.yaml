@@ -934,11 +934,13 @@ refinement:
       blocked_by: []
       signature: 8bdea053f90aa61ed8a66998fef94dbd11811c5f46ef8cb0fa3db10d2e65c782
     L248_lifecycle_representation_replay_equivalence:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 72a138d4c8e28d693297b8e92116ae7066d0c2cc1c1de28e2e295f58288b8c3f
     L249_lifecycle_resume_authoritative_reconstruction:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 5ea077c043cd5b8f898acfc8e6cc099b0cb1b10f63428895e118a3cfa11d51c6
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
