@@ -6066,6 +6066,7 @@ functions:
     meaning: 'All transform and acceptance entrypoints of the owner that authoritative representation s is used to initialize or resume remain closed until that owner completes authoritative recovery/reconstruction through frontier h and installs the recovered logical document state, the recovered head, and the recovered OT metadata through frontier h: no transform or acceptance entrypoint of that owner is open before recovery through h is complete and all three installations have occurred. This predicate asserts the closure gate only; it does not require that the recovery or any installation ever occurs.'
     semantic_anchors:
     - claim:L173_optimized_lifecycle_representation_resumes_only_through_recovery
+    - claim:L245_lifecycle_result_equivalence_bridge
   recovery_attempt_authoritative_recovery_head_is:
     args:
     - RecoveryAttempt
@@ -7728,11 +7729,17 @@ claims:
                   fn: representation_resumes_owner_service
                   args:
                   - var: s
-              - call:
-                  fn: acceptance_state_reconstructed_at_frontier
-                  args:
-                  - var: s
-                  - var: h
+              - and:
+                - call:
+                    fn: acceptance_state_reconstructed_at_frontier
+                    args:
+                    - var: s
+                    - var: h
+                - call:
+                    fn: owner_transform_and_acceptance_entrypoints_closed_until_recovery_and_installation_complete
+                    args:
+                    - var: s
+                    - var: h
   L246_completed_recovery_result_equivalence_bridge:
     capability: relational
     contracts: []
