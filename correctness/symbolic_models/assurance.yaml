@@ -13098,3 +13098,56 @@ records:
           back, and uninterrupted visible-document binding from start through publication eligibility; the publishing-attempt
           corollary follows from (3) and requires no separate statement.
         differences: []
+  claim:L239_foreground_catchup_publication_atomic_and_non_regressing:
+    kind: claim
+    subject_id: L239_foreground_catchup_publication_atomic_and_non_regressing
+    subject_signature: 4d3302399565f5055aebf10c6c71141eb93806636b297652ac00043db915a126
+    roundtrip:
+      subject_signature: 4d3302399565f5055aebf10c6c71141eb93806636b297652ac00043db915a126
+      status: TRANSLATED
+      natural_language: 'For every catch-up attempt c, if c is one normal foreground visible-document-bound reconnect/catch-up
+        attempt for the current document starting from the client''s last_applied_revision, the highest contiguous canonical
+        revision already applied by that client, then there exist a catch-up response r, a revision h, a revision f, and a
+        revision f2 such that: r is a logical catch-up response belonging to the protocol execution of c, for the same document
+        and reconnect-start context, and its response head and private reconciled candidate are the response head and candidate
+        handled by c for that response; h is the authoritative response head captured for r; f is the user-visible canonical
+        frontier (the client''s last_applied_revision for the resync document) at the moment the candidate response r is ready
+        to publish; f2 is the user-visible canonical frontier (the client''s last_applied_revision for the resync document)
+        after r has been handled (published or discarded); if f is not at or before h in the canonical revision order, then
+        r is discarded without mutating the visible canonical base, last_applied_revision, pending-resolution state, or speculative
+        overlays; if f is at or before h in the canonical revision order, then state from r is exposed to the user only by
+        one atomic publication after r''s specified reconciliation work is complete, with no checkpoint, tail, or intermediate
+        candidate prefix from r user-visible, and publication of r restores no previously removed speculative overlay and
+        no previously removed pending-resolution state; f is at or before f2 in the canonical revision order; and any user-visible
+        publication effect of c is one atomic publication transition with no intermediate candidate prefix exposed, and additionally
+        any response of c whose head is below the already-visible canonical frontier cannot regress or otherwise mutate that
+        visible canonical/frontier state.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 4d3302399565f5055aebf10c6c71141eb93806636b297652ac00043db915a126
+        verdict: EQUIVALENT
+        reason: 'The formula maps every clause: each foreground attempt has a corresponding response with a captured head,
+          a frontier at readiness, and a frontier after handling; beyond-head implies discard without visible mutation, at-or-before-head
+          implies atomic-only exposure with no restoration of removed state, the after-handling frontier is never below the
+          readiness frontier, and the per-attempt atomic, non-regressing predicate covers the final publication sentence.
+          No source requirement is omitted and no extra requirement is added.'
+        differences: []
+      strengthening:
+        subject_signature: 4d3302399565f5055aebf10c6c71141eb93806636b297652ac00043db915a126
+        verdict: EQUIVALENT
+        reason: The formula reproduces the universal foreground-attempt scope, the existential corresponding response with
+          its captured head and readiness/after-handling frontiers, the discard branch when the readiness frontier is beyond
+          the head, the atomic-publication and no-restoration branch when it is at or before the head, the non-decreasing
+          after-handling frontier, and the atomic, non-regressing publication property, with no added guard or guarantee outside
+          the source.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 4d3302399565f5055aebf10c6c71141eb93806636b297652ac00043db915a126
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal foreground catch-up scope, the corresponding response with its captured
+          head and readiness/after frontiers, both discard and atomic-publication branches, frontier monotonicity, atomic
+          publication with no intermediate prefix or restored removed state, and the non-regression rule for a head below
+          the visible frontier, without adding or omitting a material requirement.
+        differences: []
