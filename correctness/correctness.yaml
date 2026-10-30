@@ -5819,13 +5819,15 @@ claims:
       logical catch-up response handled through the response's publication boundary; the response has
       one captured head, one visible frontier at candidate readiness, and one visible frontier after response
       handling. If the visible frontier at readiness is beyond the captured head, the entire response
-      and its candidate are discarded without modifying visible canonical state or frontier. If the visible
-      frontier at readiness is at or before the captured head, the reconciled candidate is exposed in
-      one atomic publication transition with no intermediate candidate prefix visible and no previously
-      removed state restored. The visible frontier after handling is never below the visible frontier
-      at readiness. Every visible publication effect of the attempt is one atomic publication transition
-      with no intermediate candidate prefix exposed, and a response whose head is below the already visible
-      canonical frontier cannot regress or otherwise mutate that visible canonical/frontier state.\n"
+      and its candidate are discarded without mutating the visible canonical base, last_applied_revision,
+      pending-resolution state, or speculative overlays. If the visible frontier at readiness is at or
+      before the captured head, the client may expose the reconciled candidate only by one atomic publication
+      after its specified reconciliation work is complete, with no checkpoint, tail, or intermediate candidate
+      prefix user-visible and no previously removed speculative overlay or pending-resolution state restored
+      by that response. The visible frontier after handling is never below the visible frontier at readiness.
+      Every visible publication effect of the attempt is one atomic publication transition with no intermediate
+      candidate prefix exposed, and a response whose head is below the already visible canonical frontier
+      cannot regress or otherwise mutate that visible canonical/frontier state."
     verification:
       verifiers:
         - intent: For each normal foreground catch-up attempt, exhibit its corresponding response
