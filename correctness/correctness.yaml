@@ -940,8 +940,9 @@ refinement:
       blocked_by: []
       signature: 5ea077c043cd5b8f898acfc8e6cc099b0cb1b10f63428895e118a3cfa11d51c6
     L250_published_accepted_terminal_atomic_creation_pair:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 92954839b396a0acb529e2ec5c4978258b9960d1096cc68821055efb4cdf0fb7
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
