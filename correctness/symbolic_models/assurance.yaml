@@ -13386,55 +13386,6 @@ records:
           relation does not add a physical-identity requirement or any other requirement outside the source, and no source
           requirement is omitted.
         differences: []
-  claim:L245_lifecycle_result_equivalence_bridge:
-    kind: claim
-    subject_id: L245_lifecycle_result_equivalence_bridge
-    subject_signature: 20d4cdb29f996b5b9337f1cd1b540e668a48a7594383a176d1b3145737adc070
-    roundtrip:
-      subject_signature: 20d4cdb29f996b5b9337f1cd1b540e668a48a7594383a176d1b3145737adc070
-      status: TRANSLATED
-      natural_language: 'For every authoritative state representation s and every revision h, if s is an optimized authoritative
-        lifecycle representation at the common authoritative frontier h, including a snapshot, checkpoint, cleanup, or compaction
-        result covered by G3, then all of the following hold: (1) within the logical_state_equivalence_at_frontier applicability
-        domain, s stands in the contract''s semantic equivalence relation to deterministic canonical replay through frontier
-        h — this classifies the pair (s, h) and does not by itself assert that every optimized representation or completed
-        recovery satisfies the relation; (2) the logical document state denoted by s equals deterministic canonical replay
-        of accepted revisions through frontier h; (3) s preserves latest_revision exactly equal to frontier h; and (4) if
-        s is used to resume owner service, then both (a) s reconstructs the acceptance-relevant state required to continue
-        accepting from frontier h without changing canonical semantics, and (b) for owner service resumed using s at frontier
-        h, the acceptance-relevant state required to continue from h without changing canonical semantics is reconstructed
-        through authoritative recovery through h, with that reconstruction complete before acceptance is exposed and acceptance
-        not exposed while it is incomplete, where (b) asserts that reconstruction and its authoritative-recovery provenance
-        rather than only a gate conditional on recovery completion, and does not require that acceptance eventually be exposed
-        nor independently assert closure of transform entrypoints.'
-      ambiguities: []
-    direct_reviews:
-      weakening:
-        subject_signature: 20d4cdb29f996b5b9337f1cd1b540e668a48a7594383a176d1b3145737adc070
-        verdict: EQUIVALENT
-        reason: 'The formula universally quantifies optimized lifecycle representations at a frontier and requires exactly
-          the source conditions: logical-state equality to deterministic canonical replay, preservation of latest revision
-          equal to the frontier, the stated logical-state equivalence relation, and, when used to resume owner service, reconstruction
-          of acceptance-relevant state through authoritative recovery before acceptance is exposed; it adds no physical-equality
-          or other extra requirement.'
-        differences: []
-      strengthening:
-        subject_signature: 20d4cdb29f996b5b9337f1cd1b540e668a48a7594383a176d1b3145737adc070
-        verdict: EQUIVALENT
-        reason: 'The formula quantifies over optimized lifecycle representations at a frontier and requires exactly the source
-          conditions: logical-state equality with deterministic canonical replay, preservation of latest revision H, the stated
-          logical-state equivalence at H, and, when resumed, acceptance-state reconstruction through authoritative recovery
-          before acceptance is exposed, without requiring physical representation equality.'
-        differences: []
-    roundtrip_reviews:
-      balanced:
-        subject_signature: 20d4cdb29f996b5b9337f1cd1b540e668a48a7594383a176d1b3145737adc070
-        verdict: EQUIVALENT
-        reason: The rendering preserves the same universal antecedent, the same denoted logical state equality to deterministic
-          canonical replay through h, the same exact latest-revision preservation, the same conditional authoritative-recovery
-          reconstruction before acceptance is exposed, and the same logical-state equivalence without requiring physical equality;
-          its definitional caveats are scoped inside the implication and add or omit no requirement.
-        differences: []
   claim:L247_full_scope_to_runtime_projection_bridge:
     kind: claim
     subject_id: L247_full_scope_to_runtime_projection_bridge

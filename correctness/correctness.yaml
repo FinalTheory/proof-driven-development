@@ -925,9 +925,6 @@ refinement:
       status: stable
       blocked_by: []
       signature: 5297596e7a8db78000113daca98f5828664492d72656e4ea57cbd4f45b3fdd28
-    L245_lifecycle_result_equivalence_bridge:
-      status: pending
-      blocked_by: []
     L246_completed_recovery_result_equivalence_bridge:
       status: stable
       blocked_by: []
@@ -1083,7 +1080,6 @@ claims:
       - C16_non_append_lifecycle_preserves_logical_revision_prefix
       - L172_snapshot_compaction_preserves_concurrent_append_suffix
       - L173_optimized_lifecycle_representation_resumes_only_through_recovery
-      - L245_lifecycle_result_equivalence_bridge
       - L246_completed_recovery_result_equivalence_bridge
       - L247_full_scope_to_runtime_projection_bridge
       - L248_lifecycle_representation_replay_equivalence
@@ -5994,31 +5990,6 @@ claims:
             transformation or canonical acceptance is equivalent to clean reconstruction through H.
           kind: state_machine
     kind: leaf
-  L245_lifecycle_result_equivalence_bridge:
-    mechanisms:
-      - snapshot_checkpoint
-      - accepted_history_log
-      - recovery_replay
-    source_refs:
-      - snapshot_frontier
-      - owner_failover
-      - final_architecture
-    statement: Every optimized authoritative lifecycle representation at a common authoritative
-      frontier H, including snapshotting, checkpoint replacement, cleanup, and compaction results,
-      denotes exactly the logical document state obtained by deterministic canonical replay through
-      H and preserves the authoritative latest revision H. If that representation is used to resume
-      owner service, the acceptance-relevant state required to continue from H without changing
-      canonical semantics is reconstructed through authoritative recovery before acceptance is
-      exposed. Together these conditions establish the specified logical-state equivalence relation
-      at H; physical representation equality is not required.
-    verification:
-      verifiers:
-        - intent: For each optimized authoritative lifecycle representation at frontier H, verify it
-            denotes exactly the canonical replay state through H, preserves latest revision H, and
-            that any resumption of owner service reconstructs the acceptance-relevant state through
-            authoritative recovery before acceptance is exposed.
-          kind: state_machine
-    kind: leaf
   L246_completed_recovery_result_equivalence_bridge:
     mechanisms:
       - recovery_replay
@@ -8102,8 +8073,6 @@ assurance:
       status: planned
     L244_post_recovery_acceptance_clean_reconstruction_equivalence:
       status: planned
-    L245_lifecycle_result_equivalence_bridge:
-      status: planned
     L246_completed_recovery_result_equivalence_bridge:
       status: planned
     L247_full_scope_to_runtime_projection_bridge:
@@ -8489,8 +8458,6 @@ formalization:
     L243_recovery_completion_replay_state_and_frontier:
       mode: symbolic
     L244_post_recovery_acceptance_clean_reconstruction_equivalence:
-      mode: symbolic
-    L245_lifecycle_result_equivalence_bridge:
       mode: symbolic
     L246_completed_recovery_result_equivalence_bridge:
       mode: symbolic
