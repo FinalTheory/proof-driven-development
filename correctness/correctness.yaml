@@ -7486,7 +7486,19 @@ assurance:
         COUNTEREXAMPLE (sat), so all three are individually load-bearing, including new leaf L222.'
       signature: 578e3b46aed78ab5241a76a376afe12ca709b0fdee1d5c2ef606fde610cae145
     G3_snapshot_and_recovery_preserve_state:
-      status: unaudited
+      status: machine_checked
+      rationale: 'G3 is stable (renewed proof_audit SUPPORTED: both declared contracts independently REALIZED;
+        L173 useful_but_stronger, all other direct premises necessary) and its 8 direct premises are all
+        at proof boundary (C9 stable after its own SUPPORTED proof_audit; C16/L172/L173 stable; bridge
+        leaves L246/L247 stable from wave39 and L248/L249 stable from wave40, all TRUSTED: G3/L246 via
+        t57, L247 via t60 after the round-34 clarification, L249 via t61, L248 via t63 after the round-37
+        MISREADING ruling). The live composition check with require_trusted=True finds the 8 premises
+        together with NOT(G3) UNSAT (ENTAILED, composition signature 26bea081c599af994568e342e1b314c1d3d0f243530c43de0e574d91c4b10b54).
+        Premise-ablation note, stated honestly: ablating any of C9, L246, L247, L248, or L249 returns
+        COUNTEREXAMPLE (each is individually load-bearing, including all four bridge leaves); ablating
+        any of C16, L172, or L173 leaves the check ENTAILED (they are not individually load-bearing in
+        the machine check, though the proof_audit found C16/L172 necessary for their subcases).'
+      signature: 26bea081c599af994568e342e1b314c1d3d0f243530c43de0e574d91c4b10b54
     G4_reconnect_converges_without_gap_or_duplicate:
       status: machine_checked
       rationale: '>- The four round-5 bridge leaves L237 (head binding), L238 (exact replay), L239 (atomic/non-regressing
