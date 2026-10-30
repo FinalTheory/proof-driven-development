@@ -7262,7 +7262,23 @@ assurance:
     G3_snapshot_and_recovery_preserve_state:
       status: unaudited
     G4_reconnect_converges_without_gap_or_duplicate:
-      status: unaudited
+      status: machine_checked
+      rationale: '>- The four round-5 bridge leaves L237 (head binding), L238 (exact replay), L239 (atomic/non-regressing
+        publication, statement narrowed per Codex round-29 adjudication), and L240 (eligibility requires
+        uninterrupted binding) are TRUSTED (t54 panels for L237/L238/L240, t55 fresh panel for clarified
+        L239) and stable (wave37 GOOD_LEAF audits, no defects, no human decision), together with the pre-existing
+        direct premises including L157 (added because the publishes -> foreground-eligible step of residual
+        conjunct 4 comes from L157). The live composition check with require_trusted=True finds the 18
+        premises together with NOT(G4) UNSAT (ENTAILED, composition signature bf90ab03a58567dd2eac21eb706857e64d8d6b344f2ddfb5b1c6d121e9c7b412).
+        Conjunct-split evidence: both top-level conjuncts of the residual target are independently UNSAT
+        under the same 18 premises (direct_smt). Premise-ablation note, stated honestly: ablating 12 premises
+        leaves the check ENTAILED (they are not individually load-bearing); ablating C12, L157, or any
+        of L237-L240 returns UNKNOWN, which is inconclusive rather than a counterexample, so no individual
+        load-bearing claim is made for the new leaves from ablation alone. The registration basis is the
+        full ENTAILED check plus the conjunct-split UNSAT evidence, not the ablations. Earlier full checks
+        timed out at 120s/240s before the leaves were in place; the successful check ran with an extended
+        solver timeout, and the timeout change itself remains uncommitted and on hold.'
+      signature: bf90ab03a58567dd2eac21eb706857e64d8d6b344f2ddfb5b1c6d121e9c7b412
     G5_retry_resolves_idempotently:
       status: unaudited
     C7_revision_frontier_is_linear:
