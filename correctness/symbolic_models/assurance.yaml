@@ -13491,3 +13491,45 @@ records:
           explicit non-requirements of eventual exposure and independent transform-entrypoint closure; its first clause restates
           the same reconstruction rather than adding an independent requirement.
         differences: []
+  claim:L248_lifecycle_representation_replay_equivalence:
+    kind: claim
+    subject_id: L248_lifecycle_representation_replay_equivalence
+    subject_signature: e3b09f1256aeb70bb2c63151b7a7ea407f5520afff87e6cd90be38ece0cdb20c
+    roundtrip:
+      subject_signature: e3b09f1256aeb70bb2c63151b7a7ea407f5520afff87e6cd90be38ece0cdb20c
+      status: TRANSLATED
+      natural_language: 'For every authoritative state representation s and every revision h, if s is an optimized authoritative
+        lifecycle representation at the common authoritative frontier h, including snapshot, checkpoint, cleanup, or compaction
+        results covered by G3, then all of the following hold: (1) within the logical_state_equivalence_at_frontier applicability
+        domain, s stands in the contract''s semantic equivalence relation to deterministic canonical replay through frontier
+        h; (2) the logical document state denoted by s equals deterministic canonical replay of accepted revisions through
+        frontier h; and (3) s preserves latest_revision exactly equal to frontier h.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: e3b09f1256aeb70bb2c63151b7a7ea407f5520afff87e6cd90be38ece0cdb20c
+        verdict: EQUIVALENT
+        reason: The universal implication covers every optimized lifecycle representation at any frontier, including snapshot,
+          checkpoint, cleanup, and compaction results, and its three conjuncts separately preserve the equivalence relation,
+          the exact denoted logical document state from canonical replay, and latest revision equal to H, without adding physical-equality
+          or any other requirement.
+        differences: []
+      strengthening:
+        subject_signature: e3b09f1256aeb70bb2c63151b7a7ea407f5520afff87e6cd90be38ece0cdb20c
+        verdict: EQUIVALENT
+        reason: 'The formula universally quantifies over exactly the antecedent class — optimized authoritative lifecycle
+          representations, including snapshot, checkpoint, cleanup, and compaction results, at a frontier — and conjoins exactly
+          the three source conclusions: standing in the logical-state equivalence relation to deterministic canonical replay
+          through that frontier, denoting exactly the replayed logical document state, and preserving latest revision equal
+          to the frontier, without requiring physical representation equality or adding any other guard, equality, or cardinality
+          condition.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: e3b09f1256aeb70bb2c63151b7a7ea407f5520afff87e6cd90be38ece0cdb20c
+        verdict: EQUIVALENT
+        reason: Quantifiers, the shared frontier coordinate, the equivalence relation, denoted-state equality, and latest-revision
+          preservation all match; the G3, accepted-revision, and applicability-domain wording elaborates the included lifecycle
+          cases and named relation without adding or removing a guarantee, and omitting the physical-equality disclaimer adds
+          no physical-equality requirement.
+        differences: []
