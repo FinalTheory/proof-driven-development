@@ -2024,6 +2024,10 @@ functions:
     semantic_anchors:
     - claim:G5_retry_resolves_idempotently
     - claim:L228_normal_retry_request_coherence_and_horizon_alignment
+    - claim:C48_normal_retry_request_coherence_and_horizon_alignment
+    - claim:L234_normal_submitted_request_endpoint_binding
+    - claim:L235_normal_submitted_request_pipeline_history_compatibility
+    - claim:L236_normal_submitted_request_eligible_coherence_transfer
     - claim:L233_normal_submitted_request_scope_eligibility
   retry_request_identity_payload_frontier_coherent:
     args:
@@ -2038,6 +2042,8 @@ functions:
     semantic_anchors:
     - claim:G5_retry_resolves_idempotently
     - claim:L228_normal_retry_request_coherence_and_horizon_alignment
+    - claim:C48_normal_retry_request_coherence_and_horizon_alignment
+    - claim:L236_normal_submitted_request_eligible_coherence_transfer
   request_represents_logical_edit:
     args:
     - Request
@@ -2056,6 +2062,10 @@ functions:
     - contract:logical_edit_request_payload_binding
     - claim:L182_logical_edit_request_payload_binding_is_preserved
     - claim:L228_normal_retry_request_coherence_and_horizon_alignment
+    - claim:C48_normal_retry_request_coherence_and_horizon_alignment
+    - claim:L234_normal_submitted_request_endpoint_binding
+    - claim:L235_normal_submitted_request_pipeline_history_compatibility
+    - claim:L236_normal_submitted_request_eligible_coherence_transfer
   accepted_ot_context_is_preceding_canonical_prefix:
     args:
     - CanonicalAcceptance
@@ -2610,6 +2620,8 @@ functions:
     - source:final_architecture
     - claim:L123_acceptance_payload_and_identity_share_submitted_request
     - claim:L228_normal_retry_request_coherence_and_horizon_alignment
+    - claim:C48_normal_retry_request_coherence_and_horizon_alignment
+    - claim:L236_normal_submitted_request_eligible_coherence_transfer
     - claim:L233_normal_submitted_request_scope_eligibility
   request_ot_acceptance_eligible:
     args:
@@ -5750,6 +5762,10 @@ functions:
     semantic_anchors:
     - claim:L182_logical_edit_request_payload_binding_is_preserved
     - claim:L228_normal_retry_request_coherence_and_horizon_alignment
+    - claim:C48_normal_retry_request_coherence_and_horizon_alignment
+    - claim:L234_normal_submitted_request_endpoint_binding
+    - claim:L235_normal_submitted_request_pipeline_history_compatibility
+    - claim:L236_normal_submitted_request_eligible_coherence_transfer
   ot_success_computed_against_frontier:
     args:
     - OTSuccessResult
@@ -5927,6 +5943,9 @@ functions:
     semantic_anchors:
     - claim:L182_logical_edit_request_payload_binding_is_preserved
     - claim:L228_normal_retry_request_coherence_and_horizon_alignment
+    - claim:C48_normal_retry_request_coherence_and_horizon_alignment
+    - claim:L235_normal_submitted_request_pipeline_history_compatibility
+    - claim:L236_normal_submitted_request_eligible_coherence_transfer
   acceptance_linearization_prestate_latest_revision:
     args:
     - CanonicalAcceptance
@@ -20485,6 +20504,200 @@ claims:
                       args:
                       - var: r
                       - var: e
+      - forall:
+          vars:
+            r: Request
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: normal_retry_submitted_request
+                  args:
+                  - var: r
+              - call:
+                  fn: submitted_request_eligible_for_ot_or_terminal_decision
+                  args:
+                  - var: r
+              - exists:
+                  vars:
+                    e: LogicalEdit
+                  body:
+                    and:
+                    - call:
+                        fn: request_represents_logical_edit
+                        args:
+                        - var: r
+                        - var: e
+                    - call:
+                        fn: submitted_request_tuple_bound_to_logical_edit
+                        args:
+                        - var: r
+                        - var: e
+                    - call:
+                        fn: request_processes_do_not_substitute_logical_operation
+                        args:
+                        - var: r
+                        - var: e
+            - call:
+                fn: retry_request_identity_payload_frontier_coherent
+                args:
+                - var: r
+  C48_normal_retry_request_coherence_and_horizon_alignment:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            r: Request
+          body:
+            implies:
+            - call:
+                fn: normal_retry_submitted_request
+                args:
+                - var: r
+            - exists:
+                vars:
+                  e: LogicalEdit
+                body:
+                  and:
+                  - call:
+                      fn: request_represents_logical_edit
+                      args:
+                      - var: r
+                      - var: e
+                  - call:
+                      fn: submitted_request_tuple_bound_to_logical_edit
+                      args:
+                      - var: r
+                      - var: e
+                  - call:
+                      fn: request_processes_do_not_substitute_logical_operation
+                      args:
+                      - var: r
+                      - var: e
+      - forall:
+          vars:
+            r: Request
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: normal_retry_submitted_request
+                  args:
+                  - var: r
+              - call:
+                  fn: submitted_request_eligible_for_ot_or_terminal_decision
+                  args:
+                  - var: r
+              - exists:
+                  vars:
+                    e: LogicalEdit
+                  body:
+                    and:
+                    - call:
+                        fn: request_represents_logical_edit
+                        args:
+                        - var: r
+                        - var: e
+                    - call:
+                        fn: submitted_request_tuple_bound_to_logical_edit
+                        args:
+                        - var: r
+                        - var: e
+                    - call:
+                        fn: request_processes_do_not_substitute_logical_operation
+                        args:
+                        - var: r
+                        - var: e
+            - call:
+                fn: retry_request_identity_payload_frontier_coherent
+                args:
+                - var: r
+  L234_normal_submitted_request_endpoint_binding:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            r: Request
+          body:
+            implies:
+            - call:
+                fn: normal_retry_submitted_request
+                args:
+                - var: r
+            - exists:
+                vars:
+                  e: LogicalEdit
+                body:
+                  and:
+                  - call:
+                      fn: request_represents_logical_edit
+                      args:
+                      - var: r
+                      - var: e
+                  - call:
+                      fn: submitted_request_tuple_bound_to_logical_edit
+                      args:
+                      - var: r
+                      - var: e
+  L235_normal_submitted_request_pipeline_history_compatibility:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            r: Request
+          body:
+            implies:
+            - call:
+                fn: normal_retry_submitted_request
+                args:
+                - var: r
+            - implies:
+              - exists:
+                  vars:
+                    e: LogicalEdit
+                  body:
+                    and:
+                    - call:
+                        fn: request_represents_logical_edit
+                        args:
+                        - var: r
+                        - var: e
+                    - call:
+                        fn: submitted_request_tuple_bound_to_logical_edit
+                        args:
+                        - var: r
+                        - var: e
+              - exists:
+                  vars:
+                    e: LogicalEdit
+                  body:
+                    and:
+                    - call:
+                        fn: request_represents_logical_edit
+                        args:
+                        - var: r
+                        - var: e
+                    - call:
+                        fn: submitted_request_tuple_bound_to_logical_edit
+                        args:
+                        - var: r
+                        - var: e
+                    - call:
+                        fn: request_processes_do_not_substitute_logical_operation
+                        args:
+                        - var: r
+                        - var: e
+  L236_normal_submitted_request_eligible_coherence_transfer:
+    capability: relational
+    contracts: []
+    formula:
+      and:
       - forall:
           vars:
             r: Request

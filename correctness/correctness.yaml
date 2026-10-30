@@ -881,6 +881,18 @@ refinement:
     L233_normal_submitted_request_scope_eligibility:
       status: pending
       blocked_by: []
+    L234_normal_submitted_request_endpoint_binding:
+      status: pending
+      blocked_by: []
+    L235_normal_submitted_request_pipeline_history_compatibility:
+      status: pending
+      blocked_by: []
+    L236_normal_submitted_request_eligible_coherence_transfer:
+      status: pending
+      blocked_by: []
+    C48_normal_retry_request_coherence_and_horizon_alignment:
+      status: pending
+      blocked_by: []
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -1124,6 +1136,7 @@ claims:
       - C43_terminal_outcome_entry_state_is_coherent
       - L232_retry_reconnect_eligibility_implies_retry_horizon
       - L233_normal_submitted_request_scope_eligibility
+      - C48_normal_retry_request_coherence_and_horizon_alignment
     source_refs:
       - ot_input_output
       - accepted_change_log
@@ -5664,6 +5677,98 @@ claims:
             test eventual progress as this leaf's obligation.
           kind: state_machine
     kind: leaf
+  L234_normal_submitted_request_endpoint_binding:
+    mechanisms:
+      - idempotency_gate
+    source_refs:
+      - final_architecture
+      - ot_input_output
+    statement: Every normal submitted_request representing one logical_client_edit within the 30-day
+      normal retry eligibility horizon has a logical_client_edit witness e such that the
+      submitted_request represents e and its submitted document_id, client_change_id, raw_edit, and
+      base_revision are bound to e and its canonical authoring state D@F, with base_revision equal
+      to F.
+    verification:
+      verifiers:
+        - intent: "Check authoring provenance for each in-scope normal submitted request: exhibit the
+            logical edit witness and verify the submitted document_id, client_change_id, raw_edit, and
+            base_revision against that edit's canonical authoring state D@F, not merely agreement among
+            the submitted fields."
+          kind: state_machine
+    kind: leaf
+  L235_normal_submitted_request_pipeline_history_compatibility:
+    mechanisms:
+      - idempotency_gate
+    source_refs:
+      - final_architecture
+      - ot_input_output
+    statement: For every normal submitted_request representing one logical_client_edit within the
+      30-day normal retry eligibility horizon, if there is a logical_client_edit witness e such that
+      the submitted_request represents e and its submitted document_id, client_change_id, raw_edit,
+      and base_revision are bound to e and its canonical authoring state D@F with base_revision
+      equal to F, then there is a logical_client_edit witness e satisfying the same representation
+      and binding whose producing request construction, serialization, dispatch, and normal retry
+      steps substitute no other logical operation while retaining e's identity and authoring
+      frontier, even if a later step restores e's operation before submission.
+    verification:
+      verifiers:
+        - intent: 'Check pipeline history relative to a qualifying endpoint witness: for each in-scope
+            normal submitted request with an endpoint-binding witness, exhibit a witness satisfying the
+            same representation and binding whose construction, serialization, dispatch, and normal retry
+            history substitutes no other logical operation under the witness identity and frontier, even
+            if later restored before submission.'
+          kind: state_machine
+    kind: leaf
+  L236_normal_submitted_request_eligible_coherence_transfer:
+    mechanisms:
+      - idempotency_gate
+    source_refs:
+      - final_architecture
+      - ot_input_output
+    statement: For every normal submitted_request representing one logical_client_edit within the
+      30-day normal retry eligibility horizon that is eligible for server-side OT or an
+      authoritative terminal decision and satisfies the representation, tuple-binding, and
+      no-substitution witness conditions for one logical_client_edit, the submitted_request
+      preserves the same document_id, client_change_id, raw_edit semantics, and base_revision for
+      its logical operation without cross-binding them to another logical operation.
+    verification:
+      verifiers:
+        - intent: 'Check the eligible-request transfer: for each in-scope normal submitted request eligible
+            for OT or an authoritative terminal decision and satisfying the representation, tuple-binding,
+            and no-substitution witness conditions, verify the same request identity, raw_edit semantics,
+            and canonical authoring frontier without cross-binding to another logical operation.'
+          kind: state_machine
+    kind: leaf
+  C48_normal_retry_request_coherence_and_horizon_alignment:
+    statement: Every normal submitted_request representing a logical_client_edit within the 30-day
+      normal retry eligibility horizon, including an initial normal submission with no prior
+      submission or retransmission required, represents a logical edit e whose document_id,
+      client_change_id, raw_edit operation semantics, and base_revision are bound to that same edit
+      and its canonical authoring state D@F, with base_revision equal to F. No step of the request
+      construction, serialization, dispatch, or normal retry that produced the submitted request
+      substitutes another logical operation while retaining e's identity and authoring frontier,
+      even if a later step restores e's operation before submission. For every such request eligible
+      for OT or an authoritative terminal decision and satisfying those witness conditions, the
+      request preserves the same request identity, raw_edit semantics, and canonical authoring
+      frontier without cross-binding them to another logical operation.
+    mechanisms:
+      - idempotency_gate
+    source_refs:
+      - final_architecture
+      - ot_input_output
+    verification:
+      verifiers:
+        - intent: Trace initial normal submissions and normal retries from their logical edit and
+            captured D@F through construction, serialization, dispatch, and retry. Check submitted
+            tuple binding, detect substitutions even when later undone, and establish the
+            coherent-request conclusion under the exact transfer-conjunct antecedent. Require no
+            successful processing or terminal observation.
+          kind: state_machine
+    kind: derived
+    depends_on:
+      - L234_normal_submitted_request_endpoint_binding
+      - L235_normal_submitted_request_pipeline_history_compatibility
+      - L236_normal_submitted_request_eligible_coherence_transfer
 catalog:
   terms:
     logical_client_edit:
@@ -7009,8 +7114,8 @@ id_allocator:
   next_sequence:
     A: 7
     G: 13
-    C: 48
-    L: 234
+    C: 49
+    L: 237
     D: 15
     T: 3
 assurance:
@@ -7308,6 +7413,8 @@ assurance:
         SAT with a concrete counterexample, demonstrating that all three direct premises are
         necessary to establish the target.
       signature: 5436d195b0ac21b84b16fe7e65436e2240dd56fe82d7a6fa9e0ae8f5b45f2c97
+    C48_normal_retry_request_coherence_and_horizon_alignment:
+      status: unaudited
   implementation_evidence:
     L19_client_applies_only_contiguous_revisions:
       status: planned
@@ -7586,6 +7693,12 @@ assurance:
     L232_retry_reconnect_eligibility_implies_retry_horizon:
       status: planned
     L233_normal_submitted_request_scope_eligibility:
+      status: planned
+    L234_normal_submitted_request_endpoint_binding:
+      status: planned
+    L235_normal_submitted_request_pipeline_history_compatibility:
+      status: planned
+    L236_normal_submitted_request_eligible_coherence_transfer:
       status: planned
 formalization:
   claims:
@@ -7942,6 +8055,14 @@ formalization:
     L232_retry_reconnect_eligibility_implies_retry_horizon:
       mode: symbolic
     L233_normal_submitted_request_scope_eligibility:
+      mode: symbolic
+    L234_normal_submitted_request_endpoint_binding:
+      mode: symbolic
+    L235_normal_submitted_request_pipeline_history_compatibility:
+      mode: symbolic
+    L236_normal_submitted_request_eligible_coherence_transfer:
+      mode: symbolic
+    C48_normal_retry_request_coherence_and_horizon_alignment:
       mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:
