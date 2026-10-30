@@ -35,13 +35,18 @@ class CheckResult:
 
 
 class _Compiler:
-    def __init__(self, program: ParsedProgram):
+    def __init__(self, program: ParsedProgram, ctx: Any = None):
         if z3 is None:
             raise RuntimeError("z3-solver is not installed")
-        self.sorts: dict[str, Any] = {"Bool": z3.BoolSort()}
+        # All sorts/functions derive from `ctx`, so every expression the
+        # compiler builds lives in that context. Callers pass a fresh
+        # context per check (see check_program) so that one check's solver
+        # state can never leak into the next check's verdict.
+        self.ctx = ctx
+        self.sorts: dict[str, Any] = {"Bool": z3.BoolSort(ctx)}
         for name in program.sorts:
             if name != "Bool":
-                self.sorts[name] = z3.DeclareSort(name)
+                self.sorts[name] = z3.DeclareSort(name, ctx)
         self.functions = {
             name: z3.Function(
                 name,
@@ -58,7 +63,7 @@ class _Compiler:
                 raise ValueError(f"unbound symbolic variable {expr.name!r}")
             return env[expr]
         if isinstance(expr, BoolConst):
-            return z3.BoolVal(expr.value)
+            return z3.BoolVal(expr.value, self.ctx)
         if isinstance(expr, Call):
             fn = self.functions[expr.function.name]
             return fn(*(self.expr(arg, env) for arg in expr.args))
@@ -99,8 +104,17 @@ def check_program(program: ParsedProgram) -> CheckResult:
 
     if z3 is None:
         raise RuntimeError("z3-solver is not installed")
-    compiler = _Compiler(program)
-    solver = z3.Solver()
+    # Each check runs in a fresh z3 context. The previous shared-context
+    # design let one check's solver state leak into later checks: a program
+    # that proves unsat standalone (G9, ~5s) returned unknown (~84s) once
+    # enough earlier checks had run in the same process, even though the
+    # compiled program was byte-identical after normalizing z3's internal
+    # let-variable numbering. A fresh context per check makes every verdict
+    # a pure function of its program again; it never weakens the gate
+    # (unknown is still inconclusive, never accepted).
+    ctx = z3.Context()
+    compiler = _Compiler(program, ctx)
+    solver = z3.Solver(ctx=ctx)
     for constraint in program.constraints:
         solver.add(compiler.expr(constraint))
     solver.add(compiler.expr(program.query))
