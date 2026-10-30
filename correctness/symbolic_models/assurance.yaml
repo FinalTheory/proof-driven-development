@@ -12714,3 +12714,172 @@ records:
           its identity/payload/binding independence is read inside the implication and does not delete the antecedent representation
           condition.
         differences: []
+  claim:L234_normal_submitted_request_endpoint_binding:
+    kind: claim
+    subject_id: L234_normal_submitted_request_endpoint_binding
+    subject_signature: 3cc6edf3edfbf4c241fabfd184f29ede3c882e8dd14256ba0b56f8d009ecdaa5
+    roundtrip:
+      subject_signature: 3cc6edf3edfbf4c241fabfd184f29ede3c882e8dd14256ba0b56f8d009ecdaa5
+      status: TRANSLATED
+      natural_language: 'For every request r, if r is a normal submitted request representing one logical edit within the
+        30-day normal retry eligibility horizon, then there exists a logical edit e such that both of the following hold:
+        (1) r represents e rather than a different logical operation, and r''s submitted document_id, client_change_id, server-visible
+        raw_edit, and base_revision=F remain bound to that same logical operation and its canonical authoring state D@F; and
+        (2) r''s complete submitted tuple is bound to e at the submitted-request endpoint, that is, r''s document_id, client_change_id,
+        and base_revision are e''s identity (document_id = D, client_change_id = k) and authoring frontier F from e''s canonical
+        authoring state D@F, and the logical operation encoded by r''s submitted raw_edit is e''s own operation against that
+        same captured D@F authoring state; equivalently, the request construction, serialization, dispatch, and normal retry
+        that produced the submitted request r did not preserve e''s (D, k, F) while substituting a semantically different
+        logical operation into r''s submitted raw_edit. This second condition speaks only about the submitted request r itself,
+        as submitted: it asserts nothing about any intermediate request-lineage representation, imposes no condition on a
+        stage that does not survive into the submitted request, and is not falsified by a transient substitution that was
+        undone before submission; it does not by itself assert that r represents no other logical edit, and it requires no
+        dispatch, retry, OT invocation, acceptance, or terminal-decision progress beyond r being the submitted request.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 3cc6edf3edfbf4c241fabfd184f29ede3c882e8dd14256ba0b56f8d009ecdaa5
+        verdict: EQUIVALENT
+        reason: The formula preserves the universal scope over normal submitted requests within the 30-day horizon, the existential
+          logical-edit witness, representation of that edit, and binding of submitted document_id, client_change_id, raw_edit,
+          and base_revision=F to e and its canonical authoring state D@F; the tuple predicate only explicates that submitted-endpoint
+          binding without adding intermediate-lineage, dispatch, retry-progress, or exclusivity conditions beyond the source.
+        differences: []
+      strengthening:
+        subject_signature: 3cc6edf3edfbf4c241fabfd184f29ede3c882e8dd14256ba0b56f8d009ecdaa5
+        verdict: EQUIVALENT
+        reason: The formula preserves the universal scope over normal submitted requests within the 30-day horizon, the existential
+          witness, representation of the same logical edit, and binding of document_id, client_change_id, raw_edit, and base_revision=F
+          to that edit and its canonical authoring state D@F, without adding uniqueness, lineage, progress, or other-endpoint
+          requirements.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 3cc6edf3edfbf4c241fabfd184f29ede3c882e8dd14256ba0b56f8d009ecdaa5
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal antecedent for normal submitted requests within the 30-day horizon,
+          the existential witness e, and the binding of submitted document_id, client_change_id, raw_edit, and base_revision=F
+          to the same e and canonical authoring state D@F; its D/k/F and operation-identity elaboration, endpoint-only scope,
+          transient-substitution disclaimer, and absence of any uniqueness or downstream-progress requirement merely unpack
+          the submitted-tuple binding without adding or omitting a source requirement.
+        differences: []
+  claim:L235_normal_submitted_request_pipeline_history_compatibility:
+    kind: claim
+    subject_id: L235_normal_submitted_request_pipeline_history_compatibility
+    subject_signature: 270222cd2e488d209ea99098942d68adfbcdb3c248474902ff2b253c405c47ca
+    roundtrip:
+      subject_signature: 270222cd2e488d209ea99098942d68adfbcdb3c248474902ff2b253c405c47ca
+      status: TRANSLATED
+      natural_language: 'For every Request r, if r is a normal submitted request representing one logical edit within the
+        30-day normal retry eligibility horizon, then: if there exists a LogicalEdit e such that (1) r represents e, rather
+        than a different logical operation, and r''s submitted document_id, client_change_id, server-visible raw_edit, and
+        base_revision = F remain bound to that same logical operation and its canonical authoring state D@F, and (2) r''s
+        complete submitted tuple is bound to e at the submitted-request endpoint — namely, r''s document_id, client_change_id,
+        and base_revision are e''s identity (document_id = D, client_change_id = k) and authoring frontier F from e''s canonical
+        authoring state D@F, and the logical operation encoded by r''s submitted raw_edit is e''s own operation against that
+        same captured D@F authoring state, equivalently the request construction, serialization, dispatch, and normal retry
+        that produced the submitted request r did not preserve e''s (D, k, F) while substituting a semantically different
+        logical operation into r''s submitted raw_edit — then there exists a LogicalEdit e, independently quantified from
+        the LogicalEdit in the antecedent, such that (1) and (2) hold for that LogicalEdit, and additionally (3) the request
+        construction, serialization, dispatch, and normal retry processes that produced r, for submitted request r whose semantic
+        source is that LogicalEdit, did not substitute a semantically different logical operation for that LogicalEdit''s
+        own operation into the raw_edit being carried while preserving that LogicalEdit''s identity and authoring frontier
+        (document_id = D, client_change_id = k, base_revision = F, from its canonical authoring state D@F). Those processes
+        may change the request''s physical representation only in semantics-preserving ways, and a substitution of a different
+        logical operation under (D, k, F) falsifies (3) even if a later step of those processes restores the LogicalEdit''s
+        operation before submission. Condition (2) speaks only about the submitted request r itself, as submitted: it asserts
+        nothing about any intermediate request-lineage representation, imposes no condition on a stage that does not survive
+        into the submitted request, and is not falsified by a transient substitution that was undone before submission. Condition
+        (3) constrains the behavior of the four named processes themselves: it asserts nothing about any intermediate representation
+        as an object — in particular it does not assert that any intermediate representation is a submitted request, remains
+        bound to the LogicalEdit''s complete tuple, or carries (D, k, F) at all — and it requires no byte-identical serialization
+        and no dispatch, retry, OT invocation, acceptance, or terminal-decision progress beyond the processes that produced
+        r. Neither (2) nor (3) by itself asserts that r represents no other logical edit, and (2) requires no dispatch, retry,
+        OT invocation, acceptance, or terminal-decision progress beyond r being the submitted request.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 270222cd2e488d209ea99098942d68adfbcdb3c248474902ff2b253c405c47ca
+        verdict: EQUIVALENT
+        reason: The formula preserves the universal normal-request scope and 30-day horizon, the antecedent witness with representation
+          plus submitted-tuple binding to D@F, and the consequent witness with the same representation and binding plus the
+          process-level no-substitution condition, including falsification by a transient substitution even if later restored
+          before submission.
+        differences: []
+      strengthening:
+        subject_signature: 270222cd2e488d209ea99098942d68adfbcdb3c248474902ff2b253c405c47ca
+        verdict: EQUIVALENT
+        reason: The formula preserves the universal normal-request scope within the 30-day horizon, the antecedent representation
+          and submitted-tuple binding to e and D@F, and the consequent process-level prohibition on substituting another logical
+          operation while retaining (D, k, F), including transient substitutions even if later restored before submission,
+          with no added scope, equality, cardinality, or progress requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 270222cd2e488d209ea99098942d68adfbcdb3c248474902ff2b253c405c47ca
+        verdict: EQUIVALENT
+        reason: Both sides share the same universal-existential structure, 30-day normal-retry horizon, (D, k, F) identity
+          and authoring-frontier coordinates, submitted-endpoint binding as antecedent, and process-level no-substitution
+          as consequent, including transient substitution falsifying the consequent even if restored before submission; the
+          explicit endpoint-versus-process scope notes restate that distinction without adding or removing a requirement.
+        differences: []
+  claim:L236_normal_submitted_request_eligible_coherence_transfer:
+    kind: claim
+    subject_id: L236_normal_submitted_request_eligible_coherence_transfer
+    subject_signature: 28aaa2ebe0fe8515f18e59faeda52262e0ea3a444eebb42222da399a1650b59f
+    roundtrip:
+      subject_signature: 28aaa2ebe0fe8515f18e59faeda52262e0ea3a444eebb42222da399a1650b59f
+      status: TRANSLATED
+      natural_language: 'For every request r, if (i) r is a normal submitted request representing one logical edit within
+        the 30-day normal retry eligibility horizon, (ii) r is a submitted request eligible for server-side OT or an authoritative
+        terminal decision, including initial submissions and normal retries, where eligibility identifies the processing scope
+        independently of whether r actually preserves its logical-edit identity, payload, or authoring-frontier binding, and
+        without requiring actual OT invocation, successful acceptance, or completion of a terminal decision, and (iii) there
+        exists a logical edit e such that all of the following hold: r represents e rather than a different logical operation,
+        and r''s submitted document_id, client_change_id, server-visible raw_edit, and base_revision = F remain bound to that
+        same logical operation and its canonical authoring state D@F; r''s complete submitted tuple is bound to e at the submitted-request
+        endpoint, namely r''s document_id, client_change_id, and base_revision are e''s identity (document_id = D, client_change_id
+        = k) and authoring frontier F from e''s canonical authoring state D@F, and the logical operation encoded by r''s submitted
+        raw_edit is e''s own operation against that same captured D@F authoring state, where this tuple-binding condition
+        speaks only about the submitted request r itself as submitted, imposes no condition on a stage that does not survive
+        into the submitted request, is not falsified by a transient substitution that was undone before submission, and requires
+        no dispatch, retry, OT invocation, acceptance, or terminal-decision progress beyond r being the submitted request;
+        and no step of the request construction, serialization, dispatch, or normal retry that produced r preserved e''s identity
+        and authoring frontier (document_id = D, client_change_id = k, base_revision = F, from e''s canonical authoring state
+        D@F) while substituting a semantically different logical operation for e''s own operation into the raw_edit being
+        carried, where those processes may change the request''s physical representation only in semantics-preserving ways,
+        such a substitution falsifies this process condition even if a later step of those processes restored e''s operation
+        before submission, and this process condition constrains the behavior of the four named processes themselves, asserts
+        nothing about any intermediate representation as an object, in particular does not assert that any intermediate representation
+        is a submitted request, remains bound to e''s complete tuple, or carries (D, k, F) at all, and requires no byte-identical
+        serialization and no dispatch, retry, OT invocation, acceptance, or terminal-decision progress beyond the processes
+        that produced r; then r preserves the same full request identity, raw_edit semantics, and canonical authoring frontier
+        for its logical operation, and those coordinates are not cross-bound from another operation. Neither the tuple-binding
+        condition nor the process condition by itself asserts that r represents no other logical edit.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 28aaa2ebe0fe8515f18e59faeda52262e0ea3a444eebb42222da399a1650b59f
+        verdict: EQUIVALENT
+        reason: The formula preserves the full antecedent — normal submitted request within the 30-day horizon, OT/terminal-decision
+          eligibility, and a single existential witness e satisfying representation, submitted-tuple binding, and process
+          no-substitution — and its consequent covers the same four coordinates (document_id, client_change_id, raw_edit semantics,
+          base_revision) without cross-binding to another logical operation, with no added or omitted requirement.
+        differences: []
+      strengthening:
+        subject_signature: 28aaa2ebe0fe8515f18e59faeda52262e0ea3a444eebb42222da399a1650b59f
+        verdict: EQUIVALENT
+        reason: The formula preserves the universal scope, 30-day normal-retry and OT/terminal-eligibility guards, the single-edit
+          representation, tuple-binding, and process no-substitution antecedents, and its consequent preserves the same document_id,
+          client_change_id, raw_edit semantics, and base_revision without cross-binding to another operation.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 28aaa2ebe0fe8515f18e59faeda52262e0ea3a444eebb42222da399a1650b59f
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal quantification, 30-day normal retry horizon, OT/terminal-decision eligibility
+          scope, representation/tuple-binding/no-substitution antecedent, and the conclusion preserving document_id, client_change_id,
+          raw_edit semantics, and base_revision without cross-binding to another operation. Its eligibility-independence,
+          endpoint-only tuple-binding, process-only no-substitution, intermediate-representation, and per-condition non-uniqueness
+          clarifications are scope readings within the implication, not added or omitted requirements.
+        differences: []
