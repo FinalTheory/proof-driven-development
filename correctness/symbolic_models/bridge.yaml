@@ -1398,6 +1398,15 @@ functions:
     - contract:logical_state_equivalence_at_frontier
     - claim:L245_lifecycle_result_equivalence_bridge
     - claim:L246_completed_recovery_result_equivalence_bridge
+  acceptance_state_reconstructed_through_authoritative_recovery_before_acceptance_at_frontier:
+    args:
+    - AuthoritativeState
+    - Revision
+    returns: Bool
+    catalog_symbols: []
+    meaning: For owner service resumed using authoritative representation s at frontier h, the acceptance-relevant state required to continue from h without changing canonical semantics is reconstructed through authoritative recovery through h. That reconstruction is complete before acceptance is exposed; acceptance is not exposed while it is incomplete. This predicate asserts the reconstruction and its authoritative-recovery provenance, rather than only a gate conditional on recovery completion. It does not require acceptance eventually to be exposed and does not independently assert closure of transform entrypoints.
+    semantic_anchors:
+    - claim:L245_lifecycle_result_equivalence_bridge
   ot_engine_invocation:
     args:
     - OTInvocation
@@ -6066,7 +6075,6 @@ functions:
     meaning: 'All transform and acceptance entrypoints of the owner that authoritative representation s is used to initialize or resume remain closed until that owner completes authoritative recovery/reconstruction through frontier h and installs the recovered logical document state, the recovered head, and the recovered OT metadata through frontier h: no transform or acceptance entrypoint of that owner is open before recovery through h is complete and all three installations have occurred. This predicate asserts the closure gate only; it does not require that the recovery or any installation ever occurs.'
     semantic_anchors:
     - claim:L173_optimized_lifecycle_representation_resumes_only_through_recovery
-    - claim:L245_lifecycle_result_equivalence_bridge
   recovery_attempt_authoritative_recovery_head_is:
     args:
     - RecoveryAttempt
@@ -7736,7 +7744,7 @@ claims:
                     - var: s
                     - var: h
                 - call:
-                    fn: owner_transform_and_acceptance_entrypoints_closed_until_recovery_and_installation_complete
+                    fn: acceptance_state_reconstructed_through_authoritative_recovery_before_acceptance_at_frontier
                     args:
                     - var: s
                     - var: h
