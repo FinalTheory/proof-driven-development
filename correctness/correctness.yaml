@@ -6039,13 +6039,18 @@ claims:
       - owner_failover
       - final_architecture
     statement: For any recovery attempt targeting a document, preservation of that document's scope
-      across the full recovery lifecycle—including document_current_epoch,
-      document_owner_generation_id, recovery_head, snapshot_content_with_snapshot_revision,
-      accepted_change_log, and recovered_owner_runtime_state—entails that every logical or OT
-      runtime state actually constructed as the recovery reconstruction result, and every owner
-      context actually established upon service resumption, preserves the same document identity.
-      Extensionally equal state or context from another document cannot substitute. No construction,
-      installation, resumption, or completion is required to occur.
+      across the full recovery lifecycle means that every recovery input, context, and state that
+      actually exists remains bound to that same document throughout the attempt. This includes
+      document_current_epoch, document_owner_generation_id, recovery_head,
+      snapshot_content_with_snapshot_revision, accepted_change_log, and
+      recovered_owner_runtime_state; rebuilt logical or OT runtime states, including intermediate
+      derived reconstruction states from construction onward; and any resumed owner context whenever
+      service resumes under it. The scope-preservation condition applies also to stalled, crashed,
+      or aborted attempt prefixes. This full-lifecycle scope-preservation condition entails that
+      every logical or OT runtime state actually constructed as the recovery reconstruction result,
+      and every owner context actually established upon service resumption, preserves the same
+      document identity. Extensionally equal state or context from another document cannot
+      substitute. No construction, installation, resumption, or completion is required to occur.
     verification:
       verifiers:
         - intent: For each recovery attempt whose full recovery lifecycle preserves document scope,
