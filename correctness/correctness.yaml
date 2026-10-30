@@ -7388,7 +7388,17 @@ assurance:
         necessary to establish the target.
       signature: 5436d195b0ac21b84b16fe7e65436e2240dd56fe82d7a6fa9e0ae8f5b45f2c97
     C48_normal_retry_request_coherence_and_horizon_alignment:
-      status: unaudited
+      status: machine_checked
+      rationale: ">-\nThe three round-28 split children L234 (endpoint binding),\nL235 (pipeline history
+        compatibility), and L236 (eligible\ncoherence transfer) are TRUSTED (t52 four-review panels) and\n\
+        stable (wave36 GOOD_LEAF audits). The live composition check\nfinds the three premises together
+        with NOT(C48) UNSAT\n(ENTAILED, composition signature\n02593532724866b7e85ce67accfb0c4f4ce7ae272b6246732f31c982158dbee6).\n\
+        Premise-ablation checks show all three premises are\nindividually load-bearing (each ablation
+        becomes SAT with a\nconcrete counterexample). Note on the check mode: the probe\nran with require_trusted=False
+        because C48 is a derived\nclaim whose assurance is compositional by design and has no\ntranslation
+        record; the premises' TRUSTED status was verified\nseparately from the t52 registry records, not
+        bypassed."
+      signature: 02593532724866b7e85ce67accfb0c4f4ce7ae272b6246732f31c982158dbee6
   implementation_evidence:
     L19_client_applies_only_contiguous_revisions:
       status: planned
