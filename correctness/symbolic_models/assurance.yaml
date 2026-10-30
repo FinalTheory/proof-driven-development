@@ -13151,3 +13151,201 @@ records:
           publication with no intermediate prefix or restored removed state, and the non-regression rule for a head below
           the visible frontier, without adding or omitting a material requirement.
         differences: []
+  claim:L241_recovery_publication_installs_epoch_and_generation:
+    kind: claim
+    subject_id: L241_recovery_publication_installs_epoch_and_generation
+    subject_signature: be4e39bac5158733ada16e96c8bd3832bdecce6ff3efbe75a2fcce7fdee288d8
+    roundtrip:
+      subject_signature: be4e39bac5158733ada16e96c8bd3832bdecce6ff3efbe75a2fcce7fdee288d8
+      status: TRANSLATED
+      natural_language: 'For every recovery attempt r, if r is within the canonical new-owner recovery boundary for its target
+        document — a classification established by entering that boundary and not depending on successful progress, so that
+        r remains a new-owner recovery attempt even if it stalls, crashes, or aborts before owner-generation installation,
+        recovery-head capture, or completion, while recovery or reconstruction activity outside the canonical new-owner recovery
+        boundary is excluded — and r reaches authoritative or acceptance-eligible publication, that is, the point at which
+        the owner generation r establishes becomes authoritative or acceptance-eligible, then r installs, before or atomically
+        with r reaching that point, a strictly newer epoch and a fresh owner generation for its target document: the epoch
+        r installs is strictly greater than the superseded generation''s epoch, and the owner generation r installs is a fresh
+        generation identity distinct from the superseded generation''s.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: be4e39bac5158733ada16e96c8bd3832bdecce6ff3efbe75a2fcce7fdee288d8
+        verdict: EQUIVALENT
+        reason: The universal formula applies exactly to new-owner recovery attempts that reach authoritative or acceptance-eligible
+          publication, and its consequent predicate declares installation, before or atomically with that publication, of
+          an epoch strictly greater than the superseded generation's epoch and a fresh generation identity distinct from the
+          superseded generation's identity for the target document.
+        differences: []
+      strengthening:
+        subject_signature: be4e39bac5158733ada16e96c8bd3832bdecce6ff3efbe75a2fcce7fdee288d8
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over new-owner recovery attempts reaching authoritative or acceptance-eligible
+          publication and requires exactly the before-or-atomic installation, for the target document, of an epoch strictly
+          greater than the superseded generation's epoch and a fresh generation identity distinct from the superseded generation's
+          identity, with no added guard, equality, cardinality, or scope requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: be4e39bac5158733ada16e96c8bd3832bdecce6ff3efbe75a2fcce7fdee288d8
+        verdict: EQUIVALENT
+        reason: Both sides quantify over every new-owner recovery attempt for its target document reaching authoritative or
+          acceptance-eligible publication and require, before or atomically with that publication, an installed epoch strictly
+          greater than the superseded generation's epoch and a fresh owner generation identity distinct from the superseded
+          generation's identity; the rendering's boundary and independence wording clarifies attempt membership within the
+          implication without deleting the publication antecedent or adding a requirement.
+        differences: []
+  claim:L242_recovery_scope_preservation_for_new_owner_attempts:
+    kind: claim
+    subject_id: L242_recovery_scope_preservation_for_new_owner_attempts
+    subject_signature: cdb0c550040ae2bdb017a7d2918e136ddfe3112eef0034ca64d5533cfe2c35d3
+    roundtrip:
+      subject_signature: cdb0c550040ae2bdb017a7d2918e136ddfe3112eef0034ca64d5533cfe2c35d3
+      status: TRANSLATED
+      natural_language: 'For every recovery attempt r, if r is a new-owner recovery attempt — that is, r is within the canonical
+        new-owner recovery boundary for its target document, a classification established by entering that recovery boundary
+        and not dependent on successful progress, so that r remains a new-owner recovery attempt if it stalls, crashes, or
+        aborts before owner-generation installation, recovery-head capture, or completion, while recovery or reconstruction
+        activity outside the canonical new-owner recovery boundary is excluded — then, letting d be the target document identity
+        bound to r, the document-scope binding holds across the full scope of r''s recovery lifecycle: every authoritative
+        owner/epoch context of r, and — whenever selected, captured, consumed, constructed, installed, or used — the recovery_head,
+        the checkpoint, the canonical accepted_change_log tail entries (bound under each of those modes, not only when replayed),
+        the rebuilt logical/OT runtime state (including intermediate derived reconstruction states, bound from construction
+        onward and not only once installed), the installed recovered_owner_runtime_state, and the resumed owner context (bound
+        as itself a document-scoped entity whenever service resumes under it) remain document-scoped to that same d. This
+        obligation applies to every recovery input, context, or state of r that actually exists at any stage of the attempt,
+        even if the attempt later stalls, crashes, or aborts before or after recovery-head capture; an authoritative object
+        or owner context from another document cannot satisfy the recovery merely because its frontier, payload, logical state,
+        or reconstructed metadata is extensionally equal to d''s. It imposes no requirement that any later recovery stage
+        occur or that recovery complete.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: cdb0c550040ae2bdb017a7d2918e136ddfe3112eef0034ca64d5533cfe2c35d3
+        verdict: EQUIVALENT
+        reason: 'The universally quantified implication over classified new-owner attempts, bound to recovery_target_document(r),
+          reproduces the source scope: the predicate meaning covers authoritative ownership/epoch context, captured head,
+          selected checkpoint, canonical tail entries in all modes, intermediate and installed logical/OT runtime state, installed
+          recovered state, and resumed owner context for every actually existing input/state, applies to stalled, crashed,
+          and aborted prefixes, requires no later stage or completion, and bars cross-document substitution on mere extensional
+          equality, with no added requirement or omitted guard.'
+        differences: []
+      strengthening:
+        subject_signature: cdb0c550040ae2bdb017a7d2918e136ddfe3112eef0034ca64d5533cfe2c35d3
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies exactly the in-boundary new-owner attempts, including stalled, crashed,
+          or aborted prefixes, binds the obligation to each attempt's own target document, and its predicate covers the enumerated
+          ownership context, head, checkpoint, tail entries, intermediate and installed runtime state, and resumed context
+          for every item that actually exists, without requiring later stages or permitting cross-document substitution on
+          extensional equality.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: cdb0c550040ae2bdb017a7d2918e136ddfe3112eef0034ca64d5533cfe2c35d3
+        verdict: EQUIVALENT
+        reason: The rendering preserves the original's universal scope over new-owner recovery attempts, the same target-document
+          binding for authoritative owner/epoch context, recovery head, checkpoint, canonical tail entries, intermediate and
+          installed logical/OT state, recovered runtime state, and resumed owner context, the application to actually existing
+          inputs/states in stalled, crashed, or aborted attempts with no later stage or completion required, and the bar on
+          substitution by extensionally equal objects from another document; its boundary and mode wording explicates rather
+          than narrows or strengthens that guarantee.
+        differences: []
+  claim:L243_recovery_completion_replay_state_and_frontier:
+    kind: claim
+    subject_id: L243_recovery_completion_replay_state_and_frontier
+    subject_signature: b5f7b38fe14312dd5547a0c2a5f9d6ab9c2961d675b93c2bb6fe462a30684bf3
+    roundtrip:
+      subject_signature: b5f7b38fe14312dd5547a0c2a5f9d6ab9c2961d675b93c2bb6fe462a30684bf3
+      status: TRANSLATED
+      natural_language: 'For every recovery attempt r and every revision h, if (a) r is within the canonical new-owner recovery
+        boundary for its target document — this classification being established by entering that recovery boundary, and not
+        depending on successful progress, so that r remains a new-owner recovery attempt even if it stalls, crashes, or aborts
+        before owner-generation installation, recovery-head capture, or completion, while recovery or reconstruction activity
+        outside that canonical boundary is excluded — and (b) r completed at authoritative head h, meaning h is the recovery
+        head captured by r and h is the authoritative frontier H, namely the document_latest_revision of r''s target document,
+        at which r''s completed recovery stands, then both of the following hold: (1) the recovered logical document state
+        installed by recovery attempt r equals the deterministic canonical replay of the accepted revisions of r''s target
+        document through revision h; and (2) the recovered service frontier of the owner established by recovery attempt r
+        is exactly revision h, namely the frontier at which that recovered owner stands to serve r''s target document after
+        r''s completion is h, neither behind nor ahead of h.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: b5f7b38fe14312dd5547a0c2a5f9d6ab9c2961d675b93c2bb6fe462a30684bf3
+        verdict: EQUIVALENT
+        reason: 'The universally quantified implication preserves the source scope and both conjuncts: antecedent ties a new-owner
+          attempt to completion at the authoritative head H, and the consequent requires both installed state equal to deterministic
+          canonical replay through that same H and the recovered owner''s service frontier exactly H, with no added or omitted
+          requirement.'
+        differences: []
+      strengthening:
+        subject_signature: b5f7b38fe14312dd5547a0c2a5f9d6ab9c2961d675b93c2bb6fe462a30684bf3
+        verdict: EQUIVALENT
+        reason: 'The formula universally quantifies recovery attempts and heads, requires new-owner recovery classification
+          and completion at the authoritative head as antecedents, and concludes exactly the two source guarantees: installed
+          recovered state equal to canonical replay of the target document''s accepted revisions through that head, and recovered
+          owner''s service frontier exactly that head, with no added or omitted requirement.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: b5f7b38fe14312dd5547a0c2a5f9d6ab9c2961d675b93c2bb6fe462a30684bf3
+        verdict: EQUIVALENT
+        reason: 'Both sides quantify over new-owner recovery attempts that complete, require the captured head to be the authoritative
+          frontier, and impose the same two equalities: installed state equals deterministic canonical replay through that
+          head, and the recovered owner''s service frontier is exactly that head. The boundary-entry clarification is scoped
+          inside the implication and does not extend the conclusion to non-completing attempts, and the definitional appositives
+          restate rather than add identity, temporal, or provenance coordinates.'
+        differences: []
+  claim:L244_post_recovery_acceptance_clean_reconstruction_equivalence:
+    kind: claim
+    subject_id: L244_post_recovery_acceptance_clean_reconstruction_equivalence
+    subject_signature: ac4c35c1668a3659f49b91e220a19096cba09f9dd2a9a3f83d24d18b20c7db87
+    roundtrip:
+      subject_signature: ac4c35c1668a3659f49b91e220a19096cba09f9dd2a9a3f83d24d18b20c7db87
+      status: TRANSLATED
+      natural_language: For every recovery attempt r and every revision h, if (1) r is within the canonical new-owner recovery
+        boundary for its target document — a classification established by entering that recovery boundary and not depending
+        on successful progress, so that r remains a new-owner recovery attempt if it stalls, crashes, or aborts before owner-generation
+        installation, recovery-head capture, or completion, while recovery or reconstruction activity outside the canonical
+        new-owner recovery boundary is excluded — and (2) the recovered owner established by r resumes canonical acceptance
+        service after r's reconstruction, that is, that owner performs or is enabled to perform canonical acceptance on the
+        basis of r's recovered state — and (3) r completed at authoritative head h, that is, h is the recovery head captured
+        by r and h is the authoritative frontier, the document_latest_revision of r's target document, at which r's completed
+        recovery stands, where this states only the authoritative-head scope coordinate of the completed recovery and does
+        not assert the contents of the recovered state and does not itself assert how the captured value was bound at capture
+        time — then every document-history-dependent runtime state value on the recovered owner established by r that can
+        influence server-side OT transformation or canonical acceptance is equivalent to a clean reconstruction from the authoritative
+        canonical history of r's target document through revision h, so that the canonical semantics resumed under r's recovered
+        owner are unchanged; this asserts the equivalence of those values to the clean reconstruction, is not confined to
+        any particular component, container, or representation, and containment of a value in some component without that
+        equivalence does not satisfy it.
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: ac4c35c1668a3659f49b91e220a19096cba09f9dd2a9a3f83d24d18b20c7db87
+        verdict: EQUIVALENT
+        reason: The universal implication preserves the antecedent (new-owner attempt, completion at the authoritative head,
+          resumed acceptance) and the consequent (every history-dependent value influencing OT transformation or canonical
+          acceptance is equivalent to a clean reconstruction through the same head, without requiring identical representation
+          or mere containment), with no guard dropped or added.
+        differences: []
+      strengthening:
+        subject_signature: ac4c35c1668a3659f49b91e220a19096cba09f9dd2a9a3f83d24d18b20c7db87
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over recovery attempts and heads, requires new-owner recovery, completion
+          at the authoritative head, and resumed acceptance as antecedents, and concludes exactly the declared equivalence
+          of every history-dependent runtime value capable of influencing server-side OT transformation or canonical acceptance
+          to a clean reconstruction from the target document's authoritative canonical history through that head, without
+          requiring containment alone or identical physical representation.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: ac4c35c1668a3659f49b91e220a19096cba09f9dd2a9a3f83d24d18b20c7db87
+        verdict: EQUIVALENT
+        reason: The rendering preserves the original quantifiers, completion-at-authoritative-head scope, resumed-acceptance
+          precondition, and universal equivalence of all document-history-dependent runtime values influencing OT transformation
+          or canonical acceptance to a clean reconstruction from the authoritative canonical history through that head, without
+          confining the guarantee to component containment or identical physical representation. Its definitional appositives
+          clarify the recovery-boundary classification, resumed acceptance, and head coordinate within the implication's scope
+          without adding or removing a source requirement.
+        differences: []
