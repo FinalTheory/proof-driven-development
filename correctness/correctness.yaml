@@ -908,17 +908,21 @@ refinement:
       blocked_by: []
       signature: c865a384fc33299cf285b262f3cd20c2b3f28e98f64833b922c2144eea86bc22
     L241_recovery_publication_installs_epoch_and_generation:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 62882c60ef6e49ac242431c3a050a2210ad568f5b9e3f3570f757915a635fbe8
     L242_recovery_scope_preservation_for_new_owner_attempts:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 9ffc28dd893fcef40ebfe8a23a941389c547f90c20c1c32a8866bf9f9204a115
     L243_recovery_completion_replay_state_and_frontier:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 39b6f67d7e0a2bf88ca94a8555d3da30f8f9ea74339d62da0e45ddb74ae248bf
     L244_post_recovery_acceptance_clean_reconstruction_equivalence:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 5297596e7a8db78000113daca98f5828664492d72656e4ea57cbd4f45b3fdd28
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
