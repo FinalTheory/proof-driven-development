@@ -7785,7 +7785,14 @@ assurance:
         is necessary to establish the target.
       signature: 83bd279ba07c71d027abb1348776da837aa995a59d6aea7862ab7eb1f8941697
     C45_terminal_outcome_publication_matches_canonical_acceptance:
-      status: unaudited
+      status: machine_checked
+      rationale: 'Composition probe ENTAILED (signature efc2598764ed7c7c0f4876e77cead6aaa7fda9cf7bdebf5271ccac385c7cce54).
+        Premise ablation: removing L190, L195, or L250 individually breaks entailment (COUNTEREXAMPLE),
+        so each of those three is individually load-bearing; removing L192, L163, or L213 individually
+        still leaves ENTAILED, so those three are not individually load-bearing in the symbolic encoding.
+        Note the proof_audit judged L250 redundant in its prose derivation while the machine ablation
+        shows it load-bearing; the registration reports the machine result.'
+      signature: efc2598764ed7c7c0f4876e77cead6aaa7fda9cf7bdebf5271ccac385c7cce54
     C46_accepted_terminal_result_preserves_acceptance_provenance:
       status: machine_checked
       rationale: Trusted symbolic translations exist for C46 and all five direct premises L197, C47,
