@@ -6052,9 +6052,7 @@ claims:
       frontier H, including snapshotting, checkpoint replacement, cleanup, and compaction results,
       stands in the specified logical-state equivalence relation to deterministic canonical replay
       through H, denotes exactly the logical document state obtained by that replay, and preserves
-      the authoritative latest revision H. The specified relation includes preservation of canonical
-      continuation semantics whenever the representation is used to resume owner service. Physical
-      representation equality is not required.
+      the authoritative latest revision H. Physical representation equality is not required.
     verification:
       verifiers:
         - intent: For every optimized authoritative lifecycle representation at a common frontier H,
