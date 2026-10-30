@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import Any
 
@@ -94,6 +95,37 @@ class _Compiler:
         raise TypeError(f"unsupported expression type {type(expr).__name__}")
 
 
+# Per-check solver timeout (milliseconds). Configurable through the
+# PDD_Z3_TIMEOUT_MS environment variable; the finite default bounds every
+# check so a hard query returns "unknown" instead of running forever.
+# A timeout never changes sat/unsat semantics: z3 reports unknown, which
+# callers treat as inconclusive. Invalid, non-positive, or out-of-range
+# values are rejected loudly rather than silently disabling or altering
+# the limit. The upper bound is z3's uint32 parameter range: z3 sets this
+# parameter via Z3_params_set_uint, so a value >= 2**32 would wrap around
+# (2**32 becomes timeout 0, i.e. unlimited) instead of erroring.
+_DEFAULT_TIMEOUT_MS = 120000
+_MAX_TIMEOUT_MS = 4294967295
+
+
+def _solver_timeout_ms() -> int:
+    raw = os.environ.get("PDD_Z3_TIMEOUT_MS")
+    if raw is None:
+        return _DEFAULT_TIMEOUT_MS
+    try:
+        value = int(raw)
+    except ValueError:
+        raise ValueError(
+            f"PDD_Z3_TIMEOUT_MS must be a positive integer, got {raw!r}"
+        ) from None
+    if value <= 0 or value > _MAX_TIMEOUT_MS:
+        raise ValueError(
+            f"PDD_Z3_TIMEOUT_MS must be between 1 and {_MAX_TIMEOUT_MS}, "
+            f"got {raw!r}"
+        )
+    return value
+
+
 def check_program(program: ParsedProgram) -> CheckResult:
     """Check whether constraints AND query are satisfiable.
 
@@ -115,6 +147,7 @@ def check_program(program: ParsedProgram) -> CheckResult:
     ctx = z3.Context()
     compiler = _Compiler(program, ctx)
     solver = z3.Solver(ctx=ctx)
+    solver.set(timeout=_solver_timeout_ms())
     for constraint in program.constraints:
         solver.add(compiler.expr(constraint))
     solver.add(compiler.expr(program.query))
