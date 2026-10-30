@@ -936,6 +936,12 @@ refinement:
       status: stable
       blocked_by: []
       signature: 8bdea053f90aa61ed8a66998fef94dbd11811c5f46ef8cb0fa3db10d2e65c782
+    L248_lifecycle_representation_replay_equivalence:
+      status: pending
+      blocked_by: []
+    L249_lifecycle_resume_authoritative_reconstruction:
+      status: pending
+      blocked_by: []
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -1080,6 +1086,8 @@ claims:
       - L245_lifecycle_result_equivalence_bridge
       - L246_completed_recovery_result_equivalence_bridge
       - L247_full_scope_to_runtime_projection_bridge
+      - L248_lifecycle_representation_replay_equivalence
+      - L249_lifecycle_resume_authoritative_reconstruction
     source_refs:
       - authoritative_truth
       - snapshot_frontier
@@ -6060,6 +6068,58 @@ claims:
             established resumed owner context preserves the same document identity.
           kind: state_machine
     kind: leaf
+  L248_lifecycle_representation_replay_equivalence:
+    mechanisms:
+      - snapshot_checkpoint
+      - accepted_history_log
+      - recovery_replay
+    source_refs:
+      - snapshot_frontier
+      - owner_failover
+      - final_architecture
+    statement: Every optimized authoritative lifecycle representation at a common authoritative
+      frontier H, including snapshotting, checkpoint replacement, cleanup, and compaction results,
+      stands in the specified logical-state equivalence relation to deterministic canonical replay
+      through H, denotes exactly the logical document state obtained by that replay, and preserves
+      the authoritative latest revision H. The specified relation includes preservation of canonical
+      continuation semantics whenever the representation is used to resume owner service. Physical
+      representation equality is not required.
+    verification:
+      verifiers:
+        - intent: For every optimized authoritative lifecycle representation at a common frontier H,
+            compare its denoted logical state and authoritative latest revision with deterministic
+            canonical replay through H. Establish the specified logical-state equivalence relation,
+            including canonical continuation semantics whenever the representation resumes owner
+            service. Physical representation equality is not required.
+          kind: state_machine
+    kind: leaf
+  L249_lifecycle_resume_authoritative_reconstruction:
+    mechanisms:
+      - snapshot_checkpoint
+      - accepted_history_log
+      - recovery_replay
+    source_refs:
+      - snapshot_frontier
+      - owner_failover
+      - final_architecture
+    statement: For every optimized authoritative lifecycle representation at a common authoritative
+      frontier H, including snapshotting, checkpoint replacement, cleanup, and compaction results,
+      if that representation is used to resume owner service, the acceptance-relevant state required
+      to continue from H without changing canonical semantics is reconstructed through authoritative
+      recovery through H. That reconstruction is complete before acceptance is exposed, and
+      acceptance is not exposed while reconstruction is incomplete. No eventual exposure of
+      acceptance or independent closure of transform entrypoints is required.
+    verification:
+      verifiers:
+        - intent: For every optimized authoritative lifecycle representation at frontier H used to
+            resume owner service, establish reconstruction of the acceptance-relevant state required
+            for canonical continuation from H, its authoritative-recovery provenance through H, and
+            completion before acceptance is exposed. Check that acceptance cannot be exposed while
+            reconstruction is incomplete. A conditional gate alone does not establish
+            reconstruction. Do not require eventual acceptance exposure or independent closure of
+            transform entrypoints.
+          kind: state_machine
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -7406,7 +7466,7 @@ id_allocator:
     A: 7
     G: 13
     C: 49
-    L: 248
+    L: 250
     D: 15
     T: 3
 assurance:
@@ -8048,6 +8108,10 @@ assurance:
       status: planned
     L247_full_scope_to_runtime_projection_bridge:
       status: planned
+    L248_lifecycle_representation_replay_equivalence:
+      status: planned
+    L249_lifecycle_resume_authoritative_reconstruction:
+      status: planned
 formalization:
   claims:
     G0_acked_edit_survives_failover:
@@ -8431,6 +8495,10 @@ formalization:
     L246_completed_recovery_result_equivalence_bridge:
       mode: symbolic
     L247_full_scope_to_runtime_projection_bridge:
+      mode: symbolic
+    L248_lifecycle_representation_replay_equivalence:
+      mode: symbolic
+    L249_lifecycle_resume_authoritative_reconstruction:
       mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:

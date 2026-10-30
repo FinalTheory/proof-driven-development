@@ -1360,6 +1360,7 @@ functions:
     - claim:L172_snapshot_compaction_preserves_concurrent_append_suffix
     - claim:L245_lifecycle_result_equivalence_bridge
     - claim:L246_completed_recovery_result_equivalence_bridge
+    - claim:L248_lifecycle_representation_replay_equivalence
   authoritative_latest_revision_equals_frontier:
     args:
     - AuthoritativeState
@@ -1376,6 +1377,7 @@ functions:
     - claim:L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier
     - claim:L245_lifecycle_result_equivalence_bridge
     - claim:L246_completed_recovery_result_equivalence_bridge
+    - claim:L248_lifecycle_representation_replay_equivalence
   representation_resumes_owner_service:
     args:
     - AuthoritativeState
@@ -1387,6 +1389,7 @@ functions:
     - claim:L173_optimized_lifecycle_representation_resumes_only_through_recovery
     - claim:L245_lifecycle_result_equivalence_bridge
     - claim:L246_completed_recovery_result_equivalence_bridge
+    - claim:L249_lifecycle_resume_authoritative_reconstruction
   acceptance_state_reconstructed_at_frontier:
     args:
     - AuthoritativeState
@@ -1398,6 +1401,7 @@ functions:
     - contract:logical_state_equivalence_at_frontier
     - claim:L245_lifecycle_result_equivalence_bridge
     - claim:L246_completed_recovery_result_equivalence_bridge
+    - claim:L249_lifecycle_resume_authoritative_reconstruction
   acceptance_state_reconstructed_through_authoritative_recovery_before_acceptance_at_frontier:
     args:
     - AuthoritativeState
@@ -1407,6 +1411,7 @@ functions:
     meaning: For owner service resumed using authoritative representation s at frontier h, the acceptance-relevant state required to continue from h without changing canonical semantics is reconstructed through authoritative recovery through h. That reconstruction is complete before acceptance is exposed; acceptance is not exposed while it is incomplete. This predicate asserts the reconstruction and its authoritative-recovery provenance, rather than only a gate conditional on recovery completion. It does not require acceptance eventually to be exposed and does not independently assert closure of transform entrypoints.
     semantic_anchors:
     - claim:L245_lifecycle_result_equivalence_bridge
+    - claim:L249_lifecycle_resume_authoritative_reconstruction
   ot_engine_invocation:
     args:
     - OTInvocation
@@ -2709,6 +2714,7 @@ functions:
     - claim:G3_snapshot_and_recovery_preserve_state
     - claim:L245_lifecycle_result_equivalence_bridge
     - claim:L246_completed_recovery_result_equivalence_bridge
+    - claim:L248_lifecycle_representation_replay_equivalence
   completed_recovery_at_frontier:
     args:
     - AuthoritativeState
@@ -2728,6 +2734,8 @@ functions:
     semantic_anchors:
     - claim:G3_snapshot_and_recovery_preserve_state
     - claim:L245_lifecycle_result_equivalence_bridge
+    - claim:L248_lifecycle_representation_replay_equivalence
+    - claim:L249_lifecycle_resume_authoritative_reconstruction
   accepted_evidence_origin_valid:
     args:
     - AcceptedEvidence
@@ -7748,6 +7756,68 @@ claims:
                     args:
                     - var: s
                     - var: h
+  L248_lifecycle_representation_replay_equivalence:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          s: AuthoritativeState
+          h: Revision
+        body:
+          implies:
+          - call:
+              fn: optimized_authoritative_lifecycle_representation_at_frontier
+              args:
+              - var: s
+              - var: h
+          - and:
+            - call:
+                fn: logical_state_equivalent_to_canonical_replay_at_frontier
+                args:
+                - var: s
+                - var: h
+            - call:
+                fn: logical_state_matches_canonical_replay
+                args:
+                - var: s
+                - var: h
+            - call:
+                fn: authoritative_latest_revision_equals_frontier
+                args:
+                - var: s
+                - var: h
+  L249_lifecycle_resume_authoritative_reconstruction:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          s: AuthoritativeState
+          h: Revision
+        body:
+          implies:
+          - call:
+              fn: optimized_authoritative_lifecycle_representation_at_frontier
+              args:
+              - var: s
+              - var: h
+          - implies:
+            - call:
+                fn: representation_resumes_owner_service
+                args:
+                - var: s
+            - and:
+              - call:
+                  fn: acceptance_state_reconstructed_at_frontier
+                  args:
+                  - var: s
+                  - var: h
+              - call:
+                  fn: acceptance_state_reconstructed_through_authoritative_recovery_before_acceptance_at_frontier
+                  args:
+                  - var: s
+                  - var: h
   L246_completed_recovery_result_equivalence_bridge:
     capability: relational
     contracts: []
