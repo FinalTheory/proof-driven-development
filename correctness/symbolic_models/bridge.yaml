@@ -654,6 +654,10 @@ functions:
     - claim:L131_post_recovery_acceptance_state_is_exhaustive
     - claim:L210_new_owner_recovery_boundary_is_attempt_scoped
     - claim:C9_recovery_reconstructs_committed_state
+    - claim:L241_recovery_publication_installs_epoch_and_generation
+    - claim:L242_recovery_scope_preservation_for_new_owner_attempts
+    - claim:L243_recovery_completion_replay_state_and_frontier
+    - claim:L244_post_recovery_acceptance_clean_reconstruction_equivalence
   recovery_head_capture_event:
     args:
     - RecoveryAttempt
@@ -701,6 +705,7 @@ functions:
     - contract:recovered_ot_state_provenance
     - claim:L174_recovery_inputs_and_state_are_document_bound
     - claim:L94_recovery_starts_after_epoch_handoff
+    - claim:L242_recovery_scope_preservation_for_new_owner_attempts
   recovery_sources_preserve_document_scope:
     args:
     - Document
@@ -5152,6 +5157,7 @@ functions:
     semantic_anchors:
     - claim:L39_recovered_owner_resumes_at_head_plus_one
     - claim:C9_recovery_reconstructs_committed_state
+    - claim:L244_post_recovery_acceptance_clean_reconstruction_equivalence
   recovery_owner_performs_canonical_acceptance:
     args:
     - RecoveryAttempt
@@ -5252,6 +5258,7 @@ functions:
     semantic_anchors:
     - claim:L210_new_owner_recovery_boundary_is_attempt_scoped
     - claim:C9_recovery_reconstructs_committed_state
+    - claim:L241_recovery_publication_installs_epoch_and_generation
   recovery_attempt_publication_is_fresh_generation:
     args:
     - RecoveryAttempt
@@ -5462,6 +5469,7 @@ functions:
     semantic_anchors:
     - claim:L174_recovery_inputs_and_state_are_document_bound
     - claim:C9_recovery_reconstructs_committed_state
+    - claim:L242_recovery_scope_preservation_for_new_owner_attempts
   client_state_established_by_initialization_or_canonical_publication:
     args:
     - ClientState
@@ -5810,6 +5818,8 @@ functions:
     semantic_anchors:
     - claim:L131_post_recovery_acceptance_state_is_exhaustive
     - claim:C9_recovery_reconstructs_committed_state
+    - claim:L243_recovery_completion_replay_state_and_frontier
+    - claim:L244_post_recovery_acceptance_clean_reconstruction_equivalence
   recovered_ot_metadata_carried_within_recovered_components:
     args:
     - RecoveryAttempt
@@ -6176,6 +6186,7 @@ functions:
     meaning: 'Recovery attempt r installs a strictly newer epoch and a fresh owner generation for its target document before or atomically with r reaching the point of becoming authoritative or acceptance-eligible: the epoch r installs is strictly greater than the superseded generation''s epoch, and the owner generation r installs is a fresh generation identity distinct from the superseded generation''s. This predicate asserts that installation outcome relative to that point; it does not assert that r reaches the point, and it imposes no requirement on an attempt that stalls, crashes, or aborts before reaching it.'
     semantic_anchors:
     - claim:C9_recovery_reconstructs_committed_state
+    - claim:L241_recovery_publication_installs_epoch_and_generation
   recovered_logical_state_equals_canonical_replay_through_head:
     args:
     - RecoveryAttempt
@@ -6185,6 +6196,7 @@ functions:
     meaning: The recovered logical document state installed by recovery attempt r equals deterministic canonical replay of the accepted revisions of r's target document through revision h. This predicate states that value equality of the installed recovered logical state; it does not assert how the state was produced, that any checkpoint selection or tail replay step occurred, that r completed, or which frontier the recovered owner serves at.
     semantic_anchors:
     - claim:C9_recovery_reconstructs_committed_state
+    - claim:L243_recovery_completion_replay_state_and_frontier
   recovered_owner_service_frontier_is:
     args:
     - RecoveryAttempt
@@ -6194,6 +6206,7 @@ functions:
     meaning: 'The recovered service frontier of the owner established by recovery attempt r is exactly revision h: the frontier at which that recovered owner stands to serve r''s target document after r''s completion is h, neither behind nor ahead of h. This predicate states the recovered owner''s frontier coordinate only; it does not assert the contents of the recovered state or any local-head or next-candidate representation of that frontier.'
     semantic_anchors:
     - claim:C9_recovery_reconstructs_committed_state
+    - claim:L243_recovery_completion_replay_state_and_frontier
   post_recovery_history_dependent_state_equivalent_to_clean_reconstruction:
     args:
     - RecoveryAttempt
@@ -6203,6 +6216,7 @@ functions:
     meaning: Every document-history-dependent runtime state value on the recovered owner established by recovery attempt r that can influence server-side OT transformation or canonical acceptance is equivalent to a clean reconstruction from the authoritative canonical history of r's target document through revision h, so the canonical semantics resumed under r's recovered owner are unchanged. This predicate asserts the equivalence of those values to the clean reconstruction; it does not confine them to any particular component, container, or representation, and containment of a value in some component without that equivalence does not satisfy it.
     semantic_anchors:
     - claim:C9_recovery_reconstructs_committed_state
+    - claim:L244_post_recovery_acceptance_clean_reconstruction_equivalence
   request_submits_logical_edit:
     args:
     - Request
@@ -17673,6 +17687,109 @@ claims:
                 args:
                 - var: r
                 - var: h
+  L241_recovery_publication_installs_epoch_and_generation:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          r: RecoveryAttempt
+        body:
+          implies:
+          - and:
+            - call:
+                fn: new_owner_recovery_attempt
+                args:
+                - var: r
+            - call:
+                fn: recovery_attempt_reaches_authoritative_publication
+                args:
+                - var: r
+          - call:
+              fn: recovery_attempt_installs_strictly_newer_epoch_and_fresh_generation
+              args:
+              - var: r
+  L242_recovery_scope_preservation_for_new_owner_attempts:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          r: RecoveryAttempt
+        body:
+          implies:
+          - call:
+              fn: new_owner_recovery_attempt
+              args:
+              - var: r
+          - call:
+              fn: recovery_inputs_states_and_resumed_context_preserve_document_scope
+              args:
+              - call:
+                  fn: recovery_target_document
+                  args:
+                  - var: r
+              - var: r
+  L243_recovery_completion_replay_state_and_frontier:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          r: RecoveryAttempt
+          h: Revision
+        body:
+          implies:
+          - and:
+            - call:
+                fn: new_owner_recovery_attempt
+                args:
+                - var: r
+            - call:
+                fn: recovery_completed_at_authoritative_head
+                args:
+                - var: r
+                - var: h
+          - and:
+            - call:
+                fn: recovered_logical_state_equals_canonical_replay_through_head
+                args:
+                - var: r
+                - var: h
+            - call:
+                fn: recovered_owner_service_frontier_is
+                args:
+                - var: r
+                - var: h
+  L244_post_recovery_acceptance_clean_reconstruction_equivalence:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          r: RecoveryAttempt
+          h: Revision
+        body:
+          implies:
+          - and:
+            - call:
+                fn: new_owner_recovery_attempt
+                args:
+                - var: r
+            - call:
+                fn: recovery_owner_resumes_acceptance
+                args:
+                - var: r
+            - call:
+                fn: recovery_completed_at_authoritative_head
+                args:
+                - var: r
+                - var: h
+          - call:
+              fn: post_recovery_history_dependent_state_equivalent_to_clean_reconstruction
+              args:
+              - var: r
+              - var: h
   L10_replay_covers_exact_tail_in_order_once:
     capability: relational
     contracts: []

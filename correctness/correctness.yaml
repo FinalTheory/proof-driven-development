@@ -208,9 +208,8 @@ refinement:
       blocked_by: []
       signature: 6edcced758a207c60fd90a7261d94f9e86b5c29373b27e31887334c4089ad991
     C9_recovery_reconstructs_committed_state:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 0ae7dda3b49e15dc527ccd9c17763e691bbaef7eaf41b6c7cd383d36247d784a
     C10_catchup_represents_exact_missing_suffix:
       status: stable
       blocked_by: []
@@ -908,6 +907,18 @@ refinement:
       status: stable
       blocked_by: []
       signature: c865a384fc33299cf285b262f3cd20c2b3f28e98f64833b922c2144eea86bc22
+    L241_recovery_publication_installs_epoch_and_generation:
+      status: pending
+      blocked_by: []
+    L242_recovery_scope_preservation_for_new_owner_attempts:
+      status: pending
+      blocked_by: []
+    L243_recovery_completion_replay_state_and_frontier:
+      status: pending
+      blocked_by: []
+    L244_post_recovery_acceptance_clean_reconstruction_equivalence:
+      status: pending
+      blocked_by: []
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -1266,6 +1277,10 @@ claims:
       - L156_owner_handoff_installs_fresh_epoch
       - L168_owner_handoff_installs_fresh_generation
       - L210_new_owner_recovery_boundary_is_attempt_scoped
+      - L241_recovery_publication_installs_epoch_and_generation
+      - L242_recovery_scope_preservation_for_new_owner_attempts
+      - L243_recovery_completion_replay_state_and_frontier
+      - L244_post_recovery_acceptance_clean_reconstruction_equivalence
     source_refs:
       - authoritative_truth
       - snapshot_frontier
@@ -5864,6 +5879,93 @@ claims:
             hence that publishing attempts have one.
           kind: state_machine
     kind: leaf
+  L241_recovery_publication_installs_epoch_and_generation:
+    mechanisms:
+      - owner_epoch_fencing
+      - recovery_replay
+    source_refs:
+      - owner_failover
+      - final_architecture
+    statement: Every new-owner recovery attempt that reaches authoritative or acceptance-eligible
+      publication installs, for its target document, an epoch strictly greater than the superseded
+      generation's epoch and a fresh owner generation identity distinct from the superseded
+      generation's identity, before or atomically with that publication.
+    verification:
+      verifiers:
+        - intent: For each new-owner recovery attempt reaching authoritative or acceptance-eligible
+            publication, exhibit the installed epoch strictly greater than the superseded
+            generation's epoch and the fresh owner generation identity distinct from the superseded
+            generation's identity, installed before or atomically with that publication.
+          kind: state_machine
+    kind: leaf
+  L242_recovery_scope_preservation_for_new_owner_attempts:
+    mechanisms:
+      - document_lifecycle_lock
+      - recovery_replay
+      - snapshot_checkpoint
+      - accepted_history_log
+    source_refs:
+      - snapshot_frontier
+      - owner_failover
+      - final_architecture
+    statement: 'For every new-owner recovery attempt targeting document D, every recovery input, context,
+      and state that actually exists remains bound to D throughout the attempt: authoritative ownership
+      context, captured head, selected checkpoint, canonical tail entries, intermediate and installed
+      logical/OT runtime state, and any resumed owner context. This covers document_current_epoch, document_owner_generation_id,
+      recovery_head, snapshot_content_with_snapshot_revision, accepted_change_log, and recovered_owner_runtime_state.
+      An authoritative object or owner context from another document cannot substitute merely because
+      its values are extensionally equal. The obligation applies to stalled, crashed, and aborted prefixes
+      and requires no later stage to occur.'
+    verification:
+      verifiers:
+        - intent: For each new-owner recovery attempt, verify that every recovery input, context,
+            and state that actually exists remains bound to the target document throughout the
+            attempt, including stalled, crashed, and aborted prefixes.
+          kind: state_machine
+    kind: leaf
+  L243_recovery_completion_replay_state_and_frontier:
+    mechanisms:
+      - recovery_replay
+      - snapshot_checkpoint
+      - accepted_history_log
+    source_refs:
+      - snapshot_frontier
+      - owner_failover
+      - final_architecture
+    statement: Every new-owner recovery attempt that completes at authoritative head H installs
+      recovered logical document state equal to deterministic canonical replay of its target
+      document's accepted revisions through H, and its recovered owner's service frontier at
+      completion is exactly H.
+    verification:
+      verifiers:
+        - intent: For each new-owner recovery attempt completing at authoritative head H, verify the
+            recovered logical state equals canonical replay through H and the recovered service
+            frontier is exactly H.
+          kind: state_machine
+    kind: leaf
+  L244_post_recovery_acceptance_clean_reconstruction_equivalence:
+    mechanisms:
+      - server_authoritative_ot
+      - recovery_replay
+      - accepted_history_log
+    source_refs:
+      - ot_input_output
+      - owner_failover
+      - final_architecture
+    statement: For every new-owner recovery attempt completed at authoritative head H whose
+      recovered owner resumes acceptance, every document-history-dependent runtime state value that
+      can influence server-side OT transformation or canonical acceptance is equivalent to an
+      independent clean reconstruction from that attempt's target document's authoritative canonical
+      history through H, so resumed canonical semantics are unchanged. This equivalence concerns all
+      such influential values, rather than merely their containment in recovered components, and
+      does not require identical physical representations.
+    verification:
+      verifiers:
+        - intent: For each new-owner recovery attempt completed at H whose recovered owner resumes
+            acceptance, verify every history-dependent runtime state value influencing OT
+            transformation or canonical acceptance is equivalent to clean reconstruction through H.
+          kind: state_machine
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -7210,7 +7312,7 @@ id_allocator:
     A: 7
     G: 13
     C: 49
-    L: 241
+    L: 245
     D: 15
     T: 3
 assurance:
@@ -7827,6 +7929,14 @@ assurance:
       status: planned
     L240_foreground_catchup_eligibility_requires_uninterrupted_binding:
       status: planned
+    L241_recovery_publication_installs_epoch_and_generation:
+      status: planned
+    L242_recovery_scope_preservation_for_new_owner_attempts:
+      status: planned
+    L243_recovery_completion_replay_state_and_frontier:
+      status: planned
+    L244_post_recovery_acceptance_clean_reconstruction_equivalence:
+      status: planned
 formalization:
   claims:
     G0_acked_edit_survives_failover:
@@ -8196,6 +8306,14 @@ formalization:
     L239_foreground_catchup_publication_atomic_and_non_regressing:
       mode: symbolic
     L240_foreground_catchup_eligibility_requires_uninterrupted_binding:
+      mode: symbolic
+    L241_recovery_publication_installs_epoch_and_generation:
+      mode: symbolic
+    L242_recovery_scope_preservation_for_new_owner_attempts:
+      mode: symbolic
+    L243_recovery_completion_replay_state_and_frontier:
+      mode: symbolic
+    L244_post_recovery_acceptance_clean_reconstruction_equivalence:
       mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:
