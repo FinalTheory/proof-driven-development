@@ -12953,3 +12953,148 @@ records:
           so jointly they preserve the original prohibition; the eligibility and independence clarifications are scoped inside
           the second implication and add no new antecedent or conclusion.
         differences: []
+  claim:L237_foreground_catchup_response_head_binding:
+    kind: claim
+    subject_id: L237_foreground_catchup_response_head_binding
+    subject_signature: d07d3d172d7f7a23448c0b4cd8781e5c741723da78c0f686116fa37b4d8b3fc1
+    roundtrip:
+      subject_signature: d07d3d172d7f7a23448c0b4cd8781e5c741723da78c0f686116fa37b4d8b3fc1
+      status: TRANSLATED
+      natural_language: 'For every catch-up attempt c, if c is a normal foreground visible-document-bound reconnect or catch-up
+        attempt for the current document starting from the client last_applied_revision L, where L is the highest contiguous
+        canonical revision already applied by that client, and c is eligible for completion or foreground publication under
+        the reconnect or catch-up protocol, then there exists a catch-up response r such that all of the following hold for
+        that same c and r: first, r is a logical catch-up response belonging to the protocol execution of c, for the same
+        document and reconnect-start context, with the response head and private reconciled candidate of r being the response
+        head and candidate handled by c for that response, asserting correspondence only; second, r is eligible to reach response
+        completion or publication under the catch-up protocol, as a scope guard only, without requiring r to be a normal or
+        in-guarantee reconnect attempt and without asserting that completion or publication actually occurs; third, the response
+        head revision carried by r is equal to the revision captured for r, namely exactly the value of document_latest_revision
+        for the catch-up document of r as returned by one response-specific authoritative-store read or linearization point,
+        where that single reading fixes the captured value for r and later canonical acceptances may advance document_latest_revision
+        for that document after the capture without changing this captured value; fourth, the captured response head for r
+        remains the same bound response-head value through exactly these stages of r: delta or snapshot selection, canonical
+        range construction, pending reconciliation, completion, and publication, with no other stage asserted; fifth, c binds
+        one response-specific head captured from the same document authoritative document_latest_revision at one authoritative-store
+        read or linearization point; sixth, the response-specific head captured for c is preserved unchanged through response
+        selection, reconciliation, completion, and any publication; and seventh, acceptances that occur after the response
+        head of c was captured are outside the response of c rather than being partially mixed into that response.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: d07d3d172d7f7a23448c0b4cd8781e5c741723da78c0f686116fa37b4d8b3fc1
+        verdict: EQUIVALENT
+        reason: The formula preserves the universal attempt scope with the foreground and eligibility guards, requires an
+          existentially witnessed corresponding response for the same document and reconnect-start context, and conjoins response
+          eligibility, equality of the response head to the single authoritative-store captured head, preservation through
+          the listed response stages, attempt-level capture from the same document's authoritative latest revision, preservation
+          through selection, reconciliation, completion, and publication, and exclusion of post-capture acceptances, with
+          no omitted, added, or materially altered requirement.
+        differences: []
+      strengthening:
+        subject_signature: d07d3d172d7f7a23448c0b4cd8781e5c741723da78c0f686116fa37b4d8b3fc1
+        verdict: EQUIVALENT
+        reason: The formula preserves the guarded universal scope, the existential corresponding response for the same document
+          and reconnect-start context, response eligibility, head equality to the single authoritative-store captured value,
+          preservation through both stated stage lists, attempt-level capture from the same document's authoritative latest
+          revision, and exclusion of post-capture acceptances, with no added uniqueness, completion, or cross-stage requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: d07d3d172d7f7a23448c0b4cd8781e5c741723da78c0f686116fa37b4d8b3fc1
+        verdict: EQUIVALENT
+        reason: Quantifiers, antecedent, same-document and reconnect-start identity, single response-specific authoritative-store
+          capture, head equality, preservation through the listed response and attempt stages, and post-capture exclusion
+          are all preserved; the elaborations on visible-document/foreground scope, candidate correspondence, and scope-guard
+          wording restate the original antecedent and correspondence without adding or omitting a requirement.
+        differences: []
+  claim:L238_foreground_catchup_publication_is_exact_replay:
+    kind: claim
+    subject_id: L238_foreground_catchup_publication_is_exact_replay
+    subject_signature: a202f3875478350424926a0f6610fdaa9af60fb904934658cb655e1fe944467c
+    roundtrip:
+      subject_signature: a202f3875478350424926a0f6610fdaa9af60fb904934658cb655e1fe944467c
+      status: TRANSLATED
+      natural_language: 'For every catch-up attempt c, if c is a normal foreground visible-document-bound reconnect/catch-up
+        attempt for the current document starting from the client''s last_applied_revision, the highest contiguous canonical
+        revision already applied by that client, and c completes and publishes its reconciled result to the user-visible canonical
+        state, then there exist a catch-up response r and a revision h such that: r is a logical catch-up response belonging
+        to the protocol execution of c, for the same document and reconnect-start context, with r''s response head and private
+        reconciled candidate being the response head and candidate handled by c for that response; r''s reconnect/resync attempt
+        has completed its canonical catch-up and its pending reconciliation through captured response head h, in that r''s
+        private reconciled candidate is complete at h and awaits atomic publication or discard; a successful publication of
+        r''s private reconciled candidate exposes user-visible canonical state through exactly h, namely canonical replay
+        of r''s document through h, with no omitted and no extra canonical acceptance; and c''s published state is an exact
+        replay through head, in that the user-visible canonical state equals canonical replay of that same document through
+        c''s captured response head, with no omitted or double-applied accepted revision through that head.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: a202f3875478350424926a0f6610fdaa9af60fb904934658cb655e1fe944467c
+        verdict: EQUIVALENT
+        reason: The formula preserves the antecedent (normal foreground attempt from last_applied_revision that publishes),
+          the existential corresponding response for the same document and reconnect-start context, the shared captured head
+          h across candidate completion and publication exposure, and the exact-replay conclusion with no omitted or double-applied
+          revision through that head.
+        differences: []
+      strengthening:
+        subject_signature: a202f3875478350424926a0f6610fdaa9af60fb904934658cb655e1fe944467c
+        verdict: EQUIVALENT
+        reason: The formula preserves the same antecedent, existential response and head, same-document and reconnect-start
+          correspondence, and the same head across candidate completion, publication exposure, and published-state exact replay
+          with no omitted or double-applied revision, without adding uniqueness, extra guards, or cross-claim bridges.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: a202f3875478350424926a0f6610fdaa9af60fb904934658cb655e1fe944467c
+        verdict: EQUIVALENT
+        reason: 'The rendering preserves the original implication: a normal foreground catch-up attempt starting from last_applied_revision
+          that completes and publishes has a corresponding logical response for the same document and reconnect-start context,
+          with the same captured head and document, a private candidate complete through that head, and a published user-visible
+          state equal to canonical replay through that head with no omitted or double-applied accepted revision. Its more
+          verbose unpacking of foreground, completeness, and exact replay does not narrow the antecedent, add a distinct guarantee,
+          or change identity, provenance, cardinality, or observation scope.'
+        differences: []
+  claim:L240_foreground_catchup_eligibility_requires_uninterrupted_binding:
+    kind: claim
+    subject_id: L240_foreground_catchup_eligibility_requires_uninterrupted_binding
+    subject_signature: 1c03135efd244ed03308f0ddf033d2448aff902ae87b9813b4b0a6802a672de9
+    roundtrip:
+      subject_signature: 1c03135efd244ed03308f0ddf033d2448aff902ae87b9813b4b0a6802a672de9
+      status: TRANSLATED
+      natural_language: 'For every catch-up attempt c, all of the following hold: (1) c is one normal foreground visible-document-bound
+        reconnect/catch-up attempt for the current document starting from the client''s last_applied_revision L, the highest
+        contiguous canonical revision already applied by that client, if and only if c is a normal foreground reconnect/catch-up
+        attempt, that is, an attempt by a normally participating client that proceeds on the foreground, user-visible-document-bound
+        path for one document, where background or non-visible per-document synchronization attempts do not qualify; (2) if
+        c is such a foreground attempt as in (1), then if the user-visible document switches away before publication, c permanently
+        loses foreground publication eligibility and cannot later publish merely because the user switches back; and (3) if
+        c is such a foreground attempt and c remains eligible to publish to the foreground user-visible canonical state under
+        the current visible-document binding, this being specifically publication eligibility and not asserting completion
+        eligibility, then the visible-document binding for c remains uninterrupted from start through publication eligibility.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 1c03135efd244ed03308f0ddf033d2448aff902ae87b9813b4b0a6802a672de9
+        verdict: EQUIVALENT
+        reason: The formula encodes the iff classification between the two foreground-attempt predicates, the unconditional
+          binding-break rule for foreground attempts starting from last_applied_revision, and the eligible-implies-uninterrupted-binding
+          rule; the final publishing sentence is the application of that eligible-attempt rule and adds no independent requirement
+          beyond it.
+        differences: []
+      strengthening:
+        subject_signature: 1c03135efd244ed03308f0ddf033d2448aff902ae87b9813b4b0a6802a672de9
+        verdict: EQUIVALENT
+        reason: The formula encodes the classification biconditional, the foreground-guarded permanent loss of publication
+          eligibility on a pre-publication switch-away, and the foreground-and-eligible implies uninterrupted-binding rule;
+          the final publishing sentence is a corollary of the eligible-implies-uninterrupted clause, not an additional requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 1c03135efd244ed03308f0ddf033d2448aff902ae87b9813b4b0a6802a672de9
+        verdict: EQUIVALENT
+        reason: The rendering preserves the classification biconditional through its definitional expansion, the permanent
+          loss of foreground publication eligibility on a pre-publication switch-away with no revival merely on switching
+          back, and uninterrupted visible-document binding from start through publication eligibility; the publishing-attempt
+          corollary follows from (3) and requires no separate statement.
+        differences: []
