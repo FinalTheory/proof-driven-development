@@ -879,14 +879,17 @@ refinement:
       status: pending
       blocked_by: []
     L234_normal_submitted_request_endpoint_binding:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 5a2ca137e00cb1f77f354fc24fc3db9fe3b6028f0b1b2609570c67fb2bffab49
     L235_normal_submitted_request_pipeline_history_compatibility:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 60af466b9182b951c3ec79831bda4cb1ae1c1dbd4f1c163578c75cb6caed8810
     L236_normal_submitted_request_eligible_coherence_transfer:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 85b7aa00c1588991d8809347405b1ad97c0fbe615ca11c7d856f244bce864abc
     C48_normal_retry_request_coherence_and_horizon_alignment:
       status: pending
       blocked_by: []
