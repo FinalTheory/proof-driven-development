@@ -210,8 +210,9 @@ refinement:
       blocked_by: []
       signature: 6edcced758a207c60fd90a7261d94f9e86b5c29373b27e31887334c4089ad991
     C9_recovery_reconstructs_committed_state:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: d85e475d040ab382a0ca6407634207d4f41b96c482fe4cb7896352591e2e48c2
     C10_catchup_represents_exact_missing_suffix:
       status: stable
       blocked_by: []
