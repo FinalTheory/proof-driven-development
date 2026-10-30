@@ -13443,3 +13443,51 @@ records:
           equal other-document state or context unable to substitute and no construction, installation, resumption, or completion
           required.'
         differences: []
+  claim:L249_lifecycle_resume_authoritative_reconstruction:
+    kind: claim
+    subject_id: L249_lifecycle_resume_authoritative_reconstruction
+    subject_signature: aa59b42a91ff57025477a49314255537d1162b087400ee9f87880efbc0526da8
+    roundtrip:
+      subject_signature: aa59b42a91ff57025477a49314255537d1162b087400ee9f87880efbc0526da8
+      status: TRANSLATED
+      natural_language: 'For every authoritative state representation s and every revision h, if s is an optimized authoritative
+        lifecycle representation at the common authoritative frontier h, including snapshot, checkpoint, cleanup, or compaction
+        results covered by G3, then, if s is used to resume owner service, then both of the following hold: (1) s reconstructs
+        the acceptance-relevant state required to continue accepting from frontier h without changing canonical semantics;
+        and (2) for the owner service resumed using s at frontier h, the acceptance-relevant state required to continue from
+        h without changing canonical semantics is reconstructed through authoritative recovery through h, and that reconstruction
+        is complete before acceptance is exposed, so that acceptance is not exposed while the reconstruction is incomplete.
+        The second condition asserts that reconstruction and its authoritative-recovery provenance, rather than only a gate
+        conditional on recovery completion, and it does not by itself require that acceptance eventually be exposed, nor does
+        it independently assert closure of transform entrypoints.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: aa59b42a91ff57025477a49314255537d1162b087400ee9f87880efbc0526da8
+        verdict: EQUIVALENT
+        reason: 'The universal quantification over representation and frontier, the two antecedents (optimized authoritative
+          lifecycle representation at the frontier and use to resume owner service), and the consequent all match the source:
+          the second consequent predicate, by its declared meaning, asserts reconstruction of the acceptance-relevant state
+          through authoritative recovery through the frontier, complete before acceptance is exposed and not exposed while
+          incomplete, while expressly not requiring eventual acceptance exposure or independent transform-entrypoint closure,
+          matching the source''s exclusions; the first consequent predicate adds no requirement beyond that reconstruction.'
+        differences: []
+      strengthening:
+        subject_signature: aa59b42a91ff57025477a49314255537d1162b087400ee9f87880efbc0526da8
+        verdict: EQUIVALENT
+        reason: The formula universally quantifies over optimized authoritative lifecycle representations and their frontier,
+          conditions on resumption of owner service, and conjoins predicates asserting reconstruction of the acceptance-relevant
+          state without changing canonical semantics through authoritative recovery through H, complete before acceptance
+          is exposed with no exposure while incomplete, while expressly not requiring eventual exposure or independent transform-entrypoint
+          closure, matching the source with no added or omitted requirement.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: aa59b42a91ff57025477a49314255537d1162b087400ee9f87880efbc0526da8
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal quantification over optimized authoritative lifecycle representations
+          at a common frontier, the resume-use precondition, the acceptance-relevant state, reconstruction through authoritative
+          recovery through the frontier, completion before acceptance exposure with no exposure while incomplete, and the
+          explicit non-requirements of eventual exposure and independent transform-entrypoint closure; its first clause restates
+          the same reconstruction rather than adding an independent requirement.
+        differences: []
