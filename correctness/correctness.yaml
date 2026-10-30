@@ -893,17 +893,21 @@ refinement:
       status: pending
       blocked_by: []
     L237_foreground_catchup_response_head_binding:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 213ec234c9205a5ffc11204c59ae77e82b7a26df2d58f0ce8df002a4f96cdeaa
     L238_foreground_catchup_publication_is_exact_replay:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 426508f614b78203b901d0b2c5041986580a186345e31c71dfefb140330afa4c
     L239_foreground_catchup_publication_atomic_and_non_regressing:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 171969c7545202df115b88317f95700c7a5ca0f8960423714162d992d20cb580
     L240_foreground_catchup_eligibility_requires_uninterrupted_binding:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: c865a384fc33299cf285b262f3cd20c2b3f28e98f64833b922c2144eea86bc22
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
