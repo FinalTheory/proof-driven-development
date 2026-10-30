@@ -929,11 +929,13 @@ refinement:
       status: pending
       blocked_by: []
     L246_completed_recovery_result_equivalence_bridge:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 2ccc3b15f1ea389cdaf6c2853d4cb1ceb77aaf149f6f1a0541a2ad38f05d2a6c
     L247_full_scope_to_runtime_projection_bridge:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 8bdea053f90aa61ed8a66998fef94dbd11811c5f46ef8cb0fa3db10d2e65c782
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
