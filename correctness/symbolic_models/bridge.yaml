@@ -706,6 +706,7 @@ functions:
     - claim:L174_recovery_inputs_and_state_are_document_bound
     - claim:L94_recovery_starts_after_epoch_handoff
     - claim:L242_recovery_scope_preservation_for_new_owner_attempts
+    - claim:L247_full_scope_to_runtime_projection_bridge
   recovery_sources_preserve_document_scope:
     args:
     - Document
@@ -1331,6 +1332,7 @@ functions:
     meaning: Authoritative state representation s is the result of a completed owner recovery at the common authoritative frontier H.
     semantic_anchors:
     - claim:G3_snapshot_and_recovery_preserve_state
+    - claim:L246_completed_recovery_result_equivalence_bridge
   g3_rebuilt_runtime_and_resumed_context_preserve_document_scope:
     args:
     - Document
@@ -1341,6 +1343,7 @@ functions:
     semantic_anchors:
     - source:owner_failover
     - claim:G3_snapshot_and_recovery_preserve_state
+    - claim:L247_full_scope_to_runtime_projection_bridge
   logical_state_matches_canonical_replay:
     args:
     - AuthoritativeState
@@ -1355,6 +1358,8 @@ functions:
     - claim:L180_non_append_lifecycle_preserves_logical_state_at_frontier
     - claim:C16_non_append_lifecycle_preserves_logical_revision_prefix
     - claim:L172_snapshot_compaction_preserves_concurrent_append_suffix
+    - claim:L245_lifecycle_result_equivalence_bridge
+    - claim:L246_completed_recovery_result_equivalence_bridge
   authoritative_latest_revision_equals_frontier:
     args:
     - AuthoritativeState
@@ -1369,6 +1374,8 @@ functions:
     - claim:C16_non_append_lifecycle_preserves_logical_revision_prefix
     - claim:L172_snapshot_compaction_preserves_concurrent_append_suffix
     - claim:L220_non_overlapped_lifecycle_source_frontier_is_completion_frontier
+    - claim:L245_lifecycle_result_equivalence_bridge
+    - claim:L246_completed_recovery_result_equivalence_bridge
   representation_resumes_owner_service:
     args:
     - AuthoritativeState
@@ -1378,6 +1385,8 @@ functions:
     semantic_anchors:
     - contract:logical_state_equivalence_at_frontier
     - claim:L173_optimized_lifecycle_representation_resumes_only_through_recovery
+    - claim:L245_lifecycle_result_equivalence_bridge
+    - claim:L246_completed_recovery_result_equivalence_bridge
   acceptance_state_reconstructed_at_frontier:
     args:
     - AuthoritativeState
@@ -1387,6 +1396,8 @@ functions:
     meaning: The representation s reconstructs the acceptance-relevant state required to continue accepting from frontier H without changing canonical semantics.
     semantic_anchors:
     - contract:logical_state_equivalence_at_frontier
+    - claim:L245_lifecycle_result_equivalence_bridge
+    - claim:L246_completed_recovery_result_equivalence_bridge
   ot_engine_invocation:
     args:
     - OTInvocation
@@ -2687,6 +2698,8 @@ functions:
     semantic_anchors:
     - contract:logical_state_equivalence_at_frontier
     - claim:G3_snapshot_and_recovery_preserve_state
+    - claim:L245_lifecycle_result_equivalence_bridge
+    - claim:L246_completed_recovery_result_equivalence_bridge
   completed_recovery_at_frontier:
     args:
     - AuthoritativeState
@@ -2705,6 +2718,7 @@ functions:
     meaning: Authoritative state representation s is an optimized authoritative lifecycle representation at the common authoritative frontier H, including snapshot, checkpoint, cleanup, or compaction results covered by G3.
     semantic_anchors:
     - claim:G3_snapshot_and_recovery_preserve_state
+    - claim:L245_lifecycle_result_equivalence_bridge
   accepted_evidence_origin_valid:
     args:
     - AcceptedEvidence
@@ -5470,6 +5484,8 @@ functions:
     - claim:L174_recovery_inputs_and_state_are_document_bound
     - claim:C9_recovery_reconstructs_committed_state
     - claim:L242_recovery_scope_preservation_for_new_owner_attempts
+    - claim:G3_snapshot_and_recovery_preserve_state
+    - claim:L247_full_scope_to_runtime_projection_bridge
   client_state_established_by_initialization_or_canonical_publication:
     args:
     - ClientState
@@ -7648,11 +7664,11 @@ claims:
           body:
             implies:
             - call:
-                fn: recovery_document_scope_attempt
+                fn: new_owner_recovery_attempt
                 args:
                 - var: r
             - call:
-                fn: recovery_sources_preserve_document_scope
+                fn: recovery_inputs_states_and_resumed_context_preserve_document_scope
                 args:
                 - call:
                     fn: recovery_target_document
@@ -7665,7 +7681,7 @@ claims:
           body:
             implies:
             - call:
-                fn: recovery_document_scope_attempt
+                fn: new_owner_recovery_attempt
                 args:
                 - var: r
             - call:
@@ -7676,6 +7692,113 @@ claims:
                     args:
                     - var: r
                 - var: r
+  L245_lifecycle_result_equivalence_bridge:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          s: AuthoritativeState
+          h: Revision
+        body:
+          implies:
+          - call:
+              fn: optimized_authoritative_lifecycle_representation_at_frontier
+              args:
+              - var: s
+              - var: h
+          - and:
+            - call:
+                fn: logical_state_equivalent_to_canonical_replay_at_frontier
+                args:
+                - var: s
+                - var: h
+            - call:
+                fn: logical_state_matches_canonical_replay
+                args:
+                - var: s
+                - var: h
+            - call:
+                fn: authoritative_latest_revision_equals_frontier
+                args:
+                - var: s
+                - var: h
+            - implies:
+              - call:
+                  fn: representation_resumes_owner_service
+                  args:
+                  - var: s
+              - call:
+                  fn: acceptance_state_reconstructed_at_frontier
+                  args:
+                  - var: s
+                  - var: h
+  L246_completed_recovery_result_equivalence_bridge:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          s: AuthoritativeState
+          h: Revision
+        body:
+          implies:
+          - call:
+              fn: completed_owner_recovery_at_frontier
+              args:
+              - var: s
+              - var: h
+          - and:
+            - call:
+                fn: logical_state_equivalent_to_canonical_replay_at_frontier
+                args:
+                - var: s
+                - var: h
+            - call:
+                fn: logical_state_matches_canonical_replay
+                args:
+                - var: s
+                - var: h
+            - call:
+                fn: authoritative_latest_revision_equals_frontier
+                args:
+                - var: s
+                - var: h
+            - implies:
+              - call:
+                  fn: representation_resumes_owner_service
+                  args:
+                  - var: s
+              - call:
+                  fn: acceptance_state_reconstructed_at_frontier
+                  args:
+                  - var: s
+                  - var: h
+  L247_full_scope_to_runtime_projection_bridge:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          r: RecoveryAttempt
+        body:
+          implies:
+          - call:
+              fn: recovery_inputs_states_and_resumed_context_preserve_document_scope
+              args:
+              - call:
+                  fn: recovery_target_document
+                  args:
+                  - var: r
+              - var: r
+          - call:
+              fn: g3_rebuilt_runtime_and_resumed_context_preserve_document_scope
+              args:
+              - call:
+                  fn: recovery_target_document
+                  args:
+                  - var: r
+              - var: r
   G4_reconnect_converges_without_gap_or_duplicate:
     contracts:
     - live_delivery_acceptance_binding

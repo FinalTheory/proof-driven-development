@@ -190,9 +190,11 @@ refinement:
       blocked_by: []
       signature: e63da0eaf540d9295946513c93e4fe80f6baf091bede4cf1b7dd0e9a7dccc567
     G3_snapshot_and_recovery_preserve_state:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: aad3be39764bfe78048793fc7a5d39a42fa2161c516ccf630ef832aed7fafb47
+      rationale: Round-31 package adds bridge premises A/B/C and rewrites scope clauses 1-2;
+        proof_audit must be renewed for the seven-premise decomposition before stability is
+        restored.
     G4_reconnect_converges_without_gap_or_duplicate:
       status: pending
       blocked_by: []
@@ -923,6 +925,15 @@ refinement:
       status: stable
       blocked_by: []
       signature: 5297596e7a8db78000113daca98f5828664492d72656e4ea57cbd4f45b3fdd28
+    L245_lifecycle_result_equivalence_bridge:
+      status: pending
+      blocked_by: []
+    L246_completed_recovery_result_equivalence_bridge:
+      status: pending
+      blocked_by: []
+    L247_full_scope_to_runtime_projection_bridge:
+      status: pending
+      blocked_by: []
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -1064,6 +1075,9 @@ claims:
       - C16_non_append_lifecycle_preserves_logical_revision_prefix
       - L172_snapshot_compaction_preserves_concurrent_append_suffix
       - L173_optimized_lifecycle_representation_resumes_only_through_recovery
+      - L245_lifecycle_result_equivalence_bridge
+      - L246_completed_recovery_result_equivalence_bridge
+      - L247_full_scope_to_runtime_projection_bridge
     source_refs:
       - authoritative_truth
       - snapshot_frontier
@@ -5970,6 +5984,75 @@ claims:
             transformation or canonical acceptance is equivalent to clean reconstruction through H.
           kind: state_machine
     kind: leaf
+  L245_lifecycle_result_equivalence_bridge:
+    mechanisms:
+      - snapshot_checkpoint
+      - accepted_history_log
+      - recovery_replay
+    source_refs:
+      - snapshot_frontier
+      - owner_failover
+      - final_architecture
+    statement: Every optimized authoritative lifecycle representation at a common authoritative
+      frontier H, including snapshotting, checkpoint replacement, cleanup, and compaction results,
+      denotes exactly the logical document state obtained by deterministic canonical replay through
+      H and preserves the authoritative latest revision H. If that representation is used to resume
+      owner service, the acceptance-relevant state required to continue from H without changing
+      canonical semantics is reconstructed through authoritative recovery before acceptance is
+      exposed. Together these conditions establish the specified logical-state equivalence relation
+      at H; physical representation equality is not required.
+    verification:
+      verifiers:
+        - intent: For each optimized authoritative lifecycle representation at frontier H, verify it
+            denotes exactly the canonical replay state through H, preserves latest revision H, and
+            that any resumption of owner service reconstructs the acceptance-relevant state through
+            authoritative recovery before acceptance is exposed.
+          kind: state_machine
+    kind: leaf
+  L246_completed_recovery_result_equivalence_bridge:
+    mechanisms:
+      - recovery_replay
+      - accepted_history_log
+    source_refs:
+      - owner_failover
+      - final_architecture
+    statement: Every authoritative representation resulting from a completed owner recovery at
+      common authoritative frontier H denotes exactly the logical document state obtained by
+      deterministic canonical replay through H and preserves authoritative latest revision H. If the
+      recovered representation is used to resume owner service, its acceptance-relevant state is
+      reconstructed so that continuation from H has unchanged canonical semantics. These conditions
+      establish the specified logical-state equivalence relation at H without requiring identical
+      physical representations.
+    verification:
+      verifiers:
+        - intent: For each authoritative representation resulting from a completed owner recovery at
+            frontier H, verify it denotes exactly the canonical replay state through H, preserves
+            latest revision H, and that any resumption of owner service reconstructs its
+            acceptance-relevant state.
+          kind: state_machine
+    kind: leaf
+  L247_full_scope_to_runtime_projection_bridge:
+    mechanisms:
+      - recovery_replay
+      - accepted_history_log
+    source_refs:
+      - owner_failover
+      - final_architecture
+    statement: For any recovery attempt targeting a document, preservation of that document's scope
+      across the full recovery lifecycle—including document_current_epoch,
+      document_owner_generation_id, recovery_head, snapshot_content_with_snapshot_revision,
+      accepted_change_log, and recovered_owner_runtime_state—entails that every logical or OT
+      runtime state actually constructed as the recovery reconstruction result, and every owner
+      context actually established upon service resumption, preserves the same document identity.
+      Extensionally equal state or context from another document cannot substitute. No construction,
+      installation, resumption, or completion is required to occur.
+    verification:
+      verifiers:
+        - intent: For each recovery attempt whose full recovery lifecycle preserves document scope,
+            verify every actually constructed recovery-result runtime state and every actually
+            established resumed owner context preserves the same document identity.
+          kind: state_machine
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -7316,7 +7399,7 @@ id_allocator:
     A: 7
     G: 13
     C: 49
-    L: 245
+    L: 248
     D: 15
     T: 3
 assurance:
@@ -7952,6 +8035,12 @@ assurance:
       status: planned
     L244_post_recovery_acceptance_clean_reconstruction_equivalence:
       status: planned
+    L245_lifecycle_result_equivalence_bridge:
+      status: planned
+    L246_completed_recovery_result_equivalence_bridge:
+      status: planned
+    L247_full_scope_to_runtime_projection_bridge:
+      status: planned
 formalization:
   claims:
     G0_acked_edit_survives_failover:
@@ -8329,6 +8418,12 @@ formalization:
     L243_recovery_completion_replay_state_and_frontier:
       mode: symbolic
     L244_post_recovery_acceptance_clean_reconstruction_equivalence:
+      mode: symbolic
+    L245_lifecycle_result_equivalence_bridge:
+      mode: symbolic
+    L246_completed_recovery_result_equivalence_bridge:
+      mode: symbolic
+    L247_full_scope_to_runtime_projection_bridge:
       mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:
