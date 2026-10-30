@@ -7401,7 +7401,18 @@ assurance:
         no redundancy.'
       signature: c24b4b70b249435b05f2a962fbb5e5fef07d33a0286322cdd3f0c7f9fc227f6e
     C9_recovery_reconstructs_committed_state:
-      status: unaudited
+      status: machine_checked
+      rationale: 'The four round-30 bridge leaves L241 (publication installs epoch + generation), L242
+        (scope preservation for every new-owner attempt), L243 (completion at head gives replay-equal
+        state + frontier), and L244 (resumed acceptance gives clean-reconstruction equivalence) are TRUSTED
+        (t56 fresh four-review panels, all EQUIVALENT) and stable (wave38 GOOD_LEAF audits, no defects,
+        no human decision), together with the 15 pre-existing direct premises. The live composition check
+        with require_trusted=True finds the 19 premises together with NOT(C9) UNSAT (ENTAILED, composition
+        signature 017e5d03ad8850d163f94eab3ae698c0c21e6df873112269b77bdb91b8f29373). Premise-ablation
+        note, stated honestly: ablating any of L210, L241, L242, L243, or L244 returns COUNTEREXAMPLE
+        (each is individually load-bearing, including all four new leaves); ablating any of the other
+        14 premises leaves the check ENTAILED (they are not individually load-bearing).'
+      signature: 017e5d03ad8850d163f94eab3ae698c0c21e6df873112269b77bdb91b8f29373
     C10_catchup_represents_exact_missing_suffix:
       status: machine_checked
       rationale: Trusted symbolic translations exist for C10 and all six direct premises L8, L12,
