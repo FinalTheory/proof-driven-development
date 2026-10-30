@@ -917,78 +917,72 @@ records:
   claim:G3_snapshot_and_recovery_preserve_state:
     kind: claim
     subject_id: G3_snapshot_and_recovery_preserve_state
-    subject_signature: 686689c758e48bd95d4f539ac7ba73a99778d4adfef81eb94d710539276b21cf
+    subject_signature: 1007a04faa125bd7cb3f584fada9bcb95f7624732c2aa6ed19b93d8245f48bbc
     roundtrip:
-      subject_signature: 686689c758e48bd95d4f539ac7ba73a99778d4adfef81eb94d710539276b21cf
+      subject_signature: 1007a04faa125bd7cb3f584fada9bcb95f7624732c2aa6ed19b93d8245f48bbc
       status: TRANSLATED
-      natural_language: 'For every authoritative state representation s and every revision H, if s is an optimized authoritative
-        lifecycle representation at the common authoritative frontier H (including a snapshot, checkpoint, cleanup, or compaction
-        result covered by G3), or s is the result of a completed owner recovery at that same frontier H, then all of the following
-        hold for the pair (s, H): within the applicability domain of logical_state_equivalence_at_frontier, s stands in that
-        contract''s semantic-equivalence relation to deterministic canonical replay through H; the logical document state
-        denoted by s equals deterministic canonical replay of the accepted revisions through H; the authoritative latest_revision
-        preserved by s is exactly H; and, if s is used to resume owner service, s reconstructs at H the acceptance-relevant
-        state required to continue accepting from H without changing canonical semantics.
-
-        For every recovery attempt r, if r is a recovery_document_scope_attempt, let d be recovery_target_document(r), the
-        target document identity bound to r. This classification covers the entire source-covered new-owner recovery lifecycle
-        for d, beginning before the first authoritative owner context, recovery head, checkpoint, tail, metadata-reconstruction
-        input, runtime-installation input, or resumed-service input is selected, captured, consumed, constructed, installed,
-        or used; it also includes stalled, crashed, and aborted prefixes, so no source-covered stage of r falls outside the
-        applicability boundary merely because a later recovery phase has not been reached. Under that guard, the recovery
-        sources used by r must preserve d as the same document identity with respect to their actual recovery observations
-        and uses: the authoritative ownership-generation/current-epoch context actually used for r, the recovery_head actually
-        captured for r, the authoritative checkpoint actually selected for r, every accepted_change_log entry actually replayed
-        by r, and the recovered_owner_runtime_state actually installed by r must all remain bound to d. The same document
-        binding must continue when those authoritative objects are consumed during metadata reconstruction, runtime installation,
-        or service resumption, and an extensionally equal authoritative object belonging to another document cannot substitute
-        for d in any of those canonical roles. Candidate heads, checkpoints, or log entries that are merely examined but are
-        not captured, selected, or replayed acquire no independent provenance obligation from this relation. This source-preservation
-        obligation imposes no progress or existence requirement on later recovery stages and adds no separate provenance obligation
-        for intermediate derived reconstruction states before installation.
-
-        For every recovery attempt r under the same recovery_document_scope_attempt guard, again with d = recovery_target_document(r),
-        every rebuilt logical/OT runtime state that is actually constructed as the recovery reconstruction result before installation,
-        and every resumed owner context that is actually established when service resumes, must preserve d as the same document
-        identity. An extensionally equal rebuilt runtime state or resumed owner context belonging to another document cannot
-        substitute for d. This rebuilt-runtime/resumed-context obligation does not require either stage ever to occur and
-        does not constrain unrelated intermediate computation artifacts.'
+      natural_language: 'For every authoritative state representation s and every revision h, if either (a) s is an optimized
+        authoritative lifecycle representation at the common authoritative frontier h, including snapshot, checkpoint, cleanup,
+        or compaction results covered by G3, or (b) s is the result of a completed owner recovery at the common authoritative
+        frontier h, then all of the following hold: (1) within the applicability domain of logical_state_equivalence_at_frontier,
+        s stands in that contract''s semantic equivalence relation to deterministic canonical replay through frontier h; (2)
+        the logical document state denoted by s equals deterministic canonical replay of accepted revisions through frontier
+        h; (3) s preserves latest_revision exactly equal to frontier h; and (4) if s is used to resume owner service, then
+        s reconstructs the acceptance-relevant state required to continue accepting from frontier h without changing canonical
+        semantics. And for every recovery attempt r, if r is within the canonical new-owner recovery boundary for its target
+        document — a classification established by entering that recovery boundary and not depending on successful progress,
+        so that r remains such an attempt if it stalls, crashes, or aborts before owner-generation installation, recovery-head
+        capture, or completion, while recovery or reconstruction activity outside that canonical boundary is excluded — then,
+        for d being the target document identity bound to r, the document-scope binding holds across the full scope of r''s
+        recovery lifecycle: every authoritative owner/epoch context of r, and, whenever selected, captured, consumed, constructed,
+        installed, or used, the recovery_head, the checkpoint, the canonical accepted_change_log tail entries (bound under
+        each of those modes, not only when replayed), the rebuilt logical/OT runtime state (including intermediate derived
+        reconstruction states, bound from construction onward and not only once installed), the installed recovered_owner_runtime_state,
+        and the resumed owner context (bound as itself a document-scoped entity whenever service resumes under it) remain
+        document-scoped to that same d. This obligation applies to every recovery input, context, or state of r that actually
+        exists at any stage of the attempt, even if the attempt later stalls, crashes, or aborts before or after recovery_head
+        capture; an authoritative object or owner context from another document cannot satisfy the recovery merely because
+        its frontier, payload, logical state, or reconstructed metadata is extensionally equal to d''s; and this imposes no
+        requirement that any later recovery stage occur or that recovery complete. And for every recovery attempt r, if r
+        is within the canonical new-owner recovery boundary for its target document in the same sense — established by entering
+        that boundary and not depending on successful progress, so that r remains such an attempt if it stalls, crashes, or
+        aborts before owner-generation installation, recovery-head capture, or completion, while activity outside that boundary
+        is excluded — then, for d being the target document identity bound to r, every rebuilt logical/OT runtime state actually
+        constructed as the recovery reconstruction result before installation, and every resumed owner context actually established
+        when service resumes, preserves d as the same document identity; an extensionally equal rebuilt runtime state or resumed
+        owner context belonging to another document cannot substitute for d; and this imposes no requirement that either stage
+        eventually occur and does not constrain unrelated intermediate computation artifacts.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 686689c758e48bd95d4f539ac7ba73a99778d4adfef81eb94d710539276b21cf
+        subject_signature: 1007a04faa125bd7cb3f584fada9bcb95f7624732c2aa6ed19b93d8245f48bbc
         verdict: EQUIVALENT
-        reason: 'The formula preserves both source guarantees: every covered optimized representation or completed recovery
-          is required to satisfy the frontier logical-state equivalence contract, with its canonical-replay, latest-revision,
-          and service-resumption acceptance-state obligations; and every new-owner recovery attempt is document-bound from
-          the pre-head authoritative owner context through each actually occurring captured head, selected checkpoint, replayed
-          tail, rebuilt runtime state, installed state, and resumed owner context. The helper predicates retain document provenance
-          rather than extensional-value equality and explicitly preserve the source''s no-progress/no-completion requirement,
-          with no material extra or omitted obligation.'
+        reason: The first conjunct encodes the equivalence contract for every optimized lifecycle representation and every
+          completed recovery at H as canonical-replay match plus latest_revision = H plus conditional acceptance-state reconstruction
+          when resuming service. The second conjunct encodes document-scope provenance for every new-owner attempt across
+          the pre-capture owner context, captured head, selected checkpoint, canonical tail, rebuilt runtime, installed state,
+          and resumed context, applying even if the attempt stalls or aborts and without requiring progress or completion.
+          The third conjunct is a subset of the second and adds no further requirement.
         differences: []
       strengthening:
-        subject_signature: 686689c758e48bd95d4f539ac7ba73a99778d4adfef81eb94d710539276b21cf
+        subject_signature: 1007a04faa125bd7cb3f584fada9bcb95f7624732c2aa6ed19b93d8245f48bbc
         verdict: EQUIVALENT
-        reason: 'The formula preserves both source guarantees: every covered optimized authoritative lifecycle representation
-          or completed recovery at frontier H is required to satisfy the logical-state equivalence relation, with only the
-          relation''s defining frontier, logical-state, and resume-state obligations made explicit; and every new-owner recovery
-          attempt is document-bound from its authoritative owner context through each actually occurring head, checkpoint,
-          replay, rebuilt-runtime, installation, and resumption stage without imposing progress. The helper meanings preserve
-          the source applicability boundary, document identity/provenance coordinate, and exclusion of merely unperformed
-          later stages, and add no independent observational, cardinality, or cross-document requirement.'
+        reason: The first conjunct reproduces the equivalence definition (same logical state as canonical replay through H,
+          latest_revision = H, and acceptance reconstruction only when resuming service) for every optimized lifecycle representation
+          and completed recovery, and the second and third conjuncts impose document-scope provenance on every new-owner attempt's
+          owner/epoch context, head, checkpoint, tail, rebuilt runtime, installed state and resumed context whenever each
+          stage occurs, without requiring progress or completion, matching the canonical statement and its exclusions with
+          no added requirement.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 686689c758e48bd95d4f539ac7ba73a99778d4adfef81eb94d710539276b21cf
+        subject_signature: 1007a04faa125bd7cb3f584fada9bcb95f7624732c2aa6ed19b93d8245f48bbc
         verdict: EQUIVALENT
-        reason: 'The rendering preserves both guarantees: each covered optimized authoritative representation or completed
-          recovery at common frontier H has the same canonical logical state, latest_revision = H, and acceptance-relevant
-          resumable state required by logical_state_equivalence_at_frontier; and each new-owner recovery remains document-bound
-          from the pre-head authoritative owner context through every actually occurring captured/selected/replayed source,
-          rebuilt runtime state, installed state, and resumed owner context. Its exclusions for merely examined candidates
-          and unrelated intermediate artifacts do not omit source obligations, while its stalled/aborted-prefix treatment
-          preserves the source''s explicit lack of any recovery-progress or completion requirement. No quantifier, identity
-          coordinate, provenance direction, observation scope, or semantic dimension is materially added or removed.'
+        reason: The rendering unpacks the equivalence contract into the same logical-state equality, latest_revision preservation,
+          and resume-time acceptance-state reconstruction, and spells out the original throughout-the-attempt, any-stage,
+          extensional-equality, and no-completion-requirement scope for recovery binding without adding a new stage, identity,
+          provenance, or completion obligation; its boundary, intermediate-reconstruction, and unrelated-artifact qualifications
+          remain inside the original attempt scope.
         differences: []
   claim:G10_user_visible_client_state_matches_document:
     kind: claim
@@ -13348,4 +13342,47 @@ records:
           confining the guarantee to component containment or identical physical representation. Its definitional appositives
           clarify the recovery-boundary classification, resumed acceptance, and head coordinate within the implication's scope
           without adding or removing a source requirement.
+        differences: []
+  claim:L246_completed_recovery_result_equivalence_bridge:
+    kind: claim
+    subject_id: L246_completed_recovery_result_equivalence_bridge
+    subject_signature: 4cfc0f3b7c92b4fdf2452a06831434c659a5763e4e5c920c9e40614f04364447
+    roundtrip:
+      subject_signature: 4cfc0f3b7c92b4fdf2452a06831434c659a5763e4e5c920c9e40614f04364447
+      status: TRANSLATED
+      natural_language: 'For every authoritative state representation s and every revision h, if s is the result of a completed
+        owner recovery at the common authoritative frontier h, then all of the following hold: (1) within the logical_state_equivalence_at_frontier
+        applicability domain, s stands in the contract''s semantic equivalence relation to deterministic canonical replay
+        through frontier h; (2) the logical document state denoted by s equals deterministic canonical replay of accepted
+        revisions through frontier h; (3) s preserves latest_revision exactly equal to frontier h; and (4) if s is used to
+        resume owner service, then s reconstructs the acceptance-relevant state required to continue accepting from frontier
+        h without changing canonical semantics.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 4cfc0f3b7c92b4fdf2452a06831434c659a5763e4e5c920c9e40614f04364447
+        verdict: EQUIVALENT
+        reason: The formula universally requires, for every completed owner recovery at a frontier, logical-state match to
+          deterministic canonical replay, preservation of latest revision equal to that frontier, the specified logical-state
+          equivalence at that frontier, and acceptance-state reconstruction conditionally on resuming owner service, while
+          imposing no identical physical representation requirement.
+        differences: []
+      strengthening:
+        subject_signature: 4cfc0f3b7c92b4fdf2452a06831434c659a5763e4e5c920c9e40614f04364447
+        verdict: EQUIVALENT
+        reason: 'The formula universally quantifies over completed owner recoveries at a frontier and requires exactly the
+          stated conditions: logical state matching deterministic canonical replay, preservation of latest revision equal
+          to the frontier, and conditional reconstruction of acceptance-relevant state when service is resumed. The equivalence
+          conjunct faithfully encodes the claim''s stated establishment of the logical-state equivalence relation at H, and
+          no identical physical representation is required.'
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 4cfc0f3b7c92b4fdf2452a06831434c659a5763e4e5c920c9e40614f04364447
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal completed-recovery-at-frontier antecedent, equality of the denoted logical
+          document state to deterministic canonical replay through H, preservation of latest revision H, and the conditional
+          resume-reconstruction requirement with unchanged canonical semantics; stating the resulting logical-state equivalence
+          relation does not add a physical-identity requirement or any other requirement outside the source, and no source
+          requirement is omitted.
         differences: []
