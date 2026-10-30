@@ -860,9 +860,6 @@ refinement:
       status: stable
       blocked_by: []
       signature: a09876460ada8526dc9503e4d42955399491192d23b34ea6ff92fef356097dbf
-    L228_normal_retry_request_coherence_and_horizon_alignment:
-      status: pending
-      blocked_by: []
     L229_terminal_attempt_arbitration_classification_and_gate:
       status: stable
       blocked_by: []
@@ -1127,7 +1124,6 @@ claims:
       - L183_definitive_rejection_preserves_request_provenance
       - C46_accepted_terminal_result_preserves_acceptance_provenance
       - L204_state_dependent_rejection_uses_authoritative_context
-      - L228_normal_retry_request_coherence_and_horizon_alignment
       - L229_terminal_attempt_arbitration_classification_and_gate
       - L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
       - L231_accepted_terminal_result_producer_binding_and_identity
@@ -5546,31 +5542,6 @@ claims:
             representations without requiring physical-row retention.
           kind: state_machine
     kind: leaf
-  L228_normal_retry_request_coherence_and_horizon_alignment:
-    mechanisms:
-      - idempotency_gate
-    source_refs:
-      - final_architecture
-      - ot_input_output
-    statement: "Every normal submitted_request representing a logical_client_edit within the 30-day normal
-      retry eligibility horizon, including an initial normal submission with no prior submission or retransmission
-      required, represents a logical edit e whose document_id, client_change_id, raw_edit operation semantics,
-      and base_revision are bound to that same edit and its canonical authoring state D@F, with base_revision
-      equal to F. No step of the request construction, serialization, dispatch, or normal retry that produced
-      the submitted request substitutes another logical operation while retaining e's identity and authoring
-      frontier, even if a later step restores e's operation before submission. For every such request
-      eligible for OT or an authoritative terminal decision and satisfying those witness conditions, the
-      request preserves the same request identity, raw_edit semantics, and canonical authoring frontier
-      without cross-binding them to another logical operation."
-    verification:
-      verifiers:
-        - intent: Trace initial normal submissions and normal retries from their logical edit and
-            captured D@F through construction, serialization, dispatch, and retry. Check submitted
-            tuple binding, detect substitutions even when later undone, and establish the
-            coherent-request conclusion under the exact transfer-conjunct antecedent. Require no
-            successful processing or terminal observation.
-          kind: state_machine
-    kind: leaf
   L229_terminal_attempt_arbitration_classification_and_gate:
     mechanisms:
       - idempotency_gate
@@ -7682,8 +7653,6 @@ assurance:
       status: planned
     L227_accepted_classification_is_retained_through_eligibility_horizon:
       status: planned
-    L228_normal_retry_request_coherence_and_horizon_alignment:
-      status: planned
     L229_terminal_attempt_arbitration_classification_and_gate:
       status: planned
     L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation:
@@ -8043,8 +8012,6 @@ formalization:
     L226_counted_accepted_evidence_supplies_non_reusable_classification:
       mode: symbolic
     L227_accepted_classification_is_retained_through_eligibility_horizon:
-      mode: symbolic
-    L228_normal_retry_request_coherence_and_horizon_alignment:
       mode: symbolic
     L229_terminal_attempt_arbitration_classification_and_gate:
       mode: symbolic

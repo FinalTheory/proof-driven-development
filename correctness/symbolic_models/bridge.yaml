@@ -2023,7 +2023,6 @@ functions:
     meaning: Request r is a normal submitted_request representing one logical edit within the 30-day normal retry eligibility horizon.
     semantic_anchors:
     - claim:G5_retry_resolves_idempotently
-    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
     - claim:C48_normal_retry_request_coherence_and_horizon_alignment
     - claim:L234_normal_submitted_request_endpoint_binding
     - claim:L235_normal_submitted_request_pipeline_history_compatibility
@@ -2041,7 +2040,6 @@ functions:
     meaning: Normal retry request r preserves the same full request identity, raw_edit semantics, and canonical authoring frontier for its logical operation; those coordinates are not cross-bound from another operation.
     semantic_anchors:
     - claim:G5_retry_resolves_idempotently
-    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
     - claim:C48_normal_retry_request_coherence_and_horizon_alignment
     - claim:L236_normal_submitted_request_eligible_coherence_transfer
   request_represents_logical_edit:
@@ -2061,7 +2059,6 @@ functions:
     - claim:G6_accepted_change_preserves_ot_semantics
     - contract:logical_edit_request_payload_binding
     - claim:L182_logical_edit_request_payload_binding_is_preserved
-    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
     - claim:C48_normal_retry_request_coherence_and_horizon_alignment
     - claim:L234_normal_submitted_request_endpoint_binding
     - claim:L235_normal_submitted_request_pipeline_history_compatibility
@@ -2619,7 +2616,6 @@ functions:
     - source:ot_input_output
     - source:final_architecture
     - claim:L123_acceptance_payload_and_identity_share_submitted_request
-    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
     - claim:C48_normal_retry_request_coherence_and_horizon_alignment
     - claim:L236_normal_submitted_request_eligible_coherence_transfer
     - claim:L233_normal_submitted_request_scope_eligibility
@@ -5761,7 +5757,6 @@ functions:
     meaning: 'Submitted request r''s complete submitted tuple is bound to logical edit e at the submitted-request endpoint: r''s document_id, client_change_id, and base_revision are e''s identity (document_id = D, client_change_id = k) and authoring frontier F from e''s canonical authoring state D@F, and the logical operation encoded by r''s submitted raw_edit is e''s own operation against that same captured D@F authoring state. Equivalently, the request construction, serialization, dispatch, and normal retry that produced the submitted request r did not preserve e''s (D, k, F) while substituting a semantically different logical operation into r''s submitted raw_edit. This predicate speaks only about the submitted request r itself, as submitted: it asserts nothing about any intermediate request-lineage representation, imposes no condition on a stage that does not survive into the submitted request, and is not falsified by a transient substitution that was undone before submission. It does not by itself assert that r represents no other logical edit, and it requires no dispatch, retry, OT invocation, acceptance, or terminal-decision progress beyond r being the submitted request.'
     semantic_anchors:
     - claim:L182_logical_edit_request_payload_binding_is_preserved
-    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
     - claim:C48_normal_retry_request_coherence_and_horizon_alignment
     - claim:L234_normal_submitted_request_endpoint_binding
     - claim:L235_normal_submitted_request_pipeline_history_compatibility
@@ -5942,7 +5937,6 @@ functions:
     meaning: 'For submitted request r whose semantic source is logical edit e: no step of the request construction, serialization, dispatch, or normal retry that produced r preserves e''s identity and authoring frontier (document_id = D, client_change_id = k, base_revision = F, from e''s canonical authoring state D@F) while substituting a semantically different logical operation for e''s own operation into the raw_edit being carried. Those processes may change the request''s physical representation only in semantics-preserving ways. A substitution of a different logical operation under e''s (D, k, F) falsifies this predicate even if a later step of those processes restores e''s operation before submission. This predicate constrains the behavior of the four named processes themselves: it asserts nothing about any intermediate representation as an object -- in particular it does not assert that any intermediate representation is a submitted request, remains bound to e''s complete tuple, or carries (D, k, F) at all -- and it requires no byte-identical serialization and no dispatch, retry, OT invocation, acceptance, or terminal-decision progress beyond the processes that produced r. It does not by itself assert that r represents no other logical edit.'
     semantic_anchors:
     - claim:L182_logical_edit_request_payload_binding_is_preserved
-    - claim:L228_normal_retry_request_coherence_and_horizon_alignment
     - claim:C48_normal_retry_request_coherence_and_horizon_alignment
     - claim:L235_normal_submitted_request_pipeline_history_compatibility
     - claim:L236_normal_submitted_request_eligible_coherence_transfer
@@ -20470,78 +20464,6 @@ claims:
                     - var: e
                     - var: s
                     - var: k
-  L228_normal_retry_request_coherence_and_horizon_alignment:
-    capability: relational
-    contracts: []
-    formula:
-      and:
-      - forall:
-          vars:
-            r: Request
-          body:
-            implies:
-            - call:
-                fn: normal_retry_submitted_request
-                args:
-                - var: r
-            - exists:
-                vars:
-                  e: LogicalEdit
-                body:
-                  and:
-                  - call:
-                      fn: request_represents_logical_edit
-                      args:
-                      - var: r
-                      - var: e
-                  - call:
-                      fn: submitted_request_tuple_bound_to_logical_edit
-                      args:
-                      - var: r
-                      - var: e
-                  - call:
-                      fn: request_processes_do_not_substitute_logical_operation
-                      args:
-                      - var: r
-                      - var: e
-      - forall:
-          vars:
-            r: Request
-          body:
-            implies:
-            - and:
-              - call:
-                  fn: normal_retry_submitted_request
-                  args:
-                  - var: r
-              - call:
-                  fn: submitted_request_eligible_for_ot_or_terminal_decision
-                  args:
-                  - var: r
-              - exists:
-                  vars:
-                    e: LogicalEdit
-                  body:
-                    and:
-                    - call:
-                        fn: request_represents_logical_edit
-                        args:
-                        - var: r
-                        - var: e
-                    - call:
-                        fn: submitted_request_tuple_bound_to_logical_edit
-                        args:
-                        - var: r
-                        - var: e
-                    - call:
-                        fn: request_processes_do_not_substitute_logical_operation
-                        args:
-                        - var: r
-                        - var: e
-            - call:
-                fn: retry_request_identity_payload_frontier_coherent
-                args:
-                - var: r
   C48_normal_retry_request_coherence_and_horizon_alignment:
     capability: relational
     contracts: []
