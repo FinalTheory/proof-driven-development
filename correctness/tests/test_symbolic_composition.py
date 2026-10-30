@@ -632,11 +632,11 @@ class SymbolicCompositionTests(unittest.TestCase):
         self.assertIn("SMT counterexample query:", rendered)
         self.assertIn("Solver: UNSAT → ENTAILED", rendered)
         self.assertIn("Mutation sensitivity:", rendered)
-        self.assertNotIn("C10_catchup_represents_exact_missing_suffix", rendered)
+        self.assertNotIn("G5_retry_resolves_idempotently", rendered)
 
     def test_symbolic_report_rejects_non_machine_checked_node(self):
         args = SimpleNamespace(
-            node=["C10_catchup_represents_exact_missing_suffix"],
+            node=["G5_retry_resolves_idempotently"],
             model=str(BRIDGE_PATH),
             assurance=str(ASSURANCE_PATH),
             format="text",

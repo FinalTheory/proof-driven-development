@@ -621,6 +621,10 @@ def _cmd_symbolic_report(graph: Graph, args: argparse.Namespace) -> int:
                 f"{node_id} recorded machine_checked signature is stale: "
                 f"recorded={recorded_signature!r} current={result.composition_signature!r}"
             )
+        if not result.machine_checked:
+            raise SymbolicCompositionError(
+                f"{node_id} no longer machine-checks on replay: {result.verdict}"
+            )
 
         target_trust = registry.evaluate(
             graph, bridge, kind="claim", subject_id=node_id

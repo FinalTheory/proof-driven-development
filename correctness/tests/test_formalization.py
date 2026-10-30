@@ -36,15 +36,20 @@ class FormalizationRoutingTests(unittest.TestCase):
         )
 
     def test_symbolic_subject_without_mapping_is_explicitly_blocked(self) -> None:
+        # The live graph currently maps every symbolic claim, so the
+        # unmapped case is exercised on a synthetic bridge copy with one
+        # entry removed instead of depending on graph state.
         subject_id = next(
             node_id
             for node_id in sorted(self.graph.claims)
             if self.graph.doc["formalization"]["claims"][node_id]["mode"] == "symbolic"
-            and node_id not in self.bridge.claims
         )
+        raw = yaml.safe_load(BRIDGE.read_text(encoding="utf-8"))
+        del raw["claims"][subject_id]
+        bridge = SymbolicBridge.from_data(raw)
         state = subject_formalization_state(
             self.graph,
-            self.bridge,
+            bridge,
             self.registry,
             kind="claim",
             subject_id=subject_id,
