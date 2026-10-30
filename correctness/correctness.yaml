@@ -716,9 +716,8 @@ refinement:
       blocked_by: []
       signature: 94c4333db3e03bd6465ede395e73a1539cdefbb6c89ce3c56fdbce3a7c5b98e3
     C45_terminal_outcome_publication_matches_canonical_acceptance:
-      status: stable
+      status: pending
       blocked_by: []
-      signature: 49226577e5dfc7eab30962417f365795e3f23ddc029708a4a4c0da6acf2a1590
     L190_authoritative_terminal_publication_surfaces_are_exhaustive:
       status: stable
       blocked_by: []
@@ -940,6 +939,9 @@ refinement:
       status: stable
       blocked_by: []
       signature: 5ea077c043cd5b8f898acfc8e6cc099b0cb1b10f63428895e118a3cfa11d51c6
+    L250_published_accepted_terminal_atomic_creation_pair:
+      status: pending
+      blocked_by: []
 assumptions:
   A2_ot_engine_is_correct:
     statement: Given a canonical committed document prefix through revision N and a raw_edit with
@@ -4609,6 +4611,7 @@ claims:
       - L195_rejected_terminal_publication_excludes_canonical_acceptance
       - L163_accepted_terminal_outcome_commits_with_canonical_acceptance
       - L213_terminal_result_store_records_have_single_acceptance_creation_provenance
+      - L250_published_accepted_terminal_atomic_creation_pair
   L190_authoritative_terminal_publication_surfaces_are_exhaustive:
     statement: Every path that can expose an ACCEPTED or REJECTED terminal result for a
       normal_retry_eligible_identity to a protocol consumer flows through
@@ -6090,6 +6093,31 @@ claims:
             transform entrypoints.
           kind: state_machine
     kind: leaf
+  L250_published_accepted_terminal_atomic_creation_pair:
+    mechanisms:
+      - acceptance_transaction
+      - durable_terminal_outcome_store
+      - terminal_outcome_publication_gate
+    source_refs:
+      - accepted_change_log
+      - storage_selection
+      - final_architecture
+    statement: At every authoritative publication boundary that makes a
+      normal_retry_eligible_identity observable, an ACCEPTED terminal_result published there has a
+      matching canonical accepted change created together with it by the same acceptance execution
+      and committed atomically with it in a single transaction, so that the change present in
+      canonical accepted history for that result is its matching creation pair, and the terminal
+      result is bound to that acceptance execution.
+    verification:
+      verifiers:
+        - intent: "For every ACCEPTED terminal_result published through an authoritative publication boundary
+            for a normal_retry_eligible_identity, compare the published record against the acceptance
+            transaction that wrote it: establish that the record's matching canonical accepted change
+            was created by the same acceptance execution, that the pair committed atomically in a single
+            transaction, and that the canonical change present in accepted history is that matching creation
+            pair. A value-equal acceptance from another execution does not satisfy this check."
+          kind: state_machine
+    kind: leaf
 catalog:
   terms:
     logical_client_edit:
@@ -7436,7 +7464,7 @@ id_allocator:
     A: 7
     G: 13
     C: 49
-    L: 250
+    L: 251
     D: 15
     T: 3
 assurance:
@@ -8092,6 +8120,8 @@ assurance:
       status: planned
     L249_lifecycle_resume_authoritative_reconstruction:
       status: planned
+    L250_published_accepted_terminal_atomic_creation_pair:
+      status: planned
 formalization:
   claims:
     G0_acked_edit_survives_failover:
@@ -8477,6 +8507,8 @@ formalization:
     L248_lifecycle_representation_replay_equivalence:
       mode: symbolic
     L249_lifecycle_resume_authoritative_reconstruction:
+      mode: symbolic
+    L250_published_accepted_terminal_atomic_creation_pair:
       mode: symbolic
   assumptions:
     A2_ot_engine_is_correct:

@@ -1668,6 +1668,7 @@ functions:
     - claim:C43_terminal_outcome_entry_state_is_coherent
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
     - claim:L213_terminal_result_store_records_have_single_acceptance_creation_provenance
+    - claim:L250_published_accepted_terminal_atomic_creation_pair
   terminal_result_idempotency_key:
     args:
     - TerminalResultRecord
@@ -1734,6 +1735,7 @@ functions:
     - claim:C44_terminal_outcome_entry_matches_canonical_acceptance
     - claim:C43_terminal_outcome_entry_state_is_coherent
     - claim:L231_accepted_terminal_result_producer_binding_and_identity
+    - claim:L250_published_accepted_terminal_atomic_creation_pair
   accepted_terminal_lifecycle_rewrite:
     args:
     - ProtocolTransition
@@ -2938,6 +2940,7 @@ functions:
     - claim:C43_terminal_outcome_entry_state_is_coherent
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
     - claim:L192_terminal_publication_preserves_store_identity_provenance
+    - claim:L250_published_accepted_terminal_atomic_creation_pair
   accepted_terminal_matching_creation_identity_matches:
     args:
     - TerminalResultRecord
@@ -3068,6 +3071,7 @@ functions:
     - claim:L192_terminal_publication_preserves_store_identity_provenance
     - claim:L117_retry_existing_acceptance_matches_full_idempotency_key
     - claim:L231_accepted_terminal_result_producer_binding_and_identity
+    - claim:L250_published_accepted_terminal_atomic_creation_pair
   accepted_terminal_matching_canonical_acceptance:
     args:
     - CanonicalAcceptance
@@ -3422,6 +3426,7 @@ functions:
     - claim:C45_terminal_outcome_publication_matches_canonical_acceptance
     - claim:C44_terminal_outcome_entry_matches_canonical_acceptance
     - claim:C43_terminal_outcome_entry_state_is_coherent
+    - claim:L250_published_accepted_terminal_atomic_creation_pair
   terminal_result_at_initialization_boundary:
     args:
     - TerminalResultRecord
@@ -3524,6 +3529,7 @@ functions:
     - claim:C45_terminal_outcome_publication_matches_canonical_acceptance
     - claim:C44_terminal_outcome_entry_matches_canonical_acceptance
     - claim:C43_terminal_outcome_entry_state_is_coherent
+    - claim:L250_published_accepted_terminal_atomic_creation_pair
   terminal_result_published_through_gate:
     args:
     - TerminalResultRecord
@@ -3588,6 +3594,7 @@ functions:
     - claim:C44_terminal_outcome_entry_matches_canonical_acceptance
     - claim:C43_terminal_outcome_entry_state_is_coherent
     - claim:L192_terminal_publication_preserves_store_identity_provenance
+    - claim:L250_published_accepted_terminal_atomic_creation_pair
   identity_fresh_in_state:
     args:
     - AuthoritativeState
@@ -3667,6 +3674,7 @@ functions:
     - claim:C45_terminal_outcome_publication_matches_canonical_acceptance
     - claim:C44_terminal_outcome_entry_matches_canonical_acceptance
     - claim:C43_terminal_outcome_entry_state_is_coherent
+    - claim:L250_published_accepted_terminal_atomic_creation_pair
     meaning: The matching ACCEPTED terminal-result creation t and canonical accepted-change creation a share one authoritative transaction boundary and therefore commit or roll back together; no reachable authoritative post-boundary state for that pair contains exactly one side. This relation asserts atomicity only and does not assert producer provenance or require a particular named transaction implementation.
   already_accepted_evidence:
     args:
@@ -10957,6 +10965,56 @@ claims:
                   fn: canonical_acceptance_present_for_result_identity
                   args:
                   - var: t
+  L250_published_accepted_terminal_atomic_creation_pair:
+    capability: relational
+    contracts: []
+    formula:
+      forall:
+        vars:
+          t: TerminalResultRecord
+        body:
+          implies:
+          - and:
+            - call:
+                fn: terminal_result_published
+                args:
+                - var: t
+            - call:
+                fn: terminal_result_for_eligible_identity
+                args:
+                - var: t
+            - call:
+                fn: accepted_terminal_result_record
+                args:
+                - var: t
+          - exists:
+              vars:
+                a: CanonicalAcceptance
+              body:
+                and:
+                - call:
+                    fn: accepted_terminal_matching_creation_pair
+                    args:
+                    - var: t
+                    - var: a
+                - call:
+                    fn: accepted_terminal_matching_acceptance_committed
+                    args:
+                    - var: a
+                - call:
+                    fn: accepted_terminal_creation_pair_atomically_commits
+                    args:
+                    - var: t
+                    - var: a
+                - call:
+                    fn: terminal_result_bound_to_acceptance_execution
+                    args:
+                    - var: t
+                    - var: a
+                - call:
+                    fn: terminal_result_has_matching_canonical_acceptance
+                    args:
+                    - var: t
   C45_terminal_outcome_publication_matches_canonical_acceptance:
     capability: relational
     contracts: []
