@@ -190,11 +190,9 @@ refinement:
       blocked_by: []
       signature: e63da0eaf540d9295946513c93e4fe80f6baf091bede4cf1b7dd0e9a7dccc567
     G3_snapshot_and_recovery_preserve_state:
-      status: pending
+      status: stable
       blocked_by: []
-      rationale: Round-31 package adds bridge premises A/B/C and rewrites scope clauses 1-2;
-        proof_audit must be renewed for the seven-premise decomposition before stability is
-        restored.
+      signature: 24078bd980d15768f8a81b3f845a9c17b407a3b5df146417b19c0ca86b55ebc3
     G4_reconnect_converges_without_gap_or_duplicate:
       status: pending
       blocked_by: []
