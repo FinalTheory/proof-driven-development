@@ -13533,3 +13533,54 @@ records:
           cases and named relation without adding or removing a guarantee, and omitting the physical-equality disclaimer adds
           no physical-equality requirement.
         differences: []
+  claim:L250_published_accepted_terminal_atomic_creation_pair:
+    kind: claim
+    subject_id: L250_published_accepted_terminal_atomic_creation_pair
+    subject_signature: 5dbf5223f37afabe0e8d4284941b0fadce0a27b9be58d580ded9b745288f6f7e
+    roundtrip:
+      subject_signature: 5dbf5223f37afabe0e8d4284941b0fadce0a27b9be58d580ded9b745288f6f7e
+      status: TRANSLATED
+      natural_language: 'For every terminal result record t, if (1) t is exposed to a protocol consumer through an authoritative
+        publication path for its identity, and (2) t is a terminal result for a normal retry-eligible identity, that is, a
+        logical edit identity (document_id, client_change_id) whose pending/retry age is no more than 30 days and therefore
+        remains inside the normal retry/reconnect protocol boundary defined by A6, and (3) t is an authoritative ACCEPTED
+        (canonical result) outcome, then there exists a canonical acceptance a such that all of the following hold: (a) t
+        and a are the ACCEPTED terminal-result creation and its matching canonical accepted-change creation for one logical
+        acceptance, which identifies the matching creation pair only; (b) the matching canonical acceptance a is committed
+        for the corresponding ACCEPTED terminal outcome, and the execution that committed a is the acceptance execution that
+        produced a, without requiring one named implementation path; (c) the matching ACCEPTED terminal-result creation t
+        and canonical accepted-change creation a share one authoritative transaction boundary and therefore commit or roll
+        back together, so that no reachable authoritative post-boundary state for that pair contains exactly one side, which
+        asserts atomicity only and does not assert producer provenance or require a particular named transaction implementation;
+        (d) for the producer binding under audit, the accepted terminal result representation t carries a canonical result
+        produced by the same acceptance execution that produced canonical acceptance a, rather than by another request, document,
+        acceptance execution, or merely extensionally equal substitute; and (e) the matching canonical accepted change for
+        t''s full identity is present in canonical accepted history.'
+      ambiguities: []
+    direct_reviews:
+      weakening:
+        subject_signature: 5dbf5223f37afabe0e8d4284941b0fadce0a27b9be58d580ded9b745288f6f7e
+        verdict: EQUIVALENT
+        reason: The formula preserves the publication, eligible-identity, and ACCEPTED antecedents and, for a matching witness,
+          the creation-pair identity, committed acceptance by the same acceptance execution, single-transaction atomic commit/rollback
+          together, execution binding of the terminal result, and presence of the matching change in canonical accepted history;
+          no source requirement is omitted and no extra requirement is added under the predicates' declared meanings.
+        differences: []
+      strengthening:
+        subject_signature: 5dbf5223f37afabe0e8d4284941b0fadce0a27b9be58d580ded9b745288f6f7e
+        verdict: EQUIVALENT
+        reason: The antecedent captures published, normal-retry-eligible, and ACCEPTED scope, while the existential conjuncts
+          jointly encode the matching creation pair, committed matching acceptance, single-transaction atomic commit-or-rollback,
+          same-acceptance-execution binding, and presence of that matching change in canonical accepted history, without adding
+          uniqueness, a named implementation, or broader scope.
+        differences: []
+    roundtrip_reviews:
+      balanced:
+        subject_signature: 5dbf5223f37afabe0e8d4284941b0fadce0a27b9be58d580ded9b745288f6f7e
+        verdict: EQUIVALENT
+        reason: The rendering preserves the universal publication-boundary quantification, the 30-day normal retry-eligible
+          identity condition, the ACCEPTED condition, the same-acceptance-execution creation pair, atomic commit/rollback
+          in one transaction boundary, and presence of the matching change in canonical accepted history; the implementation-independence
+          qualifiers in (b) and (c) are scoped clarifications and do not delete the antecedents or the same-execution producer
+          binding preserved in (d).
+        differences: []
