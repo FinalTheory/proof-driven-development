@@ -716,8 +716,9 @@ refinement:
       blocked_by: []
       signature: 94c4333db3e03bd6465ede395e73a1539cdefbb6c89ce3c56fdbce3a7c5b98e3
     C45_terminal_outcome_publication_matches_canonical_acceptance:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 5ef6987081093c2646e213fadfef3e681ecaae973dd177f04a9c807901bc26a5
     L190_authoritative_terminal_publication_surfaces_are_exhaustive:
       status: stable
       blocked_by: []
