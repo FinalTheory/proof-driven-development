@@ -300,6 +300,7 @@ functions:
     - claim:C10_catchup_represents_exact_missing_suffix
     - claim:L101_client_completes_catchup_through_response_head
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+    - claim:L239_foreground_catchup_publication_atomic_and_non_regressing
   catchup_response_identifies_selected_checkpoint:
     args:
     - CatchupResponse
@@ -2092,6 +2093,10 @@ functions:
     meaning: c is one normal foreground visible-document-bound reconnect/catch-up attempt for the current document starting from the client's last_applied_revision L, the highest contiguous canonical revision already applied by that client.
     semantic_anchors:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
+    - claim:L237_foreground_catchup_response_head_binding
+    - claim:L238_foreground_catchup_publication_is_exact_replay
+    - claim:L239_foreground_catchup_publication_atomic_and_non_regressing
+    - claim:L240_foreground_catchup_eligibility_requires_uninterrupted_binding
   catchup_eligible_for_completion_or_publication:
     args:
     - CatchupAttempt
@@ -2100,6 +2105,7 @@ functions:
     meaning: Catch-up attempt c is eligible for completion or foreground publication under the reconnect/catch-up protocol.
     semantic_anchors:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
+    - claim:L237_foreground_catchup_response_head_binding
   catchup_head_captured_from_authoritative_latest:
     args:
     - CatchupAttempt
@@ -2109,6 +2115,7 @@ functions:
     meaning: Catch-up attempt c binds one response-specific head H captured from the same document authoritative document_latest_revision at one authoritative-store read/linearization point.
     semantic_anchors:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
+    - claim:L237_foreground_catchup_response_head_binding
   catchup_head_preserved_to_publication:
     args:
     - CatchupAttempt
@@ -2117,6 +2124,7 @@ functions:
     meaning: The response-specific head captured for c is preserved unchanged through response selection, reconciliation, completion, and any publication.
     semantic_anchors:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
+    - claim:L237_foreground_catchup_response_head_binding
   catchup_visible_document_binding_uninterrupted:
     args:
     - CatchupAttempt
@@ -2125,6 +2133,7 @@ functions:
     meaning: The visible-document binding for catch-up attempt c remains uninterrupted from start through publication eligibility.
     semantic_anchors:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
+    - claim:L240_foreground_catchup_eligibility_requires_uninterrupted_binding
   catchup_foreground_publication_eligible:
     args:
     - CatchupAttempt
@@ -2135,6 +2144,7 @@ functions:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
     - claim:L157_foreground_reconnect_loses_publication_eligibility_after_document_switch
     - claim:C36_reconnect_starts_from_canonical_client_frontier
+    - claim:L240_foreground_catchup_eligibility_requires_uninterrupted_binding
   catchup_attempt_publishes:
     args:
     - CatchupAttempt
@@ -2145,6 +2155,7 @@ functions:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
     - claim:L157_foreground_reconnect_loses_publication_eligibility_after_document_switch
     - claim:C36_reconnect_starts_from_canonical_client_frontier
+    - claim:L238_foreground_catchup_publication_is_exact_replay
   catchup_published_state_is_exact_replay_through_head:
     args:
     - CatchupAttempt
@@ -2153,6 +2164,7 @@ functions:
     meaning: If c publishes, the user-visible canonical state equals canonical replay of that same document through c captured response head with no omitted or double-applied accepted revision through H.
     semantic_anchors:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
+    - claim:L238_foreground_catchup_publication_is_exact_replay
   catchup_publication_is_atomic_and_non_regressing:
     args:
     - CatchupAttempt
@@ -2161,6 +2173,7 @@ functions:
     meaning: Any user-visible publication effect of catch-up attempt c is one atomic publication transition with no intermediate candidate prefix exposed; additionally, any response of c whose head H is below the already-visible canonical frontier cannot regress or otherwise mutate that visible canonical/frontier state.
     semantic_anchors:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
+    - claim:L239_foreground_catchup_publication_atomic_and_non_regressing
   catchup_excludes_acceptances_after_captured_head:
     args:
     - CatchupAttempt
@@ -2169,6 +2182,7 @@ functions:
     meaning: Acceptances that occur after c response head was captured are outside c response rather than being partially mixed into that response.
     semantic_anchors:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
+    - claim:L237_foreground_catchup_response_head_binding
   catchup_binding_break_permanently_blocks_publication:
     args:
     - CatchupAttempt
@@ -2179,6 +2193,7 @@ functions:
     - claim:G4_reconnect_converges_without_gap_or_duplicate
     - claim:L157_foreground_reconnect_loses_publication_eligibility_after_document_switch
     - claim:C36_reconnect_starts_from_canonical_client_frontier
+    - claim:L240_foreground_catchup_eligibility_requires_uninterrupted_binding
   normal_client_resync_attempt:
     args:
     - CatchupResponse
@@ -2748,6 +2763,7 @@ functions:
     semantic_anchors:
     - contract:catchup_head_binding
     - claim:L122_catchup_response_head_is_bound_to_authoritative_frontier
+    - claim:L237_foreground_catchup_response_head_binding
   represented_document:
     args:
     - ClientState
@@ -3945,6 +3961,7 @@ functions:
     - claim:L41_recovery_checkpoint_does_not_exceed_recovery_head
     - claim:C9_recovery_reconstructs_committed_state
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+    - claim:L239_foreground_catchup_publication_atomic_and_non_regressing
   classification_evidence_preserved_throughout_horizon:
     args:
     - CatchupResponse
@@ -3988,6 +4005,7 @@ functions:
     semantic_anchors:
     - claim:L109_resync_publication_is_atomic_and_monotonic
     - claim:G7_reconnect_does_not_double_render_accepted_optimistic_edit
+    - claim:L239_foreground_catchup_publication_atomic_and_non_regressing
   resync_visible_frontier_after_response_handling:
     args:
     - CatchupResponse
@@ -3998,6 +4016,7 @@ functions:
     meaning: Revision f is the user-visible canonical frontier (the client's last_applied_revision for the resync document) after response c has been handled (published or discarded).
     semantic_anchors:
     - claim:L109_resync_publication_is_atomic_and_monotonic
+    - claim:L239_foreground_catchup_publication_atomic_and_non_regressing
   resync_candidate_discarded_without_visible_mutation:
     args:
     - CatchupResponse
@@ -4006,6 +4025,7 @@ functions:
     meaning: Candidate response c is discarded without mutating the visible canonical base, last_applied_revision, pending-resolution state, or speculative overlays.
     semantic_anchors:
     - claim:L109_resync_publication_is_atomic_and_monotonic
+    - claim:L239_foreground_catchup_publication_atomic_and_non_regressing
   resync_state_exposed_only_by_atomic_publication:
     args:
     - CatchupResponse
@@ -4014,6 +4034,7 @@ functions:
     meaning: State from candidate c is exposed to the user only by one atomic publication after c's specified reconciliation work is complete; no checkpoint, tail, or intermediate candidate prefix from c is user-visible.
     semantic_anchors:
     - claim:L109_resync_publication_is_atomic_and_monotonic
+    - claim:L239_foreground_catchup_publication_atomic_and_non_regressing
   supplied_identity_interpreted_only_under_request_document:
     args:
     - CatchupResponse
@@ -4031,6 +4052,7 @@ functions:
     meaning: Publication of candidate c restores no previously removed speculative overlay and no previously removed pending-resolution state.
     semantic_anchors:
     - claim:L109_resync_publication_is_atomic_and_monotonic
+    - claim:L239_foreground_catchup_publication_atomic_and_non_regressing
   committed_acceptance_remains_in_recoverable_authoritative_history:
     args:
     - CanonicalAcceptance
@@ -4550,6 +4572,7 @@ functions:
     - claim:L130_reconnect_start_is_bound_to_visible_client_tuple
     - claim:L157_foreground_reconnect_loses_publication_eligibility_after_document_switch
     - claim:C36_reconnect_starts_from_canonical_client_frontier
+    - claim:L240_foreground_catchup_eligibility_requires_uninterrupted_binding
   reconnect_attempt_document:
     args:
     - CatchupAttempt
@@ -4953,6 +4976,7 @@ functions:
     meaning: 'Response r''s reconnect/resync attempt has completed its canonical catch-up and its pending reconciliation through captured response head h: r''s private reconciled candidate is complete at h and awaits atomic publication or discard.'
     semantic_anchors:
     - claim:L119_completed_resync_candidate_stays_at_response_head_until_publication
+    - claim:L238_foreground_catchup_publication_is_exact_replay
   resync_candidate_frontier_at_readiness_is:
     args:
     - CatchupResponse
@@ -4971,6 +4995,7 @@ functions:
     meaning: 'A successful publication of response r''s private reconciled candidate exposes user-visible canonical state through exactly h: canonical replay of r''s document through h, with no omitted and no extra canonical acceptance.'
     semantic_anchors:
     - claim:L119_completed_resync_candidate_stays_at_response_head_until_publication
+    - claim:L238_foreground_catchup_publication_is_exact_replay
   post_head_acceptances_deferred_for_candidate:
     args:
     - CatchupResponse
@@ -5673,6 +5698,7 @@ functions:
     meaning: 'The revision H captured for catch-up response r: exactly the value of document_latest_revision(D) for r''s catch-up document D as returned by one response-specific authoritative-store read/linearization point. That single reading fixes the captured value for r. Later canonical acceptances may advance document_latest_revision(D) after the capture without changing this captured value. This function names the captured value only; preservation of H through the response''s stages is asserted separately.'
     semantic_anchors:
     - claim:L122_catchup_response_head_is_bound_to_authoritative_frontier
+    - claim:L237_foreground_catchup_response_head_binding
   catchup_head_preserved_through_listed_stages:
     args:
     - CatchupResponse
@@ -5682,6 +5708,7 @@ functions:
     meaning: 'The captured response head H for response r remains the same bound response-head value through exactly these stages of r: delta/snapshot selection, canonical range construction, pending reconciliation, completion, and publication. No other stage is asserted by this predicate.'
     semantic_anchors:
     - claim:L122_catchup_response_head_is_bound_to_authoritative_frontier
+    - claim:L237_foreground_catchup_response_head_binding
   transition_within_candidate_initialized_unpublished_interval:
     args:
     - ProtocolTransition
@@ -6399,6 +6426,17 @@ functions:
     - claim:L223_authoritative_accepted_evidence_counts_durable_representation
     - claim:L227_accepted_classification_is_retained_through_eligibility_horizon
     meaning: Evidence representation e is a durable representation of accepted_idempotency_evidence counted by authoritative state s for the exact full identity k = (document_id, client_change_id). Counting here means that s counts e as such a representation for k; whether s also counts e as already-accepted evidence is a separate condition. Durability concerns the represented evidence's persistence in authoritative durable state, including through equivalent representations; it does not require retention of the same physical row or runtime object. This relation concerns representations of that accepted_idempotency_evidence, not arbitrary durable records for k. It does not itself assert already-accepted classification, valid provenance, retention throughout the retry/reconnect horizon, or a committed acceptance.
+  attempt_response_is:
+    args:
+    - CatchupAttempt
+    - CatchupResponse
+    returns: Bool
+    catalog_symbols: []
+    meaning: Response r is a logical catch-up response belonging to the protocol execution of attempt c, for the same document and reconnect-start context. Its response head and private reconciled candidate are the response head and candidate handled by c for that response. This relation asserts correspondence only; it does not assert response existence, uniqueness of physical response objects, completion, publication, eligibility, or successful processing.
+    semantic_anchors:
+    - claim:L237_foreground_catchup_response_head_binding
+    - claim:L238_foreground_catchup_publication_is_exact_replay
+    - claim:L239_foreground_catchup_publication_atomic_and_non_regressing
 assumptions:
   A2_ot_engine_is_correct:
     capability: relational
@@ -7689,6 +7727,244 @@ claims:
                         fn: catchup_published_state_is_exact_replay_through_head
                         args:
                         - var: c
+  L237_foreground_catchup_response_head_binding:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            c: CatchupAttempt
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: foreground_catchup_attempt
+                  args:
+                  - var: c
+              - call:
+                  fn: catchup_eligible_for_completion_or_publication
+                  args:
+                  - var: c
+            - exists:
+                vars:
+                  r: CatchupResponse
+                body:
+                  and:
+                  - call:
+                      fn: attempt_response_is
+                      args:
+                      - var: c
+                      - var: r
+                  - call:
+                      fn: catchup_head_binding_eligible_response
+                      args:
+                      - var: r
+                  - eq:
+                    - call:
+                        fn: catchup_response_head_value
+                        args:
+                        - var: r
+                    - call:
+                        fn: captured_authoritative_head_for_response
+                        args:
+                        - var: r
+                  - call:
+                      fn: catchup_head_preserved_through_listed_stages
+                      args:
+                      - var: r
+                  - call:
+                      fn: catchup_head_captured_from_authoritative_latest
+                      args:
+                      - var: c
+                  - call:
+                      fn: catchup_head_preserved_to_publication
+                      args:
+                      - var: c
+                  - call:
+                      fn: catchup_excludes_acceptances_after_captured_head
+                      args:
+                      - var: c
+  L238_foreground_catchup_publication_is_exact_replay:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            c: CatchupAttempt
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: foreground_catchup_attempt
+                  args:
+                  - var: c
+              - call:
+                  fn: catchup_attempt_publishes
+                  args:
+                  - var: c
+            - exists:
+                vars:
+                  r: CatchupResponse
+                  h: Revision
+                body:
+                  and:
+                  - call:
+                      fn: attempt_response_is
+                      args:
+                      - var: c
+                      - var: r
+                  - call:
+                      fn: resync_candidate_completed_through_head
+                      args:
+                      - var: r
+                      - var: h
+                  - call:
+                      fn: resync_candidate_publication_exposes_frontier
+                      args:
+                      - var: r
+                      - var: h
+                  - call:
+                      fn: catchup_published_state_is_exact_replay_through_head
+                      args:
+                      - var: c
+  L239_foreground_catchup_publication_atomic_and_non_regressing:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            c: CatchupAttempt
+          body:
+            implies:
+            - call:
+                fn: foreground_catchup_attempt
+                args:
+                - var: c
+            - exists:
+                vars:
+                  r: CatchupResponse
+                  h: Revision
+                  f: Revision
+                  f2: Revision
+                body:
+                  and:
+                  - call:
+                      fn: attempt_response_is
+                      args:
+                      - var: c
+                      - var: r
+                  - call:
+                      fn: catchup_response_head_is
+                      args:
+                      - var: r
+                      - var: h
+                  - call:
+                      fn: resync_visible_frontier_at_candidate_readiness
+                      args:
+                      - var: r
+                      - var: f
+                  - call:
+                      fn: resync_visible_frontier_after_response_handling
+                      args:
+                      - var: r
+                      - var: f2
+                  - implies:
+                    - not:
+                        call:
+                          fn: revision_at_or_before
+                          args:
+                          - var: f
+                          - var: h
+                    - call:
+                        fn: resync_candidate_discarded_without_visible_mutation
+                        args:
+                        - var: r
+                  - implies:
+                    - call:
+                        fn: revision_at_or_before
+                        args:
+                        - var: f
+                        - var: h
+                    - and:
+                      - call:
+                          fn: resync_state_exposed_only_by_atomic_publication
+                          args:
+                          - var: r
+                      - call:
+                          fn: resync_publication_restores_no_previously_removed_state
+                          args:
+                          - var: r
+                  - call:
+                      fn: revision_at_or_before
+                      args:
+                      - var: f
+                      - var: f2
+                  - call:
+                      fn: catchup_publication_is_atomic_and_non_regressing
+                      args:
+                      - var: c
+  L240_foreground_catchup_eligibility_requires_uninterrupted_binding:
+    capability: relational
+    contracts: []
+    formula:
+      and:
+      - forall:
+          vars:
+            c: CatchupAttempt
+          body:
+            and:
+            - implies:
+              - call:
+                  fn: foreground_catchup_attempt
+                  args:
+                  - var: c
+              - call:
+                  fn: normal_foreground_reconnect_attempt
+                  args:
+                  - var: c
+            - implies:
+              - call:
+                  fn: normal_foreground_reconnect_attempt
+                  args:
+                  - var: c
+              - call:
+                  fn: foreground_catchup_attempt
+                  args:
+                  - var: c
+      - forall:
+          vars:
+            c: CatchupAttempt
+          body:
+            implies:
+            - call:
+                fn: foreground_catchup_attempt
+                args:
+                - var: c
+            - call:
+                fn: catchup_binding_break_permanently_blocks_publication
+                args:
+                - var: c
+      - forall:
+          vars:
+            c: CatchupAttempt
+          body:
+            implies:
+            - and:
+              - call:
+                  fn: foreground_catchup_attempt
+                  args:
+                  - var: c
+              - call:
+                  fn: catchup_foreground_publication_eligible
+                  args:
+                  - var: c
+            - call:
+                fn: catchup_visible_document_binding_uninterrupted
+                args:
+                - var: c
   G5_retry_resolves_idempotently:
     contracts:
     - idempotency_terminal_outcome_coherence
