@@ -1822,7 +1822,7 @@ functions:
     - IdempotencyKey
     returns: Bool
     catalog_symbols: []
-    meaning: Full composite idempotency identity k = (document_id, client_change_id) is within the configured normal retry eligibility horizon in authoritative state s. This predicate does not assume any fixed duration such as 30 days.
+    meaning: Full composite idempotency identity k = (document_id, client_change_id) has its idempotency gate record still present and consultable in authoritative state s; the record is written when the server first receives the request and may hold a reservation or in-progress state before any terminal outcome exists; this presence is what 'within the configured normal retry eligibility horizon' means. This predicate does not assume any fixed duration such as 30 days. Presence may extend beyond 30 days when deletion is lazy, and no presence is promised after 30 days.
     semantic_anchors:
     - contract:idempotency_terminal_outcome_coherence
     - source:accepted_change_log
@@ -8163,7 +8163,7 @@ claims:
                   args:
                   - var: s
               - call:
-                  fn: terminal_key_within_retry_horizon
+                  fn: within_retry_reconnect_eligibility
                   args:
                   - var: s
                   - var: k
@@ -8281,10 +8281,15 @@ claims:
             t: TerminalResultRecord
           body:
             implies:
-            - call:
-                fn: rejected_terminal_result_record
-                args:
-                - var: t
+            - and:
+              - call:
+                  fn: rejected_terminal_result_record
+                  args:
+                  - var: t
+              - call:
+                  fn: rejected_terminal_result_within_retry_horizon
+                  args:
+                  - var: t
             - and:
               - call:
                   fn: rejected_terminal_identity_matches_request
@@ -8316,10 +8321,15 @@ claims:
             t: TerminalResultRecord
           body:
             implies:
-            - call:
-                fn: state_dependent_rejected_terminal_result
-                args:
-                - var: t
+            - and:
+              - call:
+                  fn: state_dependent_rejected_terminal_result
+                  args:
+                  - var: t
+              - call:
+                  fn: rejected_terminal_result_within_retry_horizon
+                  args:
+                  - var: t
             - and:
               - call:
                   fn: rejection_decision_has_authoritative_context
@@ -8359,28 +8369,6 @@ claims:
                     args:
                     - var: x
       - and:
-        - forall:
-            vars:
-              s: AuthoritativeState
-              k: IdempotencyKey
-            body:
-              implies:
-              - call:
-                  fn: reachable_authoritative_state
-                  args:
-                  - var: s
-              - and:
-                - implies:
-                  - call:
-                      fn: within_retry_reconnect_eligibility
-                      args:
-                      - var: s
-                      - var: k
-                  - call:
-                      fn: terminal_key_within_retry_horizon
-                      args:
-                      - var: s
-                      - var: k
         - forall:
             vars:
               r: Request

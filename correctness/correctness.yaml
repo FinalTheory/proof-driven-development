@@ -5685,10 +5685,15 @@ claims:
       - idempotency_gate
     source_refs:
       - final_architecture
-    statement: For every reachable authoritative state s and every idempotency key k, if k lies
-      within the 30-day normal retry and reconnect eligibility horizon in s, then k lies within the
-      configured normal retry eligibility horizon in s. The configured horizon need not have a fixed
-      duration.
+    statement: For every reachable authoritative state s and every full idempotency identity k, if k
+      lies within the 30-day normal retry and reconnect eligibility boundary in s, then k lies
+      within the configured normal retry eligibility horizon in s, where 'within the configured
+      horizon' means the idempotency record for k remains present and consultable in s. This
+      containment holds because idempotency records remain consultable for at least 30 days from the
+      server's first acceptance of the request, when the record is written; deletion may be lazy, so
+      presence may extend beyond 30 days, and no presence is promised after 30 days. The containment
+      does not require equality of the two horizons. The 30-day boundary covers both normal retry
+      and authoritative reconnect reconciliation, which consult the same record.
     verification:
       verifiers:
         - intent: In every reachable authoritative state, check that a key within 30-day
@@ -5707,7 +5712,10 @@ claims:
       server-side OT or an authoritative terminal decision. This includes initial normal submissions
       and normal retries; no prior submission or retransmission is required. Eligibility is
       independent of actual request coherence, processing success, OT invocation, acceptance, or
-      completion of a terminal decision.
+      completion of a terminal decision. Here pending/retry age is measured from the server's first
+      acceptance of the request, when its idempotency record is written; later retries or reconnects
+      that hit the existing record preserve that origin and do not reset it. An attempt that never
+      commits, for example after a crash before terminal commit, writes no record and starts no age.
     verification:
       verifiers:
         - intent: Check the processing-scope classification of initial normal submissions and normal

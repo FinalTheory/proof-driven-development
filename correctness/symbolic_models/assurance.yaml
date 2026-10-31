@@ -1389,104 +1389,112 @@ records:
   claim:G5_retry_resolves_idempotently:
     kind: claim
     subject_id: G5_retry_resolves_idempotently
-    subject_signature: f7a83ada49ea85cc96c5e7dbc58ab70703ab8e26698f853d312514e05410c0df
+    subject_signature: 5ccbe9abb1f00053270609c4de425ae5ad751988cc8f057d045127ecafcf74a6
     roundtrip:
-      subject_signature: f7a83ada49ea85cc96c5e7dbc58ab70703ab8e26698f853d312514e05410c0df
+      subject_signature: 5ccbe9abb1f00053270609c4de425ae5ad751988cc8f057d045127ecafcf74a6
       status: TRANSLATED
-      natural_language: 'The conjunction of all of the following holds. (1) For every authoritative state s and every idempotency
-        key k, if s is reachable under the canonical server protocol and failure model and k, as the exact full composite
-        identity (document_id, client_change_id), is within the configured normal retry eligibility horizon in s — this horizon
-        predicate assuming no fixed duration such as 30 days — then all four hold in s for k: s contains at most one durable
-        terminal result for that exact identity, with equal client_change_id values in different document namespaces counting
-        as distinct identities; if that exact identity has an ACCEPTED terminal outcome in s, canonical accepted history for
-        the same document contains the matching canonical acceptance for that exact identity and no incompatible REJECTED
-        outcome exists for that same identity; if that exact identity has a REJECTED terminal outcome in s, canonical accepted
-        history for the same document contains no canonical acceptance for that exact identity; and the terminal outcome for
-        k is immutable in that, once a terminal outcome for that exact identity has linearized, every later acceptance or
-        definitive-rejection transition for the same identity whose resulting authoritative state remains within the configured
-        normal retry eligibility horizon for k preserves the same single-valued outcome, post-horizon transitions or re-submissions
-        being outside this immutable-outcome predicate and this predicate adding no progress requirement. (2a) For every terminal
-        result record t, if t is an authoritative ACCEPTED(canonical result) terminal result and t is within the normal retry
-        eligibility horizon — meaning the full identity t carries is still a normal_retry_eligible_identity, the horizon in
-        which producer provenance must be retained, this predicate classifying horizon membership only and not itself asserting
-        producer provenance, origin authority, or lifecycle preservation — then there exists a canonical acceptance a such
-        that all hold: a is a committed canonical accepted-change record in authoritative accepted history; the full idempotency
-        key carried by t equals the authoritative idempotency identity carried by a; and t carries a canonical result produced
-        by the same acceptance execution that produced and committed a for the same full identity, this producer-provenance
-        relation having to be correct at authoritative terminalization and remain the same in any later lifecycle representation
-        on which it is asserted, but not requiring the binding metadata to have been materialized during acceptance-transaction
-        assembly and not treating a transient intermediate metadata substitution discarded before authoritative terminalization
-        as a violation. (2b) For every protocol transition x and terminal result records before and after, if x is an authoritative
-        lifecycle representation change, within the normal retry eligibility horizon, that preserves one already-linearized
-        ACCEPTED logical terminal outcome from before to after while possibly rewriting its durable physical representation,
-        with before and after carrying the same full idempotency identity, then there exists a canonical acceptance a such
-        that all hold: a is committed as in (2a); the key carried by before equals the identity carried by a; the key carried
-        by after equals the identity carried by a; and the claim-level producer-match relation in (2a) holds both for before
-        with a and for after with a. (3) For every terminal result record t, if t is an authoritative REJECTED(definitive
-        rejection reason) terminal result, then both hold with respect to the definitive rejection decision from which t derives
-        and the exact submitted request for which that decision was produced: t and that request carry the exact same full
-        (document_id, client_change_id) identity; and, when the definitive rejection reason depends on raw_edit or base_revision,
-        that decision uses those exact values from its bound submitted request. (4) For every terminal result record t, if
-        t is an authoritative rejected terminal result whose definitive rejection reason''s truth depends on document/history
-        state, then both hold for the decision from which t derives: that decision is bound to authoritative same-document
-        rejection context rather than unvalidated stale owner-local state; and the authoritative context/evidence for that
-        decision remains sufficient when t linearizes, either because it is current or because a reason-specific guard, monotonicity
-        argument, or revalidation preserves the rejection truth. (5) For every external terminal result x, if x is a definitive
-        externally terminal result exposed to a client — pending, timeout, cancellation, transport-loss, and crash-before-terminal-commit
-        observations not being such results — and x belongs to the normal retry eligibility horizon for its logical edit,
-        whether returned by the initial normal submission or by an in-horizon retry/reprocessing attempt, a post-expiry re-submission
-        being outside this horizon predicate, then x is emitted from, derived from, and exactly reproduces the already-linearized
-        authoritative terminal outcome for the same full key that x carries; an attempt-local computation that independently
-        produces identical content without deriving from that committed outcome does not satisfy this, and attempt-local transient
-        computations cannot substitute a conflicting result. (6a) For every authoritative state s and idempotency key k, if
-        s is reachable as in (1), then if the composite identity k is within the 30-day normal retry/reconnect eligibility
-        horizon in s, k is within the configured normal retry eligibility horizon in s in the sense of the terminal-key horizon
-        predicate in (1). (6b) For every request r, if r is a normal submitted request representing one logical edit within
-        the 30-day normal retry eligibility horizon, then r preserves the same full request identity, raw_edit semantics,
-        and canonical authoring frontier for its logical operation, those coordinates not being cross-bound from another operation.
-        (6c) For every protocol transition t and idempotency key k, if t is any acceptance attempt or definitive-rejection
-        attempt for the exact full key k while that logical identity remains within the 30-day normal retry eligibility horizon
-        — no acceptance or definitive-rejection path being excluded by being classified outside some narrower terminal-result
-        subprotocol, and post-expiry re-submission being outside this predicate — then t arbitrates through the same single
-        authoritative per-key terminal state used by every competing acceptance and definitive-rejection attempt for k, with
-        no independent arbitration domain allowed to decide a second terminal outcome. (6d) For every protocol transition
-        t and terminal result records before and after, if t is an authoritative lifecycle representation rewrite, within
-        the 30-day normal retry eligibility horizon, from before to after for the same already-linearized logical terminal
-        outcome and the same full idempotency key, the durable physical representation possibly changing, then t preserves
-        the same already-linearized logical terminal outcome from before to after: an ACCEPTED outcome preserves the exact
-        canonical result, and a REJECTED outcome preserves the same definitive rejection reason, physical representation possibly
-        changing and, for REJECTED, this preservation not requiring preservation of the same rejection-decision object or
-        producer when the exact request binding and required authoritative-context justification remain valid.'
+      natural_language: 'The proposition is the conjunction of all of the following clauses. Throughout, an idempotency key
+        is the exact full composite identity consisting of document_id plus client_change_id, and equal client_change_id values
+        in different document namespaces are distinct identities. Referenced semantic contracts supply canonical vocabulary
+        and relations only; their entire formulas are not implicitly conjoined into this claim. (1) For every authoritative
+        state s and every idempotency key k, if s is reachable under the canonical server protocol and failure model, so that
+        impossible or purely hypothetical authoritative states are excluded, and if the composite identity k is within the
+        30-day normal retry and reconnect eligibility horizon in s, then all of the following hold for that same s and k:
+        s contains at most one durable terminal result for the exact full identity k; if k has an ACCEPTED terminal outcome
+        in s, then the canonical accepted history for that same document contains the matching canonical acceptance for that
+        exact identity and no incompatible REJECTED outcome exists for that same identity; if k has a REJECTED terminal outcome
+        in s, then the canonical accepted history for that same document contains no canonical acceptance for that exact identity;
+        and once a terminal outcome for k has linearized, every later acceptance or definitive-rejection transition for that
+        same identity whose resulting authoritative state remains within the configured normal retry eligibility horizon for
+        k preserves the same single-valued outcome, with post-horizon transitions or re-submissions outside this requirement
+        and with no progress requirement added. (2) For every terminal result record t, if t is an authoritative ACCEPTED
+        canonical-result outcome and t is within the normal retry eligibility horizon, in the sense that the full identity
+        t carries is still a normal-retry-eligible identity, which is the horizon in which producer provenance must be retained,
+        where this horizon classification by itself does not assert producer provenance, origin authority, or lifecycle preservation,
+        then there exists a canonical acceptance a such that a is a committed canonical accepted-change record in authoritative
+        accepted history, the full idempotency key carried by t equals the authoritative idempotency identity carried by a,
+        and t carries a canonical result produced by the same acceptance execution that produced and committed a for the same
+        full identity. That producer-provenance relation must be correct at authoritative terminalization and must remain
+        the same in any later lifecycle representation on which the relation is asserted, but it does not require the binding
+        metadata to have been materialized during acceptance-transaction assembly, and it does not treat a transient intermediate
+        metadata substitution that is discarded before authoritative terminalization as a violation. (3) For every protocol
+        transition x and every pair of terminal result records before and after, if x is an authoritative lifecycle representation
+        change, within the normal retry eligibility horizon, that preserves one already-linearized ACCEPTED logical terminal
+        outcome from before to after while possibly rewriting its durable physical representation, where before and after
+        carry the same full idempotency identity, then there exists a canonical acceptance a such that a is committed in authoritative
+        accepted history, the full key carried by before equals the identity carried by a, the full key carried by after equals
+        the identity carried by a, and both before and after carry a canonical result produced by the same acceptance execution
+        that produced and committed a, with the provenance meaning stated in clause (2). (4) For every terminal result record
+        t, if t is an authoritative REJECTED definitive-rejection-reason outcome and t belongs to a logical identity still
+        within the 30-day normal retry eligibility horizon in which definitive-rejection request and authoritative-context
+        provenance are guaranteed, with post-expiry re-submission outside this condition, then both of the following hold:
+        t and the exact submitted request for which the definitive rejection decision from which t derives was produced carry
+        the exact same full document_id plus client_change_id identity; and, when the definitive rejection reason depends
+        on raw_edit or base_revision, that decision uses those exact values from its bound submitted request. (5) For every
+        terminal result record t, if t is an authoritative rejected terminal result whose definitive rejection reason has
+        a truth that depends on document or history state, and t belongs to a logical identity still within the 30-day normal
+        retry eligibility horizon as in clause (4), then both of the following hold for the definitive rejection decision
+        from which t derives: that decision is bound to authoritative same-document rejection context rather than unvalidated
+        stale owner-local state; and the authoritative context or evidence for that decision remains sufficient when t linearizes,
+        either because it is current or because a reason-specific guard, monotonicity argument, or revalidation preserves
+        the rejection truth. (6) For every external terminal result x, if x is a definitive externally terminal result exposed
+        to a client, where pending, timeout, cancellation, transport-loss, and crash-before-terminal-commit observations are
+        not externally terminal results, and if x belongs to the normal retry eligibility horizon for its logical edit, whether
+        x is returned by the initial normal submission or by an in-horizon retry or reprocessing attempt, with a post-expiry
+        re-submission outside this condition and outside terminal-response outcome binding, then x is emitted from, derived
+        from, and exactly reproduces the already-linearized authoritative terminal outcome for the same full key associated
+        with x. An attempt-local computation that independently produces identical content without deriving from that committed
+        outcome does not satisfy this relation, and attempt-local transient computations cannot substitute a conflicting result.
+        (7) For every request r, if r is a normal submitted request representing one logical edit within the 30-day normal
+        retry eligibility horizon, then r preserves the same full request identity, raw_edit semantics, and canonical authoring
+        frontier for its logical operation, and those coordinates are not cross-bound from another operation. (8) For every
+        protocol transition t and every idempotency key k, if t is any acceptance attempt or definitive-rejection attempt
+        for the exact full key k while that logical identity remains within the 30-day normal retry eligibility horizon, where
+        no acceptance or definitive-rejection path is excluded by being classified outside some narrower terminal-result subprotocol
+        and post-expiry re-submission is outside this condition, then t arbitrates through the same single authoritative per-key
+        terminal state used by every competing acceptance and definitive-rejection attempt for k, and no independent arbitration
+        domain may decide a second terminal outcome. (9) For every protocol transition t and every pair of terminal result
+        records before and after, if t is an authoritative lifecycle representation rewrite, within the 30-day normal retry
+        eligibility horizon, from the terminal-result representation before to the representation after for the same already-linearized
+        logical terminal outcome and the same full idempotency key, where the durable physical representation may change,
+        then t preserves the same already-linearized logical terminal outcome from before to after: an ACCEPTED outcome preserves
+        the exact canonical result, and a REJECTED outcome preserves the same definitive rejection reason. Physical representation
+        may change, and for a REJECTED outcome this preservation does not require preserving the same rejection-decision object
+        or producer when the exact request binding and the required authoritative-context justification remain valid.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: f7a83ada49ea85cc96c5e7dbc58ab70703ab8e26698f853d312514e05410c0df
+        subject_signature: 5ccbe9abb1f00053270609c4de425ae5ad751988cc8f057d045127ecafcf74a6
         verdict: EQUIVALENT
-        reason: 'The formula preserves all claim requirements: per-key at-most-one, mutual exclusion, immutability and shared
-          arbitration within the retry horizon; accepted producer binding with the same committed acceptance across lifecycle
-          rewrites; rejected binding to the exact submitted request identity and raw_edit/base_revision context; state-dependent
-          rejection requiring same-document authoritative context sufficient at terminalization, with no such requirement
-          for request-intrinsic reasons; retry request identity/raw_edit/frontier coherence; and external results deriving
-          from and exactly reproducing the already-linearized authoritative outcome, with non-terminal uncertainty and post-expiry
-          resubmission excluded and no added progress requirement.'
+        reason: 'The formula covers every claim element within the stated 30-day horizon: full (document_id, client_change_id)
+          identity, retry request identity/payload/frontier coherence, at-most-one and immutable single-valued terminal outcomes
+          with ACCEPTED/REJECTED mutual exclusion, same-execution ACCEPTED producer binding including lifecycle preservation,
+          REJECTED derivation from the decision for the same request with request-value matching, state-dependent authoritative-context
+          and sufficiency-at-terminalization, shared per-key arbitration, lifecycle exact-outcome preservation, and external
+          results deriving from and exactly reproducing the already-linearized outcome, with non-terminal and post-expiry
+          cases excluded as in the source.'
         differences: []
       strengthening:
-        subject_signature: f7a83ada49ea85cc96c5e7dbc58ab70703ab8e26698f853d312514e05410c0df
+        subject_signature: 5ccbe9abb1f00053270609c4de425ae5ad751988cc8f057d045127ecafcf74a6
         verdict: EQUIVALENT
-        reason: The formula covers all five contracts and the statement's extra elements with matching full-identity (D,k)
-          scoping, horizon guards, provenance direction, single-valued arbitration, immutability and lifecycle preservation,
-          and non-terminal/post-expiry exclusions; no source requirement is omitted and no out-of-boundary requirement is
-          added.
+        reason: 'Every claim component is encoded with the same full (document_id, client_change_id) identity and 30-day horizon
+          guards: state coherence with at-most-one, accepted-matching, rejected-exclusion and immutability; accepted producer
+          binding at terminalization and across lifecycle rewrites; rejected identity binding plus raw_edit/base_revision
+          values when dependent; state-dependent authoritative-context binding with sufficiency at terminalization and intrinsic
+          reasons excluded; external reproduction of the already-linearized outcome; retry identity/payload/frontier coherence;
+          shared per-key arbitration; and exact-outcome lifecycle preservation, with no liveness requirement added and no
+          post-expiry extension.'
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: f7a83ada49ea85cc96c5e7dbc58ab70703ab8e26698f853d312514e05410c0df
+        subject_signature: 5ccbe9abb1f00053270609c4de425ae5ad751988cc8f057d045127ecafcf74a6
         verdict: EQUIVALENT
-        reason: 'The rendering preserves all claim guarantees: single-valued coherent terminal outcomes with mutual exclusion
-          and immutability within the normal horizon, accepted-result producer binding including lifecycle preservation, rejected-result
-          request binding and state-dependent authoritative-context binding, derived exact reproduction for external terminal
-          results, same per-key arbitration, request identity/raw-edit/frontier preservation, non-terminal uncertainty, post-expiry
-          exclusion, and the 30-day bridge to the configured horizon without adding a progress requirement.'
+        reason: The nine clauses reproduce the original's horizon-scoped coherence, accepted-producer binding including lifecycle
+          preservation, rejection request and state-dependent context bindings, external-result reproduction, submitted-request
+          preservation, single per-key arbitration, first-terminal immutability and mutual exclusion, non-terminal uncertainty,
+          and post-expiry exclusion, with the same full (document_id, client_change_id) identity, provenance direction, and
+          at-most-one cardinality; the stated disclaimers qualify implementation timing and representation without deleting
+          any antecedent requirement.
         differences: []
   claim:G12_client_pending_state_tracks_unresolved_edits:
     kind: claim
@@ -2991,56 +2999,58 @@ records:
   contract:idempotency_terminal_outcome_coherence:
     kind: contract
     subject_id: idempotency_terminal_outcome_coherence
-    subject_signature: b2674654f50a903304c4ba071fc96e08e928ff3105cf808f80ae5bb4418e44b3
+    subject_signature: 58dc192cb31557a9d6a9afa02d19c8cc93cbd216b3a2a941c2ba5301ca4cfefd
     roundtrip:
-      subject_signature: b2674654f50a903304c4ba071fc96e08e928ff3105cf808f80ae5bb4418e44b3
+      subject_signature: 58dc192cb31557a9d6a9afa02d19c8cc93cbd216b3a2a941c2ba5301ca4cfefd
       status: TRANSLATED
-      natural_language: For every authoritative state s and every full composite idempotency identity k = (document_id, client_change_id),
-        if s is reachable under the canonical server protocol and failure model and k is within the configured normal retry
-        eligibility horizon in s, then all of the following hold in s for that exact identity k. The authoritative idempotency
-        terminal-outcome state contains at most one durable terminal result for k; equal client_change_id values in different
-        document namespaces are distinct identities. This terminal-outcome state represents durable ACCEPTED(canonical result)
-        or REJECTED(definitive reason) outcomes, and uncertainty has no terminal entry. If k has an ACCEPTED terminal outcome,
-        the canonical accepted-change history for the same document contains the matching canonical acceptance for that exact
-        identity and there is no incompatible REJECTED outcome for that same identity. If k has a REJECTED terminal outcome,
-        the canonical accepted-change history for the same document contains no canonical acceptance for that exact identity.
-        Once a terminal outcome for k has linearized, every later acceptance or definitive-rejection transition for that same
-        identity whose resulting authoritative state remains within the configured normal retry eligibility horizon for k
-        preserves that same single-valued terminal outcome. Transitions or re-submissions after the retry horizon are outside
-        that immutability condition, and the condition imposes no progress requirement. Impossible or purely hypothetical
-        authoritative states are outside the reachability guard, and no premise is added requiring k already to have a terminal
-        outcome.
+      natural_language: 'For every authoritative state s and every idempotency key k, if s is reachable under the canonical
+        server protocol and failure model, and the full composite idempotency identity k = (document_id, client_change_id)
+        has its idempotency gate record still present and consultable in authoritative state s — that presence being what
+        it means for k to be within the configured normal retry eligibility horizon in s, where the record is written when
+        the server first receives the request and may hold a reservation or in-progress state before any terminal outcome
+        exists, with no fixed duration such as 30 days assumed, presence possibly extending beyond 30 days when deletion is
+        lazy and no presence promised after 30 days — then all of the following hold for that same s and that same exact full
+        composite identity k: (1) s contains at most one durable terminal result for k, where a terminal result is ACCEPTED
+        with a canonical result or REJECTED with a definitive reason and where equal client_change_id values in different
+        document namespaces are distinct identities; (2) if k has an ACCEPTED terminal outcome in s, then the canonical accepted
+        history for that same document contains the matching canonical acceptance for that exact identity, and no incompatible
+        REJECTED outcome exists for that same identity; (3) if k has a REJECTED terminal outcome in s, then the canonical
+        accepted history for that same document contains no canonical acceptance for that exact identity; and (4) once a terminal
+        outcome for k has linearized, every later acceptance or definitive-rejection transition for that same identity whose
+        resulting authoritative state remains within the configured normal retry eligibility horizon for k preserves the same
+        single-valued outcome, where post-horizon transitions or re-submissions are outside this condition and this condition
+        imposes no requirement that any such later transition occur or make progress.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: b2674654f50a903304c4ba071fc96e08e928ff3105cf808f80ae5bb4418e44b3
+        subject_signature: 58dc192cb31557a9d6a9afa02d19c8cc93cbd216b3a2a941c2ba5301ca4cfefd
         verdict: EQUIVALENT
-        reason: The formula preserves the canonical state-invariant scope by quantifying every reachable authoritative state
-          and exact composite idempotency identity only while that key is within the normal retry horizon. Its predicates
-          retain the single-terminal cardinality bound, ACCEPTED-to-matching-canonical-acceptance provenance plus exclusion
-          of REJECTED, REJECTED exclusion of canonical acceptance, and within-horizon immutability across later acceptance
-          or definitive-rejection transitions. The catalog and predicate meanings also preserve document-scoped identity and
-          the exclusion of uncertain attempt outcomes from terminal state, without adding progress or post-horizon obligations.
+        reason: The formula preserves the reachable-state and within-horizon antecedent, at most one durable terminal result
+          for the exact composite (document_id, client_change_id) identity, ACCEPTED only with the matching canonical acceptance
+          and no incompatible REJECTED outcome, REJECTED with no canonical acceptance, and preservation of the single-valued
+          outcome across later in-horizon acceptance or definitive-rejection transitions; uncertain outcomes are excluded
+          because only durable terminal results count.
         differences: []
       strengthening:
-        subject_signature: b2674654f50a903304c4ba071fc96e08e928ff3105cf808f80ae5bb4418e44b3
+        subject_signature: 58dc192cb31557a9d6a9afa02d19c8cc93cbd216b3a2a941c2ba5301ca4cfefd
         verdict: EQUIVALENT
-        reason: The formula preserves the canonical state-invariant scope by quantifying every reachable authoritative state
-          and exact composite idempotency identity only while that key is within the normal retry horizon. Its predicates
-          retain the at-most-one durable terminal outcome constraint, ACCEPTED-to-matching-canonical-acceptance provenance
-          plus exclusion of REJECTED, REJECTED exclusion of canonical acceptance, and within-horizon immutability across later
-          acceptance or definitive-rejection transitions. The supplied catalog and predicate meanings preserve document-scoped
-          identity and uncertainty as non-terminal state, while adding neither progress nor post-horizon obligations.
+        reason: The formula quantifies over reachable authoritative states only where the composite key's gate record is present,
+          matching the in-horizon scope, and requires at most one (not exactly one) durable terminal outcome for the exact
+          (document_id, client_change_id) identity, preserving document separation. ACCEPTED implies a matching canonical
+          acceptance and no REJECTED for that identity, REJECTED implies no canonical acceptance, and immutability is limited
+          to later in-horizon transitions with no progress requirement, matching the canonical mutual exclusion, provenance
+          direction, cardinality, and lifecycle preservation; uncertain outcomes are excluded because terminal outcomes are
+          defined only as canonical ACCEPTED or definitive REJECTED.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: b2674654f50a903304c4ba071fc96e08e928ff3105cf808f80ae5bb4418e44b3
+        subject_signature: 58dc192cb31557a9d6a9afa02d19c8cc93cbd216b3a2a941c2ba5301ca4cfefd
         verdict: EQUIVALENT
-        reason: The rendering preserves the canonical all-reachable-state invariant, the document-scoped composite identity,
-          single-valued durable terminal-outcome cardinality, ACCEPTED/REJECTED coherence with the canonical accepted-change
-          history, uncertainty exclusion, and within-horizon immutability across later terminal transitions. Its explicit
-          reachability, retry-horizon, and no-progress clarifications do not add or remove guarantees beyond the canonical
-          contract and stated exclusions.
+        reason: The rendering preserves the composite (document_id, client_change_id) identity, at-most-one durable terminal
+          cardinality, the ACCEPTED-implies-matching-canonical-acceptance-and-no-REJECTED direction, the REJECTED-implies-no-canonical-acceptance
+          direction, the reachable-authoritative-state and normal-retry-horizon scope as defined by consultable gate-record
+          presence, and the exclusion of uncertain/non-terminal outcomes; clause (4) is horizon-scoped preservation of the
+          same invariant without adding a progress requirement.
         differences: []
   contract:live_delivery_acceptance_binding:
     kind: contract
@@ -5491,60 +5501,63 @@ records:
   claim:L162_terminal_state_transition_preserves_single_outcome:
     kind: claim
     subject_id: L162_terminal_state_transition_preserves_single_outcome
-    subject_signature: ace73db580e68abc0ce904e8dcf449bec704311fc1e3dfcfe4d1c20483990e5a
+    subject_signature: bf5002dc16cb8907a55194a0900203b455b42912e5a3e662535b31c69f1a9ad8
     roundtrip:
-      subject_signature: ace73db580e68abc0ce904e8dcf449bec704311fc1e3dfcfe4d1c20483990e5a
+      subject_signature: bf5002dc16cb8907a55194a0900203b455b42912e5a3e662535b31c69f1a9ad8
       status: TRANSLATED
-      natural_language: 'All of the following hold, where an idempotency key k is always the exact full composite identity
-        (document_id, client_change_id), so equal client_change_id values in different document namespaces are distinct identities.
-        (1) For every authoritative state s and every idempotency key k, if s is reachable under the canonical server protocol
-        and failure model and k is within the configured normal retry eligibility horizon in s (with no fixed duration assumed),
-        then both: it is not the case that the terminal outcome contained in s for k is both ACCEPTED (canonical result) and
-        REJECTED (definitive rejection reason); and the terminal outcome for k in s is immutable, meaning that once a terminal
-        outcome for k has linearized, every later acceptance or definitive-rejection transition for that same identity whose
-        resulting authoritative state remains within the configured normal retry eligibility horizon for k preserves the same
-        single-valued outcome, while post-horizon transitions or re-submissions are outside this immutability predicate and
-        no progress requirement is added. (2) For every authoritative state s and every idempotency key k, if s is reachable,
-        k is within the normal retry eligibility horizon in s, and s contains a terminal_result for k in its idempotency_terminal_outcomes
-        store (presence only, irrespective of the outcome''s value and provenance), then s contains at most one durable terminal
-        result for k. (3) For every protocol transition x, authoritative state s, and idempotency key k, if x is an authoritative
-        terminal-state transition applied at s — that is, a transition that linearizes, attempts to linearize, or is arbitrated
-        against the per-key terminal outcome state in s, namely the acceptance and definitive-rejection transitions of the
-        terminal state machine, and not a non-terminal lifecycle, recovery, or representation-migration transition — and s
-        is reachable, k is within the normal retry eligibility horizon in s, and the terminal outcome contained in s for k
-        is REJECTED (definitive rejection reason), then x does not create a canonical acceptance for k. (4) For every protocol
-        transition x, authoritative state s, and idempotency key k, if x is an authoritative terminal-state transition applied
-        at s (with the same meaning as in (3)), s is reachable, k is within the normal retry eligibility horizon in s, and
-        s contains a terminal_result for k, then x preserves the exact logical terminal outcome for k: the terminal_result
-        for k after x is identical in value and identity to the one in s; this preservation assertion concerns an existing
-        outcome and does not itself govern whether x may create an outcome for a key that has none.'
+      natural_language: 'For every authoritative state s and every idempotency key k, where k denotes the exact full composite
+        identity (document_id, client_change_id) and equal client_change_id values in different document namespaces are distinct
+        identities: (1) if s is reachable under the canonical server protocol and failure model (impossible or purely hypothetical
+        authoritative states being excluded) and k''s idempotency gate record is still present and consultable in s — that
+        presence, where the record is written when the server first receives the request and may hold a reservation or in-progress
+        state before any terminal outcome exists, being what being within the configured normal retry eligibility horizon
+        means, without assuming any fixed duration such as 30 days, with presence possibly extending beyond 30 days when deletion
+        is lazy and no presence promised after 30 days — then s does not both have an ACCEPTED(canonical result) terminal
+        outcome for k and have a REJECTED(definitive rejection reason) terminal outcome for k, and the terminal outcome for
+        k is immutable in the sense that, once a terminal outcome for k has linearized, every later acceptance or definitive-rejection
+        transition for that same identity whose resulting authoritative state remains within the configured normal retry eligibility
+        horizon for k preserves the same single-valued outcome, with post-horizon transitions or re-submissions outside this
+        immutability and with no progress requirement added; (2) if, in addition, s contains a terminal_result for k in its
+        idempotency_terminal_outcomes store (presence only, the outcome''s value and provenance being separate), then s contains
+        at most one durable terminal result for k; (3) for every protocol transition x, if x is an authoritative terminal-state
+        transition applied at s — that is, a transition that linearizes, attempts to linearize, or is arbitrated against the
+        per-key terminal outcome state in s, namely the acceptance and definitive-rejection transitions of the terminal state
+        machine, excluding non-terminal lifecycle, recovery, and representation-migration transitions — and s is reachable,
+        k is within the retry horizon in s as defined above, and s has a REJECTED(definitive rejection reason) terminal outcome
+        for k, then x does not create a canonical acceptance for k; and (4) if x is such an authoritative terminal-state transition
+        applied at s, s is reachable, k is within the retry horizon in s as defined above, and s contains a terminal_result
+        for k, then x preserves the exact logical terminal outcome for k, meaning the terminal_result for k after x is identical
+        in value and identity to the one in s, this preservation assertion concerning an existing outcome and not governing,
+        by itself, whether x may create an outcome for a key that has none.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: ace73db580e68abc0ce904e8dcf449bec704311fc1e3dfcfe4d1c20483990e5a
+        subject_signature: bf5002dc16cb8907a55194a0900203b455b42912e5a3e662535b31c69f1a9ad8
         verdict: EQUIVALENT
-        reason: The formula preserves the source scope (eligible/full composite key within the retry horizon, reachable authoritative
-          states), asserts ACCEPTED/REJECTED mutual exclusivity and at-most-one outcome, requires every authoritative terminal-state
-          transition from a state containing an outcome to preserve that exact outcome, and forbids acceptance creation from
-          a REJECTED state, with no material added or omitted requirement.
+        reason: 'The four conjuncts jointly cover the claim within its stated scope: mutual exclusivity and immutability for
+          reachable within-horizon states, at-most-one terminal outcome when one is present, preservation by every later authoritative
+          terminal-state transition from a state containing an outcome, and no canonical acceptance created by a terminal
+          transition from a rejected state, all for the exact full composite key (document_id, client_change_id), with no
+          added requirement.'
         differences: []
       strengthening:
-        subject_signature: ace73db580e68abc0ce904e8dcf449bec704311fc1e3dfcfe4d1c20483990e5a
+        subject_signature: bf5002dc16cb8907a55194a0900203b455b42912e5a3e662535b31c69f1a9ad8
         verdict: EQUIVALENT
-        reason: 'The formula matches the source: preservation is required for every later authoritative terminal-state transition
-          at a reachable state within the retry horizon containing a terminal outcome, ACCEPTED/REJECTED mutual exclusivity
-          and at-most-one outcome are asserted within the same reachable/horizon scope, and a state with a REJECTED outcome
-          forbids any terminal-state transition creating a canonical acceptance for the same full composite key. No requirement
-          is added outside the stated horizon, identity, or transition scope, and no source requirement is omitted.'
+        reason: 'The four conjuncts jointly encode the source guarantees under the same eligible, reachable, within-horizon
+          scope and full composite key identity: ACCEPTED and REJECTED are mutually exclusive, a contained terminal outcome
+          is at most one and is preserved in value and identity by every later authoritative terminal-state transition, and
+          a rejected state admits no later transition creating a canonical acceptance. No additional cardinality, temporal,
+          identity, or provenance requirement is added, and no source requirement is omitted.'
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: ace73db580e68abc0ce904e8dcf449bec704311fc1e3dfcfe4d1c20483990e5a
+        subject_signature: bf5002dc16cb8907a55194a0900203b455b42912e5a3e662535b31c69f1a9ad8
         verdict: EQUIVALENT
-        reason: The rendering preserves the original's quantifiers, composite key identity, eligibility/retry-horizon scope,
-          mutual exclusivity of ACCEPTED and REJECTED, at-most-one terminal outcome, preservation of the exact existing outcome
-          by later authoritative terminal-state transitions, and the bar on canonical acceptance after a REJECTED outcome,
-          without adding or omitting a guarantee.
+        reason: The rendering preserves the composite document-plus-client-change identity, the reachable-state and retry-horizon
+          scope defined by consultable gate-record presence, ACCEPTED/REJECTED mutual exclusion, at-most-one durable terminal
+          result, blocking of later canonical acceptance after a committed REJECTED outcome, and exact value-and-identity
+          preservation by later authoritative terminal-state transitions; its horizon and existing-outcome qualifications
+          remain within the source's eligible-key scope and add or omit no requirement.
         differences: []
   claim:L170_recovery_preserves_terminal_outcomes:
     kind: claim
@@ -11183,84 +11196,92 @@ records:
   claim:C40_terminal_outcome_is_single_valued_per_idempotency_key:
     kind: claim
     subject_id: C40_terminal_outcome_is_single_valued_per_idempotency_key
-    subject_signature: 1c7ff9d388e456134ea25e8096f2df023d5bbc0c626ee1a7494543b745d8fe2e
+    subject_signature: 5577c56a0294b139b68d3ef553ef577de9c9d1e43a3605d5916a4d6be70bd739
     roundtrip:
-      subject_signature: 1c7ff9d388e456134ea25e8096f2df023d5bbc0c626ee1a7494543b745d8fe2e
+      subject_signature: 5577c56a0294b139b68d3ef553ef577de9c9d1e43a3605d5916a4d6be70bd739
       status: TRANSLATED
-      natural_language: 'The conjunction of the following six statements holds. (1) For every authoritative state s and every
-        idempotency key k, if s is reachable under the canonical server protocol and failure model and the full composite
-        identity k = (document_id, client_change_id) is within the configured normal retry eligibility horizon in s, then
-        both: it is not the case that the terminal outcome contained in s for k is both ACCEPTED (canonical result) and REJECTED
-        (definitive rejection reason), and the terminal outcome for k in s is immutable in the following sense: once a terminal
-        outcome for k has linearized, every later acceptance or definitive-rejection transition for that same identity whose
-        resulting authoritative state remains within the configured normal retry eligibility horizon for k preserves the same
-        single-valued outcome, with post-horizon transitions or re-submissions outside this predicate and with no progress
-        requirement added. (2) For every authoritative state s and every idempotency key k, if s is reachable, k is within
-        the configured normal retry eligibility horizon in s, and s contains a terminal_result for the exact full identity
-        k in its idempotency_terminal_outcomes store (presence only, without asserting its value or provenance), then s contains
-        at most one durable terminal result for the exact full composite identity k, where equal client_change_id values in
-        different document namespaces are distinct identities. (3) For every protocol transition x, authoritative state s,
-        and idempotency key k, if x is an authoritative terminal-state transition applied at s (a transition that linearizes,
-        attempts to linearize, or is arbitrated against the per-key terminal outcome state in s, namely the acceptance and
-        definitive-rejection transitions of the terminal state machine, excluding non-terminal lifecycle, recovery, and representation-migration
-        transitions), s is reachable, k is within the configured normal retry eligibility horizon in s, s contains a terminal
-        outcome for k, x is a transition/path that can create a canonical acceptance or an authoritative definitive rejection
-        for the exact full identity k, and the authoritative state resulting from x remains within the configured normal retry
-        eligibility horizon for k (this last condition asserting only that horizon position for k, and nothing about x''s
-        pre-state, about whether x preserves or creates any outcome, or about any other identity), then x, applied at s, preserves
-        the exact logical terminal outcome for k, i.e. the terminal_result for k after x is identical in value and identity
-        to the one in s. (4) For every protocol transition x, authoritative state s, and idempotency key k, if x is an authoritative
-        terminal-state transition applied at s as defined in (3), s is reachable, k is within the configured normal retry
-        eligibility horizon in s, and the terminal outcome contained in s for k is REJECTED (definitive rejection reason),
-        then x does not create a canonical acceptance for the exact full identity k. (5) For every protocol transition x,
-        authoritative state s, and idempotency key k, if x is a transition/path that can create a canonical acceptance or
-        an authoritative definitive rejection for the exact full identity k, k is an eligible idempotency key (the logical
-        edit identity it denotes is a normal-retry-eligible identity within the protocol''s eligibility boundary), x is an
-        authoritative terminal-state transition applied at s as defined in (3), s is reachable, and k is within the configured
-        normal retry eligibility horizon in s, then path x passes through the same single per-key terminal-outcome arbitration
-        gate used by every acceptance and definitive-rejection path for the exact full identity k, before its terminal decision
-        can become authoritative, with no bypass around that gate for x. (6) For every terminal result record t, authoritative
-        state s, and idempotency key k, if t is the authoritative creation of an ACCEPTED terminal_result for one eligible
-        full idempotency identity (this classifier naming the qualifying creation event only, without constraining which implementation
+      natural_language: 'This proposition is the explicit symbolic translation of the claim, using the referenced contract
+        only for canonical vocabulary and relations; the referenced contract''s entire formula is not implicitly conjoined.
+        An idempotency key k is the exact full composite identity (document_id, client_change_id); equal client_change_id
+        values in different document namespaces are distinct identities. A terminal_result is an authoritative terminal outcome
+        for one idempotency key within the normal retry horizon, either ACCEPTED(canonical result) or REJECTED(definitive
+        rejection reason); uncertainty has no terminal entry. The following six statements hold jointly. (1) For every authoritative
+        state s and every idempotency key k, if s is reachable under the canonical server protocol and failure model and k
+        is within the configured normal retry eligibility horizon in s, where within-horizon means k''s idempotency gate record
+        is still present and consultable in s, the record having been written when the server first received the request and
+        being able to hold a reservation or in-progress state before any terminal outcome exists, with no fixed duration such
+        as 30 days assumed, presence being able to extend beyond 30 days when deletion is lazy and no presence being promised
+        after 30 days, then both of the following hold: s does not simultaneously have an ACCEPTED terminal outcome for k
+        and a REJECTED terminal outcome for k, and terminal_outcome_is_immutable holds for s and k, that is, once a terminal
+        outcome for the exact full k has linearized, every later acceptance or definitive-rejection transition for that same
+        k whose resulting authoritative state remains within the configured normal retry eligibility horizon for k preserves
+        the same single-valued outcome, post-horizon transitions or re-submissions being outside this predicate and this predicate
+        adding no progress requirement. (2) For every authoritative state s and every idempotency key k, if s is reachable,
+        k is within the retry horizon in s, and s contains a terminal_result for k in its idempotency_terminal_outcomes store,
+        where containment asserts presence only and the outcome''s value and provenance are separate, then s contains at most
+        one durable terminal result for the exact full k. (3) For every protocol transition x, every authoritative state s,
+        and every idempotency key k, if x is an authoritative terminal-state transition applied at s, that is, a transition
+        that linearizes, attempts to linearize, or is arbitrated against the per-key terminal outcome state in s, namely an
+        acceptance or definitive-rejection transition of the terminal state machine, with non-terminal lifecycle, recovery,
+        and representation-migration transitions not being terminal-state transitions, and s is reachable, k is within the
+        retry horizon in s, s contains a terminal outcome for k, x is a path that can create a canonical acceptance or an
+        authoritative definitive rejection for the exact full k, and the authoritative state resulting from x remains within
+        the configured normal retry eligibility horizon for k, where this last condition classifies only the horizon position
+        for k of the state resulting from x, assumes no fixed duration, and asserts nothing about x''s pre-state, about whether
+        x preserves or creates any outcome, or about any other identity, then x preserves the exact logical terminal outcome
+        for k: the terminal_result for k after x is identical in value and identity to the one in s. (4) For every protocol
+        transition x, every authoritative state s, and every idempotency key k, if x is an authoritative terminal-state transition
+        applied at s, s is reachable, k is within the retry horizon in s, and the terminal outcome contained in s for the
+        exact full k is REJECTED(definitive rejection reason), then x does not create a canonical acceptance for the exact
+        full k. (5) For every protocol transition x, every authoritative state s, and every idempotency key k, if x is a path
+        that can create a canonical acceptance or an authoritative definitive rejection for the exact full k, k is eligible,
+        that is, the logical edit identity it denotes is a normal-retry-eligible identity within the protocol''s eligibility
+        boundary, x is an authoritative terminal-state transition applied at s, s is reachable, and k is within the retry
+        horizon in s, then x passes through the same single per-key terminal-outcome arbitration gate used by every acceptance
+        and definitive-rejection path for the exact full k, before its terminal decision can become authoritative, with no
+        bypass around that gate for x. (6) For every terminal result record t, every authoritative state s, and every idempotency
+        key k, if t is the authoritative creation of an ACCEPTED terminal_result for one eligible full idempotency identity,
+        where this classification names the qualifying creation event only and, by itself, does not constrain which implementation
         path produced it, which acceptance execution supplied its payload, or which transaction mechanism commits the matching
-        canonical accepted change), t is the terminal_result contained in the terminal outcome store in s for the exact full
-        identity k, s is reachable, and k is within the configured normal retry eligibility horizon in s, then there exists
-        a canonical acceptance a such that all three hold: t and a are the ACCEPTED terminal-result creation and its matching
-        canonical accepted-change creation for one logical acceptance (this relation identifying the matching creation pair
-        only); t and a carry the same full idempotency identity, concretely the same (document_id, client_change_id) (this
-        relation asserting same-key identity only); and the matching creations t and a share one authoritative transaction
-        boundary and therefore commit or roll back together, with no reachable authoritative post-boundary state for that
-        pair containing exactly one side (this relation asserting atomicity only, and not asserting producer provenance or
-        requiring a particular named transaction implementation).'
+        canonical accepted change, and t is the terminal_result contained in the terminal outcome store in s for k, and s
+        is reachable, and k is within the retry horizon in s, then there exists a canonical acceptance creation a such that
+        all three of the following hold: t and a are the ACCEPTED terminal-result creation and its matching canonical accepted-change
+        creation for one logical acceptance, where this relation identifies the matching creation pair only; t and a carry
+        the same full idempotency identity, concretely the same (document_id, client_change_id), where this relation asserts
+        same-key identity only and producer provenance, transaction atomicity, commit outcome, and implementation-path choice
+        remain separate; and t and a share one authoritative transaction boundary and therefore commit or roll back together,
+        with no reachable authoritative post-boundary state for that pair containing exactly one side, where this relation
+        asserts atomicity only and does not assert producer provenance or require a particular named transaction implementation.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: 1c7ff9d388e456134ea25e8096f2df023d5bbc0c626ee1a7494543b745d8fe2e
+        subject_signature: 5577c56a0294b139b68d3ef553ef577de9c9d1e43a3605d5916a4d6be70bd739
         verdict: EQUIVALENT
-        reason: The formula captures at most one terminal outcome, ACCEPTED/REJECTED mutual exclusion and immutability within
-          the retry horizon, identity-matched atomic co-commit of ACCEPTED with its canonical acceptance, a bar on acceptance-creating
-          transitions applied while REJECTED is in force within the horizon regardless of the resulting state's horizon position
-          (with post-horizon first submissions excluded by the pre-state horizon guard), and the shared per-key arbitration
-          gate for all eligible acceptance and definitive-rejection paths, without collapsing the full (document_id, client_change_id)
-          identity or adding extra requirements.
+        reason: The formula covers at-most-one and mutual exclusion in reachable within-horizon states, immutability/preservation
+          for later terminal transitions, the REJECTED-to-acceptance bar for transitions applied while REJECTED is in force
+          without a resulting-state horizon guard, the shared per-key arbitration gate for eligible acceptance/rejection paths,
+          and an atomically co-committing, same-identity matching canonical acceptance for ACCEPTED outcomes, all scoped to
+          the full composite idempotency identity with no added requirement.
         differences: []
       strengthening:
-        subject_signature: 1c7ff9d388e456134ea25e8096f2df023d5bbc0c626ee1a7494543b745d8fe2e
+        subject_signature: 5577c56a0294b139b68d3ef553ef577de9c9d1e43a3605d5916a4d6be70bd739
         verdict: EQUIVALENT
-        reason: The formula captures at-most-one and mutual exclusion, immutability/preservation within the retry horizon,
-          the REJECTED ban on acceptance for transitions applied while REJECTED is in force within the horizon regardless
-          of the resulting state's horizon position while excluding submissions first applied after the horizon, atomic co-commitment
-          of ACCEPTED with its same-identity matching canonical change, and shared per-key arbitration for acceptance and
-          definitive-rejection paths, with no material strengthening or weakening.
+        reason: The formula covers the claim's per-key, within-horizon single-valued outcome, mutual ACCEPTED/REJECTED exclusion,
+          within-horizon immutability and preservation, the REJECTED bar on acceptance-creating transitions applied while
+          REJECTED is in force within the horizon regardless of the resulting state's horizon position, shared arbitration
+          for acceptance and definitive-rejection paths, and atomic matching of an ACCEPTED terminal result with its same-identity
+          canonical accepted change, without adding requirements outside that horizon-scoped claim.
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: 1c7ff9d388e456134ea25e8096f2df023d5bbc0c626ee1a7494543b745d8fe2e
+        subject_signature: 5577c56a0294b139b68d3ef553ef577de9c9d1e43a3605d5916a4d6be70bd739
         verdict: EQUIVALENT
-        reason: The rendering preserves single-valuedness, immutability, mutual exclusion, atomic ACCEPTED commitment, same-state
-          arbitration, and the REJECTED exclusion for transitions applied within the horizon regardless of the resulting state's
-          horizon position, with post-horizon re-submissions excluded and full (document_id, client_change_id) identity maintained
-          throughout.
+        reason: 'The six clauses jointly reproduce the source: at most one durable terminal result for the exact full (document_id,
+          client_change_id) identity within the horizon, horizon-scoped immutability/preservation, the REJECTED exclusion
+          for transitions applied while REJECTED is in force without a resulting-state horizon condition, post-horizon re-submissions
+          as outside the proposition, arbitration of all acceptance and definitive-rejection paths against the same per-key
+          gate, and ACCEPTED committed atomically with its matching canonical accepted change, without adding fixed-duration,
+          producer-provenance, implementation-path, or transaction-mechanism requirements.'
         differences: []
   claim:L215_denotation_change_is_coordinate_change:
     kind: claim
@@ -12457,61 +12478,78 @@ records:
   claim:L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation:
     kind: claim
     subject_id: L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
-    subject_signature: b633f28198325db0a2d168dce608c3cbb76f0c0d5811d14c07e89539a90f11d6
+    subject_signature: a49b81346afdfcfc6f0321606ea0b752d735e8576ad3eb1eef769caf01626d65
     roundtrip:
-      subject_signature: b633f28198325db0a2d168dce608c3cbb76f0c0d5811d14c07e89539a90f11d6
+      subject_signature: a49b81346afdfcfc6f0321606ea0b752d735e8576ad3eb1eef769caf01626d65
       status: TRANSLATED
-      natural_language: 'The following conjunction holds. (1) For every authoritative state s and every idempotency key k,
-        where k is the exact full composite identity (document_id, client_change_id), if s is reachable under the canonical
-        server protocol and failure model and k is within the configured normal retry eligibility horizon in s — this horizon
-        predicate does not by itself assume any fixed duration such as 30 days — then s contains at most one durable terminal
-        result for that exact k; equal client_change_id values in different document namespaces are distinct identities. (2)
-        For every such reachable s and every k within the retry horizon in s, if the terminal outcome contained in s for the
-        exact k is ACCEPTED(canonical result), then the accepted terminal outcome matches canonical acceptance: the canonical
-        accepted history for that same document contains the matching canonical acceptance for that exact identity, and no
-        incompatible REJECTED outcome exists for that same identity. (3) For every such reachable s and every k within the
-        retry horizon in s, if the terminal outcome contained in s for the exact k is ACCEPTED(canonical result), then the
-        terminal outcome contained in s for the exact k is not REJECTED(definitive rejection reason). (4) For every such reachable
-        s and every k within the retry horizon in s, if the terminal outcome contained in s for the exact k is REJECTED(definitive
-        rejection reason), then the rejected terminal outcome excludes canonical acceptance: the canonical accepted history
-        for that same document contains no canonical acceptance for that exact identity. (5) For every protocol transition
-        x and every pair of terminal result records r1 and r2, if x is an authoritative lifecycle representation rewrite,
-        within the 30-day normal retry eligibility horizon, from representation r1 to representation r2 for the same already-linearized
-        logical terminal outcome and the same full idempotency key, where the durable physical representation may change,
-        then x preserves the same already-linearized logical terminal outcome from r1 to r2: an ACCEPTED outcome preserves
-        the exact canonical result, and a REJECTED outcome preserves the same definitive rejection reason; for a REJECTED
-        outcome this does not require preserving the same rejection-decision object or producer when the exact request binding
-        and required authoritative-context justification remain valid. (6) For every protocol transition x and every pair
-        of terminal result records r1 and r2, if x is such an authoritative lifecycle representation rewrite from r1 to r2,
-        then the full idempotency key carried by r1 equals the full idempotency key carried by r2.'
+      natural_language: 'All of the following hold jointly. Throughout, an idempotency key k is the exact full composite identity
+        (document_id, client_change_id); equal client_change_id values in different document namespaces are distinct identities.
+
+        (a) For every authoritative state s and every idempotency key k: if s is reachable under the canonical server protocol
+        and failure model (impossible or purely hypothetical authoritative states are excluded), and k''s idempotency gate
+        record is still present and consultable in s — the record written when the server first receives the request, which
+        may hold a reservation or in-progress state before any terminal outcome exists, and whose presence is what ''within
+        the configured normal retry eligibility horizon'' means, without assuming any fixed duration such as 30 days, where
+        presence may extend beyond 30 days when deletion is lazy and no presence is promised after 30 days — then s contains
+        at most one durable terminal result for the exact full composite identity k.
+
+        (b) For every authoritative state s and every idempotency key k: if s is reachable as above, and k''s gate record
+        is still present and consultable in s as above, and the terminal outcome contained in s for the exact identity k is
+        ACCEPTED(canonical result), then the canonical accepted history for that same document contains the matching canonical
+        acceptance for that exact identity, and no incompatible REJECTED outcome exists for that same identity.
+
+        (c) For every authoritative state s and every idempotency key k: if s is reachable as above, and k''s gate record
+        is still present and consultable in s as above, and the terminal outcome contained in s for the exact identity k is
+        ACCEPTED(canonical result), then the terminal outcome contained in s for the exact identity k is not REJECTED(definitive
+        rejection reason).
+
+        (d) For every authoritative state s and every idempotency key k: if s is reachable as above, and k''s gate record
+        is still present and consultable in s as above, and the terminal outcome contained in s for the exact identity k is
+        REJECTED(definitive rejection reason), then the canonical accepted history for that same document contains no canonical
+        acceptance for that exact identity.
+
+        (e) For every protocol transition x and every pair of terminal result records r1, r2: if x is an authoritative lifecycle
+        representation rewrite, within the 30-day normal retry eligibility horizon, from terminal-result representation r1
+        to representation r2 for the same already-linearized logical terminal outcome and the same full idempotency key, where
+        the durable physical representation may change, then x preserves the same already-linearized logical terminal outcome
+        from r1 to r2: an ACCEPTED outcome preserves the exact canonical result, and a REJECTED outcome preserves the same
+        definitive rejection reason; the physical representation may change, and for REJECTED this does not require preserving
+        the same rejection-decision object or producer when the exact request binding and required authoritative-context justification
+        remain valid.
+
+        (f) For every protocol transition x and every pair of terminal result records r1, r2: if x is an authoritative lifecycle
+        representation rewrite, within the 30-day normal retry eligibility horizon, from terminal-result representation r1
+        to representation r2 for the same already-linearized logical terminal outcome and the same full idempotency key, where
+        the durable physical representation may change, then the full idempotency key carried by r1 equals the full idempotency
+        key carried by r2.'
       ambiguities: []
     direct_reviews:
       weakening:
-        subject_signature: b633f28198325db0a2d168dce608c3cbb76f0c0d5811d14c07e89539a90f11d6
+        subject_signature: a49b81346afdfcfc6f0321606ea0b752d735e8576ad3eb1eef769caf01626d65
         verdict: EQUIVALENT
-        reason: 'The formula covers every source requirement with matching guards and identity: at-most-one (allowing zero)
-          in reachable states within the retry horizon, ACCEPTED matching canonical acceptance and excluding REJECTED, REJECTED
-          excluding canonical acceptance, and lifecycle rewrites within the 30-day horizon preserving the full composite key
-          and the exact canonical result or definitive reason, with no added requirement.'
+        reason: 'All source requirements are encoded: reachable/horizon-guarded at-most-one (including zero) per full composite
+          key, ACCEPTED implying matching canonical acceptance and no REJECTED outcome, REJECTED implying no canonical acceptance,
+          and an authoritative 30-day-horizon lifecycle rewrite of an already-linearized result preserving the full key and
+          the exact ACCEPTED canonical result or REJECTED definitive reason, with no added converse or extra requirement.'
         differences: []
       strengthening:
-        subject_signature: b633f28198325db0a2d168dce608c3cbb76f0c0d5811d14c07e89539a90f11d6
+        subject_signature: a49b81346afdfcfc6f0321606ea0b752d735e8576ad3eb1eef769caf01626d65
         verdict: EQUIVALENT
-        reason: 'All source requirements are encoded with matching scope: reachable in-horizon at-most-one, ACCEPTED implies
-          matching canonical acceptance and no REJECTED, REJECTED implies no canonical acceptance, and authoritative 30-day
-          lifecycle rewrites preserve the full composite key and exact ACCEPTED result or REJECTED reason, with no added universal,
-          cardinality, or identity requirement.'
+        reason: 'Each source requirement is encoded with matching scope: reachable-state plus retry-horizon guards for at-most-one,
+          ACCEPTED-to-canonical-acceptance and REJECTED-exclusion, and the 30-day authoritative rewrite preserves both the
+          full composite key and the exact ACCEPTED result or REJECTED reason, without adding converse, broader-scope, or
+          extra-cardinality requirements.'
         differences: []
     roundtrip_reviews:
       balanced:
-        subject_signature: b633f28198325db0a2d168dce608c3cbb76f0c0d5811d14c07e89539a90f11d6
+        subject_signature: a49b81346afdfcfc6f0321606ea0b752d735e8576ad3eb1eef769caf01626d65
         verdict: EQUIVALENT
-        reason: The rendering preserves the at-most-one terminal outcome per exact full composite key in reachable states
-          within the normal retry horizon, the ACCEPTED-to-canonical-acceptance and exclusion-of-REJECTED requirements, the
-          REJECTED-to-no-canonical-acceptance requirement, and the 30-day lifecycle-rewrite preservation of the full key and
-          exact logical value (canonical result for ACCEPTED, definitive reason for REJECTED); the added clarifications about
-          distinct document namespaces, absence as zero, and non-identity of rejection-decision objects/producers do not omit
-          or add a material requirement beyond the source.
+        reason: 'Clauses (a)-(f) jointly preserve the original: at most one durable terminal result per exact full composite
+          key in reachable states, with gate-record presence defining the normal retry horizon; ACCEPTED requires the matching
+          same-document canonical acceptance and excludes any same-key REJECTED outcome; REJECTED requires no same-key canonical
+          acceptance; and a within-horizon lifecycle rewrite preserves the full key and the exact logical value, canonical
+          result for ACCEPTED or definitive reason for REJECTED, with physical representation change and REJECTED object/producer
+          non-identity not weakening reason preservation.'
         differences: []
   claim:L229_terminal_attempt_arbitration_classification_and_gate:
     kind: claim
