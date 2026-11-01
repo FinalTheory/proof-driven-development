@@ -614,7 +614,7 @@ refinement:
     C40_terminal_outcome_is_single_valued_per_idempotency_key:
       status: stable
       blocked_by: []
-      signature: d666de97a1609fbb9283f2bbe6c515c8846766c8215ead5d0b0d320b8b898ef1
+      signature: 92a250809ba8d2ce2ab7990d46a75d27a986c84b0ebd8e73a1337711807a131a
     L165_pending_identity_revision_evidence_survives_retention:
       status: stable
       blocked_by: []
