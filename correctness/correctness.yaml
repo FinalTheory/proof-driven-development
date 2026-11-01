@@ -702,7 +702,7 @@ refinement:
     C44_terminal_outcome_entry_matches_canonical_acceptance:
       status: stable
       blocked_by: []
-      signature: b1b2289103b0ac6a48eae82bc0edf01c61b9277af67b4968a0cf0f9aff2b62a9
+      signature: 795d004abe2bb7b3ffb58ca6519c563b1a5bd245d4e6250da469b3fce71e11d6
     L186_terminal_outcome_initialization_matches_canonical_acceptance:
       status: stable
       blocked_by: []
@@ -892,8 +892,9 @@ refinement:
       blocked_by: []
       signature: 85b7aa00c1588991d8809347405b1ad97c0fbe615ca11c7d856f244bce864abc
     C48_normal_retry_request_coherence_and_horizon_alignment:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 15e1810e42b8a88ae45fa9606c37efacceefcc67ce77e61682f3829d78d288d4
     L237_foreground_catchup_response_head_binding:
       status: stable
       blocked_by: []
