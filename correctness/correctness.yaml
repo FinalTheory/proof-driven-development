@@ -197,8 +197,9 @@ refinement:
       status: pending
       blocked_by: []
     G5_retry_resolves_idempotently:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 55e937a6d2dcde2c6531bfe4923351a80a3b6fb1d77859ea6face60fc89af386
     C7_revision_frontier_is_linear:
       status: stable
       blocked_by: []
@@ -7559,7 +7560,18 @@ assurance:
         solver timeout, and the timeout change itself remains uncommitted and on hold.'
       signature: bf90ab03a58567dd2eac21eb706857e64d8d6b344f2ddfb5b1c6d121e9c7b412
     G5_retry_resolves_idempotently:
-      status: unaudited
+      status: machine_checked
+      rationale: 'Composition probe ENTAILED (signature 8cc8904aab6b6192cffb7d581377b9957626786f4533ca2fc64c1ce56b8b1c19)
+        after restructuring conjunct[0] to explicit outcome guards (state_has_accepted -> accepted_matches,
+        state_has_rejected -> rejected_excludes). Premise ablation: removing C46 individually breaks entailment
+        (COUNTEREXAMPLE), so C46 is individually load-bearing; removing C40, L161, L183, L204, L229, L230,
+        L231, L232, L233, or C48 individually leaves the solver UNKNOWN, so those ten are not decided
+        by ablation; removing A3, C13, L35, L54, L55, L108, L117, L182, L164, C42, or C43 individually
+        still leaves ENTAILED, so those eleven are not individually load-bearing in the symbolic encoding.
+        Note the proof_audit judged all direct premises except L231 necessary in its prose derivation
+        while the machine ablation decides only C46 as load-bearing; the registration reports the machine
+        result.'
+      signature: 8cc8904aab6b6192cffb7d581377b9957626786f4533ca2fc64c1ce56b8b1c19
     C7_revision_frontier_is_linear:
       status: machine_checked
       rationale: 'symbolic-compose ENTAILED (solver unsat) over TRUSTED premise translations. Premise-ablation

@@ -3244,6 +3244,7 @@ functions:
     - claim:L184_terminal_outcome_entry_has_single_authoritative_value
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
     - claim:L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
+    - claim:G5_retry_resolves_idempotently
   state_has_rejected_terminal_outcome:
     args:
     - AuthoritativeState
@@ -3258,6 +3259,7 @@ functions:
     - claim:L184_terminal_outcome_entry_has_single_authoritative_value
     - claim:C40_terminal_outcome_is_single_valued_per_idempotency_key
     - claim:L230_reachable_state_terminal_outcome_coherence_and_lifecycle_preservation
+    - claim:G5_retry_resolves_idempotently
   transition_preserves_terminal_outcome:
     args:
     - ProtocolTransition
@@ -8174,20 +8176,32 @@ claims:
                   - var: s
                   - var: k
               - call:
-                  fn: accepted_terminal_outcome_matches_canonical_acceptance
-                  args:
-                  - var: s
-                  - var: k
-              - call:
-                  fn: rejected_terminal_outcome_excludes_canonical_acceptance
-                  args:
-                  - var: s
-                  - var: k
-              - call:
                   fn: terminal_outcome_is_immutable
                   args:
                   - var: s
                   - var: k
+              - implies:
+                - call:
+                    fn: state_has_accepted_terminal_outcome
+                    args:
+                    - var: s
+                    - var: k
+                - call:
+                    fn: accepted_terminal_outcome_matches_canonical_acceptance
+                    args:
+                    - var: s
+                    - var: k
+              - implies:
+                - call:
+                    fn: state_has_rejected_terminal_outcome
+                    args:
+                    - var: s
+                    - var: k
+                - call:
+                    fn: rejected_terminal_outcome_excludes_canonical_acceptance
+                    args:
+                    - var: s
+                    - var: k
       - and:
         - forall:
             vars:
