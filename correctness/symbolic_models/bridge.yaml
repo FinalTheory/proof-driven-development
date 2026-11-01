@@ -2048,7 +2048,7 @@ functions:
     returns: Bool
     catalog_symbols:
     - submitted_request
-    meaning: Request r is a normal submitted_request representing one logical edit within the 30-day normal retry eligibility horizon.
+    meaning: Request r is a normal submitted_request representing one logical edit within the 30-day normal retry eligibility horizon, where pending/retry age is measured from the server's first acceptance of the request, when its idempotency record is written. Later retries or reconnects that hit the existing record preserve that origin and do not reset it. An attempt that never commits writes no record and starts no age.
     semantic_anchors:
     - claim:G5_retry_resolves_idempotently
     - claim:C48_normal_retry_request_coherence_and_horizon_alignment
@@ -6005,7 +6005,7 @@ functions:
     - client_change_id
     - raw_edit
     - base_revision
-    meaning: 'For submitted request r whose semantic source is logical edit e: no step of the request construction, serialization, dispatch, or normal retry that produced r preserves e''s identity and authoring frontier (document_id = D, client_change_id = k, base_revision = F, from e''s canonical authoring state D@F) while substituting a semantically different logical operation for e''s own operation into the raw_edit being carried. Those processes may change the request''s physical representation only in semantics-preserving ways. A substitution of a different logical operation under e''s (D, k, F) falsifies this predicate even if a later step of those processes restores e''s operation before submission. This predicate constrains the behavior of the four named processes themselves: it asserts nothing about any intermediate representation as an object -- in particular it does not assert that any intermediate representation is a submitted request, remains bound to e''s complete tuple, or carries (D, k, F) at all -- and it requires no byte-identical serialization and no dispatch, retry, OT invocation, acceptance, or terminal-decision progress beyond the processes that produced r. It does not by itself assert that r represents no other logical edit.'
+    meaning: 'For submitted request r whose semantic source is logical edit e: no step of the request construction, serialization, dispatch, or normal retry that produced r preserves e''s identity and authoring frontier (document_id = D, client_change_id = k, base_revision = F, from e''s canonical authoring state D@F) while substituting a semantically different logical operation for e''s own operation into the raw_edit being carried. A substitution of a different logical operation under e''s (D, k, F) falsifies this predicate even if a later step of those processes restores e''s operation before submission. This predicate constrains the behavior of the four named processes themselves: it asserts nothing about any intermediate representation as an object -- in particular it does not assert that any intermediate representation is a submitted request, remains bound to e''s complete tuple, or carries (D, k, F) at all -- and it requires no byte-identical serialization and no dispatch, retry, OT invocation, acceptance, or terminal-decision progress beyond the processes that produced r. It does not by itself assert that r represents no other logical edit.'
     semantic_anchors:
     - claim:L182_logical_edit_request_payload_binding_is_preserved
     - claim:C48_normal_retry_request_coherence_and_horizon_alignment
