@@ -876,8 +876,9 @@ refinement:
       blocked_by: []
       signature: 7d0ed94de7597f90604ea1a54fb2bfe4b3e840bfae802e01879538993ab846e5
     L233_normal_submitted_request_scope_eligibility:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 2a26e6fe21511983dcecda77dbc5b14f9efa1d119d58e5b4bbaa2718b7bd97e3
     L234_normal_submitted_request_endpoint_binding:
       status: stable
       blocked_by: []
