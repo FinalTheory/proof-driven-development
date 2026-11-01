@@ -872,8 +872,9 @@ refinement:
       blocked_by: []
       signature: 60124b0484eaf715f3157ff5087c2c047e463d9a8844e48a301f77b2ec42c9bf
     L232_retry_reconnect_eligibility_implies_retry_horizon:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 7d0ed94de7597f90604ea1a54fb2bfe4b3e840bfae802e01879538993ab846e5
     L233_normal_submitted_request_scope_eligibility:
       status: pending
       blocked_by: []
