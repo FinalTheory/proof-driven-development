@@ -538,6 +538,24 @@ def build_roundtrip_comparison_prompt(
         "sections, classify it as STRONGER rather than treating the extracted statement as unquestioned authority."
         if isinstance(subject, ObligationTranslationSubject) else ""
     )
+    functions = getattr(subject, "functions", {}) or {}
+    meanings = {}
+    for name, entry in functions.items():
+        if isinstance(entry, dict) and entry.get("meaning"):
+            meanings[name] = entry["meaning"]
+    definitions = ""
+    if meanings:
+        body = yaml.safe_dump(meanings, sort_keys=False, allow_unicode=True).rstrip("\n")
+        definitions = (
+            "\nSUPPLIED DEFINITIONS (part of the canonical source for this subject)\n"
+            "The following predicate/function meanings are the definitions the formula "
+            "was built from, and they define the terms the statement uses. A rendering "
+            "passage that restates one of these definitions is a clarification of a "
+            "defined term, not an added requirement. Judge defined terms by these "
+            "definitions. Classify a passage as STRONGER only if it goes beyond these "
+            "definitions and the statement/vocabulary above.\n"
+            f"{body}\n"
+        )
     return f"""You are independently auditing semantic equivalence between two natural-language propositions.
 
 SUBJECT SIGNATURE
@@ -545,7 +563,7 @@ SUBJECT SIGNATURE
 
 ORIGINAL CANONICAL PROPOSITION
 {subject.source_context()}
-
+{definitions}
 BLIND ROUND-TRIP RENDERING
 {roundtrip_natural_language}
 

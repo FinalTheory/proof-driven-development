@@ -171,7 +171,7 @@ For one mapping, the intended fresh-agent gate is:
 2. two direct reviewers compare the original proposition with the symbolic formula, one biased toward finding weakening/omission and one toward strengthening/scope expansion;
 3. one independent balanced round-trip reviewer compares the original proposition with the blind natural-language rendering, using a `SUPPLIED DEFINITIONS` section containing the declared meanings of every predicate/function used by the subject's formula. The reviewer does not receive the formula. Restating a supplied definition is a clarification only when it preserves that definition and the canonical proposition's scope; the definitions do not authorize additional guarantees. This tests source-independent semantic reconstruction without duplicating the direct weakening/strengthening attack pair.
 
-The shipped `build_roundtrip_comparison_prompt` currently omits this definitions section; callers must supply it until the canonical generator implements this requirement.
+The shipped `build_roundtrip_comparison_prompt` includes this definitions section when the subject has predicate/function meanings; callers do not need to supply it separately.
 
 The default aggregation rule therefore requires two directional direct `EQUIVALENT` verdicts and one balanced round-trip `EQUIVALENT` verdict. Any concrete `WEAKER`, `STRONGER`, or `MISMATCH` verdict rejects the mapping. Reviewer execution/format failures or unresolved ambiguity produce `INCOMPLETE`, never a trusted result. Existing persisted records with the legacy pair of round-trip weakening/strengthening reviews remain valid so already-established assurance is not discarded solely by this protocol simplification.
 
