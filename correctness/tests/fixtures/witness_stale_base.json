@@ -1310,6 +1310,16 @@
    "entries": [],
    "returns": "Bool"
   },
+  "rejected_terminal_result_within_retry_horizon": {
+   "args": [
+    "TerminalResultRecord"
+   ],
+   "else": {
+    "const": true
+   },
+   "entries": [],
+   "returns": "Bool"
+  },
   "rejection_context_sufficient_at_terminalization": {
    "args": [
     "TerminalResultRecord",

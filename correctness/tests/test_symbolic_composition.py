@@ -614,6 +614,12 @@ class SymbolicCompositionTests(unittest.TestCase):
                 self.assertIsNotNone(result.solver_result.model)
 
     def test_symbolic_report_renders_only_machine_checked_compositions_by_default(self):
+        # The live model now certifies every composition, including G5.
+        # Keep a negative control in memory so filtering is still exercised.
+        excluded = "C13_idempotency_key_is_temporally_unique"
+        graph_doc = copy.deepcopy(self.graph.doc)
+        graph_doc["assurance"]["composition"][excluded] = {"status": "unaudited"}
+        graph = Graph(graph_doc)
         args = SimpleNamespace(
             node=[],
             model=str(BRIDGE_PATH),
@@ -622,27 +628,36 @@ class SymbolicCompositionTests(unittest.TestCase):
         )
         output = StringIO()
         with redirect_stdout(output):
-            rc = _cmd_symbolic_report(self.graph, args)
+            rc = _cmd_symbolic_report(graph, args)
         rendered = output.getvalue()
 
         self.assertEqual(rc, 0)
         self.assertIn(f"{C12_TARGET}  [MACHINE-CHECKED]", rendered)
         self.assertIn(f"{C14_TARGET}  [MACHINE-CHECKED]", rendered)
-        self.assertIn("C13_idempotency_key_is_temporally_unique  [MACHINE-CHECKED]", rendered)
+        self.assertNotIn(f"{excluded}  [MACHINE-CHECKED]", rendered)
         self.assertIn("SMT counterexample query:", rendered)
         self.assertIn("Solver: UNSAT → ENTAILED", rendered)
         self.assertIn("Mutation sensitivity:", rendered)
-        self.assertNotIn("G5_retry_resolves_idempotently", rendered)
+        self.assertIn("G5_retry_resolves_idempotently  [MACHINE-CHECKED]", rendered)
 
     def test_symbolic_report_rejects_non_machine_checked_node(self):
+        # Exercise rejection independently of the live certification status.
+        graph_doc = copy.deepcopy(self.graph.doc)
+        graph_doc["assurance"]["composition"]["G5_retry_resolves_idempotently"] = {
+            "status": "unaudited"
+        }
+        graph = Graph(graph_doc)
         args = SimpleNamespace(
             node=["G5_retry_resolves_idempotently"],
             model=str(BRIDGE_PATH),
             assurance=str(ASSURANCE_PATH),
             format="text",
         )
-        with self.assertRaises(SymbolicCompositionError):
-            _cmd_symbolic_report(self.graph, args)
+        with self.assertRaisesRegex(
+            SymbolicCompositionError,
+            "G5_retry_resolves_idempotently is not currently recorded as machine_checked",
+        ):
+            _cmd_symbolic_report(graph, args)
 
     def test_recorded_c14_machine_check_is_replayable_from_current_model(self):
         registry = TranslationAssuranceRegistry.load(ASSURANCE_PATH)
