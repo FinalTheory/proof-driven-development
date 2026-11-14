@@ -194,8 +194,9 @@ refinement:
       blocked_by: []
       signature: 24078bd980d15768f8a81b3f845a9c17b407a3b5df146417b19c0ca86b55ebc3
     G4_reconnect_converges_without_gap_or_duplicate:
-      status: pending
+      status: stable
       blocked_by: []
+      signature: 1f62f15a9160ed32de2fa4214ed96a36abe55d33a8bb1571db6eae3e44eafb39
     G5_retry_resolves_idempotently:
       status: stable
       blocked_by: []
