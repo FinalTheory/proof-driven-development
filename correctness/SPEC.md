@@ -2,7 +2,7 @@
 
 这份文件是 Correctness Harness 的**人类可读 mental model**。
 
-正文只解释三件事：**Harness 在建模什么、为什么需要这些类型、这些状态如何随审计和修改演化**。为了便于人工审阅，文末 Appendix A 另外提供 canonical `correctness.yaml` 的完整字段/约束速查；正文仍不展开当前 DAG 内容、CLI 手册或代码实现细节。
+正文只解释三件事：**Harness 在建模什么、为什么需要这些类型、这些状态如何随审计和修改演化**。canonical `correctness.yaml` 的完整字段/约束速查见 [`SCHEMA.md`](SCHEMA.md)；正文不展开当前 DAG 内容、CLI 手册或代码实现细节。
 
 我们要解决的问题很简单：架构 correctness reasoning 不能一直隐含在 reviewer 的脑子里；但当 proof model 本身越来越大时，如果没有清晰的语义边界，人也会失去对模型的整体理解。
 
@@ -37,7 +37,7 @@ Harness 实际上管理五个彼此不同的层次：
 | **Refinement** | proposition 的边界和 dependency decomposition 是否合理？ |
 | **Assurance** | 我们对 specification 完整性、proof composition、implementation correctness 分别有多大把握？ |
 
-这四层不能混在一起。尤其要记住：
+这五层不能混在一起。尤其要记住：
 
 ```text
 refinement stable

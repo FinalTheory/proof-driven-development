@@ -447,7 +447,6 @@ provenance binding
 - [`correctness/SCHEMA.md`](correctness/SCHEMA.md) — canonical 模型字段/类型参考；
 - [`correctness/correctness.yaml`](correctness/correctness.yaml) — 当前机器可读正确性模型；
 - [`correctness/correctness.py`](correctness/correctness.py) — 验证、切片、调度、semantic signature、assurance 状态和受控修改；
-- [`HANDOVER.md`](HANDOVER.md) — 当前 operational snapshot、campaign 状态与推荐 continuation；
 - [`AGENTS.md`](AGENTS.md) — agent 操作仓库时必须遵守的规则。
 
 ---

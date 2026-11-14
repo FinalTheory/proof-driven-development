@@ -697,10 +697,11 @@ signature preconditions, applies structured operations in memory, validates the 
 refinement control state, and only then atomically replaces `correctness.yaml`. Invalid or
 stale mutations are rejected without modifying the file.
 
-Automation mutation plans must include at least one branch-local semantic signature copied
-from `refinement-status --format compact-yaml`. This is optimistic concurrency control: unrelated
-branches may commit concurrently in sequence, but a result derived from a branch that changed
-while its sub-agent was running is rejected as `STALE_MUTATION`.
+Automation mutation plans must include at least one branch-local `semantic_signatures` entry
+copied from `refinement-status --format compact-yaml`, or a current `model_signature` precondition.
+Prefer branch-local signatures for independent branch work; a model signature guards the whole
+model. Both provide optimistic concurrency control: a mismatch in any supplied signature is
+rejected as `STALE_MUTATION`.
 
 Node IDs are allocated only by the mutation tool under the same lock. Agents provide a
 semantic lower-snake-case `slug`, never a prefix or sequence number. Canonical meanings are:
@@ -842,6 +843,8 @@ implementation-verification result and not an independent proof-composition cert
 successful refinement audit, record the current signature:
 
     python3 -B correctness.py refinement-signature NODE
+
+Do not confuse the refinement/node semantic signature (`_node_semantic_signature`), used by `preconditions.semantic_signatures` and refinement stability, with the translation subject signature (`translation_subject_signature`), used by translation-review panels and translation assurance. They hash different payloads; a translation subject signature cannot substitute for a refinement signature in a mutation plan and will be rejected as `STALE_MUTATION` when it differs.
 
 Then set:
 
@@ -1008,7 +1011,7 @@ After an ordinary DAG/workflow-state mutation that does not change correctness t
     python3 -B correctness.py validate
     python3 -B correctness.py refinement-status --format compact-yaml
 
-When correctness tooling itself changes, or after a tooling repair, run the stronger gate:
+When correctness tooling itself changes, or after a tooling repair, run the stronger gate from the repository's `correctness/` directory (run `cd correctness` first if starting at the repository root):
 
     python3 -B correctness.py validate
     python3 -B -m unittest discover -s tests -t .

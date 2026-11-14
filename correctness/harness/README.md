@@ -140,6 +140,16 @@ is satisfiable.
 
 The adversarial mutation-test path replaces one direct-premise formula with an intentionally weaker structured formula and verifies that a previously `UNSAT` composition becomes `SAT`. Persisted machine-check artifacts store the exact premise/formula override, and repository preflight replays that mutation against the current bridge rather than trusting the recorded `SAT` label or witness text. This checks that the entailment actually depends on the removed semantic condition rather than succeeding vacuously or because target/premise formulas were accidentally coupled.
 
+Per-premise ablation is an orchestration-layer diagnostic built on `check_with_premise_overrides`, not an automatic Harness pass: a caller replaces each direct premise with `{"bool": true}` in turn and reruns composition. A rationale that attributes necessity to an individual premise should cite the actual ablation result and proof rule. UNKNOWN or an execution failure establishes no necessity conclusion; ENTAILED after removal shows only that the remaining premises suffice in the current abstraction.
+
+### Solver behavior
+
+Each backend check uses a fresh `z3.Context()` and a default timeout of 120000 milliseconds. `PDD_Z3_TIMEOUT_MS` overrides this per-check limit and must be an integer from 1 through 4294967295. Invalid values are rejected. A timeout produces `unknown`; it never changes the meaning of `sat` or `unsat`.
+
+The ordinary backend compiles transitive closure using `z3.TransitiveClosure`. Composition targets without transitive closure use `direct_smt`. Supported finite transitive-invariant targets first prove one-step induction obligations (`finite_transitive_invariant_lift`). If other target clauses remain, a second SMT phase may use the established invariant lemmas (`finite_transitive_invariant_lift_then_smt`); it runs only after the first phase returns UNSAT. This is a restricted proof strategy, not a complete decision procedure for transitive closure.
+
+Composition maps UNSAT to `ENTAILED`, SAT to `COUNTEREXAMPLE`, and an inconclusive solver result to `UNKNOWN`. Inspect the proof rule and failed phase: a counterexample to a lifted proof obligation may expose a limitation of the proof strategy rather than a counterexample to the original target. `UNKNOWN` establishes neither entailment nor a gap and must not be recorded as machine-checked assurance. Further analysis must distinguish a specification/mapping defect from a solver or proof-strategy limitation.
+
 ### Stable verification facade
 
 `symbolic/verification.py` provides the current high-level interface:
@@ -159,7 +169,9 @@ For one mapping, the intended fresh-agent gate is:
 
 1. one blind round-trip agent sees only typed predicate meanings, catalog vocabulary, Harness contract-class semantics, and the formula, then renders the symbolic proposition back into natural language;
 2. two direct reviewers compare the original proposition with the symbolic formula, one biased toward finding weakening/omission and one toward strengthening/scope expansion;
-3. one independent balanced round-trip reviewer compares the original proposition only with the blind natural-language rendering. This tests source-independent semantic reconstruction without duplicating the direct weakening/strengthening attack pair.
+3. one independent balanced round-trip reviewer compares the original proposition with the blind natural-language rendering, using a `SUPPLIED DEFINITIONS` section containing the declared meanings of every predicate/function used by the subject's formula. The reviewer does not receive the formula. Restating a supplied definition is a clarification only when it preserves that definition and the canonical proposition's scope; the definitions do not authorize additional guarantees. This tests source-independent semantic reconstruction without duplicating the direct weakening/strengthening attack pair.
+
+The shipped `build_roundtrip_comparison_prompt` currently omits this definitions section; callers must supply it until the canonical generator implements this requirement.
 
 The default aggregation rule therefore requires two directional direct `EQUIVALENT` verdicts and one balanced round-trip `EQUIVALENT` verdict. Any concrete `WEAKER`, `STRONGER`, or `MISMATCH` verdict rejects the mapping. Reviewer execution/format failures or unresolved ambiguity produce `INCOMPLETE`, never a trusted result. Existing persisted records with the legacy pair of round-trip weakening/strengthening reviews remain valid so already-established assurance is not discarded solely by this protocol simplification.
 

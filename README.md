@@ -447,7 +447,6 @@ The repository deliberately separates the target-system design from the Correctn
 - [`correctness/SCHEMA.md`](correctness/SCHEMA.md) — the canonical model field/type reference;
 - [`correctness/correctness.yaml`](correctness/correctness.yaml) — the current machine-readable correctness model;
 - [`correctness/correctness.py`](correctness/correctness.py) — validation, slicing, scheduling, semantic signatures, assurance state, and controlled mutation;
-- [`HANDOVER.md`](HANDOVER.md) — current operational snapshot, campaign state, and recommended continuation;
 - [`AGENTS.md`](AGENTS.md) — repository operating rules for agents.
 
 ---
